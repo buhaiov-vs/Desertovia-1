@@ -53,7 +53,7 @@ export default defineConfig({
       url: `http://localhost:${WEB_PORT}`,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
-      env: { DESERTOD_BACKEND: `http://localhost:${API_PORT}` },
+      env: { DESERTOD_BACKEND: `http://localhost:${API_PORT}`, DESERTOD_E2E_HARNESS: '1' },
     },
   ],
 })

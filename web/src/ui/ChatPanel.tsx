@@ -44,7 +44,7 @@ export function ChatPanel({
   const [seenAt, setSeenAt] = useState(() => Date.now() + serverOffsetMs)
   const list = useRef<HTMLOListElement>(null)
 
-  const own = (message: ChatMessage) => (message.isTsar ? tsar : message.citizenId === ownCitizenId)
+  const own = (message: ChatMessage) => (!message.isChaplain && (message.isTsar ? tsar : message.citizenId !== null && message.citizenId === ownCitizenId))
 
   const lines = useMemo(() => {
     const all: Line[] = messages.map((message) => ({
@@ -135,7 +135,7 @@ export function ChatPanel({
                   className={`chat-line message${own(line.message) ? ' own' : ''}`}
                   title={new Date(line.message.sentAt).toLocaleString()}
                 >
-                  <span className={`chat-author${line.message.isTsar ? ' tsar' : ''}`}>
+                  <span className={`chat-author${line.message.isTsar ? ' tsar' : ''}${line.message.isChaplain ? ' chaplain' : ''}`}>
                     {line.message.authorName}
                     {line.message.isTsar && <span className="badge">{t('hud.tsar')}</span>}
                   </span>{' '}

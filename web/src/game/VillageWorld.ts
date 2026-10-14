@@ -1,3 +1,4 @@
+import { BuildingLighting, hasPreparedBuilding } from './BuildingLighting'
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
 import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type Tsar, type VillageState, type Wilds } from '../api'
@@ -202,6 +203,7 @@ export class VillageWorld {
   private readonly projectLayer = new Container()
   private readonly night = new Graphics()
   private readonly lights = new Graphics()
+  private readonly buildingLights = new Container()
   private readonly flames = new Graphics()
   private readonly fog = new Fog()
   private fogUpdatedAt = Number.NEGATIVE_INFINITY
@@ -248,6 +250,7 @@ export class VillageWorld {
   private activeProjectId: string | null = null
   private lastBuildingKey = ''
   private buildingViews: Container[] = []
+  private readonly litBuildings = new Set<BuildingLighting>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
   private buildingLabels: Array<{ text: Text; x: number; y: number }> = []
   private buildingName: ((kind: string, storage: boolean) => string) | null = null
@@ -294,7 +297,7 @@ export class VillageWorld {
     this.placementLayer.addChild(this.ghost)
     this.placementLayer.visible = false
     this.selection.visible = false
-    this.world.addChild(this.groundLayer, this.objects, this.placementLayer, this.selection, this.night, this.lights, this.fog.sprite)
+    this.world.addChild(this.groundLayer, this.objects, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite)
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
@@ -329,6 +332,8 @@ export class VillageWorld {
       autoDensity: true,
       resolution: Math.min(window.devicePixelRatio || 1, 2),
     })
+    // Keep touch devices cool; animation time and gameplay timers still use elapsed time.
+    app.ticker.maxFPS = window.matchMedia('(pointer: coarse)').matches ? 30 : 60
     host.appendChild(app.canvas)
     return new VillageWorld(app, tiles, painter, host, options.minimap ?? true)
   }
@@ -435,8 +440,8 @@ export class VillageWorld {
     for (const bush of layout.bushes) addScenery(this.scattered(this.bushView(bush.x, bush.y), bush.x, bush.y), bush.x, bush.y)
     for (const reed of layout.reeds) this.objects.addChild(cull(this.reedView(reed.x, reed.y)))
     const church = MONASTERY.church
-    this.objects.addChild(this.buildingView(church.tiles, church.x, church.y, 'blue'))
-    for (const cell of MONASTERY.cells) this.objects.addChild(this.buildingView(MONASTERY.cell, cell.x, cell.y))
+    this.objects.addChild(this.preparedBuilding('monastery-church', church.x, church.y, church.tiles[0].length, church.tiles.length))
+    for (const cell of MONASTERY.cells) this.objects.addChild(this.preparedBuilding('monk-cell', cell.x, cell.y))
     this.terrain = layout.terrain
     this.minimap?.setTerrain(layout.terrain)
     this.wildlife.setTerrain(layout.terrain)
@@ -578,6 +583,11 @@ export class VillageWorld {
   }
 
   /** Null follows the village's day and night. */
+  /** A dimmed map behind a modal needs fewer frames, leaving the phone responsive to controls. */
+  setObscured(obscured: boolean) {
+    this.app.ticker.maxFPS = obscured ? 8 : window.matchMedia('(pointer: coarse)').matches ? 30 : 60
+  }
+
   setNightOverride(night: boolean | null) {
     this.nightOverride = night
   }
@@ -1007,7 +1017,17 @@ export class VillageWorld {
   }
 
   /** A finished building in the 3×3 area of a plot. Storage kinds share names with their building kinds. */
+  private preparedBuilding(kind: string, x: number, y: number, width = 3, height = 3): BuildingLighting {
+    const view = new BuildingLighting(this.tiles, kind, x, y, width, height)
+    view.setNight(this.nightAmount)
+    this.litBuildings.add(view)
+    this.buildingLights.addChild(view.light)
+    view.once('destroyed', () => this.litBuildings.delete(view))
+    return view
+  }
+
   private finishedView(kind: string, x: number, y: number): Container {
+    if (hasPreparedBuilding(kind)) return this.preparedBuilding(kind, x, y)
     const tiles = BUILDING_TILES[kind]
     if (tiles) return this.buildingView(tiles, x, y)
     const view = this.wildView(kind)
@@ -1326,9 +1346,11 @@ export class VillageWorld {
     // Other projects: finished buildings, or rising walls on their site.
     for (const [id, site] of Object.entries(PROJECT_SITES)) {
       const tiles = PROJECT_BUILDINGS[id]
-      const dome = id === 'bell-tower' ? 'gold' : undefined
       if (completed.has(id)) {
-        add(this.buildingView(tiles, site.x, site.y, dome))
+        const spriteKind = id === 'granary' ? 'great-granary' : id
+        add(hasPreparedBuilding(spriteKind)
+          ? this.preparedBuilding(spriteKind, site.x, site.y, tiles[0].length, tiles.length)
+          : this.buildingView(tiles, site.x, site.y, id === 'bell-tower' ? 'gold' : undefined))
       } else if (project?.definitionId === id) {
         const fraction = project.phase === 'Construction' ? project.buildDone / project.buildRequired : 0
         const rows = Math.floor(fraction * tiles.length)
@@ -1930,7 +1952,9 @@ export class VillageWorld {
       this.nightOverride !== null ? Number(this.nightOverride) : this.village ? darknessAt(this.village.weather, now) : 0
     this.nightAmount += (nightTarget - this.nightAmount) * Math.min(1, seconds * 2)
     this.night.alpha = this.nightAmount * 0.55
+    for (const building of this.litBuildings) building.setNight(this.nightAmount)
     this.lights.alpha = this.nightAmount * (0.9 + Math.sin(this.elapsed * 9) * 0.1)
+    this.buildingLights.alpha = 0.96 + Math.sin(this.elapsed * 3) * 0.04
     this.rainAmount += (this.rainTarget - this.rainAmount) * Math.min(1, seconds)
     this.drawRain(seconds)
 

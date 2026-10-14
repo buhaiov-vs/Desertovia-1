@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Desertod.Api.Game;
 
 /// <param name="CitizenId">Null when the Tsar wrote it.</param>
-public sealed record ChatMessageDto(Guid Id, string AuthorName, Guid? CitizenId, bool IsTsar, string Text, DateTimeOffset SentAt);
+public sealed record ChatMessageDto(Guid Id, string AuthorName, Guid? CitizenId, bool IsTsar, string Text, DateTimeOffset SentAt, bool IsChaplain = false);
 
 public sealed record SendChatRequest(string? Text);
 
@@ -39,7 +39,10 @@ public sealed class ChatService(
             .OrderByDescending(m => m.SentAt)
             .Take(HistoryLength)
             .ToListAsync(cancellationToken);
-        return messages.AsEnumerable().Reverse().Select(ToDto).ToList();
+        var chaplain = await db.ChaplainMessages.AsNoTracking().Where(m => m.VillageId == member.VillageId)
+            .OrderByDescending(m => m.SentAt).Take(HistoryLength).ToListAsync(cancellationToken);
+        return messages.Select(ToDto).Concat(chaplain.Select(ToDto)).OrderBy(m => m.SentAt).ThenBy(m => m.Id)
+            .TakeLast(HistoryLength).ToList();
     }
 
     public async Task<ChatMessageDto> SendAsync(string slug, Guid accountId, string? text, CancellationToken cancellationToken)
@@ -95,6 +98,9 @@ public sealed class ChatService(
         return citizen is null ? null : new Member(village.Id, village.Slug, citizen.Id, citizen.Name);
     }
 
-    private static ChatMessageDto ToDto(ChatMessage message) =>
+    internal static ChatMessageDto ToDto(ChaplainMessage message) =>
+        new(message.Id, "Отец Срамослав", null, false, message.Text, message.SentAt, true);
+
+    internal static ChatMessageDto ToDto(ChatMessage message) =>
         new(message.Id, message.AuthorName, message.CitizenId, message.IsTsar, message.Text, message.SentAt);
 }

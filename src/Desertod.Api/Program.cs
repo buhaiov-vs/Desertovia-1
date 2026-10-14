@@ -65,6 +65,8 @@ builder.Services.AddSingleton<CitizenPresence>();
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddSingleton<ChatService>();
 builder.Services.AddSingleton<SramoslavService>();
+builder.Services.AddSingleton<ChaplainChatWorker>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<ChaplainChatWorker>());
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<DungeonRuntime>();
 builder.Services.AddHostedService<CycleSettlementWorker>();

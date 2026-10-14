@@ -1,0 +1,444 @@
+[
+  {
+    "name": "building-bakery",
+    "batch": 1,
+    "cell": 0,
+    "rect": [
+      0,
+      0,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 260,
+      "y": 748,
+      "w": 96,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-barracks",
+    "batch": 1,
+    "cell": 1,
+    "rect": [
+      384,
+      0,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 0,
+      "y": 0,
+      "w": 160,
+      "h": 160
+    }
+  },
+  {
+    "name": "building-bell-tower",
+    "batch": 1,
+    "cell": 2,
+    "rect": [
+      768,
+      0,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 780,
+      "y": 162,
+      "w": 96,
+      "h": 128
+    }
+  },
+  {
+    "name": "building-drying-rack",
+    "batch": 1,
+    "cell": 3,
+    "rect": [
+      1152,
+      0,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 882,
+      "y": 944,
+      "w": 64,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-farm",
+    "batch": 1,
+    "cell": 4,
+    "rect": [
+      0,
+      384,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 358,
+      "y": 748,
+      "w": 96,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-granary",
+    "batch": 1,
+    "cell": 5,
+    "rect": [
+      384,
+      384,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 878,
+      "y": 162,
+      "w": 96,
+      "h": 128
+    }
+  },
+  {
+    "name": "building-great-granary",
+    "batch": 1,
+    "cell": 6,
+    "rect": [
+      768,
+      384,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 686,
+      "y": 422,
+      "w": 128,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-heap",
+    "batch": 1,
+    "cell": 7,
+    "rect": [
+      1152,
+      384,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 66,
+      "y": 1042,
+      "w": 64,
+      "h": 64
+    }
+  },
+  {
+    "name": "building-hut",
+    "batch": 1,
+    "cell": 8,
+    "rect": [
+      0,
+      768,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 456,
+      "y": 748,
+      "w": 96,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-lean-to",
+    "batch": 1,
+    "cell": 9,
+    "rect": [
+      384,
+      768,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 132,
+      "y": 1042,
+      "w": 64,
+      "h": 64
+    }
+  },
+  {
+    "name": "building-library",
+    "batch": 1,
+    "cell": 10,
+    "rect": [
+      768,
+      768,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 0,
+      "y": 292,
+      "w": 96,
+      "h": 128
+    }
+  },
+  {
+    "name": "building-market",
+    "batch": 1,
+    "cell": 11,
+    "rect": [
+      1152,
+      768,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 816,
+      "y": 422,
+      "w": 128,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-mine",
+    "batch": 1,
+    "cell": 12,
+    "rect": [
+      0,
+      1152,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 554,
+      "y": 748,
+      "w": 96,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-monastery-church",
+    "batch": 2,
+    "cell": 0,
+    "rect": [
+      0,
+      0,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 98,
+      "y": 292,
+      "w": 96,
+      "h": 128
+    }
+  },
+  {
+    "name": "building-monk-cell",
+    "batch": 2,
+    "cell": 1,
+    "rect": [
+      384,
+      0,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 652,
+      "y": 748,
+      "w": 96,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-smithy",
+    "batch": 2,
+    "cell": 2,
+    "rect": [
+      768,
+      0,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 196,
+      "y": 292,
+      "w": 96,
+      "h": 128
+    }
+  },
+  {
+    "name": "building-stage",
+    "batch": 2,
+    "cell": 3,
+    "rect": [
+      1152,
+      0,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 750,
+      "y": 748,
+      "w": 96,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-stone-pile",
+    "batch": 2,
+    "cell": 4,
+    "rect": [
+      0,
+      384,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 198,
+      "y": 1042,
+      "w": 64,
+      "h": 64
+    }
+  },
+  {
+    "name": "building-stone-yard",
+    "batch": 2,
+    "cell": 5,
+    "rect": [
+      384,
+      384,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 324,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    }
+  },
+  {
+    "name": "building-storehouse",
+    "batch": 2,
+    "cell": 6,
+    "rect": [
+      768,
+      384,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 0,
+      "y": 552,
+      "w": 128,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-tavern",
+    "batch": 2,
+    "cell": 7,
+    "rect": [
+      1152,
+      384,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 454,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    }
+  },
+  {
+    "name": "building-town-hall",
+    "batch": 2,
+    "cell": 8,
+    "rect": [
+      0,
+      768,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 162,
+      "y": 0,
+      "w": 160,
+      "h": 160
+    }
+  },
+  {
+    "name": "building-treasury",
+    "batch": 2,
+    "cell": 9,
+    "rect": [
+      384,
+      768,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 848,
+      "y": 748,
+      "w": 96,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-wood-pile",
+    "batch": 2,
+    "cell": 10,
+    "rect": [
+      768,
+      768,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 264,
+      "y": 1042,
+      "w": 64,
+      "h": 64
+    }
+  },
+  {
+    "name": "building-woodyard",
+    "batch": 2,
+    "cell": 11,
+    "rect": [
+      1152,
+      768,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 130,
+      "y": 552,
+      "w": 128,
+      "h": 96
+    }
+  },
+  {
+    "name": "building-workshop",
+    "batch": 2,
+    "cell": 12,
+    "rect": [
+      0,
+      1152,
+      384,
+      384
+    ],
+    "sourceFrame": {
+      "x": 260,
+      "y": 552,
+      "w": 128,
+      "h": 96
+    }
+  }
+]

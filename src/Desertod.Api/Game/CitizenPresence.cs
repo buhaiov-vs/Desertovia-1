@@ -81,6 +81,15 @@ public sealed class CitizenPresence(TimeProvider time)
         }
     }
 
+    public bool IsVillagePresent(string slug)
+    {
+        lock (gate)
+        {
+            var now = time.GetUtcNow();
+            return citizens.Values.Any(entry => string.Equals(entry.Slug, slug, StringComparison.OrdinalIgnoreCase) && IsPresent(entry, now));
+        }
+    }
+
     /// <summary>Citizens who went away since the last call, each reported once until they come back.</summary>
     public IReadOnlyList<(string Slug, Guid CitizenId)> TakeDeparted()
     {

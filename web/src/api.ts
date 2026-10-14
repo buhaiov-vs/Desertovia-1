@@ -1160,6 +1160,7 @@ export interface ChatMessage {
   /** Null when the Tsar wrote it. */
   citizenId: string | null
   isTsar: boolean
+  isChaplain?: boolean
   text: string
   sentAt: string
 }

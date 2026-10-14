@@ -1,0 +1,17 @@
+{
+  "buildings": 26,
+  "individual_night_files": 26,
+  "all_night_files_rgba": true,
+  "all_cells_have_content_and_transparent_background": true,
+  "no_visible_content_clipped_at_cell_edges": true,
+  "sources": [
+    {
+      "file": "exec-a8bfcdb7-94d9-4999-8253-a667bbee9257.png",
+      "sha256": "ec8ddceb450c53c807378bcad1cfd6210ffe89aa70543b2632f8b2b037d122c4"
+    },
+    {
+      "file": "exec-acc108dc-c777-426f-b1c6-b6e4acd2b4b9.png",
+      "sha256": "d90e05c597f165acf522f1ac31dcc1bad4f4d31543afb158bc204c63edf79efa"
+    }
+  ]
+}

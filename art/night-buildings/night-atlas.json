@@ -1,0 +1,1242 @@
+{
+  "frames": {
+    "building-bakery-night": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-barracks-night": {
+      "frame": {
+        "x": 384,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-bell-tower-night": {
+      "frame": {
+        "x": 768,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-drying-rack-night": {
+      "frame": {
+        "x": 1152,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-farm-night": {
+      "frame": {
+        "x": 0,
+        "y": 384,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-granary-night": {
+      "frame": {
+        "x": 384,
+        "y": 384,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-great-granary-night": {
+      "frame": {
+        "x": 768,
+        "y": 384,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-heap-night": {
+      "frame": {
+        "x": 1152,
+        "y": 384,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-hut-night": {
+      "frame": {
+        "x": 0,
+        "y": 768,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-lean-to-night": {
+      "frame": {
+        "x": 384,
+        "y": 768,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-library-night": {
+      "frame": {
+        "x": 768,
+        "y": 768,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-market-night": {
+      "frame": {
+        "x": 1152,
+        "y": 768,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-mine-night": {
+      "frame": {
+        "x": 0,
+        "y": 1152,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-monastery-church-night": {
+      "frame": {
+        "x": 384,
+        "y": 1152,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-monk-cell-night": {
+      "frame": {
+        "x": 768,
+        "y": 1152,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-smithy-night": {
+      "frame": {
+        "x": 1152,
+        "y": 1152,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-stage-night": {
+      "frame": {
+        "x": 0,
+        "y": 1536,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-stone-pile-night": {
+      "frame": {
+        "x": 384,
+        "y": 1536,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-stone-yard-night": {
+      "frame": {
+        "x": 768,
+        "y": 1536,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-storehouse-night": {
+      "frame": {
+        "x": 1152,
+        "y": 1536,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-tavern-night": {
+      "frame": {
+        "x": 0,
+        "y": 1920,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-town-hall-night": {
+      "frame": {
+        "x": 384,
+        "y": 1920,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-treasury-night": {
+      "frame": {
+        "x": 768,
+        "y": 1920,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-wood-pile-night": {
+      "frame": {
+        "x": 1152,
+        "y": 1920,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-woodyard-night": {
+      "frame": {
+        "x": 0,
+        "y": 2304,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    },
+    "building-workshop-night": {
+      "frame": {
+        "x": 384,
+        "y": 2304,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      }
+    }
+  },
+  "meta": {
+    "image": "night-atlas.png",
+    "size": {
+      "w": 1536,
+      "h": 2688
+    },
+    "scale": "1"
+  },
+  "status": "prepared_art_not_runtime_integrated",
+  "notes": [
+    "Generated nighttime art; sprite geometry is not pixel-identical to daytime.",
+    "Warm ground glow is baked into transparent PNG.",
+    "Align scale and ground anchors in renderer before switching variants."
+  ],
+  "buildings": [
+    {
+      "name": "building-bakery",
+      "label": "Пекарня",
+      "day": "building-bakery-day.png",
+      "night": "building-bakery-night.png",
+      "nightSize": [
+        314,
+        314
+      ],
+      "nightContentBounds": [
+        31,
+        23,
+        231,
+        273
+      ],
+      "sourceFrame": {
+        "x": 260,
+        "y": 748,
+        "w": 96,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        0,
+        0,
+        314,
+        314
+      ]
+    },
+    {
+      "name": "building-barracks",
+      "label": "Казармы",
+      "day": "building-barracks-day.png",
+      "night": "building-barracks-night.png",
+      "nightSize": [
+        313,
+        314
+      ],
+      "nightContentBounds": [
+        21,
+        43,
+        301,
+        296
+      ],
+      "sourceFrame": {
+        "x": 0,
+        "y": 0,
+        "w": 160,
+        "h": 160
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        314,
+        0,
+        627,
+        314
+      ]
+    },
+    {
+      "name": "building-bell-tower",
+      "label": "Колокольня",
+      "day": "building-bell-tower-day.png",
+      "night": "building-bell-tower-night.png",
+      "nightSize": [
+        313,
+        314
+      ],
+      "nightContentBounds": [
+        1,
+        9,
+        313,
+        314
+      ],
+      "sourceFrame": {
+        "x": 780,
+        "y": 162,
+        "w": 96,
+        "h": 128
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        627,
+        0,
+        940,
+        314
+      ]
+    },
+    {
+      "name": "building-drying-rack",
+      "label": "Сушилка",
+      "day": "building-drying-rack-day.png",
+      "night": "building-drying-rack-night.png",
+      "nightSize": [
+        314,
+        314
+      ],
+      "nightContentBounds": [
+        0,
+        17,
+        271,
+        289
+      ],
+      "sourceFrame": {
+        "x": 882,
+        "y": 944,
+        "w": 64,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        940,
+        0,
+        1254,
+        314
+      ]
+    },
+    {
+      "name": "building-farm",
+      "label": "Ферма",
+      "day": "building-farm-day.png",
+      "night": "building-farm-night.png",
+      "nightSize": [
+        314,
+        313
+      ],
+      "nightContentBounds": [
+        41,
+        47,
+        298,
+        303
+      ],
+      "sourceFrame": {
+        "x": 358,
+        "y": 748,
+        "w": 96,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        0,
+        314,
+        314,
+        627
+      ]
+    },
+    {
+      "name": "building-granary",
+      "label": "Амбар",
+      "day": "building-granary-day.png",
+      "night": "building-granary-night.png",
+      "nightSize": [
+        313,
+        313
+      ],
+      "nightContentBounds": [
+        57,
+        47,
+        291,
+        285
+      ],
+      "sourceFrame": {
+        "x": 878,
+        "y": 162,
+        "w": 96,
+        "h": 128
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        314,
+        314,
+        627,
+        627
+      ]
+    },
+    {
+      "name": "building-great-granary",
+      "label": "Большой амбар",
+      "day": "building-great-granary-day.png",
+      "night": "building-great-granary-night.png",
+      "nightSize": [
+        313,
+        313
+      ],
+      "nightContentBounds": [
+        3,
+        0,
+        300,
+        305
+      ],
+      "sourceFrame": {
+        "x": 686,
+        "y": 422,
+        "w": 128,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        627,
+        314,
+        940,
+        627
+      ]
+    },
+    {
+      "name": "building-heap",
+      "label": "Открытый склад",
+      "day": "building-heap-day.png",
+      "night": "building-heap-night.png",
+      "nightSize": [
+        314,
+        313
+      ],
+      "nightContentBounds": [
+        42,
+        16,
+        300,
+        291
+      ],
+      "sourceFrame": {
+        "x": 66,
+        "y": 1042,
+        "w": 64,
+        "h": 64
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        940,
+        314,
+        1254,
+        627
+      ]
+    },
+    {
+      "name": "building-hut",
+      "label": "Хижина",
+      "day": "building-hut-day.png",
+      "night": "building-hut-night.png",
+      "nightSize": [
+        314,
+        313
+      ],
+      "nightContentBounds": [
+        17,
+        7,
+        314,
+        313
+      ],
+      "sourceFrame": {
+        "x": 456,
+        "y": 748,
+        "w": 96,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        0,
+        627,
+        314,
+        940
+      ]
+    },
+    {
+      "name": "building-lean-to",
+      "label": "Шалаш",
+      "day": "building-lean-to-day.png",
+      "night": "building-lean-to-night.png",
+      "nightSize": [
+        313,
+        313
+      ],
+      "nightContentBounds": [
+        0,
+        23,
+        313,
+        306
+      ],
+      "sourceFrame": {
+        "x": 132,
+        "y": 1042,
+        "w": 64,
+        "h": 64
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        314,
+        627,
+        627,
+        940
+      ]
+    },
+    {
+      "name": "building-library",
+      "label": "Библиотека",
+      "day": "building-library-day.png",
+      "night": "building-library-night.png",
+      "nightSize": [
+        313,
+        313
+      ],
+      "nightContentBounds": [
+        1,
+        28,
+        308,
+        313
+      ],
+      "sourceFrame": {
+        "x": 0,
+        "y": 292,
+        "w": 96,
+        "h": 128
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        627,
+        627,
+        940,
+        940
+      ]
+    },
+    {
+      "name": "building-market",
+      "label": "Рынок",
+      "day": "building-market-day.png",
+      "night": "building-market-night.png",
+      "nightSize": [
+        314,
+        313
+      ],
+      "nightContentBounds": [
+        1,
+        4,
+        294,
+        313
+      ],
+      "sourceFrame": {
+        "x": 816,
+        "y": 422,
+        "w": 128,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        940,
+        627,
+        1254,
+        940
+      ]
+    },
+    {
+      "name": "building-mine",
+      "label": "Шахта",
+      "day": "building-mine-day.png",
+      "night": "building-mine-night.png",
+      "nightSize": [
+        314,
+        314
+      ],
+      "nightContentBounds": [
+        0,
+        0,
+        314,
+        314
+      ],
+      "sourceFrame": {
+        "x": 554,
+        "y": 748,
+        "w": 96,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-1.png",
+      "sourceCellRect": [
+        0,
+        940,
+        314,
+        1254
+      ]
+    },
+    {
+      "name": "building-monastery-church",
+      "label": "Монастырская церковь",
+      "day": "building-monastery-church-day.png",
+      "night": "building-monastery-church-night.png",
+      "nightSize": [
+        314,
+        314
+      ],
+      "nightContentBounds": [
+        0,
+        0,
+        314,
+        300
+      ],
+      "sourceFrame": {
+        "x": 98,
+        "y": 292,
+        "w": 96,
+        "h": 128
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        0,
+        0,
+        314,
+        314
+      ]
+    },
+    {
+      "name": "building-monk-cell",
+      "label": "Келья",
+      "day": "building-monk-cell-day.png",
+      "night": "building-monk-cell-night.png",
+      "nightSize": [
+        313,
+        314
+      ],
+      "nightContentBounds": [
+        0,
+        17,
+        305,
+        314
+      ],
+      "sourceFrame": {
+        "x": 652,
+        "y": 748,
+        "w": 96,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        314,
+        0,
+        627,
+        314
+      ]
+    },
+    {
+      "name": "building-smithy",
+      "label": "Кузница",
+      "day": "building-smithy-day.png",
+      "night": "building-smithy-night.png",
+      "nightSize": [
+        313,
+        314
+      ],
+      "nightContentBounds": [
+        9,
+        23,
+        312,
+        300
+      ],
+      "sourceFrame": {
+        "x": 196,
+        "y": 292,
+        "w": 96,
+        "h": 128
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        627,
+        0,
+        940,
+        314
+      ]
+    },
+    {
+      "name": "building-stage",
+      "label": "Сцена",
+      "day": "building-stage-day.png",
+      "night": "building-stage-night.png",
+      "nightSize": [
+        314,
+        314
+      ],
+      "nightContentBounds": [
+        7,
+        71,
+        260,
+        314
+      ],
+      "sourceFrame": {
+        "x": 750,
+        "y": 748,
+        "w": 96,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        940,
+        0,
+        1254,
+        314
+      ]
+    },
+    {
+      "name": "building-stone-pile",
+      "label": "Куча камня",
+      "day": "building-stone-pile-day.png",
+      "night": "building-stone-pile-night.png",
+      "nightSize": [
+        314,
+        313
+      ],
+      "nightContentBounds": [
+        80,
+        48,
+        289,
+        297
+      ],
+      "sourceFrame": {
+        "x": 198,
+        "y": 1042,
+        "w": 64,
+        "h": 64
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        0,
+        314,
+        314,
+        627
+      ]
+    },
+    {
+      "name": "building-stone-yard",
+      "label": "Каменный склад",
+      "day": "building-stone-yard-day.png",
+      "night": "building-stone-yard-night.png",
+      "nightSize": [
+        313,
+        313
+      ],
+      "nightContentBounds": [
+        6,
+        0,
+        311,
+        313
+      ],
+      "sourceFrame": {
+        "x": 324,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        314,
+        314,
+        627,
+        627
+      ]
+    },
+    {
+      "name": "building-storehouse",
+      "label": "Общий склад",
+      "day": "building-storehouse-day.png",
+      "night": "building-storehouse-night.png",
+      "nightSize": [
+        313,
+        313
+      ],
+      "nightContentBounds": [
+        1,
+        6,
+        313,
+        281
+      ],
+      "sourceFrame": {
+        "x": 0,
+        "y": 552,
+        "w": 128,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        627,
+        314,
+        940,
+        627
+      ]
+    },
+    {
+      "name": "building-tavern",
+      "label": "Таверна",
+      "day": "building-tavern-day.png",
+      "night": "building-tavern-night.png",
+      "nightSize": [
+        314,
+        313
+      ],
+      "nightContentBounds": [
+        0,
+        0,
+        290,
+        313
+      ],
+      "sourceFrame": {
+        "x": 454,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        940,
+        314,
+        1254,
+        627
+      ]
+    },
+    {
+      "name": "building-town-hall",
+      "label": "Ратуша",
+      "day": "building-town-hall-day.png",
+      "night": "building-town-hall-night.png",
+      "nightSize": [
+        314,
+        364
+      ],
+      "nightContentBounds": [
+        15,
+        22,
+        314,
+        364
+      ],
+      "sourceFrame": {
+        "x": 162,
+        "y": 0,
+        "w": 160,
+        "h": 160
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        0,
+        627,
+        314,
+        991
+      ]
+    },
+    {
+      "name": "building-treasury",
+      "label": "Казна",
+      "day": "building-treasury-day.png",
+      "night": "building-treasury-night.png",
+      "nightSize": [
+        313,
+        313
+      ],
+      "nightContentBounds": [
+        0,
+        0,
+        313,
+        313
+      ],
+      "sourceFrame": {
+        "x": 848,
+        "y": 748,
+        "w": 96,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        314,
+        627,
+        627,
+        940
+      ]
+    },
+    {
+      "name": "building-wood-pile",
+      "label": "Куча дерева",
+      "day": "building-wood-pile-day.png",
+      "night": "building-wood-pile-night.png",
+      "nightSize": [
+        313,
+        313
+      ],
+      "nightContentBounds": [
+        0,
+        3,
+        313,
+        313
+      ],
+      "sourceFrame": {
+        "x": 264,
+        "y": 1042,
+        "w": 64,
+        "h": 64
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        627,
+        627,
+        940,
+        940
+      ]
+    },
+    {
+      "name": "building-woodyard",
+      "label": "Склад дерева",
+      "day": "building-woodyard-day.png",
+      "night": "building-woodyard-night.png",
+      "nightSize": [
+        314,
+        313
+      ],
+      "nightContentBounds": [
+        0,
+        7,
+        282,
+        313
+      ],
+      "sourceFrame": {
+        "x": 130,
+        "y": 552,
+        "w": 128,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        940,
+        627,
+        1254,
+        940
+      ]
+    },
+    {
+      "name": "building-workshop",
+      "label": "Мастерская",
+      "day": "building-workshop-day.png",
+      "night": "building-workshop-night.png",
+      "nightSize": [
+        314,
+        263
+      ],
+      "nightContentBounds": [
+        0,
+        0,
+        304,
+        220
+      ],
+      "sourceFrame": {
+        "x": 260,
+        "y": 552,
+        "w": 128,
+        "h": 96
+      },
+      "sourceSheet": "night-sheet-2.png",
+      "sourceCellRect": [
+        0,
+        991,
+        314,
+        1254
+      ]
+    }
+  ]
+}

@@ -418,5 +418,25 @@
       "P1 energy slow-work/collapse and existing drinks adaptation",
       "P2 shared duel hospital and existing healing tariffs"
     ]
+  },
+  "hospital_plan": {
+    "decision": "D-025",
+    "document": "HOSPITAL_PLAN.md",
+    "state": "plan_and_art_proposal_prepared",
+    "branch": "docs/hospital-plan",
+    "game_code_changed": false,
+    "live_changed": false,
+    "payment_operations_executed": false,
+    "art": "art/hospital-proposal",
+    "draft_frames": 2,
+    "dedicated_hospital_asset_found": false,
+    "existing_native_injuries_found": true,
+    "existing_bot_hospital_found": true,
+    "checks": [
+      "source code comparison: native Remedy and external duel hospital",
+      "saved generated source + exact2 frame crops, alpha/bounds/SHA manifest",
+      "docs links/JSON and AGENTS/CLAUDE synchronization"
+    ],
+    "next_stage": "external status synchronization and existing treatment link, before embedded payment"
   }
 }

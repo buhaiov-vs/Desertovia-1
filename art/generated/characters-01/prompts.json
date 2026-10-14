@@ -1,0 +1,38 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-citizen-male-2",
+      "subject": "Bearded Slavic peasant man with shoulder-length hair, sleeveless vest over a shirt, trousers tucked into foot wraps.",
+      "width": 16,
+      "height": 16,
+      "prompt": "Generate ONE tiny pixel-art character sprite for a cozy medieval Slavic village game. References 1 and 2 are style guides only: match Kenney Tiny Town/Tiny Farm chunky minimal pixel clusters, simple shapes and warm colors. Transparent background. South-facing standing character viewed slightly from above, arms at sides, no tools or ground or shadow. CRITICAL: design on a logical 16x16 grid, enlarged with nearest neighbor; character only 14 logical pixels tall, feet at bottom row, horizontally centered. Every logical pixel a large flat square; extremely simple face and silhouette, not a detailed illustration. At most 2-3 flat shades per material. EXACT recolor palette: skin #f7c282 light and #e19a65 shade; hair including beard #bd6c4a light and #763b36 dark; clothing #c0cbdc light, #8b9bb4 middle, #52607c dark. Use those exact solid RGB colors only in their respective regions. Small shoes can be earthy tan. No gradients, antialiasing, texture, subpixel detail, black outlines, lettering, borders, scenery, additional characters. Bearded Slavic peasant man with shoulder-length hair, sleeveless vest over a shirt, trousers tucked into foot wraps.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-3",
+      "subject": "Stocky Slavic workman with short hair and thick beard, sleeves rolled up exposing forearms, broad leather work apron rendered in clothes recolor colors.",
+      "width": 16,
+      "height": 16,
+      "prompt": "Generate ONE tiny pixel-art character sprite for a cozy medieval Slavic village game. References 1 and 2 are style guides only: match Kenney Tiny Town/Tiny Farm chunky minimal pixel clusters, simple shapes and warm colors. Transparent background. South-facing standing character viewed slightly from above, arms at sides, no tools or ground or shadow. CRITICAL: design on a logical 16x16 grid, enlarged with nearest neighbor; character only 14 logical pixels tall, feet at bottom row, horizontally centered. Every logical pixel a large flat square; extremely simple face and silhouette, not a detailed illustration. At most 2-3 flat shades per material. EXACT recolor palette: skin #f7c282 light and #e19a65 shade; hair including beard #bd6c4a light and #763b36 dark; clothing #c0cbdc light, #8b9bb4 middle, #52607c dark. Use those exact solid RGB colors only in their respective regions. Small shoes can be earthy tan. No gradients, antialiasing, texture, subpixel detail, black outlines, lettering, borders, scenery, additional characters. Stocky Slavic workman with short hair and thick beard, sleeves rolled up exposing forearms, broad leather work apron rendered in clothes recolor colors.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-female-1",
+      "subject": "Young Slavic peasant woman with a long braid over her shoulder, sarafan dress over a light blouse. Blouse uses light clothing recolor color, dress uses middle and dark clothing recolor colors.",
+      "width": 16,
+      "height": 16,
+      "prompt": "Generate ONE tiny pixel-art character sprite for a cozy medieval Slavic village game. References 1 and 2 are style guides only: match Kenney Tiny Town/Tiny Farm chunky minimal pixel clusters, simple shapes and warm colors. Transparent background. South-facing standing character viewed slightly from above, arms at sides, no tools or ground or shadow. CRITICAL: design on a logical 16x16 grid, enlarged with nearest neighbor; character only 14 logical pixels tall, feet at bottom row, horizontally centered. Every logical pixel a large flat square; extremely simple face and silhouette, not a detailed illustration. At most 2-3 flat shades per material. EXACT recolor palette: skin #f7c282 light and #e19a65 shade; hair including beard #bd6c4a light and #763b36 dark; clothing #c0cbdc light, #8b9bb4 middle, #52607c dark. Use those exact solid RGB colors only in their respective regions. Small shoes can be earthy tan. No gradients, antialiasing, texture, subpixel detail, black outlines, lettering, borders, scenery, additional characters. Young Slavic peasant woman with a long braid over her shoulder, sarafan dress over a light blouse. Blouse uses light clothing recolor color, dress uses middle and dark clothing recolor colors.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

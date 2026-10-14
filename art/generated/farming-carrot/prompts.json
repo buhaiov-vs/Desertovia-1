@@ -1,0 +1,46 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-carrot-sprout",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single sprite for medieval Slavic village farming game. Two tiny thin feathery carrot seedlings centered, occupying 5x4 logical pixels. Green shoots only, no orange root. Strict 16x16 logical pixel art enlarged to square canvas: each logical pixel a large solid square. Extremely simple readable silhouette like reference crops. At most three flat green colors and three flat orange colors. Top left lighting, south-facing top-down three-quarter view. Fully transparent around subject, no soil, shadow, pot, backdrop or scenery. No antialiasing, gradients, haze, glowing edges, neon colors, tiny veins, text, panels or multiple separate sprites."
+    },
+    {
+      "name": "prop-carrot-young",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single sprite for medieval Slavic village farming game. Small bushy tuft of feathery bright-green carrot leaves centered, occupying 8x8 logical pixels. Green tops only, no root. Strict 16x16 logical pixel art enlarged to square canvas: each logical pixel a large solid square. Extremely simple readable silhouette like reference crops. At most three flat green colors and three flat orange colors. Top left lighting, south-facing top-down three-quarter view. Fully transparent around subject, no soil, shadow, pot, backdrop or scenery. No antialiasing, gradients, haze, glowing edges, neon colors, tiny veins, text, panels or multiple separate sprites."
+    },
+    {
+      "name": "prop-carrot-ripe",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single sprite for medieval Slavic village farming game. Tall feathery green carrot tops with a small orange carrot shoulder visible at base. Root remains buried, no long orange root. Centered, about 11x12 logical pixels. Strict 16x16 logical pixel art enlarged to square canvas: each logical pixel a large solid square. Extremely simple readable silhouette like reference crops. At most three flat green colors and three flat orange colors. Top left lighting, south-facing top-down three-quarter view. Fully transparent around subject, no soil, shadow, pot, backdrop or scenery. No antialiasing, gradients, haze, glowing edges, neon colors, tiny veins, text, panels or multiple separate sprites."
+    },
+    {
+      "name": "icon-carrot-harvested",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single sprite for medieval Slavic village farming game. One orange carrot lying diagonally from lower-left pointed root to upper-right feathery green top. Whole pulled carrot visible. Centered, 14x14 logical pixel silhouette with one pixel margin. Strict 16x16 logical pixel art enlarged to square canvas: each logical pixel a large solid square. Extremely simple readable silhouette like reference crops. At most three flat green colors and three flat orange colors. Top left lighting, south-facing top-down three-quarter view. Fully transparent around subject, no soil, shadow, pot, backdrop or scenery. No antialiasing, gradients, haze, glowing edges, neon colors, tiny veins, text, panels or multiple separate sprites."
+    }
+  ]
+}

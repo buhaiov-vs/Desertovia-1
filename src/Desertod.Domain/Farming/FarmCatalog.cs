@@ -11,10 +11,10 @@ public enum CropKind
     Rye,
 }
 
-/// <param name="Endurance">Endurance level needed to sow it; Endurance is the farming skill.</param>
+/// <param name="SkillLevel">Farming level needed to sow it.</param>
 /// <param name="GrowHours">Time to ripen in a bed that is kept watered.</param>
 /// <param name="Harvest">Goods of a ripe bed at a stat factor of 1.</param>
-public sealed record CropDefinition(CropKind Kind, string Name, int Endurance, double GrowHours, IReadOnlyList<ResourceAmount> Harvest);
+public sealed record CropDefinition(CropKind Kind, string Name, int SkillLevel, double GrowHours, IReadOnlyList<ResourceAmount> Harvest);
 
 public static class FarmCatalog
 {

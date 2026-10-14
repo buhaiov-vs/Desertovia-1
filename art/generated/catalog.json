@@ -1,0 +1,4121 @@
+[
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Wood",
+    "description": "Bundle of logs and sticks. Gathered in the forest; the main building material; sawn into planks.",
+    "prompt": "16×16 item icon: three short chopped logs stacked in a small pyramid, light end grain rings visible on the front, brown bark.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "samples/item-wood.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Stone",
+    "description": "Pile of rough grey stones. Gathered on the hillside; foundations, walls, monument, bridge.",
+    "prompt": "16×16 item icon: small pile of three rough grey field stones, one large in front and two smaller behind.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-02/item-stone.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Food",
+    "description": "Basket of berries, meat and vegetables. Eaten by citizens; produced by foraging, hunting, fishing, farming, baking.",
+    "prompt": "16×16 item icon: small woven bast basket filled with red berries, a turnip and a piece of meat.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-02/item-food.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Coal",
+    "description": "Black lumps of coal. Mined; burned in the smithy to smelt iron and forge chains.",
+    "prompt": "16×16 item icon: three angular lumps of coal, very dark blue-grey with small light glints on the edges.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-02/item-coal.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Iron ore",
+    "description": "Rusty-brown rock with metal flecks. Mined; smelted into iron ingots.",
+    "prompt": "16×16 item icon: one chunky rust-brown rock with grey metallic flecks and orange rust spots.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-02/item-iron-ore.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Iron ingot",
+    "description": "Grey metal bar. Smelted at the smithy; used for chains, mechanisms and deliveries.",
+    "prompt": "16×16 item icon: two trapezoid iron bars stacked crosswise, cool grey with a bright top edge.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-02/item-iron-ingot.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Planks",
+    "description": "Stack of sawn boards. Made at the workshop; floors, stage, storehouse, library.",
+    "prompt": "16×16 item icon: neat stack of four sawn light-brown boards seen from the side, straight edges, visible wood grain lines.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-02/item-planks.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Leather",
+    "description": "Tanned animal hide. From hunting; hung as the hut's door; stored in the storehouse.",
+    "prompt": "16×16 item icon: stretched tanned hide in the classic animal-skin shape, tan with darker edges.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-leather.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Gold",
+    "description": "Gold nuggets or coins. Dug from the vein over the bridge, mined, or a rare expedition find; pays for the bell tower.",
+    "prompt": "16×16 item icon: three shiny lumpy gold nuggets with one bright white highlight pixel each.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-gold.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Chain",
+    "description": "Coil of iron chain. Forged by a master smith from iron and coal.",
+    "prompt": "16×16 item icon: short iron chain of five oval links lying in an S curve, grey with light highlights.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-chain.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Mechanism",
+    "description": "Wooden gears and an iron axle. Built by an artisan from planks and iron.",
+    "prompt": "16×16 item icon: one large wooden cog wheel meshing with a small iron cog on an iron axle.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-mechanism.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Remedy",
+    "description": "Small clay bottle of herbal medicine. Brewed by an alchemist at the library.",
+    "prompt": "16×16 item icon: small round clay bottle with a cork, a green herb leaf tied to its neck with string.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-remedy.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Research points",
+    "description": "Knowledge: a birch-bark scroll with carved signs. Not a physical good, never stored; spent on discoveries.",
+    "prompt": "16×16 item icon: curled white birch-bark scroll with dark scratched symbols and a small glowing yellow spark above it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-research-points.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Reeds",
+    "description": "Bundle of cut river reeds (cattails). Cover for lean-tos and racks, thatch for roofs.",
+    "prompt": "16×16 item icon: bundle of long green-yellow reeds with brown cattail heads, tied in the middle with twine.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-reeds.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Feathers",
+    "description": "A few bird feathers. From hunting birds; meant for arrows later.",
+    "prompt": "16×16 item icon: three crossed bird feathers, brown and grey with white tips.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-feathers.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Flax",
+    "description": "Bundle of flax stalks with blue flowers. Grown on the farm; stored on the drying rack and in the storehouse.",
+    "prompt": "16×16 item icon: bundle of thin straw-colored flax stalks tied at the middle, small light-blue flowers at the top.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-flax.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Grain",
+    "description": "Sack or sheaf of rye grain. Grown on the farm; baked into bread, brewed into vigor drinks.",
+    "prompt": "16×16 item icon: small burlap sack tied at the top, spilling golden rye grains, one rye ear sticking out.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-grain.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "1-Resources (18)",
+    "kind": "item",
+    "name": "Vigor drink",
+    "description": "Clay mug or bottle of fizzy kvass \"like a thunderstorm\". Brewed at the tavern; gives energy back.",
+    "prompt": "16×16 item icon: wooden mug of dark brown kvass with white foam, a small yellow lightning bolt beside it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "resources-03/item-vigor-drink.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Heap",
+    "description": "A fenced patch of ground with a messy pile of any goods; four short posts at the corners. First storage of the wild age.",
+    "prompt": "32×32 building (footprint 2×2 tiles): patch of bare trampled earth with four short wooden posts at the corners joined by a low rope, an untidy pile of logs, stones and a basket in the middle.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-01/building-heap.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Lean-to",
+    "description": "Poles and reeds against the wind; two people sleep under it.",
+    "prompt": "32×32 building (footprint 2×2 tiles): primitive lean-to shelter, long wooden poles slanted from the ground on the left up to a crossbar on two forked posts on the right, covered with bundles of yellow reeds, open front with two straw bedrolls inside.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-01/building-lean-to.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Wood pile",
+    "description": "Stacked wood stays dry and does not crowd the heap.",
+    "prompt": "32×32 building (footprint 2×2 tiles): neat stack of split firewood logs between two pairs of upright stakes, end grain facing the viewer, a chopping block with an axe in front.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-01/building-wood-pile.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Stone pile",
+    "description": "A ring of stones that holds more stones.",
+    "prompt": "32×32 building (footprint 2×2 tiles): low ring of large grey boulders enclosing a heap of smaller grey stones.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-01/building-stone-pile.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Drying rack",
+    "description": "Meat and berries dry here instead of rotting in the heap.",
+    "prompt": "32×48 building (footprint 2×2 tiles, poles rise 1 tile above): wooden drying rack of two posts and a crossbar under a small reed roof, strips of red meat, a tan hide and bunches of berries hanging from it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-drying-rack.png",
+    "width": 32,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Hut",
+    "description": "The first real house: stone base, timber frame, clay walls, thatched roof. Four people sleep well here.",
+    "prompt": "48×48 building (footprint 3×3 tiles): small Slavic peasant hut, low grey stone base, whitewashed clay walls between dark timber beams, thick golden thatched roof, hide hanging in the doorway, one small window.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "samples/building-hut.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Town Hall",
+    "description": "Main village hall that stores any goods; cream gable with a round window, banners by an arched door.",
+    "prompt": "80×80 building (footprint 5×4 tiles, roof rises 1 tile above): large two-storey log hall (terem) with a steep wooden shingle roof, carved wooden gable trim with a round window, wide arched double door, two red banners beside it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-town-hall.png",
+    "width": 80,
+    "height": 80
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Woodyard",
+    "description": "A roofed yard for wood, planks and reeds.",
+    "prompt": "64×48 building (footprint 4×3 tiles): long open-sided timber shed on four posts under a long brown shingle roof, stacks of logs, planks and reed bundles under it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-woodyard.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Stone yard",
+    "description": "Walled yard for stone, ore and coal.",
+    "prompt": "64×64 building (footprint 4×4 tiles): walled yard of dry-stacked grey stone with a wide dark gateway in the front, piles of stone, rust ore and black coal visible inside, small thatched lean roof at the back.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-stone-yard.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Granary",
+    "description": "Raised floor and thick walls keep food from mice and rot.",
+    "prompt": "48×64 building (footprint 3×3 tiles, roof rises 1 tile above): log granary standing on short stone stilts, small door reached by a plank ramp, thatched roof, grain sacks leaning by the ramp.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-granary.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Storehouse",
+    "description": "Shelves for iron, leather and finer goods.",
+    "prompt": "64×48 building (footprint 4×3 tiles): long sturdy plank storehouse with a shingle roof and a wide double door with iron hinges, crates and a barrel outside.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-storehouse.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Treasury",
+    "description": "A strong room for gold. Needs a later age.",
+    "prompt": "48×48 building (footprint 3×3 tiles): small squat stone building with thick walls, a grey slate roof, a heavy iron-barred door with a big lock, a glint of gold through a tiny barred window.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-treasury.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Farm",
+    "description": "Fields to tend.",
+    "prompt": "48×48 building (footprint 3×3 tiles): three horizontal rows of dry ploughed brown soil beds separated by narrow grass paths, a low wattle fence along the edges, no plants (crops are drawn on top).",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-farm.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Mine",
+    "description": "A shaft for coal, ore and gold.",
+    "prompt": "48×48 building (footprint 3×3 tiles): dark mine entrance cut into a grey rocky hillside, framed by thick timber supports, wooden rails coming out with a small ore cart, a pile of ore beside it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-mine.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Smithy",
+    "description": "Forge for iron and chains.",
+    "prompt": "48×64 building (footprint 3×3 tiles, chimney rises 1 tile above): stone-and-timber smithy with an open front, a glowing orange forge and stone chimney inside, an anvil on a stump in front, grey shingle roof.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-smithy.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Workshop",
+    "description": "Saws planks and builds mechanisms.",
+    "prompt": "64×48 building (footprint 4×3 tiles): long plank workshop with a long cream-brown roof, a sawhorse with a log and a saw in front, a crate of tools, a small window.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-workshop.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Library",
+    "description": "Chronicles, research and remedies.",
+    "prompt": "48×64 building (footprint 3×3 tiles, roof rises 1 tile above): tall narrow stone building with a steep roof, tall arched windows, a round rose window in the gable, a small wooden cross-shaped finial.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-library.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Tavern",
+    "description": "Talk and rest.",
+    "prompt": "64×64 building (footprint 4×3 tiles, roof rises 1 tile above): big cozy log tavern with a long orange-brown roof, warm lit window, a barrel of kvass and a bench by the door, a hanging mug sign.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-tavern.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Bakery",
+    "description": "A clay oven under a roof. Grain goes in, bread comes out.",
+    "prompt": "48×48 building (footprint 3×3 tiles): open-fronted timber shelter on a stone base over a large domed clay oven with a glowing mouth, a flour sack and a tray of round loaves beside it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-bakery.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Stage",
+    "description": "Music lifts the spirit.",
+    "prompt": "48×48 building (footprint 3×2 tiles, posts rise 1 tile above): small raised plank stage with two carved wooden posts at the back corners carrying red and gold pennants, a three-step stair in front.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-stage.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Market",
+    "description": "Trade with other villages. Needs a later age.",
+    "prompt": "64×48 building (footprint 4×3 tiles): row of two wooden market stalls with a red-and-white striped awning, goods on the counter (bread, pots, cloth), crates and sacks in front.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-market.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "section": "2-Buildings in the world (22)",
+    "kind": "building",
+    "name": "Barracks",
+    "description": "Guards and patrols. Needs a later age.",
+    "prompt": "80×80 building (footprint 5×4 tiles, towers rise 1 tile above): fortified log barracks with a battlemented palisade top, two war banners, a heavy iron-bound gate, a rack of spears by the door.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "buildings-02/building-barracks.png",
+    "width": 80,
+    "height": 80
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Heap",
+    "description": "Small fenced pile of mixed goods.",
+    "prompt": "16×16 icon: tiny untidy pile of a log, a stone and a sack between two short posts.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-heap.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Lean-to",
+    "description": "Slanted reed shelter.",
+    "prompt": "16×16 icon: small triangular reed-covered lean-to seen from the front.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-lean-to.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Wood pile",
+    "description": "Stacked logs.",
+    "prompt": "16×16 icon: stack of log ends between two upright stakes.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-wood-pile.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Stone pile",
+    "description": "Ring of stones.",
+    "prompt": "16×16 icon: ring of grey boulders around a small heap of stones.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-stone-pile.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Drying rack",
+    "description": "Rack with hanging meat.",
+    "prompt": "16×16 icon: wooden frame with two strips of red meat hanging from the crossbar.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-drying-rack.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Hut",
+    "description": "Small thatched house.",
+    "prompt": "16×16 icon: tiny whitewashed hut with a thick golden thatched roof and a dark door.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-hut.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Town Hall",
+    "description": "Hall with banners.",
+    "prompt": "16×16 icon: log hall with a steep roof and a small red banner on top.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-town-hall.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Woodyard",
+    "description": "Shed with logs under a roof.",
+    "prompt": "16×16 icon: open shed roof on two posts over a stack of logs.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-woodyard.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Stone yard",
+    "description": "Walled yard with stones.",
+    "prompt": "16×16 icon: low grey stone wall with a gateway and stones behind it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-stone-yard.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Granary",
+    "description": "Raised barn with grain sacks.",
+    "prompt": "16×16 icon: small log barn on stilts with a grain sack in front.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-granary.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Storehouse",
+    "description": "Shelves with crates.",
+    "prompt": "16×16 icon: two stacked wooden crates and a barrel.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-storehouse.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Treasury",
+    "description": "Iron-bound chest of gold.",
+    "prompt": "16×16 icon: open iron-bound wooden chest overflowing with gold.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-treasury.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Farm",
+    "description": "Field with crop rows.",
+    "prompt": "16×16 icon: three green crop rows on brown soil behind a tiny fence.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-farm.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Mine",
+    "description": "Shaft entrance with a cart.",
+    "prompt": "16×16 icon: dark arched mine entrance with timber frame and a tiny ore cart.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-mine.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Smithy",
+    "description": "Anvil with sparks.",
+    "prompt": "16×16 icon: black anvil with a hammer and three orange sparks.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-smithy.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Workshop",
+    "description": "Saw and planks.",
+    "prompt": "16×16 icon: hand saw lying across two planks.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-workshop.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Library",
+    "description": "Book shelf or scroll.",
+    "prompt": "16×16 icon: thick leather-bound chronicle book standing upright with a brass clasp.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-library.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Tavern",
+    "description": "Mug of kvass and a barrel.",
+    "prompt": "16×16 icon: foaming wooden mug in front of a small barrel.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-tavern.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Bakery",
+    "description": "Loaf of bread in an oven.",
+    "prompt": "16×16 icon: domed clay oven with a round golden loaf at its mouth.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-bakery.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Stage",
+    "description": "Gusli on a stage.",
+    "prompt": "16×16 icon: small wing-shaped gusli (Russian zither) on a plank platform with a pennant.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-stage.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Market",
+    "description": "Striped stall awning.",
+    "prompt": "16×16 icon: tiny market stall with a red-and-white striped awning.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-market.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "3-Building icons (22)",
+    "kind": "icon",
+    "name": "Barracks",
+    "description": "Shield and spear.",
+    "prompt": "16×16 icon: round red wooden shield with a spear crossed behind it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "building-icons/icon-building-barracks.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Heap stages (1)",
+    "description": "Ground: cleared patch with sticks.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Heap: cleared earth patch with a few sticks laid at the corners.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Lean-to stages (2)",
+    "description": "Frame: leaning poles. Cover: reeds laid on the poles.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Lean-to. Stage 1 Frame: bare slanted poles on two forked posts. Stage 2 Cover: the same with reed bundles half laid on.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Wood pile stages (1)",
+    "description": "Pile: first logs stacked.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Wood pile: stakes driven in and a first low row of logs.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Stone pile stages (1)",
+    "description": "Ring: stones laid in a ring.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Stone pile: half-closed ring of boulders.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Drying rack stages (2)",
+    "description": "Frame: tied poles. Cover: reed roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Drying rack. Stage 1 Frame: two posts and a tied crossbar. Stage 2 Cover: the frame with a reed roof, nothing hanging yet.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Hut stages (6)",
+    "description": "Ground, Foundation (stone base), Frame (posts and beams), Walls (wattle and daub), Roof (thatch), Finish (hide door).",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Hut. Stage 1 Ground: cleared earth with stakes and string. Stage 2 Foundation: low rectangle of grey stones. Stage 3 Frame: timber posts and beams on the stones. Stage 4 Walls: woven wattle walls half daubed with clay. Stage 5 Roof: rafters half covered with thatch. Stage 6 Finish: complete hut without the hide door.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Woodyard stages (4)",
+    "description": "Ground, Foundation, Frame, Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Woodyard. Stage 1 Ground: cleared earth with stakes. Stage 2 Foundation: stone pads for four posts. Stage 3 Frame: four posts and beams. Stage 4 Roof: half-shingled roof.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Stone yard stages (4)",
+    "description": "Ground, Walls, Frame, Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Stone yard. Stage 1 Ground: cleared earth with stakes. Stage 2 Walls: knee-high stone walls. Stage 3 Frame: posts for the back roof. Stage 4 Roof: half-thatched back roof.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Granary stages (5)",
+    "description": "Ground, Foundation, Frame, Walls, Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Granary. Stage 1 Ground: stakes and string. Stage 2 Foundation: stone stilts. Stage 3 Frame: floor beams and posts on the stilts. Stage 4 Walls: log walls half up. Stage 5 Roof: rafters half thatched.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Storehouse stages (5)",
+    "description": "Ground, Foundation, Frame, Floor (planks), Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Storehouse. Stage 1 Ground: stakes and string. Stage 2 Foundation: stone base. Stage 3 Frame: posts and beams. Stage 4 Floor: plank floor laid inside the frame. Stage 5 Roof: half-shingled roof.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Farm stages (3)",
+    "description": "Ground, Field (ploughed furrows), Fence.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Farm. Stage 1 Ground: grass cleared to bare earth with corner stakes. Stage 2 Field: fresh ploughed furrows. Stage 3 Fence: wattle fence half woven around the furrows.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Bakery stages (4)",
+    "description": "Ground, Foundation, Oven (clay oven), Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Bakery. Stage 1 Ground: stakes and string. Stage 2 Foundation: stone base. Stage 3 Oven: half-built clay dome on the base. Stage 4 Roof: posts and a half-thatched roof over the oven.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Mine stages (3)",
+    "description": "Ground, Shaft (hole in rock), Frame (timber supports).",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Mine. Stage 1 Ground: marked rocky slope. Stage 2 Shaft: rough dark hole dug in the rock with rubble. Stage 3 Frame: first timber supports in the entrance.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Smithy stages (4)",
+    "description": "Ground, Foundation, Forge (stone forge), Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Smithy. Stage 1 Ground: stakes and string. Stage 2 Foundation: stone base. Stage 3 Forge: cold stone forge and chimney stub. Stage 4 Roof: posts and a half-covered roof.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Workshop stages (4)",
+    "description": "Ground, Foundation, Frame, Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Workshop. Stage 1 Ground: stakes and string. Stage 2 Foundation: stone base. Stage 3 Frame: posts and beams. Stage 4 Roof: half-covered roof.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Library stages (5)",
+    "description": "Ground, Foundation, Frame, Floor, Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Library. Stage 1 Ground: stakes and string. Stage 2 Foundation: stone base. Stage 3 Frame: tall posts and beams. Stage 4 Floor: plank floor inside. Stage 5 Roof: steep rafters half covered.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Tavern stages (5)",
+    "description": "Ground, Foundation, Frame, Walls, Roof.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Tavern. Stage 1 Ground: stakes and string. Stage 2 Foundation: stone base. Stage 3 Frame: posts and beams. Stage 4 Walls: log walls half up. Stage 5 Roof: half-thatched roof.",
+    "status": "pending"
+  },
+  {
+    "section": "4-Construction stages (optional, 62)",
+    "kind": "building",
+    "name": "Stage stages (3)",
+    "description": "Ground, Floor (planks), Frame (posts).",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Stage. Stage 1 Ground: stakes and string. Stage 2 Floor: raised plank platform. Stage 3 Frame: back posts without pennants.",
+    "status": "pending"
+  },
+  {
+    "section": "5-Construction props (5)",
+    "kind": "prop",
+    "name": "Survey peg",
+    "description": "Short wooden stake marking a site's corners and lines still to build.",
+    "prompt": "16×16 prop: one short pointed wooden stake driven into the ground with a strip of red cloth tied on top, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "construction-props/prop-survey-peg.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "5-Construction props (5)",
+    "kind": "prop",
+    "name": "Construction signboard",
+    "description": "Small wooden sign on a post: \"work here\". Placed next to every active site and project.",
+    "prompt": "16×16 prop: small blank wooden board nailed to a post with a hammer hanging from a nail, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "construction-props/prop-construction-signboard.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "5-Construction props (5)",
+    "kind": "terrain",
+    "name": "Blueprint ground",
+    "description": "Cleared, trampled earth of a building plot under construction.",
+    "prompt": "16×16 seamless terrain tile: bare trampled light-brown earth with a few wood chips and footprints.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "construction-props/terrain-blueprint-ground.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "5-Construction props (5)",
+    "kind": "prop",
+    "name": "Storage pallet",
+    "description": "Wooden pallet in a storage yard; goods are stacked on it, one pallet per slot.",
+    "prompt": "16×16 prop: low flat wooden pallet of three planks seen from the three-quarter view, empty, occupying the bottom half of the canvas.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "construction-props/prop-storage-pallet.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "5-Construction props (5)",
+    "kind": "effect",
+    "name": "Placement outline",
+    "description": "Outline that follows the pointer while the Tsar or a Governor places a blueprint; yellow with a plus when free, red when blocked.",
+    "prompt": "Keep code-drawn. If drawn as a sprite: 48×64 effect: dashed parchment-yellow rectangle outline with rounded corners and a small plus sign in the middle, semi-transparent fill.",
+    "status": "retained-as-directed"
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "terrain",
+    "name": "Dry bed, left",
+    "description": "Left end of a dry ploughed bed (light soil).",
+    "prompt": "16×16 terrain tile: left end of a raised bed of dry light-brown ploughed soil with horizontal furrows, rounded left edge, grass path above and below. Tiles seamlessly with the middle piece on its right.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-beds/terrain-dry-bed-left.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "terrain",
+    "name": "Dry bed, middle",
+    "description": "Middle of a dry ploughed bed.",
+    "prompt": "16×16 terrain tile: middle of a raised bed of dry light-brown ploughed soil with horizontal furrows, grass path above and below, seamless to the left and right.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-beds/terrain-dry-bed-middle.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "terrain",
+    "name": "Dry bed, right",
+    "description": "Right end of a dry ploughed bed.",
+    "prompt": "16×16 terrain tile: right end of a raised bed of dry light-brown ploughed soil with horizontal furrows, rounded right edge, grass path above and below.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-beds/terrain-dry-bed-right.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "terrain",
+    "name": "Wet bed, left",
+    "description": "Left end of a watered bed (dark soil). Shown while the bed is wet.",
+    "prompt": "16×16 terrain tile: the same shape as the dry bed left end but with dark wet brown soil and two tiny water glints.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-beds/terrain-wet-bed-left.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "terrain",
+    "name": "Wet bed, middle",
+    "description": "Middle of a watered bed.",
+    "prompt": "16×16 terrain tile: the same shape as the dry bed middle but with dark wet brown soil and a tiny water glint.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-beds/terrain-wet-bed-middle.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "terrain",
+    "name": "Wet bed, right",
+    "description": "Right end of a watered bed.",
+    "prompt": "16×16 terrain tile: the same shape as the dry bed right end but with dark wet brown soil and two tiny water glints.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-beds/terrain-wet-bed-right.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Turnip, sprout",
+    "description": "Tiny turnip leaves. Growth below 40%.",
+    "prompt": "16×16 prop: two tiny round green turnip seedling leaves in the center, transparent around them.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-turnip/prop-turnip-sprout.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Turnip, young",
+    "description": "Leafy turnip tops.",
+    "prompt": "16×16 prop: small clump of broad green turnip leaves, transparent around them.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-turnip/prop-turnip-young.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Turnip, ripe",
+    "description": "Big leaves with a purple-white turnip showing.",
+    "prompt": "16×16 prop: big clump of turnip leaves with the round white-and-purple top of a turnip showing at the base.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-turnip/prop-turnip-ripe.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Carrot, sprout",
+    "description": "Tiny feathery carrot leaves.",
+    "prompt": "16×16 prop: two tiny thin feathery carrot seedlings, transparent around them.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-carrot/prop-carrot-sprout.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Carrot, young",
+    "description": "Feathery carrot tops.",
+    "prompt": "16×16 prop: small bushy tuft of feathery bright-green carrot leaves.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-carrot/prop-carrot-young.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Carrot, ripe",
+    "description": "Full tops with orange carrot shoulders showing.",
+    "prompt": "16×16 prop: tall feathery carrot tops with an orange carrot shoulder showing at the base.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-carrot/prop-carrot-ripe.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Cabbage, sprout",
+    "description": "Small round cabbage leaves.",
+    "prompt": "16×16 prop: three tiny round pale-green cabbage leaves.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-cabbage/prop-cabbage-sprout.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Cabbage, young",
+    "description": "Loose cabbage head.",
+    "prompt": "16×16 prop: loose open rosette of pale-green cabbage leaves.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-cabbage/prop-cabbage-young.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Cabbage, ripe",
+    "description": "Big tight green cabbage head.",
+    "prompt": "16×16 prop: big round tight cabbage head with outer leaves spread around it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-cabbage/prop-cabbage-ripe.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Flax, sprout",
+    "description": "Thin green flax shoots.",
+    "prompt": "16×16 prop: a few very thin blue-green flax shoots with narrow leaves.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-flax/prop-flax-sprout.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Flax, young",
+    "description": "Tall thin flax stalks.",
+    "prompt": "16×16 prop: tall slender blue-green flax stalks with tiny narrow leaves, no flowers.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-flax/prop-flax-young.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Flax, ripe",
+    "description": "Flax stalks with small blue flowers.",
+    "prompt": "16×16 prop: tall slender flax stalks topped with small sky-blue five-petal flowers.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-flax/prop-flax-ripe.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Rye, sprout",
+    "description": "Short grass-like rye shoots.",
+    "prompt": "16×16 prop: short bright-green grass-like rye shoots in a row.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-rye/prop-rye-sprout.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Rye, young",
+    "description": "Green rye stalks.",
+    "prompt": "16×16 prop: dense green rye stalks with unripe green ears.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-rye/prop-rye-young.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "prop",
+    "name": "Rye, ripe",
+    "description": "Golden rye with heavy ears.",
+    "prompt": "16×16 prop: dense golden rye stalks with heavy bent ears and long whiskers.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-rye/prop-rye-ripe.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "icon",
+    "name": "Turnip, harvested",
+    "description": "A pulled turnip.",
+    "prompt": "16×16 icon: one pulled turnip, white bottom and purple top, with green leaves.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-turnip/icon-turnip-harvested.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "icon",
+    "name": "Carrot, harvested",
+    "description": "A pulled carrot.",
+    "prompt": "16×16 icon: one orange carrot lying diagonally with green feathery top.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-carrot/icon-carrot-harvested.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "icon",
+    "name": "Cabbage, harvested",
+    "description": "A cabbage head.",
+    "prompt": "16×16 icon: one round pale-green cabbage head.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-cabbage/icon-cabbage-harvested.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "icon",
+    "name": "Flax, harvested",
+    "description": "A bundle of flax.",
+    "prompt": "16×16 icon: small sheaf of cut flax stalks with a few blue flowers.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-flax/icon-flax-harvested.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "6-Farming (26)",
+    "kind": "icon",
+    "name": "Rye, harvested",
+    "description": "A sheaf of rye.",
+    "prompt": "16×16 icon: golden rye sheaf tied with a straw band.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "farming-rye/icon-rye-harvested.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "icon",
+    "name": "Tsar's monument",
+    "description": "Stone statue of the Tsar on a pedestal.",
+    "prompt": "16×16 icon: small grey stone statue of a crowned Tsar with a sceptre on a square pedestal.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-icons-01/icon-tsar-s-monument.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "icon",
+    "name": "Fishing pier",
+    "description": "Planks on poles over water with a fishing rod.",
+    "prompt": "16×16 icon: short plank pier on poles over blue water with a fishing rod leaning on it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-icons-01/icon-fishing-pier.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "icon",
+    "name": "Palisade",
+    "description": "Row of sharpened logs.",
+    "prompt": "16×16 icon: four sharpened upright logs side by side bound with rope.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-icons-01/icon-palisade.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "icon",
+    "name": "Tsar Bridge",
+    "description": "Wooden bridge with railings over a river.",
+    "prompt": "16×16 icon: arched wooden bridge with railings over a blue river.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-icons-02/icon-tsar-bridge.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "icon",
+    "name": "Great Granary",
+    "description": "Large granary with a wide roof.",
+    "prompt": "16×16 icon: wide log granary with a big thatched roof and two grain sacks.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-icons-02/icon-great-granary.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "icon",
+    "name": "Bell Tower",
+    "description": "Tower with a golden onion dome and a bell.",
+    "prompt": "16×16 icon: white bell tower with a golden onion dome and a bronze bell in the open arch.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-icons-02/icon-bell-tower.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Monument pedestal",
+    "description": "Square stone pedestal; the first half of the monument build.",
+    "prompt": "16×16 prop: square grey stone pedestal with a stepped base and a flat top, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-monument/prop-monument-pedestal.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Monument rough block",
+    "description": "Roughly hewn stone block on the pedestal; the monument half built.",
+    "prompt": "16×16 prop: rough uncut grey stone block, chisel marks, roughly the shape of a standing figure, standing on nothing (drawn above the pedestal).",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-monument/prop-monument-rough-block.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Tsar statue",
+    "description": "Grey stone statue of the Tsar with a crown and a sceptre; the finished monument.",
+    "prompt": "16×16 prop: grey stone statue of a bearded Tsar in a long robe, wearing a crown, holding a sceptre, standing on nothing (drawn above the pedestal).",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-monument/prop-tsar-statue.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Pier pole",
+    "description": "Wooden pole standing in the river; pier before the planks.",
+    "prompt": "16×16 prop: two thick wet wooden poles sticking out of water, small ripple rings at their base, transparent elsewhere.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-pier/prop-pier-pole.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Pier deck",
+    "description": "Plank deck tile over water.",
+    "prompt": "16×16 prop: section of plank deck running left to right, three boards with nail dots, pole tops under the front edge, seamless left and right.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-pier/prop-pier-deck.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Palisade stake, vertical",
+    "description": "Sharpened logs along the west wall.",
+    "prompt": "16×16 prop: palisade section running top to bottom, seen from the side: sharpened log tips pointing up, seamless at the top and bottom edges.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-palisade-01/prop-palisade-stake-vertical.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Palisade rail, horizontal",
+    "description": "Sharpened logs along the north and south walls.",
+    "prompt": "16×16 prop: palisade section running left to right: three upright sharpened logs bound by a horizontal rope, seamless at the left and right edges.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-palisade-01/prop-palisade-rail-horizontal.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Palisade corner, north-west",
+    "description": "Corner where the west wall meets the north wall.",
+    "prompt": "16×16 prop: palisade corner piece joining a wall going right and a wall going down, a thicker corner log.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-palisade-01/prop-palisade-corner-north-west.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Palisade corner, south-west",
+    "description": "Corner where the west wall meets the south wall.",
+    "prompt": "16×16 prop: palisade corner piece joining a wall going up and a wall going right, a thicker corner log.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-palisade-02/prop-palisade-corner-south-west.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Palisade end",
+    "description": "End of the north and south walls at the river.",
+    "prompt": "16×16 prop: palisade wall coming from the left ending in one thick post on the right.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-palisade-02/prop-palisade-end.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Palisade gate post, north",
+    "description": "Thick gate post north of the gate opening.",
+    "prompt": "16×16 prop: palisade wall coming from the top ending in a tall thick gate post with a carved top, opening below.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-palisade-02/prop-palisade-gate-post-north.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Palisade gate post, south",
+    "description": "Thick gate post south of the gate opening.",
+    "prompt": "16×16 prop: tall thick gate post with a carved top, palisade wall continuing down from it, opening above.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-palisade-02/prop-palisade-gate-post-south.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Bridge deck",
+    "description": "Wooden plank deck over the river.",
+    "prompt": "16×16 prop: bridge deck of thick planks running top to bottom (across the deck), seamless left and right.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-bridge/prop-bridge-deck.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Bridge railing, left",
+    "description": "Railing end on the west bank.",
+    "prompt": "16×16 prop: start of a wooden bridge railing: a carved end post on the left and a rail running out to the right edge.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-bridge/prop-bridge-railing-left.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Bridge railing, middle",
+    "description": "Railing over the water.",
+    "prompt": "16×16 prop: wooden bridge railing section, top rail and two balusters, seamless left and right.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-bridge/prop-bridge-railing-middle.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "prop",
+    "name": "Bridge railing, right",
+    "description": "Railing end on the east bank.",
+    "prompt": "16×16 prop: end of a wooden bridge railing: rail coming from the left edge to a carved end post on the right.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-bridge/prop-bridge-railing-right.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "building",
+    "name": "Great Granary",
+    "description": "Large granary, 4 × 3 tiles: more room for grain, wood and stone.",
+    "prompt": "64×48 building: big long log granary on stone stilts, huge golden thatched roof, two wide doors, sacks, logs and stones stacked beside it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-buildings/building-great-granary.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "section": "7-Village projects (6 icons + 18 pieces)",
+    "kind": "building",
+    "name": "Bell Tower",
+    "description": "Stone bell tower, 3 × 4 tiles, with a golden onion dome; its ringing carries over both banks.",
+    "prompt": "48×64 building: tall white stone bell tower, square base, open arched belfry with a bronze bell, topped with a golden onion dome and a gold Orthodox cross.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "project-buildings/building-bell-tower.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "Grass, plain",
+    "description": "Plain meadow grass, the most common ground tile.",
+    "prompt": "16×16 seamless terrain tile: plain short meadow grass, two greens, very little detail so it can repeat thousands of times.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-grass/terrain-grass-plain.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "Grass, variant 1",
+    "description": "Grass with a few tufts.",
+    "prompt": "16×16 seamless terrain tile: the same meadow grass with two small darker grass tufts.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-grass/terrain-grass-variant-1.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "Grass, variant 2",
+    "description": "Grass with small flowers.",
+    "prompt": "16×16 seamless terrain tile: the same meadow grass with three tiny white and yellow flowers.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-grass/terrain-grass-variant-2.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "Stony ground",
+    "description": "Grey stones in grass; where stones are gathered.",
+    "prompt": "16×16 seamless terrain tile: meadow grass with several loose grey stones of different sizes.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-river/terrain-stony-ground.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "River, west bank",
+    "description": "Water with the west shore.",
+    "prompt": "16×16 terrain tile: river water on the right, a muddy grassy shore on the left with a light foam line where they meet, seamless top and bottom.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-river/terrain-river-west-bank.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "River, water",
+    "description": "Open river water (animated ripples would be nice).",
+    "prompt": "16×16 seamless terrain tile: open river water, mid blue with a few light ripple strokes running top to bottom. Optional: strip of 4 frames with the ripples moving down.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-river/terrain-river-water.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "River, east bank",
+    "description": "Water with the east shore.",
+    "prompt": "16×16 terrain tile: river water on the left, a muddy grassy shore on the right with a light foam line where they meet, seamless top and bottom.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-river/terrain-river-east-bank.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "Pond water",
+    "description": "Still pond water in the wild land.",
+    "prompt": "16×16 seamless terrain tile: still pond water, slightly greener blue than the river, one lily pad.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-pond/terrain-pond-water.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "Pond shore",
+    "description": "Light shallow edge of a pond.",
+    "prompt": "Set of 16×16 terrain tiles for a pond edge (Wang autotile set of 16 tiles: every combination of water and grass at the four corners), light shallow water and sandy rim.",
+    "status": "pending"
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "Mountain rock",
+    "description": "Bare rock under the mountain ridges of the wild land; nobody walks on it.",
+    "prompt": "16×16 seamless terrain tile: bare grey-brown mountain rock with a few cracks and darker patches, no grass.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-mountains/terrain-mountain-rock.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Mountain peak",
+    "description": "Rocky peak drawn twice the tile size; neighbouring peaks overlap into a ridge. Some are overgrown with moss.",
+    "prompt": "32×32 prop, three variants plus three mossy ones: a jagged grey rock peak filling the bottom of the canvas, light faces on the left and shadow on the right, transparent around it; mossy versions with green patches on the slopes.",
+    "status": "pending"
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "terrain",
+    "name": "Trampled earth",
+    "description": "Bare packed earth around the campfire.",
+    "prompt": "16×16 seamless terrain tile: packed brown earth with a few pebbles and ash specks.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-birch/terrain-trampled-earth.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Tree, variant 1",
+    "description": "Tall tree, two tiles high. Felled for wood; grows back.",
+    "prompt": "16×32 prop: tall birch tree, white trunk with black marks, round light-green crown, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-birch/prop-tree-variant-1.png",
+    "width": 16,
+    "height": 32
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Tree, variant 2",
+    "description": "Small tree, one tile.",
+    "prompt": "16×16 prop: small young birch with a round light-green crown and a thin white trunk, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-birch/prop-tree-variant-2.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Tree, variant 3",
+    "description": "Tall tree of another kind (for example a pine), two tiles high.",
+    "prompt": "16×32 prop: tall dark-green spruce with layered drooping branches and a brown trunk, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-trees/prop-tree-variant-3.png",
+    "width": 16,
+    "height": 32
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Tree, variant 4",
+    "description": "Small tree of another kind, one tile.",
+    "prompt": "16×16 prop: small young spruce, dark-green cone shape, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-trees/prop-tree-variant-4.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Tree, variant 5",
+    "description": "Round bushy tree, one tile.",
+    "prompt": "16×16 prop: round bushy oak with a dark-green crown and a short thick trunk, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-trees/prop-tree-variant-5.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Tree stump",
+    "description": "What is left after a tree is felled, until it grows back.",
+    "prompt": "16×16 prop: low cut tree stump with light rings on the top and a few wood chips around it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-woodland/prop-tree-stump.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Sapling",
+    "description": "A young tree growing back on a felled spot.",
+    "prompt": "16×16 prop: tiny sapling with a thin stem and three small leaves next to an old stump.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-woodland/prop-sapling.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Berry bush",
+    "description": "Green bush with red berries; where berries are foraged.",
+    "prompt": "16×16 prop: round low green bush dotted with bright red berries, small ground shadow.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-woodland/prop-berry-bush.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Reeds",
+    "description": "Clump of cattails on the river bank; cut for reeds.",
+    "prompt": "16×16 prop: clump of four tall thin green reeds of different heights with brown cattail heads.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-camp/prop-reeds.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Campfire stones and logs",
+    "description": "Ring of stones with crossed logs; the heart of the camp.",
+    "prompt": "16×16 prop: oval ring of grey stones around two crossed burnt logs and glowing embers, no flames (flames are a separate effect).",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-camp/prop-campfire-stones-and-logs.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "effect",
+    "name": "Campfire flames",
+    "description": "Animated flickering flames on the campfire (several frames).",
+    "prompt": "Strip of 4 frames, each 16×16 effect: flickering campfire flames, red outer, orange middle, pale yellow core, about 10 pixels tall, base on the bottom row, each frame a slightly different flame shape.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-flames/effect-campfire-flames.png",
+    "width": 64,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Gold vein rock",
+    "description": "Grey rock outcrop on the far bank.",
+    "prompt": "16×16 seamless terrain tile: bare grey rocky ground with cracks, no grass.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-gold/prop-gold-vein-rock.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Gold nugget in rock",
+    "description": "Gold glinting in the outcrop; disappears as the vein is dug.",
+    "prompt": "16×16 prop: a grey rock lump with a vein of bright gold and two glints, transparent around it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-gold/prop-gold-nugget-in-rock.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Depleted vein spot",
+    "description": "Bare grey rock where a nugget was dug out.",
+    "prompt": "16×16 prop: the same grey rock lump with an empty dug-out hollow and pick marks, no gold.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-gold/prop-depleted-vein-spot.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "building",
+    "name": "Monastery church",
+    "description": "Old church on the far bank, 3 × 4 tiles, with a blue onion dome and cross. Scenery.",
+    "prompt": "48×64 building: old white stone Orthodox church, arched door and narrow windows, a drum topped with a blue onion dome with gold stars and a gold cross.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-monastery/building-monastery-church.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "building",
+    "name": "Monk cell",
+    "description": "Small monastery house, 3 × 3 tiles; two stand by the church.",
+    "prompt": "48×48 building: small whitewashed monk's cell with a dark wooden roof, a tiny arched door and one small window, a wooden cross over the door.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "scenery-monastery/building-monk-cell.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "section": "8-Scenery (29)",
+    "kind": "prop",
+    "name": "Onion dome",
+    "description": "Onion dome with a cross; gold for the bell tower, blue for the church.",
+    "prompt": "16×32 prop, two versions: an onion dome on a short drum with an Orthodox cross on top; version 1 gold, version 2 blue with small gold stars.",
+    "status": "pending"
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen, male style 1",
+    "description": "Male villager body. Hair, skin and outfit regions are recolored (6 skin tones, 8 hair colors, 8 outfit colors).",
+    "prompt": "16×16 character: young Slavic peasant man, short hair, belted long shirt (kosovorotka) and trousers, bast shoes, arms at his sides. Skin, hair and clothes in the exact recolor colors.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "samples/character-citizen-male-1.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen, male style 2",
+    "description": "Male villager body, another cut of clothes. Recolorable.",
+    "prompt": "16×16 character: bearded Slavic peasant man, shoulder-length hair, sleeveless vest over a shirt, trousers tucked into foot wraps. Skin, hair and clothes in the exact recolor colors.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "characters-01/character-citizen-male-2.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen, male style 3",
+    "description": "Male villager body, another cut of clothes. Recolorable.",
+    "prompt": "16×16 character: stocky Slavic workman with short hair and a thick beard, sleeves rolled up, leather apron. Skin, hair and clothes in the exact recolor colors.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "characters-01/character-citizen-male-3.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen, male style 4",
+    "description": "Male villager with a hood or cap. Recolorable.",
+    "prompt": "16×16 character: Slavic peasant man in a round felt cap with hair showing at the sides, long belted coat. Cap and coat in the clothes recolor colors, skin and hair in theirs.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "characters-02/character-citizen-male-4.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen, male style 5",
+    "description": "Male villager with a hood or cap, another color layout. Recolorable.",
+    "prompt": "16×16 character: Slavic hunter-looking man with a hood over his head and a short cloak. Hood and cloak in the clothes recolor colors, face in skin colors, a fringe of hair in hair colors.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "characters-02/character-citizen-male-5.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen, female style 1",
+    "description": "Female villager in a dress. Recolorable.",
+    "prompt": "16×16 character: young Slavic peasant woman with a long braid over her shoulder, sarafan dress over a white blouse. Skin, hair and dress in the exact recolor colors.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "characters-01/character-citizen-female-1.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen, female style 2",
+    "description": "Female villager with a headscarf. Recolorable.",
+    "prompt": "16×16 character: Slavic peasant woman in a headscarf tied under the chin, long skirt and apron. Headscarf in the hair recolor colors, skirt in the clothes recolor colors.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "characters-02/character-citizen-female-2.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen, old look",
+    "description": "Fixed sprites for citizens created before character creation.",
+    "prompt": "No new sprite: map these citizens to the new recolorable bodies with fixed colors.",
+    "status": "retained-as-directed"
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Tsar",
+    "description": "The streamer's character: village leader, should stand out (for example a fur hat and staff).",
+    "prompt": "16×16 character: village leader (voivode) in a tall fur-trimmed hat and a long embroidered red caftan with gold trim, holding a tall staff. Face in the skin recolor colors, beard in the hair recolor colors.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "characters-leaders/character-tsar.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Elder (priest)",
+    "description": "Hooded old monk who stands by the campfire and gives advice.",
+    "prompt": "16×16 character: old Orthodox monk in a black hooded robe and tall black hat (klobuk), long white beard, wooden cross on his chest, leaning on a crooked staff. Fixed colors, not recolored.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "characters-leaders/character-elder-priest.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen walk frames",
+    "description": "Walking animation for every body style.",
+    "prompt": "Strip of 4 frames, each 16×16 character: the given citizen style walking toward the viewer, legs and arms alternating, one-pixel body bob. Same colors as the still sprite.",
+    "status": "pending"
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen work frames",
+    "description": "Working poses: chopping, digging, carrying, sowing, fishing, building.",
+    "prompt": "Strip of 2 frames per action, each 16×16 character: the given citizen style swinging an axe (chop), swinging a pickaxe (dig), holding a sack over the head (carry), scattering seed (sow), holding a rod (fish), hammering (build).",
+    "status": "pending"
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Citizen asleep",
+    "description": "Lying or sitting asleep, with \"Z\" letters.",
+    "prompt": "16×16 character: the given citizen style curled up asleep on the ground on a straw mat, eyes closed. The \"Z\" is a separate effect.",
+    "status": "pending"
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Rabbit",
+    "description": "Brown rabbit that hops in meadows; hunted for food and leather.",
+    "prompt": "Strip of 3 frames, each 16×16 character, facing right: brown wild hare with long ears and a white tail; frame 1 sitting, frames 2-3 mid-hop. Body about 9 pixels long, feet on the bottom row.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "animals-rabbit/character-rabbit.png",
+    "width": 48,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Deer",
+    "description": "Deer with antlers in the woods; hunted for a lot of food and leather.",
+    "prompt": "Strip of 3 frames, each 16×16 character, facing right: red deer stag with small antlers, white belly and tail; frame 1 standing, frames 2-3 trotting. Body about 12 pixels long.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "animals-deer/character-deer.png",
+    "width": 48,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Bird",
+    "description": "Small brown bird with a red breast in groves; hunted for feathers.",
+    "prompt": "Strip of 3 frames, each 16×16 character, facing right: small brown bird with an orange-red breast (bullfinch-like); frame 1 perched, frames 2-3 wings up and down. Body about 6 pixels long.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "animals-bird/character-bird.png",
+    "width": 48,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Rabbit, carried",
+    "description": "Caught rabbit held upside down above the hunter's head.",
+    "prompt": "16×16 character: dead hare hanging head down, held by the hind legs at the top, eyes closed.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "animals-carried/character-rabbit-carried.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Deer, carried",
+    "description": "Caught deer carried by the hunter.",
+    "prompt": "16×16 character: dead deer slung across the shoulders seen from the front, legs hanging both sides, sized to sit on top of a 16×16 citizen.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "animals-carried/character-deer-carried.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "9-Characters and animals (19)",
+    "kind": "character",
+    "name": "Bird, carried",
+    "description": "Caught bird held by the feet.",
+    "prompt": "16×16 character: two small dead birds hanging head down from a string, eyes closed.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "animals-carried/character-bird-carried.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Gather wood (`chop-wood`)",
+    "description": "Axe in a log. Laborer gathers wood in the forest.",
+    "prompt": "16×16 icon: woodcutter's axe stuck in a short log, two wood chips flying.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "task-icons-01/icon-task-chop-wood.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Gather stones (`quarry-stone`)",
+    "description": "Pickaxe over stones. Laborer gathers stones on the hillside.",
+    "prompt": "16×16 icon: hand pick (wooden handle, iron head) above two grey stones.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "task-icons-01/icon-task-quarry-stone.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Forage berries (`forage`)",
+    "description": "Hand picking red berries from a bush.",
+    "prompt": "16×16 icon: hand picking a red berry from a small green berry sprig.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "task-icons-01/icon-task-forage.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Cut reeds (`cut-reeds`)",
+    "description": "Sickle cutting cattails.",
+    "prompt": "16×16 icon: curved sickle crossing two cattail reeds.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "task-icons-02/icon-task-cut-reeds.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Hunt rabbits (`hunt`)",
+    "description": "Sling or snare with a rabbit.",
+    "prompt": "16×16 icon: brown hare head in profile with a rope snare loop in front of it.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "task-icons-02/icon-task-hunt.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Hunt deer (`track-game`)",
+    "description": "Bow with a deer hoof print.",
+    "prompt": "16×16 icon: wooden hunting bow beside a split deer hoof print.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "task-icons-02/icon-task-track-game.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Hunt birds (`hunt-birds`)",
+    "description": "Sling stone and a falling feather.",
+    "prompt": "16×16 icon: leather sling with a stone and a small falling brown feather.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "task-icons-03/icon-task-hunt-birds.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Tend the fire (`tend-fire`)",
+    "description": "Hand adding a log to a fire; raises morale.",
+    "prompt": "16×16 icon: hand laying a log onto small orange flames.",
+    "status": "generated-awaiting-final-style-audit",
+    "file": "task-icons-03/icon-task-tend-fire.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Fish from the pier (`fish`)",
+    "description": "Fishing rod with a fish.",
+    "prompt": "16×16 icon: bent wooden fishing rod with a silver fish on the line.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Dig for gold (`dig-gold`)",
+    "description": "Shovel with a gold nugget.",
+    "prompt": "16×16 icon: wooden shovel with a shiny gold nugget on the blade.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Measure the river (`measure-river`)",
+    "description": "Measuring pole with notches in water; gives research points.",
+    "prompt": "16×16 icon: notched measuring pole standing in blue water with ripple lines.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Carry to storage (`carry-to-storage`)",
+    "description": "Person carrying a sack toward a pile.",
+    "prompt": "16×16 icon: burlap sack with a small arrow pointing down into an open crate.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Tend the fields (`tend-fields`)",
+    "description": "Hoe between crop rows.",
+    "prompt": "16×16 icon: wooden hoe over a small green sprout in soil.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Sow turnips (`sow-turnips`)",
+    "description": "Hand dropping seed with a turnip.",
+    "prompt": "16×16 icon: small seed pouch dropping seeds, a tiny turnip in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Sow carrots (`sow-carrots`)",
+    "description": "Hand dropping seed with a carrot.",
+    "prompt": "16×16 icon: small seed pouch dropping seeds, a tiny carrot in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Sow cabbage (`sow-cabbage`)",
+    "description": "Hand dropping seed with a cabbage.",
+    "prompt": "16×16 icon: small seed pouch dropping seeds, a tiny cabbage in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Sow flax (`sow-flax`)",
+    "description": "Hand dropping seed with a blue flax flower.",
+    "prompt": "16×16 icon: small seed pouch dropping seeds, a tiny blue flax flower in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Sow rye (`sow-rye`)",
+    "description": "Hand dropping seed with a rye ear.",
+    "prompt": "16×16 icon: small seed pouch dropping seeds, a tiny golden rye ear in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Water the fields (`water-fields`)",
+    "description": "Wooden bucket pouring water.",
+    "prompt": "16×16 icon: tilted wooden bucket pouring blue water drops onto a sprout.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Harvest (`harvest`)",
+    "description": "Sickle and a basket of crops.",
+    "prompt": "16×16 icon: sickle leaning on a basket full of vegetables and rye ears.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Read the chronicles (`read-books`)",
+    "description": "Open book of chronicles.",
+    "prompt": "16×16 icon: open old book with red initial letters on the pages (no readable text).",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Chat at the tavern (`chat-tavern`)",
+    "description": "Two mugs clinking.",
+    "prompt": "16×16 icon: two wooden mugs of kvass clinking with foam splashing.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Brew vigor drinks (`brew-vigor`)",
+    "description": "Bubbling pot with a lightning spark.",
+    "prompt": "16×16 icon: small iron pot of bubbling brown brew with a yellow lightning spark rising from it.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Deliver wood (`deliver-wood`)",
+    "description": "Wood carried to a project.",
+    "prompt": "16×16 icon: two logs on a carrying frame with a small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Deliver stone (`deliver-stone`)",
+    "description": "Stone carried to a project.",
+    "prompt": "16×16 icon: wicker back basket with grey stones and a small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Deliver reeds (`deliver-reeds`)",
+    "description": "Reeds carried to a project.",
+    "prompt": "16×16 icon: tied reed bundle with a small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Deliver gold (`deliver-gold`)",
+    "description": "Gold carried to a project.",
+    "prompt": "16×16 icon: small leather pouch of gold nuggets with a small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Deliver planks (`deliver-planks`)",
+    "description": "Planks carried to a project.",
+    "prompt": "16×16 icon: three planks tied with rope with a small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Deliver iron (`deliver-iron`)",
+    "description": "Iron ingots carried to a project.",
+    "prompt": "16×16 icon: two iron ingots on a small hand barrow with a small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Build (`build`)",
+    "description": "Hammer and a beam; work on a village project.",
+    "prompt": "16×16 icon: wooden mallet striking a beam joint, two small impact lines.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Go on an expedition (`expedition`)",
+    "description": "Backpack and walking stick leaving the gate.",
+    "prompt": "16×16 icon: birch-bark backpack with a walking stick leaning on it.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Roam the land (`roam`)",
+    "description": "Footprints on grass.",
+    "prompt": "16×16 icon: trail of three bast-shoe footprints across a green tuft.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Tell stories by the fire (`tell-stories`)",
+    "description": "Speech bubble over a fire.",
+    "prompt": "16×16 icon: small campfire with a parchment speech bubble containing three dots above it.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Study plants (`study-plants`)",
+    "description": "Magnifier or eye over a leaf.",
+    "prompt": "16×16 icon: green herb leaf with a large open eye looking at it.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Explore the land (`explore-land`)",
+    "description": "Map with a dotted path.",
+    "prompt": "16×16 icon: rolled-open parchment map with a red dotted path and an X.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Read the sky (`read-sky`)",
+    "description": "Eye under clouds; gives research points.",
+    "prompt": "16×16 icon: open eye looking up at a small white cloud and a half sun.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Research a discovery (`research-technology`)",
+    "description": "Scroll with a lightbulb-like spark.",
+    "prompt": "16×16 icon: birch-bark scroll with a bright yellow star-shaped spark above it.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Mine coal (`mine-coal`)",
+    "description": "Pickaxe with a coal lump. Miner.",
+    "prompt": "16×16 icon: pickaxe over a big black lump of coal.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Mine iron ore (`mine-iron-ore`)",
+    "description": "Pickaxe with ore. Miner.",
+    "prompt": "16×16 icon: pickaxe over a rust-brown ore rock with grey flecks.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Smelt iron (`smelt-ingot`)",
+    "description": "Crucible pouring into an ingot mold. Smith.",
+    "prompt": "16×16 icon: clay crucible pouring glowing orange metal into an ingot mold.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Saw planks (`saw-planks`)",
+    "description": "Saw cutting a log into boards. Carpenter.",
+    "prompt": "16×16 icon: hand saw half way through a log, a board falling away, sawdust dots.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Bake bread (`bake-bread`)",
+    "description": "Loaf on a baker's peel. Baker.",
+    "prompt": "16×16 icon: wooden baker's peel holding a round golden rye loaf with a steam curl.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Research (`research`)",
+    "description": "Quill and scroll. Scholar.",
+    "prompt": "16×16 icon: goose quill writing on a parchment scroll with an ink pot.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Survey the site (`survey`)",
+    "description": "Measuring rod and plumb line. Engineer.",
+    "prompt": "16×16 icon: striped measuring rod with a plumb bob hanging on a string.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Supervise construction (`supervise`)",
+    "description": "Pointing hand over a plan. Engineer.",
+    "prompt": "16×16 icon: pointing finger above a small blue building plan.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Trade (`trade`)",
+    "description": "Scales with coins. Merchant.",
+    "prompt": "16×16 icon: brass balance scales with a coin on one pan and a sack on the other.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Play the gusli (`perform`)",
+    "description": "Gusli (Russian zither) with notes. Bard.",
+    "prompt": "16×16 icon: wing-shaped wooden gusli with strings and two music notes.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Patrol (`patrol`)",
+    "description": "Spear and lantern. Guard.",
+    "prompt": "16×16 icon: spear with a small lit lantern hanging from it.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Mine gold (`mine-gold`)",
+    "description": "Pickaxe with a gold nugget deep in rock. Deep miner.",
+    "prompt": "16×16 icon: pickaxe striking dark rock with a bright gold vein.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Forge chains (`forge-chain`)",
+    "description": "Hammer on an anvil with a chain. Master smith.",
+    "prompt": "16×16 icon: smith's hammer above an anvil with a glowing chain link on it.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Build mechanisms (`build-mechanism`)",
+    "description": "Gears and a wrench. Artisan.",
+    "prompt": "16×16 icon: wooden cog wheel with a small chisel crossing it.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Long expedition (`explore`)",
+    "description": "Compass and a far mountain. Scout.",
+    "prompt": "16×16 icon: brass compass in front of a distant blue mountain peak.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Draft plans (`design`)",
+    "description": "Compass drawing on a blueprint. Architect.",
+    "prompt": "16×16 icon: drafting compass drawing an arc on a blue plan sheet.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Brew remedies (`brew-remedy`)",
+    "description": "Mortar, pestle and herbs. Alchemist.",
+    "prompt": "16×16 icon: stone mortar and pestle with green herb leaves.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Lead a crew (`lead-crew`)",
+    "description": "Raised hand over a group of hard hats. Foreman.",
+    "prompt": "16×16 icon: raised wooden staff above three small worker heads in caps.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Negotiate (`negotiate`)",
+    "description": "Handshake over a scroll. Envoy.",
+    "prompt": "16×16 icon: two hands shaking above a scroll with a red wax seal.",
+    "status": "pending"
+  },
+  {
+    "section": "10-Task icons (57)",
+    "kind": "icon",
+    "name": "Command (`command`)",
+    "description": "Banner and sword. Captain.",
+    "prompt": "16×16 icon: red war banner on a pole crossed with a sword.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Bring sticks (`bring-sticks`)",
+    "description": "Armful of thin sticks.",
+    "prompt": "16×16 icon: armful of thin brown sticks tied with twine, small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Bring logs (`bring-logs`)",
+    "description": "Log on a shoulder.",
+    "prompt": "16×16 icon: one long log on a shoulder strap, small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Bring stones (`bring-stones`)",
+    "description": "Stones in a carrying basket.",
+    "prompt": "16×16 icon: wicker carrying basket with grey stones, small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Bring reeds (`bring-reeds`)",
+    "description": "Bundle of reeds on a back.",
+    "prompt": "16×16 icon: large reed bundle with a carrying rope, small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Bring hides (`bring-hides`)",
+    "description": "Folded hide.",
+    "prompt": "16×16 icon: folded tan hide tied with a cord, small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Bring planks (`bring-planks`)",
+    "description": "Planks on a shoulder.",
+    "prompt": "16×16 icon: two long planks carried at an angle, small arrow pointing right.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Fell the trees (`fell-trees`)",
+    "description": "Axe and a falling tree; trees standing on the plot.",
+    "prompt": "16×16 icon: small tree tipping over next to a stump with an axe.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Clear the ground (`clear-ground`)",
+    "description": "Rake or shovel over rubble.",
+    "prompt": "16×16 icon: wooden rake pulling small stones and grass tufts off bare earth.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Mark the outline (`mark-outline`)",
+    "description": "Stakes with a string between them.",
+    "prompt": "16×16 icon: two stakes in the ground with a taut string between them.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Lean the poles (`lean-poles`)",
+    "description": "Two poles leaned together.",
+    "prompt": "16×16 icon: three poles leaned together in a tent shape.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Lay the cover (`lay-cover`)",
+    "description": "Reeds laid over poles.",
+    "prompt": "16×16 icon: reed bundle being laid across two slanted poles.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Stack the pile (`stack-pile`)",
+    "description": "Hands stacking logs.",
+    "prompt": "16×16 icon: hand placing a log on top of a small stack of logs.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Lay the stone ring (`lay-ring`)",
+    "description": "Stones set in a circle.",
+    "prompt": "16×16 icon: hand setting the last stone into a circle of stones.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Tie the rack (`tie-rack`)",
+    "description": "Rope knot on a pole joint.",
+    "prompt": "16×16 icon: two poles crossed and lashed with a rope knot.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Lay stones (`lay-stones`)",
+    "description": "Stone foundation course being laid.",
+    "prompt": "16×16 icon: row of square foundation stones with a trowel.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Hew beams (`hew-beams`)",
+    "description": "Adze squaring a log.",
+    "prompt": "16×16 icon: adze squaring the side of a log, chips flying.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Raise posts (`raise-posts`)",
+    "description": "Upright post being lifted.",
+    "prompt": "16×16 icon: tall wooden post standing up with a small upward arrow.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Tie the frame (`tie-frame`)",
+    "description": "Timber frame corner with rope.",
+    "prompt": "16×16 icon: corner of a timber frame, post and beam joined and lashed.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Mix clay (`mix-clay`)",
+    "description": "Trough of clay and straw.",
+    "prompt": "16×16 icon: wooden trough of red-brown clay with straw sticking out and a stirring stick.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Weave and daub walls (`weave-walls`)",
+    "description": "Wattle fence smeared with clay.",
+    "prompt": "16×16 icon: square of woven wattle, half of it smeared with clay.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Bundle thatch (`bundle-thatch`)",
+    "description": "Tied bundle of straw or reeds.",
+    "prompt": "16×16 icon: tight bundle of golden straw tied at both ends.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Thatch the roof (`thatch-roof`)",
+    "description": "Thatched roof corner.",
+    "prompt": "16×16 icon: corner of a roof with layered golden thatch and a straw bundle being added.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Hang the door (`hang-door`)",
+    "description": "Hide door on a doorframe.",
+    "prompt": "16×16 icon: wooden doorframe with a tan hide hanging in it.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Plough the field (`plough-field`)",
+    "description": "Wooden plough in furrows.",
+    "prompt": "16×16 icon: wooden scratch plough (sokha) cutting a furrow in brown soil.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Dig the shaft (`dig-shaft`)",
+    "description": "Shovel at a hole in rock.",
+    "prompt": "16×16 icon: shovel at the edge of a dark hole in grey rock.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Build the forge (`build-forge`)",
+    "description": "Stone forge with bellows.",
+    "prompt": "16×16 icon: small stone forge hearth with leather bellows beside it.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Build the oven (`build-oven`)",
+    "description": "Domed clay oven.",
+    "prompt": "16×16 icon: half-built domed clay oven with a hand adding clay.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Lay the floor (`lay-floor`)",
+    "description": "Planks being nailed down.",
+    "prompt": "16×16 icon: floor boards with a hammer driving in a nail.",
+    "status": "pending"
+  },
+  {
+    "section": "11-Construction job icons (29)",
+    "kind": "icon",
+    "name": "Lend a hand (`lend-a-hand`)",
+    "description": "Open helping hand; counts toward the crew without material.",
+    "prompt": "16×16 icon: two hands reaching toward each other, one helping the other up.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Laborer",
+    "description": "Plain work gloves. Basic role, everyone starts here.",
+    "prompt": "16×16 icon: pair of worn brown work mittens.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Miner",
+    "description": "Pickaxe and helmet lamp. Journeyman, needs Mining.",
+    "prompt": "16×16 icon: pickaxe crossed with a small oil lamp.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Smith",
+    "description": "Hammer and anvil. Journeyman, needs Smelting.",
+    "prompt": "16×16 icon: smith's hammer resting on a small anvil.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Carpenter",
+    "description": "Saw and plane. Journeyman, needs Carpentry.",
+    "prompt": "16×16 icon: hand saw crossed with a wooden plane.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Baker",
+    "description": "Loaf and baker's cap. Journeyman, needs Baking.",
+    "prompt": "16×16 icon: round rye loaf with a white baker's cap behind it.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Hunter",
+    "description": "Bow and arrow. Journeyman.",
+    "prompt": "16×16 icon: wooden bow with a feathered arrow nocked.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Farmer",
+    "description": "Sickle and wheat. Journeyman.",
+    "prompt": "16×16 icon: sickle crossed with a golden rye ear.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Scholar",
+    "description": "Quill and scroll. Journeyman, needs Writing.",
+    "prompt": "16×16 icon: goose quill over a rolled scroll.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Engineer",
+    "description": "Measuring rod and compass. Journeyman.",
+    "prompt": "16×16 icon: measuring rod crossed with a drafting compass.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Merchant",
+    "description": "Coin purse. Journeyman.",
+    "prompt": "16×16 icon: fat leather coin purse with a coin peeking out.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Bard",
+    "description": "Gusli. Journeyman, needs Music.",
+    "prompt": "16×16 icon: wing-shaped gusli with a music note.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Guard",
+    "description": "Spear and round shield. Journeyman.",
+    "prompt": "16×16 icon: round wooden shield with an iron boss and a spear behind it.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Synoptic",
+    "description": "Weather vane with a cloud; forecasts are famously wrong. Journeyman, needs Weather lore.",
+    "prompt": "16×16 icon: rooster weather vane pointing the wrong way at a small cloud, a tiny question mark shape made of a curl.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Deep miner",
+    "description": "Pickaxe with a gold nugget, deep tunnel. Master.",
+    "prompt": "16×16 icon: pickaxe in front of a dark tunnel with a gold nugget, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Master smith",
+    "description": "Hammer with a chain, glowing anvil. Master, needs Forging.",
+    "prompt": "16×16 icon: glowing anvil with a chain and a hammer, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Artisan",
+    "description": "Gears and fine tools. Master, needs Mechanics.",
+    "prompt": "16×16 icon: two meshing gears with a fine chisel, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Scout",
+    "description": "Spyglass and map. Master.",
+    "prompt": "16×16 icon: brass spyglass lying on a map, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Architect",
+    "description": "Blueprint and drafting compass. Master.",
+    "prompt": "16×16 icon: blue plan of a church with a drafting compass, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Alchemist",
+    "description": "Flask with bubbling liquid. Master, needs Alchemy.",
+    "prompt": "16×16 icon: round glass flask of bubbling green liquid, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Foreman",
+    "description": "Megaphone or raised staff over a crew. Master.",
+    "prompt": "16×16 icon: raised foreman's staff with a red ribbon, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Envoy",
+    "description": "Sealed letter with a ribbon. Master.",
+    "prompt": "16×16 icon: folded letter with a red wax seal and a ribbon, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "12-Roles (22)",
+    "kind": "icon",
+    "name": "Captain",
+    "description": "Helmet with a plume and a banner. Master.",
+    "prompt": "16×16 icon: pointed Slavic helmet with a red plume, small gold star in the corner.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Stone tools",
+    "description": "Sharp stone bound to a handle. Camp era.",
+    "prompt": "16×16 icon: knapped flint blade lashed to a wooden handle with sinew.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Herb lore",
+    "description": "Bunch of herbs and roots. Camp era.",
+    "prompt": "16×16 icon: bunch of green herbs and a forked root tied with twine.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Weaving",
+    "description": "Woven reed mat and cord. Camp era.",
+    "prompt": "16×16 icon: small square of woven reed mat with a coil of twisted cord.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Tracking",
+    "description": "Hoof prints and a broken twig. Camp era.",
+    "prompt": "16×16 icon: two hoof prints in mud next to a broken twig.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Agriculture",
+    "description": "Seed sprouting from soil. Village era.",
+    "prompt": "16×16 icon: seed in brown soil with a green sprout and two leaves.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Carpentry",
+    "description": "Plane shaving a beam. Village era.",
+    "prompt": "16×16 icon: wooden plane on a beam with a curled shaving.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Mining",
+    "description": "Pickaxe at a tunnel mouth. Village era.",
+    "prompt": "16×16 icon: pickaxe leaning at a timber-framed tunnel mouth.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Writing",
+    "description": "Birch bark with carved letters. Village era.",
+    "prompt": "16×16 icon: piece of white birch bark with scratched dark marks and a bone stylus.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Brewing",
+    "description": "Barrel of kvass and honey. Village era.",
+    "prompt": "16×16 icon: small barrel with a honey pot on top.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Baking",
+    "description": "Clay oven with a loaf. Village era.",
+    "prompt": "16×16 icon: round loaf with a wheat ear and a steam curl.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Weather lore",
+    "description": "Cloud, wind and an aching knee. Village era.",
+    "prompt": "16×16 icon: small cloud with wind lines and a raindrop.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Smelting",
+    "description": "Furnace with molten metal. Town era.",
+    "prompt": "16×16 icon: small clay furnace with a glowing orange opening and molten metal running out.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Music",
+    "description": "Gusli strings and notes. Town era.",
+    "prompt": "16×16 icon: three music notes over gusli strings.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Bookkeeping",
+    "description": "Tally sticks and an abacus. Town era.",
+    "prompt": "16×16 icon: wooden abacus (schoty) with a notched tally stick.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Mechanics",
+    "description": "Gear, lever and axle. Town era.",
+    "prompt": "16×16 icon: gear wheel on an axle with a lever.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Alchemy",
+    "description": "Distilling flask over a flame. Town era.",
+    "prompt": "16×16 icon: glass retort over a small flame with a drop falling.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Forging",
+    "description": "Folded iron on an anvil. Town era.",
+    "prompt": "16×16 icon: glowing orange iron bar folded on an anvil.",
+    "status": "pending"
+  },
+  {
+    "section": "13-Technologies (18)",
+    "kind": "icon",
+    "name": "Vigor drinks",
+    "description": "Mug with lightning, coffee beans and sleepless eyes. Town era.",
+    "prompt": "16×16 icon: mug with a lightning bolt, two coffee beans and a pair of wide-open tired eyes above it.",
+    "status": "pending"
+  },
+  {
+    "section": "14-Eras (4)",
+    "kind": "icon",
+    "name": "Wild",
+    "description": "A lone campfire under the trees.",
+    "prompt": "16×16 icon: small campfire under a tall spruce.",
+    "status": "pending"
+  },
+  {
+    "section": "14-Eras (4)",
+    "kind": "icon",
+    "name": "Camp",
+    "description": "Lean-to and drying rack.",
+    "prompt": "16×16 icon: reed lean-to next to a drying rack.",
+    "status": "pending"
+  },
+  {
+    "section": "14-Eras (4)",
+    "kind": "icon",
+    "name": "Village",
+    "description": "Huts and a farm.",
+    "prompt": "16×16 icon: two thatched huts behind a small field.",
+    "status": "pending"
+  },
+  {
+    "section": "14-Eras (4)",
+    "kind": "icon",
+    "name": "Town",
+    "description": "Stone buildings and a church dome.",
+    "prompt": "16×16 icon: stone wall with a gate and a small onion dome behind it.",
+    "status": "pending"
+  },
+  {
+    "section": "15-Stats (5)",
+    "kind": "icon",
+    "name": "Strength",
+    "description": "Flexed arm or a lifted boulder.",
+    "prompt": "16×16 icon: red flexed arm.",
+    "status": "pending"
+  },
+  {
+    "section": "15-Stats (5)",
+    "kind": "icon",
+    "name": "Dexterity",
+    "description": "Open hand catching something.",
+    "prompt": "16×16 icon: green open hand catching a small ball.",
+    "status": "pending"
+  },
+  {
+    "section": "15-Stats (5)",
+    "kind": "icon",
+    "name": "Intelligence",
+    "description": "Head with a spark, or an open book.",
+    "prompt": "16×16 icon: blue head silhouette with a yellow spark.",
+    "status": "pending"
+  },
+  {
+    "section": "15-Stats (5)",
+    "kind": "icon",
+    "name": "Charisma",
+    "description": "Smiling face with a speech bubble.",
+    "prompt": "16×16 icon: purple speech bubble with a small heart.",
+    "status": "pending"
+  },
+  {
+    "section": "15-Stats (5)",
+    "kind": "icon",
+    "name": "Endurance",
+    "description": "Heart with a shield, or a walking boot.",
+    "prompt": "16×16 icon: orange heart in front of a small shield.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Woodcutting",
+    "description": "Axe.",
+    "prompt": "16×16 icon: round parchment badge with an axe.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Quarrying",
+    "description": "Pickaxe and stone.",
+    "prompt": "16×16 icon: round parchment badge with a pick over a stone.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Gathering",
+    "description": "Basket of berries and herbs.",
+    "prompt": "16×16 icon: round parchment badge with a berry basket.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Hunting",
+    "description": "Bow.",
+    "prompt": "16×16 icon: round parchment badge with a bow.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Fishing",
+    "description": "Fish on a hook.",
+    "prompt": "16×16 icon: round parchment badge with a fish on a hook.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Farming",
+    "description": "Hoe and sprout.",
+    "prompt": "16×16 icon: round parchment badge with a hoe and a sprout.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Mining",
+    "description": "Mine cart.",
+    "prompt": "16×16 icon: round parchment badge with an ore cart.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Smithing",
+    "description": "Anvil.",
+    "prompt": "16×16 icon: round parchment badge with an anvil.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Carpentry",
+    "description": "Saw.",
+    "prompt": "16×16 icon: round parchment badge with a saw.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Baking",
+    "description": "Bread loaf.",
+    "prompt": "16×16 icon: round parchment badge with a loaf.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Scholarship",
+    "description": "Book and quill.",
+    "prompt": "16×16 icon: round parchment badge with a book and quill.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Building",
+    "description": "Hammer and beam.",
+    "prompt": "16×16 icon: round parchment badge with a mallet and beam.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Hauling",
+    "description": "Sack on a back.",
+    "prompt": "16×16 icon: round parchment badge with a sack.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Entertaining",
+    "description": "Gusli or a jester's bell.",
+    "prompt": "16×16 icon: round parchment badge with a gusli and a music note.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Exploring",
+    "description": "Compass.",
+    "prompt": "16×16 icon: round parchment badge with a compass rose.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Trading",
+    "description": "Scales.",
+    "prompt": "16×16 icon: round parchment badge with balance scales.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Guarding",
+    "description": "Shield.",
+    "prompt": "16×16 icon: round parchment badge with a round shield.",
+    "status": "pending"
+  },
+  {
+    "section": "16-Skills (18)",
+    "kind": "icon",
+    "name": "Weatherlore",
+    "description": "Weather vane and cloud.",
+    "prompt": "16×16 icon: round parchment badge with a cloud and a weather vane.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Hunger",
+    "description": "Empty bowl; someone worked with no food in storage.",
+    "prompt": "16×16 icon: empty wooden bowl and spoon with a small red warning border.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Cold",
+    "description": "Shivering figure under a tree; more citizens than beds.",
+    "prompt": "16×16 icon: blue snowflake over a small tree, with a red warning border.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Storage",
+    "description": "Overflowing pile; gathered goods did not fit.",
+    "prompt": "16×16 icon: crate overflowing with logs falling out, with a red warning border.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Fire",
+    "description": "First campfire being lit. Story 1.",
+    "prompt": "16×16 icon: two sticks with the first small flame between them.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Shelter",
+    "description": "Lean-to. Story 2.",
+    "prompt": "16×16 icon: reed lean-to with a person sleeping inside.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Stores",
+    "description": "Basket of food. Story 3.",
+    "prompt": "16×16 icon: full basket of food next to a drying rack.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "First house",
+    "description": "Hut with smoke from the roof. Story 4.",
+    "prompt": "16×16 icon: thatched hut with a curl of smoke from the roof.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Monument",
+    "description": "Tsar statue. Story 5.",
+    "prompt": "16×16 icon: crowned Tsar statue on a pedestal.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Fishing spot",
+    "description": "Pier with a fish. Story 6.",
+    "prompt": "16×16 icon: plank pier with a fish jumping beside it.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Palisade",
+    "description": "Wall of stakes, wolf eyes outside. Story 7.",
+    "prompt": "16×16 icon: sharpened stake wall with two yellow wolf eyes in the dark behind it.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Tsar Bridge",
+    "description": "Bridge to the monastery. Story 8.",
+    "prompt": "16×16 icon: wooden bridge with a small onion dome on the far side.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Monks' gold",
+    "description": "Gold nugget and a monk's hood. Story 9.",
+    "prompt": "16×16 icon: black monk's hood beside a gold nugget.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Monastery bell",
+    "description": "Bell under a golden dome. Story 10.",
+    "prompt": "16×16 icon: bronze bell under a golden onion dome, sound lines.",
+    "status": "pending"
+  },
+  {
+    "section": "17-Quests (14)",
+    "kind": "icon",
+    "name": "Great Granary",
+    "description": "Large granary full of sacks. Story 11.",
+    "prompt": "16×16 icon: large granary with sacks piled at its door.",
+    "status": "pending"
+  },
+  {
+    "section": "18-Weather and time (5)",
+    "kind": "icon",
+    "name": "Sunny",
+    "description": "Sun; today's sky in the top bar.",
+    "prompt": "16×16 icon: round yellow sun with short rays.",
+    "status": "pending"
+  },
+  {
+    "section": "18-Weather and time (5)",
+    "kind": "icon",
+    "name": "Rain",
+    "description": "Rain cloud; today's sky in the top bar.",
+    "prompt": "16×16 icon: grey cloud with three blue raindrops falling.",
+    "status": "pending"
+  },
+  {
+    "section": "18-Weather and time (5)",
+    "kind": "effect",
+    "name": "Raindrop",
+    "description": "Falling drop for the rain overlay on the map.",
+    "prompt": "4×8 effect: thin light-blue diagonal raindrop streak, 1 pixel wide, slightly transparent.",
+    "status": "pending"
+  },
+  {
+    "section": "18-Weather and time (5)",
+    "kind": "icon",
+    "name": "Day",
+    "description": "Sun for the day and night toggle.",
+    "prompt": "16×16 icon: sun rising over a hill.",
+    "status": "pending"
+  },
+  {
+    "section": "18-Weather and time (5)",
+    "kind": "icon",
+    "name": "Night",
+    "description": "Moon for the day and night toggle.",
+    "prompt": "16×16 icon: pale crescent moon with two small stars.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Energy",
+    "description": "Lightning bolt or flame; spent by every cycle, regained by sleeping.",
+    "prompt": "16×16 icon: yellow lightning bolt.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Morale",
+    "description": "Happy face or a raised fist; village spirit. Shown before the morale number (0-100, no percent sign) in the top bar.",
+    "prompt": "16×16 icon: smiling sun-like face.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Renown",
+    "description": "Laurel or a star medal; reward for helping the village.",
+    "prompt": "16×16 icon: gold medal with a star on a red ribbon.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Streak",
+    "description": "Chain of flames; renewing cycles on time.",
+    "prompt": "16×16 icon: orange flame with three small linked dots under it.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Experience / level up",
+    "description": "Upward arrow with a star.",
+    "prompt": "16×16 icon: green upward arrow with a small star.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Rare find",
+    "description": "Sparkling gold nugget from an expedition.",
+    "prompt": "16×16 icon: gold nugget with four sparkles around it.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Idle",
+    "description": "Citizen standing with nothing to do.",
+    "prompt": "16×16 icon: three grey dots in a speech bubble.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Working",
+    "description": "Small turning gear or hammer.",
+    "prompt": "16×16 icon: small hammer with motion lines.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Awaiting renewal",
+    "description": "Hourglass; the cycle ended and waits for the player.",
+    "prompt": "16×16 icon: wooden hourglass with sand run out.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Dormant",
+    "description": "Closed eyes or a grey moon; subscription lapsed.",
+    "prompt": "16×16 icon: grey sleeping face with closed eyes and a small padlock.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Asleep",
+    "description": "\"Z Z\" above a head.",
+    "prompt": "16×16 effect: three white \"Z\" shapes rising diagonally, getting bigger.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Sleeps under the trees",
+    "description": "Tree with a shivering person; worst rest.",
+    "prompt": "16×16 icon: small tree with a curled-up person and blue shiver lines.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Sleeps in a lean-to",
+    "description": "Lean-to with a bedroll.",
+    "prompt": "16×16 icon: reed lean-to with a straw bedroll.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Sleeps in a hut",
+    "description": "Hut with a lit window; full rest.",
+    "prompt": "16×16 icon: hut with a warm lit window and a crescent moon.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Storage full",
+    "description": "Box with an exclamation mark; citizens wait with goods in hands.",
+    "prompt": "16×16 icon: full crate with a red exclamation mark.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Tsar badge",
+    "description": "Crown or a fur hat; marks the streamer.",
+    "prompt": "16×16 icon: tall fur-trimmed red voivode hat.",
+    "status": "pending"
+  },
+  {
+    "section": "19-Status (17)",
+    "kind": "icon",
+    "name": "Forecast",
+    "description": "Weather vane with a question mark; a Synoptic's announcement.",
+    "prompt": "16×16 icon: rooster weather vane with half sun and half cloud behind it.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Tab: Village",
+    "description": "Village roofs.",
+    "prompt": "16×16 icon: two small hut roofs side by side.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Tab: Character",
+    "description": "Person silhouette.",
+    "prompt": "16×16 icon: head-and-shoulders silhouette of a peasant in a cap.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Tab: Tasks",
+    "description": "Checklist on birch bark.",
+    "prompt": "16×16 icon: birch-bark sheet with three tick marks.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Tab: Build",
+    "description": "Hammer and saw.",
+    "prompt": "16×16 icon: hammer crossed with a saw.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Tab: Technologies",
+    "description": "Scroll with a spark.",
+    "prompt": "16×16 icon: scroll with a yellow star-shaped spark.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Tab: Settings",
+    "description": "Wooden gear.",
+    "prompt": "16×16 icon: wooden cog wheel.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Close",
+    "description": "Cross.",
+    "prompt": "16×16 icon: dark brown X made of two crossed sticks.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Done",
+    "description": "Check mark.",
+    "prompt": "16×16 icon: green check mark.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Menu",
+    "description": "Three lines or a scroll.",
+    "prompt": "16×16 icon: three horizontal wooden bars.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Inventory / Storage",
+    "description": "Bag or chest.",
+    "prompt": "16×16 icon: tied burlap bag.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Join",
+    "description": "Open door with a person.",
+    "prompt": "16×16 icon: open wooden door with a small arrow going in.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Results",
+    "description": "Scroll with a tick.",
+    "prompt": "16×16 icon: scroll with a green tick.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Collapse",
+    "description": "Arrow up.",
+    "prompt": "16×16 icon: brown chevron pointing up.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Expand",
+    "description": "Arrow down.",
+    "prompt": "16×16 icon: brown chevron pointing down.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Chat",
+    "description": "Speech bubble.",
+    "prompt": "16×16 icon: two overlapping parchment speech bubbles.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Invite",
+    "description": "Letter with a seal.",
+    "prompt": "16×16 icon: folded letter with a red wax seal.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Notifications on",
+    "description": "Bell.",
+    "prompt": "16×16 icon: small bronze bell with two sound lines.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Notifications off",
+    "description": "Crossed bell.",
+    "prompt": "16×16 icon: small bronze bell with a red diagonal line across it.",
+    "status": "pending"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Login: Twitch",
+    "description": "Official Twitch logo (use the brand asset, do not generate).",
+    "prompt": "Do not generate: use the official brand asset.",
+    "status": "retained-as-directed"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Login: Google",
+    "description": "Official Google logo (use the brand asset, do not generate).",
+    "prompt": "Do not generate: use the official brand asset.",
+    "status": "retained-as-directed"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Login: Telegram",
+    "description": "Official Telegram logo (use the brand asset, do not generate).",
+    "prompt": "Do not generate: use the official brand asset.",
+    "status": "retained-as-directed"
+  },
+  {
+    "section": "20-Interface (22)",
+    "kind": "icon",
+    "name": "Login: Email",
+    "description": "Envelope.",
+    "prompt": "16×16 icon: closed parchment envelope.",
+    "status": "pending"
+  },
+  {
+    "section": "21-Effects (7)",
+    "kind": "effect",
+    "name": "Speech bubble",
+    "description": "Parchment-colored bubble with a tail; citizens and the Elder talk.",
+    "prompt": "Keep code-drawn (it stretches to fit the text). If drawn as a sprite: 24×24 nine-slice effect: parchment `#fff8e7` bubble with a 2-pixel dark brown `#3a2a1a` border, rounded corners, tail at the bottom middle.",
+    "status": "retained-as-directed"
+  },
+  {
+    "section": "21-Effects (7)",
+    "kind": "effect",
+    "name": "Task bubble",
+    "description": "Small square bubble above a citizen's head holding the task icon or carried good.",
+    "prompt": "16×16 effect: empty rounded square parchment `#fff5dc` frame with a 1-pixel dark brown border and a small tail at the bottom, center left empty for the icon.",
+    "status": "pending"
+  },
+  {
+    "section": "21-Effects (7)",
+    "kind": "effect",
+    "name": "Chimney smoke",
+    "description": "Puffs of smoke rising from huts, bakery, smithy and the campfire.",
+    "prompt": "Strip of 4 frames, each 16×16 effect: small grey-white smoke puff rising and fading from the bottom to the top.",
+    "status": "pending"
+  },
+  {
+    "section": "21-Effects (7)",
+    "kind": "effect",
+    "name": "Forge sparks",
+    "description": "Sparks flying at the smithy while someone works.",
+    "prompt": "Strip of 4 frames, each 16×16 effect: a few orange and yellow spark pixels bursting outward and fading.",
+    "status": "pending"
+  },
+  {
+    "section": "21-Effects (7)",
+    "kind": "effect",
+    "name": "Selection outline",
+    "description": "Yellow outline around the clicked tree, building or spot while the player chooses what to do.",
+    "prompt": "Keep code-drawn (it fits any area).",
+    "status": "retained-as-directed"
+  },
+  {
+    "section": "21-Effects (7)",
+    "kind": "effect",
+    "name": "Walk target marker",
+    "description": "Marker on the ground where the Tsar or a citizen is walking to.",
+    "prompt": "Strip of 2 frames, each 16×16 effect: small parchment-yellow ring on the ground with a downward arrow bobbing above it.",
+    "status": "pending"
+  },
+  {
+    "section": "21-Effects (7)",
+    "kind": "effect",
+    "name": "Ripe sparkle",
+    "description": "Glint over a ripe farm bed, ready to harvest.",
+    "prompt": "Strip of 3 frames, each 16×16 effect: small four-point white-yellow star twinkling (small, big, small).",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "terrain",
+    "name": "Marsh ground",
+    "description": "Soggy ground around ponds and the river in the wild; walkers wade through it slowly.",
+    "prompt": "16×16 seamless terrain tile: soggy dark olive-green ground with two small puddles of brown-green water and a few darker wet patches.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "terrain",
+    "name": "Marsh pool",
+    "description": "Open marsh water between the soggy patches.",
+    "prompt": "16×16 seamless terrain tile: still murky green-brown water with a few floating duckweed specks and one small lily pad.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Sedge tussock",
+    "description": "Clump of marsh sedge dotted over the marsh.",
+    "prompt": "16×16 prop: round clump of thin pale-green and straw-yellow sedge blades rising from a small dark wet mound, transparent around it.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "effect",
+    "name": "Marsh splash",
+    "description": "Splash at a walker's feet while they wade through the marsh.",
+    "prompt": "Strip of 3 frames, each 16×16 effect: a small ring of muddy green water drops splashing up from the bottom row and falling back.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Thicket, variant 1",
+    "description": "Dense brambles that nobody walks through until they are cut.",
+    "prompt": "16×16 prop: tangled dense blackthorn bush filling the tile, dark green leaves, brown thorny branches poking out, a few black berries.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Thicket, variant 2",
+    "description": "Dense hazel and briar scrub.",
+    "prompt": "16×16 prop: dense low hazel scrub woven with thorny briar stems, mid-green leaves, a few small pink briar flowers.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Thicket, variant 3",
+    "description": "Thicket with dry dead stems.",
+    "prompt": "16×16 prop: dense thorny thicket with grey dead stems sticking up out of dark green leaves.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Cleared thicket",
+    "description": "What is left once the thicket is cut: stubble and a pile of brush.",
+    "prompt": "16×16 prop: short cut stems in trampled grass and a small pile of cut brown branches, transparent around it.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "icon",
+    "name": "Clear the thicket (`clear-thicket`)",
+    "description": "Billhook cutting thorny branches. Laborer cuts a path through a thicket.",
+    "prompt": "16×16 icon: curved iron billhook with a wooden handle slicing through a thorny brown branch.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Rockfall, variant 1",
+    "description": "Big boulders fallen into a mountain pass; they block it until broken up.",
+    "prompt": "16×16 prop: two large rough grey boulders jammed together with smaller stones at their feet, cracks on the faces, filling the tile.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Rockfall, variant 2",
+    "description": "One huge boulder in the pass.",
+    "prompt": "16×16 prop: one huge rounded grey boulder with a lighter top-left face and moss on its shaded side, pebbles around it.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Rockfall, variant 3",
+    "description": "Heap of broken rock in the pass.",
+    "prompt": "16×16 prop: tall jumbled heap of angular grey rock slabs leaning on each other.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Broken rockfall",
+    "description": "Rubble left once the boulders are broken and carried off; walkable.",
+    "prompt": "16×16 prop: scattered flat grey rock chips and gravel on bare ground, low, transparent around it.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "icon",
+    "name": "Break the rockfall (`break-rockfall`)",
+    "description": "Sledgehammer striking a boulder. Laborer breaks up a rockfall and gets stone.",
+    "prompt": "16×16 icon: heavy wooden-handled sledgehammer striking a grey boulder, a crack and two chips flying off.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "terrain",
+    "name": "Ravine, north rim",
+    "description": "Grass ending at the northern edge of the ravine, the far wall dropping away below.",
+    "prompt": "16×16 terrain tile, seamless left and right: meadow grass in the top third ending at a ragged rock edge, below it a lit grey-brown cliff face falling into darkness at the bottom edge.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "terrain",
+    "name": "Ravine, depth",
+    "description": "The bottom of the ravine, too deep to see.",
+    "prompt": "16×16 seamless terrain tile: near-black blue-grey chasm with a few faint rock ledges and pebbles catching a little light.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "terrain",
+    "name": "Ravine, south rim",
+    "description": "Grass at the southern edge of the ravine; the near wall is in shadow.",
+    "prompt": "16×16 terrain tile, seamless left and right: darkness at the top edge, a thin strip of shadowed rock lip, then meadow grass in the bottom two-thirds.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "building",
+    "name": "Rope bridge",
+    "description": "Plank bridge on ropes across the ravine, 3 × 4 tiles; the Tsar or a Governor places it, citizens build it.",
+    "prompt": "48×64 building (footprint 3×4 tiles): a narrow wooden plank bridge running from the bottom edge to the top edge across a dark ravine, thick rope hand-lines on both sides sagging slightly, two stout wooden posts at each end with ropes tied around them; the ravine shows dark under the planks in the middle rows, grass at the top and bottom rows.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "icon",
+    "name": "Rope bridge",
+    "description": "Planks on ropes.",
+    "prompt": "16×16 icon: short sagging plank bridge with two rope hand-lines between two wooden posts.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "building",
+    "name": "Rope bridge stages (2)",
+    "description": "Posts (posts driven in on both rims, ropes stretched across), Ropes and half the planks.",
+    "prompt": "Building under construction, same canvas size and footprint as the finished Rope bridge. Stage 1 Posts: two posts on each rim with bare ropes stretched across the dark ravine. Stage 2 Planks: the ropes with planks laid over the lower half, a few loose planks stacked on the near rim.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "icon",
+    "name": "Stretch the ropes (`stretch-ropes`)",
+    "description": "Coil of rope being pulled taut between two posts. Construction job of the rope bridge.",
+    "prompt": "16×16 icon: coil of thick hemp rope with its end pulled taut to a wooden post.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "icon",
+    "name": "Lay the deck (`lay-deck`)",
+    "description": "A plank being laid across two ropes. Last construction job of the rope bridge.",
+    "prompt": "16×16 icon: one wooden plank laid crosswise over two parallel ropes, a mallet resting beside it.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Cave mouth",
+    "description": "Dark opening in a mountain ridge; laborers dig stone in it and sometimes find coal or iron ore.",
+    "prompt": "32×32 prop: rough natural arch opening in a grey rock face, deep darkness inside, a few rocks at the entrance and two small glints of ore on the inner wall, the rock face fills the top half and sides.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Worked cave mouth",
+    "description": "The cave once citizens have dug in it: timber props and a lantern.",
+    "prompt": "32×32 prop: the same cave arch with two rough timber props holding the entrance, a small lantern hanging on one, a little heap of broken stone outside.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "icon",
+    "name": "Dig in the cave (`dig-cave`)",
+    "description": "Pickaxe before a cave arch. Laborer digs stone, sometimes coal or ore.",
+    "prompt": "16×16 icon: small iron pickaxe in front of a dark rocky cave arch with one orange ore glint.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Lookout peak",
+    "description": "A rocky peak with a way up; from the top a climber sees far over the land.",
+    "prompt": "32×32 prop: a rocky grey peak with a narrow zig-zag trail of flat stone steps climbing its south face to a small flat top, a few tufts of grass on the ledges.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "prop",
+    "name": "Lookout cairn",
+    "description": "A stone cairn with a ribbon on a pole, raised on the lookout once someone has climbed it.",
+    "prompt": "16×32 prop: small cairn of stacked flat grey stones with a thin wooden pole rising from it and a red ribbon fluttering at the top.",
+    "status": "pending"
+  },
+  {
+    "section": "22-Obstacles (28)",
+    "kind": "terrain",
+    "name": "Mountain trail",
+    "description": "Flat stone steps up the lookout; the only mountain tile walkers may climb.",
+    "prompt": "16×16 terrain tile: three flat grey stone steps rising from the bottom to the top edge, rough rock on both sides, seamless top and bottom.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "terrain",
+    "name": "Dead earth (3 variants)",
+    "description": "Bare grey-brown ground covering most of the map (`Ground`).",
+    "prompt": "Three 16×16 seamless terrain tiles: dry cracked grey-brown earth `#4a4238` with dark grit specks; variant 2 with a thin crack, variant 3 with a few pebbles. No grass.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "terrain",
+    "name": "Withered grass",
+    "description": "Patches of dead grass between the graves (`DeadGrass`).",
+    "prompt": "16×16 seamless terrain tile: the dead earth with four or five tufts of dry straw-yellow `#8a7a50` grass bent over, no green.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "terrain",
+    "name": "Bone-strewn ground",
+    "description": "Old bones lying in the dirt (`Bones`); walkable.",
+    "prompt": "16×16 terrain tile: the dead earth with a scattered thigh bone, two ribs and a small cracked skull, bones off-white `#d8d0b8`.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "terrain",
+    "name": "Entrance path",
+    "description": "Trodden track at the west edge where the heroes come in (`Entrance`).",
+    "prompt": "16×16 terrain tile, seamless left and right: packed lighter brown path `#6a5e4c` with wheel ruts along it and grit at the edges.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "prop",
+    "name": "Dead tree (2 variants)",
+    "description": "Bare blackened tree; blocks walkers (`DeadTree`).",
+    "prompt": "Two 16×16 props: a leafless dead tree with a dark grey-brown trunk and crooked bare branches reaching up, a small shadow at the foot; variant 2 split by lightning with one branch hanging. Transparent around it.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "prop",
+    "name": "Grave",
+    "description": "Leaning headstone with a cross; blocks walkers (`Grave`).",
+    "prompt": "16×16 prop: a weathered grey rounded headstone leaning slightly, a carved cross, moss at its foot, a low mound of earth in front.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "prop",
+    "name": "Broken fence",
+    "description": "Rotten graveyard fence; blocks walkers (`Fence`).",
+    "prompt": "16×16 prop, seamless left and right: two dark rotten wooden rails on crooked posts, one rail broken and hanging.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "prop",
+    "name": "Barrow mound",
+    "description": "Earth mound of an old chieftain's grave; blocks walkers (`Mound`).",
+    "prompt": "16×16 prop: a round grassless earth mound with a small grey standing stone on top.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "prop",
+    "name": "Grey boulder",
+    "description": "Big boulder; blocks walkers (`Rock`).",
+    "prompt": "16×16 prop: a large rounded grey boulder with a lighter top-left face and a dark crack, filling most of the tile.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "character",
+    "name": "Grave rat",
+    "description": "Fast, weak rat that comes in packs.",
+    "prompt": "Strip of 4 frames, each 16×16 character, facing right: a mangy grey-brown rat with red eyes and a bald pink tail; frames 1-3 scurrying, frame 4 lying dead on its back. Body about 10 pixels long.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "character",
+    "name": "Imp",
+    "description": "Small hopping red devil.",
+    "prompt": "Strip of 4 frames, each 16×16 character, facing right: a small red imp with stubby black horns, yellow eyes, bat wings and a pointed tail; frames 1-3 hopping, frame 4 lying slain. About 9 pixels tall.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "character",
+    "name": "Ghoul",
+    "description": "Hunched corpse-eater with long claws.",
+    "prompt": "Strip of 4 frames, each 16×16 character, facing right: a hunched grey-green ghoul in rags with yellow eyes, long bone-white claws reaching forward; frames 1-3 shambling, frame 4 collapsed. About 11 pixels tall.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "character",
+    "name": "Wraith",
+    "description": "Floating pale ghost.",
+    "prompt": "Strip of 4 frames, each 16×16 character, facing right: a floating pale blue-grey hooded ghost with dark empty eyes and a ragged trailing hem, semi-transparent edges; frames 1-3 bobbing, frame 4 fading into wisps.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "character",
+    "name": "Barrow King",
+    "description": "The boss: a crowned skeleton lord with a sword.",
+    "prompt": "Strip of 4 frames, each 16×24 character, facing right: a tall skeleton king with a rusty gold crown, green glowing eyes, a tattered dark green cloak and a notched sword; frames 1-3 striding, frame 4 crumbled into bones with the crown on top.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "icon",
+    "name": "Class: Brawler",
+    "description": "Bare fists; anyone can fight this way.",
+    "prompt": "16×16 icon: a clenched fist with a cloth wrap around the knuckles.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "icon",
+    "name": "Class: Spearman",
+    "description": "Fights with a spear from storage.",
+    "prompt": "16×16 icon: a wooden spear with an iron head, diagonal.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "icon",
+    "name": "Class: Swordsman",
+    "description": "Fights with a sword from storage.",
+    "prompt": "16×16 icon: an iron sword with a leather-wrapped hilt, point up.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "icon",
+    "name": "Class: Archer",
+    "description": "Shoots with a bow and arrows.",
+    "prompt": "16×16 icon: a curved yew bow with an arrow nocked.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "icon",
+    "name": "Class: Shieldbearer",
+    "description": "Holds a shield; more health, softer blows.",
+    "prompt": "16×16 icon: a round wooden shield with an iron boss and rim.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "icon",
+    "name": "Class: Healer",
+    "description": "Heals allies with a remedy.",
+    "prompt": "16×16 icon: a small cloth satchel with a red cross and a sprig of herbs.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "icon",
+    "name": "Class: Voivode",
+    "description": "The Tsar at the head of the host.",
+    "prompt": "16×16 icon: a gold Russian crown with fur trim and a small cross on top.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "effect",
+    "name": "Skull bubble",
+    "description": "Over a fallen hero running for the exit.",
+    "prompt": "16×16 effect: parchment `#fff8e7` speech bubble with a dark brown border and a tail at the bottom middle, a small black skull inside.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "effect",
+    "name": "Arrow in flight",
+    "description": "An archer's shot between hero and foe.",
+    "prompt": "16×16 effect: a short arrow flying right, wooden shaft, iron tip, white fletching, centred.",
+    "status": "pending"
+  },
+  {
+    "section": "23-Dungeon: Dead Lands (24)",
+    "kind": "icon",
+    "name": "Dead Lands",
+    "description": "The dungeon in the Tsar's panel and the village banner.",
+    "prompt": "16×16 icon: a dead tree beside a leaning headstone under a pale green moon.",
+    "status": "pending"
+  }
+]

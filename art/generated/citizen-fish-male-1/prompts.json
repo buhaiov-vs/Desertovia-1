@@ -1,0 +1,27 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-citizen-male-1-fish-frame-1",
+      "width": 16,
+      "height": 16,
+      "prompt": "Exactly ONE young Slavic peasant character in ONE fishing pose holding ONE simple wooden fishing rod with short visible line. NOT a sprite sheet. Same character as first reference: short brown hair, belted kosovorotka, trousers, bast shoes. Other references define chunky minimal Kenney pixel art. Transparent 16x16 logical pixel canvas enlarged nearest-neighbor. Body centered, south-facing slight overhead view, feet at bottom, all rod and line inside canvas. Rod and line must be solid one-logical-pixel thick so they survive at 16x16. Flat colors: skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c, warm brown rod, muted grey line. No gradients, texture, antialiasing, glow, shadow, water, ground, scenery, fish, text or other people. Waiting pose: hands at waist grip rod angled upward to screen-right, rod tip gently curved, short line hanging down at right edge.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-1-fish-frame-2",
+      "width": 16,
+      "height": 16,
+      "prompt": "Exactly ONE young Slavic peasant character in ONE fishing pose holding ONE simple wooden fishing rod with short visible line. NOT a sprite sheet. Same character as first reference: short brown hair, belted kosovorotka, trousers, bast shoes. Other references define chunky minimal Kenney pixel art. Transparent 16x16 logical pixel canvas enlarged nearest-neighbor. Body centered, south-facing slight overhead view, feet at bottom, all rod and line inside canvas. Rod and line must be solid one-logical-pixel thick so they survive at 16x16. Flat colors: skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c, warm brown rod, muted grey line. No gradients, texture, antialiasing, glow, shadow, water, ground, scenery, fish, text or other people. Small lifting pose: elbows slightly bent higher, rod lifted toward upper-right, line drawn slightly upward. Keep feet planted and head/body same scale and placement.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

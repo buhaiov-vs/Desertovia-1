@@ -1,0 +1,62 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-drying-rack-1-frame",
+      "width": 32,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-drying-rack-preview.png",
+      "prompt": "Use case: precise-object-edit. One construction-stage game sprite. Edit reference finished drying-rack, stage 1: Two vertical wooden posts and a tied crossbar only; remove roof, meat, all hanging objects, and ALL brown halo/background. Empty areas must have zero alpha. Preserve original canvas proportions 32:48, camera, footprint and exact ground anchor locations. Keep all remaining components in original positions and sizes, preserve unused transparent space above the construction. Do not zoom/recenter. 32x48 logical pixel art, enlarged with solid square pixels. Simple warm Kenney-style flat colors, three shades per material max. No gradients, soft edges, halos, scenery, text, labels or panels. Transparent background including all openings. Each stage shows all construction completed so far."
+    },
+    {
+      "name": "construction-drying-rack-2-cover",
+      "width": 32,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-drying-rack-preview.png",
+      "prompt": "Use case: precise-object-edit. One construction-stage game sprite. Edit reference finished drying-rack, stage 2: Same two posts and tied crossbar with a reed roof. Nothing hanging yet. Remove ALL brown halo/background; transparent between posts. Preserve original canvas proportions 32:48, camera, footprint and exact ground anchor locations. Keep all remaining components in original positions and sizes, preserve unused transparent space above the construction. Do not zoom/recenter. 32x48 logical pixel art, enlarged with solid square pixels. Simple warm Kenney-style flat colors, three shades per material max. No gradients, soft edges, halos, scenery, text, labels or panels. Transparent background including all openings. Each stage shows all construction completed so far."
+    },
+    {
+      "name": "construction-hut-1-ground",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/samples/building-hut-preview.png",
+      "prompt": "Use case: precise-object-edit. One construction-stage game sprite. Edit reference finished hut, stage 1: Cleared earth with stakes and string at the stone-base footprint. No stones, walls, frame or roof yet. Preserve original canvas proportions 48:48, camera, footprint and exact ground anchor locations. Keep all remaining components in original positions and sizes, preserve unused transparent space above the construction. Do not zoom/recenter. 48x48 logical pixel art, enlarged with solid square pixels. Simple warm Kenney-style flat colors, three shades per material max. No gradients, soft edges, halos, scenery, text, labels or panels. Transparent background including all openings. Each stage shows all construction completed so far."
+    },
+    {
+      "name": "construction-hut-2-foundation",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/samples/building-hut-preview.png",
+      "prompt": "Use case: precise-object-edit. One construction-stage game sprite. Edit reference finished hut, stage 2: Low rectangle of grey foundation stones on cleared earth. No upright frame, walls or roof. Preserve original canvas proportions 48:48, camera, footprint and exact ground anchor locations. Keep all remaining components in original positions and sizes, preserve unused transparent space above the construction. Do not zoom/recenter. 48x48 logical pixel art, enlarged with solid square pixels. Simple warm Kenney-style flat colors, three shades per material max. No gradients, soft edges, halos, scenery, text, labels or panels. Transparent background including all openings. Each stage shows all construction completed so far."
+    },
+    {
+      "name": "construction-hut-3-frame",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/samples/building-hut-preview.png",
+      "prompt": "Use case: precise-object-edit. One construction-stage game sprite. Edit reference finished hut, stage 3: Timber posts and beams on the grey stone foundation. Empty open structure with no walls, roof covering or door. Preserve original canvas proportions 48:48, camera, footprint and exact ground anchor locations. Keep all remaining components in original positions and sizes, preserve unused transparent space above the construction. Do not zoom/recenter. 48x48 logical pixel art, enlarged with solid square pixels. Simple warm Kenney-style flat colors, three shades per material max. No gradients, soft edges, halos, scenery, text, labels or panels. Transparent background including all openings. Each stage shows all construction completed so far."
+    },
+    {
+      "name": "construction-hut-4-walls",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/samples/building-hut-preview.png",
+      "prompt": "Use case: precise-object-edit. One construction-stage game sprite. Edit reference finished hut, stage 4: Foundation, timber posts and beams with woven wattle walls half daubed with clay. No thatch roof or hide door. Preserve original canvas proportions 48:48, camera, footprint and exact ground anchor locations. Keep all remaining components in original positions and sizes, preserve unused transparent space above the construction. Do not zoom/recenter. 48x48 logical pixel art, enlarged with solid square pixels. Simple warm Kenney-style flat colors, three shades per material max. No gradients, soft edges, halos, scenery, text, labels or panels. Transparent background including all openings. Each stage shows all construction completed so far."
+    },
+    {
+      "name": "construction-hut-5-roof",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/samples/building-hut-preview.png",
+      "prompt": "Use case: precise-object-edit. One construction-stage game sprite. Edit reference finished hut, stage 5: Foundation, timber frame and completed wattle-and-daub walls, with rafters half covered in golden thatch. No hide door. Preserve original canvas proportions 48:48, camera, footprint and exact ground anchor locations. Keep all remaining components in original positions and sizes, preserve unused transparent space above the construction. Do not zoom/recenter. 48x48 logical pixel art, enlarged with solid square pixels. Simple warm Kenney-style flat colors, three shades per material max. No gradients, soft edges, halos, scenery, text, labels or panels. Transparent background including all openings. Each stage shows all construction completed so far."
+    },
+    {
+      "name": "construction-hut-6-finish",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/samples/building-hut-preview.png",
+      "prompt": "Use case: precise-object-edit. One construction-stage game sprite. Edit reference finished hut, stage 6: Complete hut exactly as reference with the hide door removed, exposing a dark empty doorway. Preserve roof, walls, window and stone foundation. Preserve original canvas proportions 48:48, camera, footprint and exact ground anchor locations. Keep all remaining components in original positions and sizes, preserve unused transparent space above the construction. Do not zoom/recenter. 48x48 logical pixel art, enlarged with solid square pixels. Simple warm Kenney-style flat colors, three shades per material max. No gradients, soft edges, halos, scenery, text, labels or panels. Transparent background including all openings. Each stage shows all construction completed so far."
+    }
+  ]
+}

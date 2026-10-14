@@ -1,0 +1,38 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate ground and gold rock; edit depleted rock",
+  "samples": [
+    {
+      "name": "prop-gold-vein-rock",
+      "transparent": false,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE opaque seamless 16x16 logical-pixel terrain tile: bare grey rocky ground with cracks, no grass, no gold. Flat top-down full-bleed square, not a freestanding rock. Few broad grey shapes, sparse cracks. Match simple flat pixel style of references Tiny Town and Tiny Farm. Uniform square pixels enlarged, limited grey palette, no gradients, noise, lighting, frame or text.",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "prop-gold-nugget-in-rock",
+      "transparent": true,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent 16x16 logical-pixel RPG prop: a grey rock lump with a vein of bright gold and exactly two tiny glints. Entire rock visible with transparent margin. Simple squat grey rock silhouette, sparse bold gold vein across front. Match Tiny Town and Tiny Farm style references: very simple flat chunky pixel clusters, 3 grey shades and 2 gold shades, no gradients, fine texture, glow, colored fringe or text. Slight overhead game view, square canvas.",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "prop-depleted-vein-spot",
+      "transparent": true,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/scenery-gold/prop-gold-nugget-in-rock-source.png"
+      ],
+      "prompt": "Edit target image 1: preserve the exact outer rock silhouette, canvas placement and grey rock faces. Remove all gold and both glints, replacing the gold vein with an empty dark-grey dug-out hollow and a few pick marks. Same grey rock lump, depleted after mining, no yellow remaining. Preserve transparency, pixel style, size and position. No new objects, no extra rubble, no glow or text.",
+      "width": 16,
+      "height": 16
+    }
+  ]
+}

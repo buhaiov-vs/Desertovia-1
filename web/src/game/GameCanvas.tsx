@@ -5,14 +5,18 @@ import { VillageWorld } from './VillageWorld'
 import type { WalkBlock, WorldTarget } from './worldMap'
 
 export interface GameCanvasHandle {
-  say(ownerId: string, text: string): void
+  say(ownerId: string, text: string, seconds?: number): void
   /** Above 1 zooms in, below 1 zooms out, around the screen centre. */
   zoom(factor: number): void
+  /** Centres the view on a walker. */
+  locate(walkerId: string): void
   /** What stops a walker from walking to a spot, in tiles; null when the way is open. */
   wayBlock(walkerId: string, spot: TilePoint): WalkBlock | null
 }
 
 export interface Placement {
+  /** Building kind being placed. */
+  kind: string
   /** Top-left tile of the building. */
   onPick: (x: number, y: number) => void
 }
@@ -21,7 +25,8 @@ interface Props {
   village: VillageState
   citizens: CitizenSummary[]
   highlightId: string | null
-  night: boolean
+  /** Development only: forces daylight (false) or night (true); null follows the village sky. */
+  nightOverride?: boolean | null
   catalog: Catalog | null
   placement?: Placement | null
   minimap?: boolean
@@ -40,7 +45,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     village,
     citizens,
     highlightId,
-    night,
+    nightOverride = null,
     catalog,
     placement = null,
     minimap = true,
@@ -55,6 +60,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   const [world, setWorld] = useState<VillageWorld | null>(null)
   const { t, building, storage } = useI18n()
   const priestName = t('priest.name')
+  const tsarTitle = t('hud.tsar')
   const governorTitle = t('hud.governor')
 
   useEffect(() => {
@@ -82,14 +88,14 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setCatalog(catalog), [world, catalog])
   useEffect(() => world?.setVillage(village), [world, village])
   useEffect(() => world?.setCitizens(citizens, highlightId), [world, citizens, highlightId])
-  useEffect(() => world?.setNight(night), [world, night])
+  useEffect(() => world?.setNightOverride(nightOverride), [world, nightOverride])
   useEffect(() => world?.setPriestName(priestName), [world, priestName])
-  useEffect(() => world?.setGovernorTitle(governorTitle), [world, governorTitle])
+  useEffect(() => world?.setTitles(tsarTitle, governorTitle), [world, tsarTitle, governorTitle])
   useEffect(
     () => world?.setBuildingNames((kind, isStorage) => (isStorage ? storage(kind) : building(kind).name)),
     [world, building, storage],
   )
-  useEffect(() => world?.setPlacement(placement?.onPick ?? null), [world, placement])
+  useEffect(() => world?.setPlacement(placement?.onPick ?? null, placement?.kind), [world, placement])
   useEffect(() => world?.setCitizenPick(onCitizenPick), [world, onCitizenPick])
   useEffect(() => world?.setWorldPick(onWorldPick), [world, onWorldPick])
   useEffect(() => world?.setWorldPickable(worldPickable), [world, worldPickable])
@@ -98,8 +104,9 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useImperativeHandle(
     ref,
     () => ({
-      say: (ownerId, text) => world?.say(ownerId, text),
+      say: (ownerId, text, seconds) => world?.say(ownerId, text, seconds),
       zoom: (factor) => world?.zoomBy(factor),
+      locate: (walkerId) => void world?.locate(walkerId),
       wayBlock: (walkerId, spot) => world?.wayBlock(walkerId, spot) ?? null,
     }),
     [world],

@@ -1,0 +1,5 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "prompt": "Generate ONE opaque seamless 16x16 logical pixel terrain tile, enlarged. References are Kenney Tiny Town and Tiny Farm for flat simple pixel style. Plain packed brown dirt filling the entire square. Just three tiny loose gray pebbles scattered irregularly and four dark ash specks. Absolutely NO ring, NO circle, NO arrangement of stones, NO campfire, NO crater, NO central feature, NO logs, NO grass. Flat top-down surface, muted brown, two brown shades plus grey. Same flat brown on all four edges. No gradients, lighting, texture noise or text. Very sparse simple tile."
+}

@@ -6,7 +6,7 @@ using Desertod.Domain.Storage;
 
 namespace Desertod.Domain.Quests;
 
-/// <param name="Current">Progress for citizens; the Governor's view never shows numbers.</param>
+/// <param name="Current">Progress for citizens; the Tsar's view never shows numbers.</param>
 public sealed record QuestObjective(string Id, QuestAudience Audience, bool Done, int? Current = null, int? Required = null);
 
 /// <param name="RenownPool">Split between the helpers by their useful cycles.</param>
@@ -19,7 +19,7 @@ public sealed record VillageNeeds(int ActiveCitizens, int HungryCitizens);
 
 /// <summary>
 /// Needs of the tribe. A quest opens when the village has a problem and closes when the problem is solved:
-/// the Governor plans the building, citizens build it and do the work around it.
+/// the Tsar or a Governor plans the building, citizens build it and do the work around it.
 /// </summary>
 public static class QuestRules
 {
@@ -106,7 +106,7 @@ public static class QuestRules
                 var food = village.Stock(ResourceKind.Food);
                 return
                 [
-                    new("plan-food-storage", QuestAudience.Governor, built || planned),
+                    new("plan-food-storage", QuestAudience.Rulers, built || planned),
                     new("build-food-storage", QuestAudience.Citizens, built),
                     new("stock-food", QuestAudience.Citizens, food >= quest.Target, food, quest.Target),
                 ];
@@ -118,7 +118,7 @@ public static class QuestRules
                 var planned = village.Sites.Sum(s => s.Definition.Shelter);
                 return
                 [
-                    new("plan-shelter", QuestAudience.Governor, beds + planned >= activeCitizens),
+                    new("plan-shelter", QuestAudience.Rulers, beds + planned >= activeCitizens),
                     new("build-shelter", QuestAudience.Citizens, beds >= activeCitizens, beds, activeCitizens),
                 ];
             }
@@ -131,7 +131,7 @@ public static class QuestRules
                 var room = free >= quest.Target;
                 return
                 [
-                    new("plan-storage", QuestAudience.Governor, room || planned),
+                    new("plan-storage", QuestAudience.Rulers, room || planned),
                     new("make-room", QuestAudience.Citizens, room, free, quest.Target),
                 ];
             }
@@ -208,10 +208,11 @@ public static class QuestRules
         }
     }
 
-    /// <summary>What actually went into storage: produced minus what stayed in the citizen's hands.</summary>
+    /// <summary>What actually went into storage: produced minus what stayed in the citizen's hands or was lost.</summary>
     internal static int Stored(CycleReport report, ResourceKind kind) =>
         report.Produced.Where(p => p.Resource == kind).Sum(p => p.Amount)
-        - report.Carried.Where(c => c.Resource == kind).Sum(c => c.Amount);
+        - report.Carried.Where(c => c.Resource == kind).Sum(c => c.Amount)
+        - report.Lost.Where(l => l.Resource == kind).Sum(l => l.Amount);
 
     /// <summary>Storage made for food; the Heap takes food too but lets it rot among the sticks.</summary>
     private static bool IsFoodStore(StorageKind? kind) =>

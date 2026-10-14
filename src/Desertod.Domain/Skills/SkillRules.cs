@@ -12,7 +12,18 @@ public static class SkillRules
     public static int ExperienceToNext(int level) =>
         level is < 0 or >= GameRules.SkillMaximum ? 0 : Progression.Curve(level);
 
-    /// <summary>Adds experience to a skill; returns the levels gained. Experience past the maximum level is lost.</summary>
+    /// <summary>The citizen's stats are enough for the next level of the skill.</summary>
+    public static bool CanReachNext(Citizen citizen, Skill skill)
+    {
+        var level = citizen.SkillLevel(skill);
+        return level < GameRules.SkillMaximum && SkillCatalog.Get(skill).Allows(citizen.Stats, level + 1);
+    }
+
+    /// <summary>
+    /// Adds experience to a skill; returns the levels gained. A level the stats are not enough for waits:
+    /// experience for it is kept, the rest is lost, and the level comes once the stats catch up (see <see cref="CatchUp"/>).
+    /// Experience past the maximum level is lost.
+    /// </summary>
     public static int AddExperience(Citizen citizen, Skill skill, int experience)
     {
         if (experience <= 0)
@@ -33,19 +44,32 @@ public static class SkillRules
         }
 
         progress.Experience += experience;
+        return LevelUp(citizen, progress);
+    }
+
+    /// <summary>Raises the skills whose next level was waiting for the stats the citizen has just gained.</summary>
+    public static void CatchUp(Citizen citizen)
+    {
+        foreach (var progress in citizen.Skills)
+        {
+            LevelUp(citizen, progress);
+        }
+    }
+
+    private static int LevelUp(Citizen citizen, SkillProgress progress)
+    {
+        var definition = SkillCatalog.Get(progress.Kind);
         var levelsGained = 0;
-        while (progress.Level < GameRules.SkillMaximum && progress.Experience >= ExperienceToNext(progress.Level))
+        while (progress.Level < GameRules.SkillMaximum
+               && progress.Experience >= ExperienceToNext(progress.Level)
+               && definition.Allows(citizen.Stats, progress.Level + 1))
         {
             progress.Experience -= ExperienceToNext(progress.Level);
             progress.Level++;
             levelsGained++;
         }
 
-        if (progress.Level >= GameRules.SkillMaximum)
-        {
-            progress.Experience = 0;
-        }
-
+        progress.Experience = Math.Min(progress.Experience, ExperienceToNext(progress.Level));
         return levelsGained;
     }
 
@@ -58,6 +82,10 @@ public static class SkillRules
     /// <summary>Applies to the work only; walking takes as long as ever.</summary>
     public static TimeSpan WorkTime(Citizen citizen, Skill skill, int required, TimeSpan work) =>
         work * (1 - GameRules.SkillWorkTimePerLevel * Mastery(citizen.SkillLevel(skill), required));
+
+    /// <summary>Experience multiplier: work far below the citizen's level in its craft teaches little.</summary>
+    public static double Challenge(Citizen citizen, Skill skill, int required) =>
+        Progression.ChallengeMultiplier(citizen.SkillLevel(skill), required);
 
     public static void Check(Citizen citizen, TaskDefinition task)
     {

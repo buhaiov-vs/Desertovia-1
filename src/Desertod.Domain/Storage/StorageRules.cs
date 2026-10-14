@@ -5,7 +5,7 @@ namespace Desertod.Domain.Storage;
 
 public static class StorageRules
 {
-    /// <summary>Most of one good a citizen may hold after taking it out of storage.</summary>
+    /// <summary>Most of one good a citizen may hold, whether taken out of storage or left over from a task.</summary>
     public const int TakeLimit = 10;
 
     /// <summary>Puts as much of the citizen's load into storage as fits. Returns what was unloaded.</summary>

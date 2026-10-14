@@ -1,0 +1,27 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-farm-1-ground",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-farm-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference farm into construction stage 1: Grass cleared to one bare earth patch with exactly four short corner stakes. No furrows, crops, green plants or fence rails. Preserve original square canvas, field footprint, top-down three-quarter camera and corner coordinates. Do not zoom, shift, recenter or add scenery. Match simple chunky Kenney-like pixel art, strict 48x48 logical pixels enlarged to solid square pixels, flat earthy browns with three shades max per material. No gradients, glow, soft edges, antialiasing, lettering or labels. Fully transparent outside the field. All previous construction remains, but none of the later elements."
+    },
+    {
+      "name": "construction-farm-2-field",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-farm-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference farm into construction stage 2: Bare earth with fresh parallel ploughed furrows, corner stakes retained. No crops, grass or fence rails. Preserve original square canvas, field footprint, top-down three-quarter camera and corner coordinates. Do not zoom, shift, recenter or add scenery. Match simple chunky Kenney-like pixel art, strict 48x48 logical pixels enlarged to solid square pixels, flat earthy browns with three shades max per material. No gradients, glow, soft edges, antialiasing, lettering or labels. Fully transparent outside the field. All previous construction remains, but none of the later elements."
+    },
+    {
+      "name": "construction-farm-3-fence",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-farm-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference farm into construction stage 3: Fresh parallel ploughed furrows surrounded by a wattle fence half woven: weave only left and back sides; right and front sides show bare stakes. No crops or green plants. Preserve original square canvas, field footprint, top-down three-quarter camera and corner coordinates. Do not zoom, shift, recenter or add scenery. Match simple chunky Kenney-like pixel art, strict 48x48 logical pixels enlarged to solid square pixels, flat earthy browns with three shades max per material. No gradients, glow, soft edges, antialiasing, lettering or labels. Fully transparent outside the field. All previous construction remains, but none of the later elements."
+    }
+  ]
+}

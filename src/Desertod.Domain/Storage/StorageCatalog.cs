@@ -44,7 +44,11 @@ public static class StorageCatalog
         new(StorageKind.StoneYard, "Stone yard", [ResourceKind.Stone, ResourceKind.IronOre, ResourceKind.Coal], 4, 40),
         new(StorageKind.Granary, "Granary", [ResourceKind.Food, ResourceKind.Grain], 4, 60),
         new(StorageKind.Storehouse, "Storehouse",
-            [ResourceKind.IronIngot, ResourceKind.Leather, ResourceKind.Feathers, ResourceKind.Flax, ResourceKind.Chain, ResourceKind.Mechanism, ResourceKind.Remedy, ResourceKind.VigorDrink], 8, 15),
+            [
+                ResourceKind.IronIngot, ResourceKind.Leather, ResourceKind.Feathers, ResourceKind.Flax, ResourceKind.Chain, ResourceKind.Mechanism,
+                ResourceKind.Remedy, ResourceKind.VigorDrink, ResourceKind.Spear, ResourceKind.Bow, ResourceKind.Arrows, ResourceKind.Sword,
+                ResourceKind.Shield, ResourceKind.LeatherArmor,
+            ], 8, 15),
         new(StorageKind.Treasury, "Treasury", [ResourceKind.Gold], 2, 50),
         new(StorageKind.GreatGranary, "Great Granary", [ResourceKind.Food, ResourceKind.Grain, ResourceKind.Wood, ResourceKind.Stone], 6, 100),
     ];

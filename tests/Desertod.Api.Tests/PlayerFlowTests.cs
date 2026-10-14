@@ -43,9 +43,9 @@ public sealed class PlayerFlowTests(DesertodApiFactory factory)
     }
 
     [Fact]
-    public async Task Governor_founds_a_private_village()
+    public async Task Tsar_founds_a_private_village()
     {
-        var client = await SignedInClientAsync(UniqueName("governor"));
+        var client = await SignedInClientAsync(UniqueName("tsar"));
 
         var created = await client.PostAsJsonAsync("/api/villages", new { name = "Smoke Village", description = "Smoke test", isPrivate = true });
         Assert.Equal(HttpStatusCode.OK, created.StatusCode);
@@ -103,6 +103,71 @@ public sealed class PlayerFlowTests(DesertodApiFactory factory)
         Assert.All(started, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
     }
 
+    [Fact]
+    public async Task Walkers_explore_the_land_the_whole_village_sees()
+    {
+        var tsar = await SignedInClientAsync(UniqueName("scout-tsar"));
+        await CreateCharacterAsync(tsar, "Chief");
+        var created = await tsar.PostAsJsonAsync("/api/villages", new { name = "Scout Village" });
+        var slug = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("slug").GetString()!;
+        var path = $"/api/villages/{slug}";
+
+        var citizen = await SignedInClientAsync(UniqueName("scout-citizen"));
+        await CreateCharacterAsync(citizen, "Scout");
+        Assert.Equal(HttpStatusCode.OK, (await citizen.PostAsJsonAsync($"{path}/citizens", new { })).StatusCode);
+
+        var walked = await tsar.PostAsJsonAsync($"{path}/tsar/goto", new { spot = new { x = -30, y = -20 } });
+        Assert.Equal(HttpStatusCode.OK, walked.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await citizen.PostAsJsonAsync($"{path}/me/goto", new { spot = new { x = 40, y = 30 } })).StatusCode);
+
+        var village = await citizen.GetFromJsonAsync<JsonElement>(path);
+        var explored = Convert.FromBase64String(village.GetProperty("state").GetProperty("explored").GetString()!);
+        Assert.Equal(Domain.World.Exploration.Size, explored.Length);
+        Assert.False(Domain.World.Exploration.IsExplored(explored, 40, 30));
+
+        var blueprint = await tsar.PostAsJsonAsync($"{path}/blueprints", new { kind = "WoodPile", x = 0, y = 0 });
+        Assert.Equal(HttpStatusCode.BadRequest, blueprint.StatusCode);
+        Assert.Contains("building.unexplored", await blueprint.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Tsar_appoints_a_Governor_who_plans_buildings()
+    {
+        var tsar = await SignedInClientAsync(UniqueName("rule-tsar"));
+        await CreateCharacterAsync(tsar, "Tsar");
+        var created = await tsar.PostAsJsonAsync("/api/villages", new { name = "Ruled Village" });
+        var slug = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("slug").GetString()!;
+        var path = $"/api/villages/{slug}";
+
+        var governor = await SignedInClientAsync(UniqueName("rule-governor"));
+        await CreateCharacterAsync(governor, "Planner");
+        var joined = await governor.PostAsJsonAsync($"{path}/citizens", new { });
+        var governorId = (await joined.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetString()!;
+        var citizen = await SignedInClientAsync(UniqueName("rule-citizen"));
+        await CreateCharacterAsync(citizen, "Worker");
+        Assert.Equal(HttpStatusCode.OK, (await citizen.PostAsJsonAsync($"{path}/citizens", new { })).StatusCode);
+
+        var blueprint = new { kind = "WoodPile", x = 9, y = 11 };
+        Assert.Equal(HttpStatusCode.Forbidden, (await governor.PostAsJsonAsync($"{path}/blueprints", blueprint)).StatusCode);
+        Assert.Equal(
+            HttpStatusCode.Forbidden,
+            (await citizen.PutAsJsonAsync($"{path}/citizens/{governorId}/governor", new { isGovernor = true })).StatusCode);
+
+        var appointed = await tsar.PutAsJsonAsync($"{path}/citizens/{governorId}/governor", new { isGovernor = true });
+        Assert.Equal(HttpStatusCode.OK, appointed.StatusCode);
+        Assert.True((await appointed.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("isGovernor").GetBoolean());
+        Assert.True((await governor.GetFromJsonAsync<JsonElement>($"{path}/me")).GetProperty("isGovernor").GetBoolean());
+
+        Assert.Equal(HttpStatusCode.OK, (await governor.PostAsJsonAsync($"{path}/blueprints", blueprint)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await citizen.DeleteAsync($"{path}/blueprints/9,11")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await governor.DeleteAsync($"{path}/blueprints/9,11")).StatusCode);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            (await tsar.PutAsJsonAsync($"{path}/citizens/{governorId}/governor", new { isGovernor = false })).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await governor.PostAsJsonAsync($"{path}/blueprints", blueprint)).StatusCode);
+    }
+
     /// <summary>The sign-in cookie as a <c>Cookie</c> header; the test server's handler keeps no cookies for SignalR.</summary>
     private async Task<string> SignInCookieAsync(string name)
     {
@@ -134,6 +199,62 @@ public sealed class PlayerFlowTests(DesertodApiFactory factory)
         await connection.InvokeAsync("LeaveVillage", DemoVillage.Slug);
 
         Assert.Equal(HubConnectionState.Connected, connection.State);
+    }
+
+    [Fact]
+    public async Task Tsar_and_citizens_chat_while_outsiders_cannot()
+    {
+        var tsar = await SignedInClientAsync(UniqueName("chat-tsar"));
+        await CreateCharacterAsync(tsar, "Chief");
+        var created = await tsar.PostAsJsonAsync("/api/villages", new { name = "Chat Village" });
+        var slug = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("slug").GetString()!;
+        var path = $"/api/villages/{slug}/chat";
+
+        var citizen = await SignedInClientAsync(UniqueName("chat-citizen"));
+        await CreateCharacterAsync(citizen, "Talker");
+        Assert.Equal(HttpStatusCode.OK, (await citizen.PostAsJsonAsync($"/api/villages/{slug}/citizens", new { })).StatusCode);
+
+        var outsider = await SignedInClientAsync(UniqueName("chat-outsider"));
+        Assert.Equal(HttpStatusCode.Forbidden, (await outsider.GetAsync(path)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await outsider.PostAsJsonAsync(path, new { text = "Let me in" })).StatusCode);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await citizen.PostAsJsonAsync(path, new { text = "   " })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await citizen.PostAsJsonAsync(path, new { text = new string('a', 121) })).StatusCode);
+
+        var hello = await tsar.PostAsJsonAsync(path, new { text = " Welcome! " });
+        Assert.Equal(HttpStatusCode.OK, hello.StatusCode);
+        var reply = await citizen.PostAsJsonAsync(path, new { text = "Thanks, chief." });
+        Assert.Equal(HttpStatusCode.OK, reply.StatusCode);
+
+        var history = (await citizen.GetFromJsonAsync<JsonElement>(path)).EnumerateArray().ToList();
+        Assert.Equal(2, history.Count);
+        Assert.Equal("Welcome!", history[0].GetProperty("text").GetString());
+        Assert.Equal("Chief", history[0].GetProperty("authorName").GetString());
+        Assert.True(history[0].GetProperty("isTsar").GetBoolean());
+        Assert.Equal("Talker", history[1].GetProperty("authorName").GetString());
+        Assert.False(history[1].GetProperty("isTsar").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Village_hub_lets_only_members_into_the_chat()
+    {
+        var name = UniqueName("hub-chat");
+        var client = await SignedInClientAsync(name);
+        await CreateCharacterAsync(client, "Listener");
+        await using var connection = VillageHubConnection(await SignInCookieAsync(name));
+        await connection.StartAsync();
+
+        Assert.False(await connection.InvokeAsync<bool>("JoinChat", DemoVillage.Slug));
+
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync($"/api/villages/{DemoVillage.Slug}/citizens", new { })).StatusCode);
+        Assert.True(await connection.InvokeAsync<bool>("JoinChat", DemoVillage.Slug));
+
+        var received = new TaskCompletionSource<JsonElement>();
+        connection.On<JsonElement>("chatMessage", message => received.TrySetResult(message));
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync($"/api/villages/{DemoVillage.Slug}/chat", new { text = "Hello, hub" })).StatusCode);
+
+        var message = await received.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.Equal("Hello, hub", message.GetProperty("text").GetString());
     }
 
     [Fact]

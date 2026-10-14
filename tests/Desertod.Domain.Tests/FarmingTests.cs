@@ -3,6 +3,7 @@ using Desertod.Domain.Catalog;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Farming;
 using Desertod.Domain.Rules;
+using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
 using static Desertod.Domain.Tests.TestWorld;
 
@@ -28,17 +29,17 @@ public class FarmingTests
     [InlineData("sow-cabbage", 3)]
     [InlineData("sow-flax", 4)]
     [InlineData("sow-rye", 5)]
-    public void EachSeed_NeedsItsEnduranceLevel(string taskId, int endurance)
+    public void EachSeed_NeedsItsFarmingLevel(string taskId, int farming)
     {
         var task = Task(taskId);
         var village = FarmVillage();
-        var skilled = NewCitizen(village, (Stat.Endurance, endurance));
+        var skilled = NewCitizen(village).WithSkill(Skill.Farming, farming);
 
-        if (endurance > 0)
+        if (farming > 0)
         {
-            var novice = NewCitizen(village, (Stat.Endurance, endurance - 1));
+            var novice = NewCitizen(village).WithSkill(Skill.Farming, farming - 1);
             var error = Assert.Throws<GameRuleException>(() => CycleEngine.Start(novice, task, WorkContext.For(village), Now));
-            Assert.Equal("farm.skillRequired", error.Code);
+            Assert.Equal("task.skillRequired", error.Code);
         }
 
         CycleEngine.Start(skilled, task, WorkContext.For(village), Now);
@@ -187,12 +188,12 @@ public class FarmingTests
     }
 
     [Fact]
-    public void Endurance4_IsAFarmer()
+    public void Farming3_IsAFarmer()
     {
         var village = NewVillage();
-        var citizen = NewCitizen(village, (Stat.Endurance, 4));
+        var citizen = NewCitizen(village).WithSkill(Skill.Farming, GameCatalog.JourneymanSkill);
 
-        Assert.Equal("farmer", GameCatalog.TitleFor(citizen.Stats).Id);
+        Assert.Equal("farmer", GameCatalog.TitleFor(citizen).Id);
     }
 
     private static Village FarmVillage()

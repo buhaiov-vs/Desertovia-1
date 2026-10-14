@@ -9,7 +9,7 @@ namespace Desertod.Domain.Buildings;
 public static class ConstructionRules
 {
     /// <summary>
-    /// The Governor places a blueprint with its top-left corner on tile (<paramref name="x"/>, <paramref name="y"/>).
+    /// The Tsar or a Governor places a blueprint with its top-left corner on tile (<paramref name="x"/>, <paramref name="y"/>).
     /// It costs nothing: citizens bring every piece of it, and first fell any trees growing there.
     /// </summary>
     public static ConstructionSite Place(Village village, BuildingKind kind, int x, int y, DateTimeOffset now)
@@ -36,10 +36,23 @@ public static class ConstructionRules
         }
 
         var footprint = WorldMap.Footprint(x, y);
-        if (!WorldMap.BuildArea.Contains(footprint) || WorldMap.ReservedAreas.Any(reserved => reserved.Overlaps(footprint)))
+        if (kind == BuildingKind.RopeBridge)
+        {
+            if (!Wilderness.Spans(village, footprint))
+            {
+                throw new GameRuleException("building.bridgeNeedsRavine", "A rope bridge must span the ravine from rim to rim.",
+                    new Dictionary<string, object> { ["x"] = x, ["y"] = y });
+            }
+        }
+        else if (!WorldMap.BuildArea.Contains(footprint) || WorldMap.ReservedAreas.Any(reserved => reserved.Overlaps(footprint)))
         {
             throw new GameRuleException("building.cannotBuildHere", "Nothing can be built here.",
                 new Dictionary<string, object> { ["x"] = x, ["y"] = y });
+        }
+
+        if (!village.IsExplored(footprint))
+        {
+            throw new GameRuleException("building.unexplored", "Nobody has seen this land yet. Send someone to explore it first.");
         }
 
         if (village.AreaTaken(footprint))

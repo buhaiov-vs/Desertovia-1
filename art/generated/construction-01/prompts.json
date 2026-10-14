@@ -1,0 +1,52 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "export": "Full canvas nearest-neighbor, no content cropping; alignment requires visual audit",
+  "samples": [
+    {
+      "name": "construction-heap-1-ground",
+      "building": "heap",
+      "stage": 1,
+      "width": 32,
+      "height": 32,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-01/building-heap-preview.png",
+      "prompt": "Use case: precise-object-edit. Create one construction-stage game sprite by editing the attached finished heap reference. Stage 1: cleared earth patch with a few sticks laid at the corners; remove all stockpiled supplies. Keep the same 32x32 logical canvas, camera, building footprint, ground anchors, pixel scale and palette. Retain transparent empty space above low construction stages; do not enlarge or recenter remaining objects. Output 1024x1024 as exactly 32x enlargement of chunky 32x32 pixels. Flat earthy colors, at most 3 shades per material. No gradients, antialiasing, halos, outlines around empty ground, text, panels or scenery. Truly transparent outside the construction site. Everything completed so far remains in this stage."
+    },
+    {
+      "name": "construction-lean-to-1-frame",
+      "building": "lean-to",
+      "stage": 1,
+      "width": 32,
+      "height": 32,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-01/building-lean-to-preview.png",
+      "prompt": "Use case: precise-object-edit. Create one construction-stage game sprite by editing the attached finished lean-to reference. Stage 1: bare slanted poles on two forked posts; no reeds or bedrolls. Keep the same 32x32 logical canvas, camera, building footprint, ground anchors, pixel scale and palette. Retain transparent empty space above low construction stages; do not enlarge or recenter remaining objects. Output 1024x1024 as exactly 32x enlargement of chunky 32x32 pixels. Flat earthy colors, at most 3 shades per material. No gradients, antialiasing, halos, outlines around empty ground, text, panels or scenery. Truly transparent outside the construction site. Everything completed so far remains in this stage."
+    },
+    {
+      "name": "construction-lean-to-2-cover",
+      "building": "lean-to",
+      "stage": 2,
+      "width": 32,
+      "height": 32,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-01/building-lean-to-preview.png",
+      "prompt": "Use case: precise-object-edit. Create one construction-stage game sprite by editing the attached finished lean-to reference. Stage 2: same bare slanted poles on two forked posts with reed bundles half laid on; no bedrolls. Keep the same 32x32 logical canvas, camera, building footprint, ground anchors, pixel scale and palette. Retain transparent empty space above low construction stages; do not enlarge or recenter remaining objects. Output 1024x1024 as exactly 32x enlargement of chunky 32x32 pixels. Flat earthy colors, at most 3 shades per material. No gradients, antialiasing, halos, outlines around empty ground, text, panels or scenery. Truly transparent outside the construction site. Everything completed so far remains in this stage."
+    },
+    {
+      "name": "construction-wood-pile-1-pile",
+      "building": "wood-pile",
+      "stage": 1,
+      "width": 32,
+      "height": 32,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-01/building-wood-pile-preview.png",
+      "prompt": "Use case: precise-object-edit. Create one construction-stage game sprite by editing the attached finished wood-pile reference. Stage 1: stakes driven in and a first low row of logs, remove all higher stacked logs. Keep the same 32x32 logical canvas, camera, building footprint, ground anchors, pixel scale and palette. Retain transparent empty space above low construction stages; do not enlarge or recenter remaining objects. Output 1024x1024 as exactly 32x enlargement of chunky 32x32 pixels. Flat earthy colors, at most 3 shades per material. No gradients, antialiasing, halos, outlines around empty ground, text, panels or scenery. Truly transparent outside the construction site. Everything completed so far remains in this stage."
+    },
+    {
+      "name": "construction-stone-pile-1-ring",
+      "building": "stone-pile",
+      "stage": 1,
+      "width": 32,
+      "height": 32,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-01/building-stone-pile-preview.png",
+      "prompt": "Use case: precise-object-edit. Create one construction-stage game sprite by editing the attached finished stone-pile reference. Stage 1: half-closed ring of boulders, empty center, no stacked stones. Keep the same 32x32 logical canvas, camera, building footprint, ground anchors, pixel scale and palette. Retain transparent empty space above low construction stages; do not enlarge or recenter remaining objects. Output 1024x1024 as exactly 32x enlargement of chunky 32x32 pixels. Flat earthy colors, at most 3 shades per material. No gradients, antialiasing, halos, outlines around empty ground, text, panels or scenery. Truly transparent outside the construction site. Everything completed so far remains in this stage."
+    }
+  ]
+}

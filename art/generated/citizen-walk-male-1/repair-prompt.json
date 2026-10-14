@@ -1,0 +1,6 @@
+{
+  "mode": "built-in image_gen",
+  "target": "character-citizen-male-1-walk-frame-3-source.png",
+  "output": "character-citizen-male-1-walk-frame-3-v2-source.png",
+  "prompt": "Edit this walking character frame. Keep canvas, transparency, hair, face, torso, clothes and belt EXACTLY unchanged. Only reverse limb positions: the boot on the RIGHT SIDE OF THE IMAGE must be LOWER than the boot on the LEFT SIDE OF THE IMAGE by one chunky pixel step. Right image-side leg long/forward; left image-side leg short/back with raised boot. The LEFT image-side hand forward/lower, RIGHT image-side hand back/higher. Do not mirror the whole image; hair and belt orientation stay unchanged. This is the opposite walking contact pose. Preserve crisp pixel art and all colors. No extra objects."
+}

@@ -1,0 +1,72 @@
+# Наш экземпляр за существующим сайтом. Общие 80/443 и службы бота не занимаются.
+name: dezertovia
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: desertod
+      POSTGRES_DB: desertod
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    ports: ["127.0.0.1:5439:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    mem_limit: 512m
+    logging: {driver: local, options: {max-size: "10m", max-file: "3"}}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U desertod -d desertod"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  api:
+    build:
+      context: ..
+      target: api
+      args: {VITE_APP_BASE: /dezertovia/}
+    image: dezertovia-api:${RELEASE_SHA:?required}
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://127.0.0.1:8094
+      ASPNETCORE_HTTP_PORTS: "8094"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      ConnectionStrings__Desertod: Host=127.0.0.1;Port=5439;Database=desertod;Username=desertod;Password=${POSTGRES_PASSWORD};GSS Encryption Mode=Disable
+      DataProtection__Key: ${DATA_PROTECTION_KEY:?required}
+      Hosting__ReleaseSha: ${RELEASE_SHA}
+      Hosting__PathBase: /dezertovia
+      Hosting__InitialTelegramOwner: ${TELEGRAM_OWNER_ID:?required}
+      Authentication__Telegram__BotUsername: ${TELEGRAM_BOT_USERNAME:?required}
+      Authentication__Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:?required}
+      Authentication__Telegram__BrowserBridgeUrl: http://127.0.0.1:8686/dezertovia/auth-bridge
+      Game__DayLength: ${DAY_LENGTH:-04:00:00}
+      Game__PeacefulTime: ${PEACEFUL_TIME:-1.00:00:00}
+    mem_limit: 1024m
+    cpus: 1.5
+    logging: {driver: local, options: {max-size: "10m", max-file: "3"}}
+    healthcheck:
+      test: ["CMD", "dotnet", "Desertod.Api.dll", "--health-check"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    depends_on:
+      postgres: {condition: service_healthy}
+  postgres-backup:
+    image: postgres:17
+    restart: unless-stopped
+    entrypoint: ["sh", "/backup/backup.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: desertod
+      PGDATABASE: desertod
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_TIME: "02:00"
+      BACKUP_KEEP_DAYS: "30"
+    volumes:
+      - ./backup:/backup:ro
+      - ${BACKUP_DIR:?required}:/backups
+    depends_on:
+      postgres: {condition: service_healthy}
+    logging: {driver: local, options: {max-size: "10m", max-file: "3"}}
+volumes:
+  postgres-data:

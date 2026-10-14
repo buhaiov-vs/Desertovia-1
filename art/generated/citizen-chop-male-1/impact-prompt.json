@@ -1,0 +1,11 @@
+{
+  "name": "character-citizen-male-1-chop-frame-2",
+  "width": 16,
+  "height": 16,
+  "prompt": "ONE 16x16 logical pixel art animation frame enlarged nearest-neighbor. Same young Slavic male peasant as first reference: short brown hair, belted kosovorotka, trousers and bast shoes. Kenney Tiny style of other two refs. South-facing slightly overhead view, centered full figure, feet at bottom, transparent background. Single CHOPPING pose with a simple wooden-handled iron axe. Character and tool entirely inside canvas. Very simple chunky pixels, flat solid colors, no gradients, textures, antialiasing, shadows, scenery, stump, lettering or extra characters. Exact recolor colors: skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothing #c0cbdc/#8b9bb4/#52607c. Brown handle and grey iron axe head. Maintain same body size and foot placement across frames. Impact: both arms swung down and forward, axe head clearly visible low on screen-left side, handle diagonally across torso, knees slightly bent. Face visible. EXACTLY ONE person in ONE pose, no comparison or sprite sheet.",
+  "reference": [
+    "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+    "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+    "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+  ]
+}

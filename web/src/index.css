@@ -225,46 +225,16 @@ kbd {
   gap: 12px;
 }
 
-.hud-title,
 .hud-resources,
 .resource-chip,
 .project-banner,
-.mini-feed,
+.chat-panel,
 .hud-status {
   background: rgba(43, 29, 14, 0.82);
   color: #fff3d6;
   border: 2px solid #1b1206;
   border-radius: 8px;
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
-}
-
-.hud-title {
-  justify-self: start;
-  padding: 0.35rem 0.7rem;
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-}
-
-.brand {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: 700;
-  font-size: 1.35rem;
-  color: var(--gold);
-  letter-spacing: 0.04em;
-  text-shadow: 0 2px 0 #000;
-}
-
-a.brand {
-  text-decoration: none;
-}
-
-a.brand:hover {
-  text-decoration: underline;
-}
-
-.village-name {
-  font-weight: 700;
 }
 
 .project-banner {
@@ -309,9 +279,17 @@ a.brand:hover {
   font-variant-numeric: tabular-nums;
 }
 
+/* Development only: on the left edge, outside the interface, and left visible when the interface is hidden. */
 .night-toggle {
-  padding: 0.15rem 0.6rem;
+  position: absolute;
+  z-index: 2;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
   font-weight: 700;
+  opacity: 0.75;
 }
 
 .weather {
@@ -331,18 +309,22 @@ button.weather-chip {
   box-shadow: 0 0 0 2px #e0a92f;
 }
 
+.weather-chip.night.weather-clear .weather-icon {
+  background: transparent;
+  box-shadow: inset -4px 1px 0 0 #e8ecf5;
+}
+
 .weather-chip.raining .weather-icon {
   border-radius: 50% 50% 4px 4px;
   background: #9fb3c8;
   box-shadow: 0 0 0 2px #5b6f86;
 }
 
+/* Placed against the viewport by WeatherChip, so it never leaves the screen when the chip is near an edge */
 .weather-panel {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+  position: fixed;
   z-index: 5;
-  width: min(320px, 90vw);
+  overflow-y: auto;
   padding: 0.6rem 0.75rem;
   background: rgba(43, 29, 14, 0.94);
   color: #fff3d6;
@@ -399,19 +381,100 @@ button.weather-chip {
   flex: 1;
 }
 
-.mini-feed {
+/* Village chat with the activities, above the bottom bar */
+.chat-panel {
   align-self: flex-start;
-  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   margin: auto 0 10px;
   padding: 0.4rem 0.7rem;
-  max-width: 420px;
+  width: min(420px, 100%);
   font-size: 0.82rem;
-  background: rgba(43, 29, 14, 0.6);
+  background: rgba(43, 29, 14, 0.72);
 }
 
-.mini-feed li + li {
-  margin-top: 0.15rem;
-  opacity: 0.85;
+.chat-panel.collapsed {
+  width: auto;
+}
+
+.chat-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chat-head .hud-card-head {
+  width: auto;
+}
+
+.chat-head .chip {
+  margin-left: auto;
+  padding: 0.05rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.chat-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.2rem 0 0;
+  max-height: min(180px, 16vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.chat-line + .chat-line {
+  margin-top: 0.2rem;
+}
+
+.chat-line.activity {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.chat-line.muted {
+  margin: 0;
+  color: #cdb991;
+}
+
+.chat-text {
+  overflow-wrap: anywhere;
+}
+
+.chat-author {
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.chat-line.own .chat-author {
+  color: #b8e986;
+}
+
+.chat-author .badge {
+  margin-left: 0.3rem;
+  font-size: 0.7rem;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.85rem;
+}
+
+.chat-form button {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.chat-error {
+  margin: 0;
+  color: #ffb347;
 }
 
 /* Tribe needs and the first-steps guide, under the top bar */
@@ -578,17 +641,18 @@ button.quest-tracker-body:active {
   font-weight: 700;
 }
 
+/* Actions sit at the right edge, under the thumb on phones and the mouse hand on desktops. */
 .hud-bottom {
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
 }
 
 .hud-left {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 6px;
   min-width: 0;
 }
@@ -596,12 +660,59 @@ button.quest-tracker-body:active {
 .hud-needs {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
 }
 
 .hud-needs .resource-chip {
   font-size: 0.85rem;
+}
+
+button.hint-term {
+  display: inline;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
   cursor: help;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+button.hint-term.resource-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+button.hint-term:hover,
+button.hint-term.open {
+  text-decoration-style: solid;
+}
+
+button.hint-term:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.hint-popup {
+  position: fixed;
+  z-index: 1000;
+  max-width: min(20rem, calc(100vw - 16px));
+  padding: 0.5rem 0.65rem;
+  background: var(--parchment);
+  color: var(--ink);
+  border: 2px solid var(--wood-dark);
+  border-radius: 6px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.35;
+  white-space: pre-line;
 }
 
 .hud-needs .needs-warning {
@@ -627,6 +738,14 @@ button.quest-tracker-body:active {
   line-height: 1;
 }
 
+.morale-icon {
+  width: 24px;
+  text-align: center;
+  font-weight: 700;
+  color: #ffd166;
+  line-height: 1;
+}
+
 .sleep-icon small {
   font-size: 0.7em;
   transform: translateY(-0.35em);
@@ -635,6 +754,7 @@ button.quest-tracker-body:active {
 .hud-status {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.6rem;
   padding: 0.45rem 0.7rem;
   min-width: min(440px, 100%);
@@ -750,6 +870,8 @@ button.quest-tracker-body:active {
   display: flex;
   flex-direction: column;
   max-height: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .modal.menu {
@@ -797,6 +919,8 @@ button.quest-tracker-body:active {
 
 .modal-body {
   overflow-y: auto;
+  min-height: 0;
+  flex: 1 1 auto;
   padding: 0.8rem;
   display: flex;
   flex-direction: column;
@@ -808,13 +932,32 @@ button.quest-tracker-body:active {
   border-top: 2px solid var(--parchment-dark);
 }
 
+.menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border-top: 2px solid var(--parchment-dark);
+}
+
+.menu-actions .danger {
+  margin-right: auto;
+  color: #8a1c10;
+  border-color: #8a1c10;
+}
+
 .close {
   padding: 0.2rem 0.55rem;
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
+  min-width: 0;
 }
 
 .tab {
@@ -902,6 +1045,117 @@ button.big {
 .task-card.current {
   border-color: var(--gold);
   box-shadow: 0 0 0 2px var(--gold);
+}
+
+/* Technology tree */
+.tech-tree-scroll {
+  overflow-x: auto;
+  padding: 4px 4px 6px;
+}
+
+.tech-tree {
+  position: relative;
+  margin: 0 auto;
+}
+
+.tech-links {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tech-link {
+  fill: none;
+  stroke: #c9b48a;
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
+.tech-link.done {
+  stroke: var(--green);
+  stroke-dasharray: none;
+}
+
+.tech-link.active {
+  stroke: var(--wood-dark);
+  stroke-width: 3;
+}
+
+.tech-link.done.active {
+  stroke: #2f6a1f;
+}
+
+button.tech-node {
+  position: absolute;
+  padding: 0.25rem 0.4rem;
+  gap: 0.4rem;
+  text-align: left;
+  font-weight: 400;
+}
+
+.tech-node.discovered {
+  background: linear-gradient(#e3f2cf, #b9d99a);
+  border-color: var(--green);
+}
+
+.tech-node.current {
+  background: linear-gradient(#ffe9a8, #f0c55a);
+  border-color: #a8761a;
+}
+
+.tech-node.locked {
+  background: #efe4cc;
+  border-color: #a8916a;
+  box-shadow: 0 2px 0 #a8916a;
+  color: var(--muted);
+}
+
+.tech-node.locked .tile-icon {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.tech-node.selected {
+  outline: 3px solid var(--blue);
+  outline-offset: 1px;
+}
+
+.tech-node-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 0.15rem;
+}
+
+.tech-node-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tech-node-meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.tech-node .bar {
+  flex: none;
+  min-width: 0;
+}
+
+.tech-node .bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(#ffe08a, #d79b1d);
+}
+
+.tech-details .task-card {
+  display: flex;
 }
 
 .task-text {
@@ -1164,6 +1418,14 @@ button.big {
   margin-bottom: 0.5rem;
 }
 
+.check-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
 .inline-form {
   display: flex;
   flex-wrap: wrap;
@@ -1258,6 +1520,10 @@ input[aria-invalid='true'] {
   animation: pop-in 0.2s ease-out;
 }
 
+.done-panel .modal-header {
+  padding-top: 0.8rem;
+}
+
 .done-body {
   padding: 0.6rem 0.9rem 0;
 }
@@ -1271,8 +1537,11 @@ input[aria-invalid='true'] {
   padding-left: 1.1rem;
 }
 
+/* Reversed, so the first button in the markup, the main one, lands at the right edge. */
 .done-actions {
   display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
   gap: 0.4rem;
   padding: 0.6rem 0.9rem 0.8rem;
   flex-wrap: wrap;
@@ -1346,6 +1615,123 @@ input[aria-invalid='true'] {
   font-weight: 600;
 }
 
+.raid-banner {
+  align-self: center;
+  margin-top: 8px;
+  padding: 0.4rem 0.9rem 0.5rem;
+  min-width: min(380px, 80vw);
+  text-align: center;
+  background: linear-gradient(rgba(70, 10, 10, 0.94), rgba(35, 5, 5, 0.94));
+  color: #ffd9c2;
+  border: 2px solid #ff5a3c;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(255, 70, 40, 0.45);
+  animation: raid-pulse 1.6s ease-in-out infinite;
+}
+
+.raid-banner-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-shadow: 0 2px 0 #000;
+}
+
+.raid-banner-row {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.3rem;
+}
+
+.dungeon-banner {
+  background: linear-gradient(rgba(36, 34, 44, 0.94), rgba(16, 14, 20, 0.94));
+  color: #dcd6e8;
+  border-color: #8a7aa8;
+  box-shadow: 0 0 12px rgba(140, 120, 180, 0.45);
+  animation: none;
+}
+
+.task-card.locked {
+  opacity: 0.55;
+}
+
+.dungeon-root .hud {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.dungeon-top {
+  align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 0.35rem 0.8rem;
+  background: rgba(24, 22, 28, 0.88);
+  color: #dcd6e8;
+  border: 2px solid #8a7aa8;
+  border-radius: 8px;
+}
+
+.dungeon-hint {
+  align-self: center;
+  padding: 0.2rem 0.6rem;
+  background: rgba(24, 22, 28, 0.75);
+  color: #dcd6e8;
+  border-radius: 6px;
+}
+
+.dungeon-hero {
+  position: absolute;
+  left: 12px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  width: min(280px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.dungeon-hero .bar > div {
+  background: #d03030;
+}
+
+@keyframes raid-pulse {
+  50% {
+    box-shadow: 0 0 22px rgba(255, 70, 40, 0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raid-banner {
+    animation: none;
+  }
+}
+
+.injury-icon {
+  color: #ff5a3c;
+  font-weight: 700;
+  width: 18px;
+  text-align: center;
+}
+
+.fight-report {
+  margin: 0.4rem 0;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid #ff5a3c;
+  background: rgba(255, 90, 60, 0.08);
+}
+
+.fight-report.won {
+  border-left-color: #6fbf4a;
+  background: rgba(111, 191, 74, 0.08);
+}
+
+.task-danger {
+  color: #c0392b;
+}
+
 .storage-list {
   list-style: none;
   margin: 0;
@@ -1414,9 +1800,8 @@ input[aria-invalid='true'] {
 
 .minimap {
   position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
+  top: max(10px, env(safe-area-inset-top));
   width: 240px;
   aspect-ratio: 120 / 90;
   border: 2px solid var(--gold);
@@ -1434,12 +1819,49 @@ input[aria-invalid='true'] {
   height: 100%;
 }
 
-@media (max-width: 640px) {
+/* The minimap takes the top right corner with the resources in two rows beside it; the guide keeps clear of it. */
+@media (min-width: 721px) {
+  .hud-top {
+    padding-right: 248px;
+  }
+
+  /* Fixed columns: without a running project the banner is not rendered, and the chips must stay on the right. */
+  .project-banner {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .hud-resources {
+    grid-row: 1;
+    grid-column: 3;
+    display: grid;
+    grid-template-columns: repeat(var(--columns), auto);
+    padding: 0;
+  }
+
+  .hud-side {
+    padding-right: 252px;
+  }
+
+  /* In the bottom left corner, level with the bottom bar on the right. */
+  .chat-panel {
+    position: absolute;
+    left: 12px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    margin: 0;
+    width: min(400px, 32vw);
+  }
+}
+
+@media (max-width: 720px) {
+  /* --hud-top-bottom is where the top bar ends, measured by the game page. */
+  .game-root {
+    --minimap-top: calc(var(--hud-top-bottom, 122px) + 6px);
+  }
+
   .minimap {
-    left: auto;
     right: 8px;
-    top: 128px;
-    transform: none;
+    top: var(--minimap-top);
     width: 112px;
   }
 
@@ -1447,6 +1869,72 @@ input[aria-invalid='true'] {
   .hud-side {
     padding-right: 124px;
   }
+}
+
+/* Under the minimap; stays where it is when the rest of the interface is hidden, so it is found again.
+   Above every panel and popup, below hints and the update prompt. */
+.ui-toggle {
+  position: absolute;
+  z-index: 999;
+  top: calc(max(10px, env(safe-area-inset-top)) + 186px);
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+/* Over the bottom right corner of the minimap. */
+.minimap-locate {
+  position: absolute;
+  top: calc(max(10px, env(safe-area-inset-top)) + 144px);
+  right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+
+.minimap-locate svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 720px) {
+  .minimap-locate {
+    top: calc(var(--minimap-top) + 54px);
+    right: 14px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .minimap-locate svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.ui-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+@media (max-width: 720px) {
+  /* Under the minimap, in the column the guide keeps clear. */
+  .ui-toggle {
+    top: calc(var(--minimap-top) + 90px);
+    right: 8px;
+  }
+}
+
+/* Panels, popups and dialogs are siblings of the canvas, so everything but the map and the toggles goes. */
+.game-root.ui-hidden > :not(.game-canvas, .ui-toggle, .night-toggle),
+.game-root.ui-hidden .minimap {
+  display: none;
 }
 
 .zoom-controls button {
@@ -1717,13 +2205,8 @@ textarea {
     gap: 6px;
   }
 
-  .hud-title {
-    justify-self: stretch;
-    padding: 0.25rem 0.5rem;
-  }
-
-  .brand {
-    font-size: 1.05rem;
+  .hud-top-spacer {
+    display: none;
   }
 
   .project-banner {
@@ -1770,9 +2253,19 @@ textarea {
 
   /* Folded cards shrink to a one-line pill so the map stays visible. */
   .quest-tracker.collapsed,
-  .guide.collapsed {
+  .guide.collapsed,
+  .chat-panel.collapsed {
     width: auto;
     padding: 0.3rem 0.6rem;
+  }
+
+  .chat-panel {
+    width: 100%;
+    margin-bottom: 6px;
+  }
+
+  .chat-lines {
+    max-height: 120px;
   }
 
   .hud-status {
@@ -1844,4 +2337,21 @@ textarea {
   .modal-footer {
     display: none;
   }
+}
+
+.update-prompt {
+  position: fixed;
+  left: 50%;
+  top: calc(12px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: calc(100vw - 16px);
+  padding: 0.5rem 0.75rem;
+  background: var(--parchment);
+  border: 2px solid var(--wood-dark);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }

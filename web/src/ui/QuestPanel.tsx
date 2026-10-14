@@ -34,17 +34,19 @@ const STORY_TASKS: Partial<Record<StoryQuestKind, string[]>> = {
   GreatGranary: ['survey', 'supervise', 'deliver-wood', 'deliver-stone', 'deliver-reeds', 'build'],
 }
 
-function objectiveText(i18n: Translator, quest: Quest, objective: QuestObjective, governor: boolean) {
+/** The Tsar reads every objective as a ruler; a Governor only the planning ones, the rest as the citizen they are. */
+function objectiveText(i18n: Translator, quest: Quest, objective: QuestObjective, tsar: boolean, ruler: boolean) {
   const resource = quest.resource ? i18n.resource(quest.resource).toLowerCase() : ''
-  if (objective.required === null) return i18n.objective(objective.id, governor, { resource })
-  return i18n.objective(objective.id, governor, {
+  const rulerView = tsar || (ruler && objective.audience === 'Rulers')
+  if (objective.required === null) return i18n.objective(objective.id, rulerView, { resource })
+  return i18n.objective(objective.id, rulerView, {
     resource,
     current: i18n.amount(objective.current ?? 0),
     required: i18n.amount(objective.required),
   })
 }
 
-/** A ready-made chat line; the game itself never passes messages from citizens to the Governor. */
+/** A ready-made chat line; the game itself never passes messages from citizens to the Tsar. */
 function tellLine(i18n: Translator, quest: Quest, village: VillageState, catalog: Catalog) {
   if (quest.kind === 'Cold') {
     const beds = quest.objectives.find((o) => o.id === 'build-shelter')
@@ -66,7 +68,8 @@ function tellLine(i18n: Translator, quest: Quest, village: VillageState, catalog
 export function QuestPanel({
   village,
   catalog,
-  governor,
+  tsar,
+  ruler,
   citizen,
   disabled,
   onStart,
@@ -75,7 +78,9 @@ export function QuestPanel({
 }: {
   village: VillageState
   catalog: Catalog
-  governor: boolean
+  tsar: boolean
+  /** The Tsar, or a citizen the Tsar appointed Governor: plans the buildings needs ask for. */
+  ruler: boolean
   citizen: Citizen | null | undefined
   disabled: boolean
   onStart: (task: Task) => void
@@ -103,10 +108,7 @@ export function QuestPanel({
   const story = village.quests.filter((quest) => isStoryQuest(quest.kind))
   const needs = village.quests.filter((quest) => !isStoryQuest(quest.kind))
 
-  const level = (stat: string) => citizen?.stats.find((s) => s.stat === stat)?.level ?? 0
-  const qualified = (task: Task) =>
-    (catalog.roles.find((role) => role.id === task.roleId)?.requirements.every((r) => level(r.stat) >= r.minimum) ?? false) &&
-    (citizen?.skills.find((s) => s.skill === task.skill)?.level ?? 0) >= task.skillLevel
+  const qualified = (task: Task) => (citizen?.skills.find((s) => s.skill === task.skill)?.level ?? 0) >= task.skillLevel
 
   const storyTasks = (quest: Quest) =>
     isStoryQuest(quest.kind)
@@ -120,7 +122,7 @@ export function QuestPanel({
       <button
         key={task.id}
         className="primary"
-        disabled={disabled || blockedByLoad(task, citizen) !== null || veinEmpty(village, task)}
+        disabled={disabled || blockedByLoad(task, citizen, village.resources, catalog.rules.takeLimit) !== null || veinEmpty(village, task)}
         onClick={() => onStart(task)}
       >
         {i18n.task(task.id)}
@@ -130,7 +132,7 @@ export function QuestPanel({
   const renderQuest = (quest: Quest) => {
     const text = i18n.quest(quest)
     const reward = catalog.questRewards[quest.kind]
-    const governorPending = quest.objectives.some((o) => o.audience === 'Governor' && !o.done)
+    const planPending = quest.objectives.some((o) => o.audience === 'Rulers' && !o.done)
     return (
       <article key={quest.id} className={`quest quest-${quest.kind.toLowerCase()}`}>
         <h4>{text.title}</h4>
@@ -139,7 +141,7 @@ export function QuestPanel({
           {quest.objectives.map((objective) => (
             <li key={objective.id} className={objective.done ? 'done' : ''}>
               <span className="quest-check">{objective.done ? '✓' : '○'}</span>
-              {objectiveText(i18n, quest, objective, governor)}
+              {objectiveText(i18n, quest, objective, tsar, ruler)}
             </li>
           ))}
         </ul>
@@ -149,7 +151,7 @@ export function QuestPanel({
           </p>
         )}
         <div className="row">
-          {governor && governorPending && (
+          {ruler && planPending && (
             <button className="primary" onClick={onPlan}>
               {t('quest.plan')}
             </button>
@@ -157,7 +159,7 @@ export function QuestPanel({
           {quest.kind === 'Hunger' && foodTasks.map(taskButton)}
           {storyTasks(quest).map(taskButton)}
           {citizen && village.sites.length > 0 && <button onClick={onHelpBuild}>{t('quest.helpBuild')}</button>}
-          {citizen && governorPending && <button onClick={() => tell(quest)}>{t('quest.tell')}</button>}
+          {citizen && !ruler && planPending && <button onClick={() => tell(quest)}>{t('quest.tell')}</button>}
         </div>
         {copied === quest.id && <p className="small highlight">{t('quest.copied')}</p>}
       </article>
@@ -174,7 +176,7 @@ export function QuestPanel({
       )}
       <section className="card quests">
         <h3>{t('quest.title')}</h3>
-        {governor && <p className="small muted">{t('quest.governorHint')}</p>}
+        {ruler && <p className="small muted">{t('quest.rulerHint')}</p>}
         {needs.length === 0 && <p className="muted small">{t('quest.none')}</p>}
         {needs.map(renderQuest)}
       </section>
@@ -185,12 +187,14 @@ export function QuestPanel({
 /** Compact list of open needs on the game screen; opens the full list on click. Starts folded on phones. */
 export function QuestTracker({
   village,
-  governor,
+  tsar,
+  ruler,
   phone,
   onOpen,
 }: {
   village: VillageState
-  governor: boolean
+  tsar: boolean
+  ruler: boolean
   phone: boolean
   onOpen: () => void
 }) {
@@ -210,11 +214,11 @@ export function QuestTracker({
           <ul>
             {shown.map((quest) => {
               const open = quest.objectives.filter((o) => !o.done)
-              const next = (governor ? open.find((o) => o.audience === 'Governor') : undefined) ?? open[0]
+              const next = (ruler ? open.find((o) => o.audience === 'Rulers') : undefined) ?? open[0]
               return (
                 <li key={quest.id}>
                   <span>{i18n.quest(quest).title}</span>
-                  {next && <span className="quest-next">{objectiveText(i18n, quest, next, governor)}</span>}
+                  {next && <span className="quest-next">{objectiveText(i18n, quest, next, tsar, ruler)}</span>}
                 </li>
               )
             })}

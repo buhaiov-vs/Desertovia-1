@@ -1,0 +1,36 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-monument-pedestal",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 world prop for medieval Slavic village game. Square grey stone pedestal with stepped base and flat top, small ground shadow. No statue or figure, empty pedestal. Strict 16x16 logical pixel grid enlarged to square canvas. Each logical pixel a large flat square. Fit within 14x14 pixels centered, one pixel clear margin. Extremely simple Kenney Tiny Town silhouette, exactly three flat stone grey shades, top-left light. South-facing top-down three-quarter view, not isometric. Fully transparent background and gaps. No text, scenery, gradients, antialiasing, haze, neon fringes, fine texture, pure black outlines or extra panels."
+    },
+    {
+      "name": "prop-monument-rough-block",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 world prop for medieval Slavic village game. Rough uncut grey stone block with a few chisel marks, roughly shaped like a standing figure. No pedestal, no ground, no shadow; this piece will be drawn above a separate pedestal. Strict 16x16 logical pixel grid enlarged to square canvas. Each logical pixel a large flat square. Fit within 14x14 pixels centered, one pixel clear margin. Extremely simple Kenney Tiny Town silhouette, exactly three flat stone grey shades, top-left light. South-facing top-down three-quarter view, not isometric. Fully transparent background and gaps. No text, scenery, gradients, antialiasing, haze, neon fringes, fine texture, pure black outlines or extra panels."
+    },
+    {
+      "name": "prop-tsar-statue",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 world prop for medieval Slavic village game. Grey stone statue of a bearded Tsar in a long robe wearing a crown and holding a sceptre. ALL parts including crown and sceptre are grey stone, no gold or colored gems. No pedestal, ground or shadow; the figure will be drawn above a separate pedestal. Strict 16x16 logical pixel grid enlarged to square canvas. Each logical pixel a large flat square. Fit within 14x14 pixels centered, one pixel clear margin. Extremely simple Kenney Tiny Town silhouette, exactly three flat stone grey shades, top-left light. South-facing top-down three-quarter view, not isometric. Fully transparent background and gaps. No text, scenery, gradients, antialiasing, haze, neon fringes, fine texture, pure black outlines or extra panels."
+    }
+  ]
+}

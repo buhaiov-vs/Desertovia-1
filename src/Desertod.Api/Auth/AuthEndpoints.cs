@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.DataProtection;
 using Desertod.Domain;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
@@ -17,6 +18,8 @@ public static class AuthEndpoints
     public sealed record PasswordRegisterRequest(string Email, string Password, string Name);
 
     public sealed record PasswordLoginRequest(string Email, string Password);
+
+    public sealed record MiniAppLoginRequest(string? InitData);
 
     public sealed record CreateCharacterRequest(string Name, Appearance? Appearance);
 
@@ -66,6 +69,43 @@ public static class AuthEndpoints
             await SignInAsync(http, logger, account.Id, AuthenticationSetup.TelegramProvider, user.Id, user.DisplayName);
 
             return Results.LocalRedirect(SafeReturnUrl(http.Request.Query[TelegramLoginVerifier.ReturnUrlParameter]));
+        });
+
+        auth.MapPost("/telegram/miniapp", async (MiniAppLoginRequest request, HttpContext http,
+            TelegramMiniAppVerifier verifier, AccountService accounts, CancellationToken cancellationToken) =>
+        {
+            var user = verifier.Verify(request.InitData);
+            if (user is null) return Results.Unauthorized();
+            var account = await accounts.ResolveExternalLoginAsync(AuthenticationSetup.TelegramProvider, user.Id, user.DisplayName, cancellationToken);
+            await SignInAsync(http, logger, account.Id, AuthenticationSetup.TelegramProvider, user.Id, user.DisplayName);
+            return Results.NoContent();
+        }).RequireRateLimiting(AuthenticationSetup.PasswordRateLimit);
+
+        auth.MapPost("/telegram/browser/start", async (HttpContext http, TelegramBrowserBridge bridge,
+            IDataProtectionProvider protection, CancellationToken cancellationToken) =>
+        {
+            if (!bridge.Enabled) return Results.NotFound();
+            var start = await bridge.CallAsync<BrowserLoginStart>("start", new { }, cancellationToken);
+            http.Response.Cookies.Append("desertovia_pending", protection.CreateProtector("desertovia-browser-login").Protect(start.Raw),
+                new CookieOptions { HttpOnly = true, Secure = http.Request.IsHttps, SameSite = SameSiteMode.Lax,
+                    Path = http.Request.PathBase.HasValue ? http.Request.PathBase.Value : "/", MaxAge = TimeSpan.FromMinutes(5) });
+            return Results.Ok(new { start.Url, start.Pin });
+        }).RequireRateLimiting(AuthenticationSetup.PasswordRateLimit);
+
+        auth.MapPost("/telegram/browser/poll", async (HttpContext http, TelegramBrowserBridge bridge,
+            IDataProtectionProvider protection, AccountService accounts, CancellationToken cancellationToken) =>
+        {
+            if (!bridge.Enabled) return Results.NotFound();
+            if (!http.Request.Cookies.TryGetValue("desertovia_pending", out var cookie)) return Results.Ok(new { pending = true });
+            string raw;
+            try { raw = protection.CreateProtector("desertovia-browser-login").Unprotect(cookie); }
+            catch (System.Security.Cryptography.CryptographicException) { return Results.Unauthorized(); }
+            var result = await bridge.CallAsync<BrowserLoginPoll>("poll", new { raw }, cancellationToken);
+            if (result.Pending || string.IsNullOrEmpty(result.Id)) return Results.Ok(new { pending = true });
+            var account = await accounts.ResolveExternalLoginAsync(AuthenticationSetup.TelegramProvider, result.Id, result.Name ?? "Telegram", cancellationToken);
+            await SignInAsync(http, logger, account.Id, AuthenticationSetup.TelegramProvider, result.Id, account.DisplayName);
+            http.Response.Cookies.Delete("desertovia_pending", new CookieOptions { Path = http.Request.PathBase.HasValue ? http.Request.PathBase.Value : "/" });
+            return Results.Ok(new { pending = false });
         });
 
         auth.MapPost("/dev-login", async (

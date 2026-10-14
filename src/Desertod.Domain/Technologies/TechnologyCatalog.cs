@@ -17,7 +17,7 @@ public enum Era
 public sealed record YieldBonus(string TaskId, double Multiplier);
 
 /// <summary>
-/// A discovery the village makes together. The Governor puts a few to the vote and citizens choose the next one; citizens with the required skills research it
+/// A discovery the village makes together. The Tsar or a Governor puts a few to the vote and citizens choose the next one; citizens with the required skills research it
 /// at its building, like an upgrade researched in a building. What it unlocks is declared on the buildings, tasks and roles
 /// (their technology requirement); bonuses are declared here.
 /// </summary>
@@ -63,6 +63,9 @@ public static class TechnologyCatalog
     public const string Forging = "forging";
     public const string WeatherLore = "weather-lore";
     public const string VigorDrinks = "vigor-drinks";
+    public const string Weaponcraft = "weaponcraft";
+    public const string Archery = "archery";
+    public const string Warfare = "warfare";
 
     private static StatRequirement Needs(Stat stat, int minimum) => new(stat, minimum);
 
@@ -77,7 +80,7 @@ public static class TechnologyCatalog
         new(StoneTools, "Stone tools", "Sharp stones bound to handles. Wood and stone come easier.",
             Era.Camp, BuildingKind.StonePile, [], [Needs(Stat.Strength, 2)], Stat.Strength, Stat.Dexterity, 4, 2,
             [Bonus("chop-wood", 1.25), Bonus("quarry-stone", 1.25)]),
-        new(HerbLore, "Herb lore", "Which berries feed and which roots heal. Foraging gives more.",
+        new(HerbLore, "Herb lore", "Which berries feed and which roots heal. Foraging gives more, and poultices close wounds.",
             Era.Camp, BuildingKind.DryingRack, [], [Needs(Stat.Intelligence, 2)], Stat.Intelligence, Stat.Dexterity, 4, 2,
             [Bonus("forage", 1.25), Bonus("study-plants", 1.25)]),
         new(Weaving, "Weaving", "Reeds twisted into cords and mats. Reeds are cut faster.",
@@ -86,6 +89,12 @@ public static class TechnologyCatalog
         new(Tracking, "Tracking", "Reading hoof prints and broken twigs. Hunters bring back more.",
             Era.Camp, BuildingKind.DryingRack, [], [Needs(Stat.Dexterity, 2), Needs(Stat.Intelligence, 1)], Stat.Dexterity, Stat.Intelligence, 4, 2,
             [Bonus("hunt", 1.2), Bonus("track-game", 1.2), Bonus("hunt-birds", 1.2)]),
+        new(Weaponcraft, "Weaponcraft", "Fire-hardened spears and hide armor. Wolves think twice.",
+            Era.Camp, BuildingKind.StonePile, [StoneTools], [Needs(Stat.Strength, 2), Needs(Stat.Dexterity, 1)], Stat.Strength, Stat.Dexterity, 4, 2,
+            []),
+        new(Archery, "Archery", "A bent stick, a gut string and feathered arrows. Beasts are struck before they reach you.",
+            Era.Camp, BuildingKind.DryingRack, [Tracking, Weaponcraft], [Needs(Stat.Dexterity, 2), Needs(Stat.Intelligence, 1)], Stat.Dexterity, Stat.Intelligence, 4, 2,
+            []),
 
         new(Agriculture, "Agriculture", "Seeds put in the ground come back as grain. The tribe can plan a farm.",
             Era.Village, BuildingKind.Granary, [HerbLore], [Needs(Stat.Endurance, 3), Needs(Stat.Intelligence, 2)], Stat.Endurance, Stat.Intelligence, 8, 3,
@@ -127,6 +136,9 @@ public static class TechnologyCatalog
         new(Forging, "Forging", "Iron folded and hammered into chains. Master smiths appear; iron is smelted faster.",
             Era.Town, BuildingKind.Smithy, [Smelting], [Needs(Stat.Strength, 6), Needs(Stat.Dexterity, 4)], Stat.Strength, Stat.Dexterity, 12, 3,
             [Bonus("smelt-ingot", 1.25)]),
+        new(Warfare, "Warfare", "Iron swords, oak shields and drills on the yard. The tribe can plan barracks; guards and captains appear.",
+            Era.Town, BuildingKind.Smithy, [Smelting, Weaponcraft], [Needs(Stat.Strength, 5), Needs(Stat.Endurance, 3)], Stat.Strength, Stat.Endurance, 12, 3,
+            []),
         new(VigorDrinks, "Vigor drinks",
             "Kvass, honey, beans from a passing merchant and three scholars who have not slept since Tuesday. Tastes like a thunderstorm. Brewed at the tavern; a drink gives energy back.",
             Era.Town, BuildingKind.Tavern, [Brewing, Alchemy, Bookkeeping], [Needs(Stat.Charisma, 4), Needs(Stat.Intelligence, 4)],

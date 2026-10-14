@@ -5,6 +5,7 @@ using Desertod.Domain.Entities;
 using Desertod.Domain.Projects;
 using Desertod.Domain.Quests;
 using Desertod.Domain.Rules;
+using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
 using Desertod.Domain.Storage;
 using Desertod.Domain.World;
@@ -16,24 +17,26 @@ namespace Desertod.Api.Game;
 /// <summary>
 /// Development only: a village half way through the story, with the Tsar Bridge under construction and citizens at
 /// work, so the bridge and its panel can be seen without hours of play. It is rebuilt on every
-/// start; its Governor and citizens are development logins, so anyone can sign in as them by name.
+/// start; its Tsar and citizens are development logins, so anyone can sign in as them by name.
 /// </summary>
 public static class DemoVillage
 {
     public const string Slug = "demo-bridge";
     private const string Name = "Демо: Царский мост";
-    private const string GovernorName = "Демо-посадник";
+    private const string TsarName = "Демо-царь";
 
-    private sealed record Resident(string Name, string TaskId, int Strength, int Dexterity, int Intelligence, int Charisma, int Endurance);
+    /// <param name="SkillLevel">Level of the craft of the resident's task; within what their stats allow.</param>
+    private sealed record Resident(
+        string Name, string TaskId, int Strength, int Dexterity, int Intelligence, int Charisma, int Endurance, int SkillLevel);
 
     private static readonly Resident[] Residents =
     [
-        new("Ярослав", "supervise", 2, 1, 5, 2, 2),
-        new("Добрыня", "build", 4, 1, 1, 1, 3),
-        new("Тихон", "build", 3, 2, 1, 1, 3),
-        new("Алёна", "deliver-wood", 2, 3, 2, 2, 3),
-        new("Василиса", "deliver-stone", 3, 2, 4, 2, 2),
-        new("Ульяна", "deliver-reeds", 1, 3, 2, 3, 3),
+        new("Ярослав", "supervise", 2, 1, 5, 2, 2, 4),
+        new("Добрыня", "build", 4, 1, 1, 1, 3, 2),
+        new("Тихон", "build", 3, 2, 1, 1, 3, 2),
+        new("Алёна", "deliver-wood", 2, 3, 2, 2, 3, 3),
+        new("Василиса", "deliver-stone", 3, 2, 4, 2, 2, 2),
+        new("Ульяна", "deliver-reeds", 1, 3, 2, 3, 3, 2),
     ];
 
     private static readonly QuestKind[] DoneQuests =
@@ -46,11 +49,11 @@ public static class DemoVillage
 
     public static async Task SeedAsync(DesertodDbContext db, TimeProvider time, CancellationToken cancellationToken)
     {
-        await RemoveAsync(db, cancellationToken);
+        await RemoveAsync(db, Slug, cancellationToken);
         var now = time.GetUtcNow();
 
-        var governor = await AccountAsync(db, GovernorName, now, cancellationToken);
-        var village = Village.Create(Slug, Name, "Посмотреть стройку Царского моста без долгой игры.", false, governor.Id, now);
+        var tsar = await AccountAsync(db, TsarName, now, cancellationToken);
+        var village = Village.Create(Slug, Name, "Посмотреть стройку Царского моста без долгой игры.", false, tsar.Id, now);
         village.Structures.AddRange(
         [
             new Structure { Kind = BuildingKind.Hut, PlotId = "13,5", BuiltAt = now },
@@ -80,7 +83,9 @@ public static class DemoVillage
                 Charisma = resident.Charisma,
                 Endurance = resident.Endurance,
             };
+            citizen.Skills.Add(new SkillProgress { Kind = GameCatalog.FindTask(resident.TaskId)!.Skill, Level = resident.SkillLevel });
             citizen.StoredEnergy = citizen.MaximumEnergy;
+            citizen.IsGovernor = resident.TaskId == "supervise";
             citizens.Add(citizen);
         }
 
@@ -158,9 +163,9 @@ public static class DemoVillage
         }
     }
 
-    private static async Task RemoveAsync(DesertodDbContext db, CancellationToken cancellationToken)
+    internal static async Task RemoveAsync(DesertodDbContext db, string slug, CancellationToken cancellationToken)
     {
-        var village = await db.Villages.SingleOrDefaultAsync(v => v.Slug == Slug, cancellationToken);
+        var village = await db.Villages.SingleOrDefaultAsync(v => v.Slug == slug, cancellationToken);
         if (village is null)
         {
             return;
@@ -176,13 +181,14 @@ public static class DemoVillage
         await db.Set<QuestContribution>().Where(c => citizenIds.Contains(c.CitizenId)).ExecuteDeleteAsync(cancellationToken);
         await db.VillageProjects.Where(p => p.VillageId == village.Id).ExecuteDeleteAsync(cancellationToken);
         await db.VillageQuests.Where(q => q.VillageId == village.Id).ExecuteDeleteAsync(cancellationToken);
+        await db.ChatMessages.Where(m => m.VillageId == village.Id).ExecuteDeleteAsync(cancellationToken);
         await db.Citizens.Where(c => c.VillageId == village.Id).ExecuteDeleteAsync(cancellationToken);
         await db.Villages.Where(v => v.Id == village.Id).ExecuteDeleteAsync(cancellationToken);
         db.ChangeTracker.Clear();
     }
 
     /// <summary>The development login with this name, as the login page would create it.</summary>
-    private static async Task<Account> AccountAsync(DesertodDbContext db, string name, DateTimeOffset now, CancellationToken cancellationToken)
+    internal static async Task<Account> AccountAsync(DesertodDbContext db, string name, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var userId = name.ToLowerInvariant();
         var login = await db.ExternalLogins.SingleOrDefaultAsync(

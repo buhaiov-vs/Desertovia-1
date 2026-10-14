@@ -1,0 +1,622 @@
+[
+  {
+    "name": "construction-heap-1-ground",
+    "building": "Heap",
+    "stage": 1,
+    "prompt": "Building under construction, same canvas size and footprint as the finished Heap: cleared earth patch with a few sticks laid at the corners.",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-01/construction-heap-1-ground.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "name": "construction-lean-to-1-frame",
+    "building": "Lean-to",
+    "stage": 1,
+    "prompt": "Stage 1 Frame: bare slanted poles on two forked posts",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-01/construction-lean-to-1-frame.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "name": "construction-lean-to-2-cover",
+    "building": "Lean-to",
+    "stage": 2,
+    "prompt": "Stage 2 Cover: the same with reed bundles half laid on",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-01/construction-lean-to-2-cover.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "name": "construction-wood-pile-1-pile",
+    "building": "Wood pile",
+    "stage": 1,
+    "prompt": "Building under construction, same canvas size and footprint as the finished Wood pile: stakes driven in and a first low row of logs.",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-01/construction-wood-pile-1-pile.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "name": "construction-stone-pile-1-ring",
+    "building": "Stone pile",
+    "stage": 1,
+    "prompt": "Building under construction, same canvas size and footprint as the finished Stone pile: half-closed ring of boulders.",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-01/construction-stone-pile-1-ring.png",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "name": "construction-drying-rack-1-frame",
+    "building": "Drying rack",
+    "stage": 1,
+    "prompt": "Stage 1 Frame: two posts and a tied crossbar",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-02/construction-drying-rack-1-frame.png",
+    "width": 32,
+    "height": 48
+  },
+  {
+    "name": "construction-drying-rack-2-cover",
+    "building": "Drying rack",
+    "stage": 2,
+    "prompt": "Stage 2 Cover: the frame with a reed roof, nothing hanging yet",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-02/construction-drying-rack-2-cover.png",
+    "width": 32,
+    "height": 48
+  },
+  {
+    "name": "construction-hut-1-ground",
+    "building": "Hut",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: cleared earth with stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-02/construction-hut-1-ground.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-hut-2-foundation",
+    "building": "Hut",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: low rectangle of grey stones",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-02/construction-hut-2-foundation.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-hut-3-frame",
+    "building": "Hut",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: timber posts and beams on the stones",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-02/construction-hut-3-frame.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-hut-4-walls",
+    "building": "Hut",
+    "stage": 4,
+    "prompt": "Stage 4 Walls: woven wattle walls half daubed with clay",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-02/construction-hut-4-walls.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-hut-5-roof",
+    "building": "Hut",
+    "stage": 5,
+    "prompt": "Stage 5 Roof: rafters half covered with thatch",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-02/construction-hut-5-roof.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-hut-6-finish",
+    "building": "Hut",
+    "stage": 6,
+    "prompt": "Stage 6 Finish: complete hut without the hide door",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-02/construction-hut-6-finish.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-woodyard-1-ground",
+    "building": "Woodyard",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: cleared earth with stakes",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-03/construction-woodyard-1-ground.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-woodyard-2-foundation",
+    "building": "Woodyard",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: stone pads for four posts",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-03/construction-woodyard-2-foundation.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-woodyard-3-frame",
+    "building": "Woodyard",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: four posts and beams",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-03/construction-woodyard-3-frame.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-woodyard-4-roof",
+    "building": "Woodyard",
+    "stage": 4,
+    "prompt": "Stage 4 Roof: half-shingled roof",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-03/construction-woodyard-4-roof.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-stone-yard-1-ground",
+    "building": "Stone yard",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: cleared earth with stakes",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-03/construction-stone-yard-1-ground.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-stone-yard-2-walls",
+    "building": "Stone yard",
+    "stage": 2,
+    "prompt": "Stage 2 Walls: knee-high stone walls",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-03/construction-stone-yard-2-walls.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-stone-yard-3-frame",
+    "building": "Stone yard",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: posts for the back roof",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-03/construction-stone-yard-3-frame.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-stone-yard-4-roof",
+    "building": "Stone yard",
+    "stage": 4,
+    "prompt": "Stage 4 Roof: half-thatched back roof",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-03/construction-stone-yard-4-roof.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-granary-1-ground",
+    "building": "Granary",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-04/construction-granary-1-ground.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-granary-2-foundation",
+    "building": "Granary",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: stone stilts",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-04/construction-granary-2-foundation.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-granary-3-frame",
+    "building": "Granary",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: floor beams and posts on the stilts",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-04/construction-granary-3-frame.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-granary-4-walls",
+    "building": "Granary",
+    "stage": 4,
+    "prompt": "Stage 4 Walls: log walls half up",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-04/construction-granary-4-walls.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-granary-5-roof",
+    "building": "Granary",
+    "stage": 5,
+    "prompt": "Stage 5 Roof: rafters half thatched",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-04/construction-granary-5-roof.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-storehouse-1-ground",
+    "building": "Storehouse",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-05/construction-storehouse-1-ground.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-storehouse-2-foundation",
+    "building": "Storehouse",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: stone base",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-05/construction-storehouse-2-foundation.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-storehouse-3-frame",
+    "building": "Storehouse",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: posts and beams",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-05/construction-storehouse-3-frame.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-storehouse-4-floor",
+    "building": "Storehouse",
+    "stage": 4,
+    "prompt": "Stage 4 Floor: plank floor laid inside the frame",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-05/construction-storehouse-4-floor.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-storehouse-5-roof",
+    "building": "Storehouse",
+    "stage": 5,
+    "prompt": "Stage 5 Roof: half-shingled roof",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-05/construction-storehouse-5-roof.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-farm-1-ground",
+    "building": "Farm",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: grass cleared to bare earth with corner stakes",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-06/construction-farm-1-ground.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-farm-2-field",
+    "building": "Farm",
+    "stage": 2,
+    "prompt": "Stage 2 Field: fresh ploughed furrows",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-06/construction-farm-2-field.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-farm-3-fence",
+    "building": "Farm",
+    "stage": 3,
+    "prompt": "Stage 3 Fence: wattle fence half woven around the furrows",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-06/construction-farm-3-fence.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-bakery-1-ground",
+    "building": "Bakery",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-07/construction-bakery-1-ground.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-bakery-2-foundation",
+    "building": "Bakery",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: stone base",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-07/construction-bakery-2-foundation.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-bakery-3-oven",
+    "building": "Bakery",
+    "stage": 3,
+    "prompt": "Stage 3 Oven: half-built clay dome on the base",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-07/construction-bakery-3-oven.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-bakery-4-roof",
+    "building": "Bakery",
+    "stage": 4,
+    "prompt": "Stage 4 Roof: posts and a half-thatched roof over the oven",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-07/construction-bakery-4-roof.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-mine-1-ground",
+    "building": "Mine",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: marked rocky slope",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-08/construction-mine-1-ground.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-mine-2-shaft",
+    "building": "Mine",
+    "stage": 2,
+    "prompt": "Stage 2 Shaft: rough dark hole dug in the rock with rubble",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-08/construction-mine-2-shaft.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-mine-3-frame",
+    "building": "Mine",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: first timber supports in the entrance",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-08/construction-mine-3-frame.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-smithy-1-ground",
+    "building": "Smithy",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-09/construction-smithy-1-ground.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-smithy-2-foundation",
+    "building": "Smithy",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: stone base",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-09/construction-smithy-2-foundation.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-smithy-3-forge",
+    "building": "Smithy",
+    "stage": 3,
+    "prompt": "Stage 3 Forge: cold stone forge and chimney stub",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-09/construction-smithy-3-forge.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-smithy-4-roof",
+    "building": "Smithy",
+    "stage": 4,
+    "prompt": "Stage 4 Roof: posts and a half-covered roof",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-09/construction-smithy-4-roof.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-workshop-1-ground",
+    "building": "Workshop",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-10/construction-workshop-1-ground.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-workshop-2-foundation",
+    "building": "Workshop",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: stone base",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-10/construction-workshop-2-foundation.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-workshop-3-frame",
+    "building": "Workshop",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: posts and beams",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-10/construction-workshop-3-frame.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-workshop-4-roof",
+    "building": "Workshop",
+    "stage": 4,
+    "prompt": "Stage 4 Roof: half-covered roof",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-10/construction-workshop-4-roof.png",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "construction-library-1-ground",
+    "building": "Library",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-11/construction-library-1-ground.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-library-2-foundation",
+    "building": "Library",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: stone base",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-11/construction-library-2-foundation.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-library-3-frame",
+    "building": "Library",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: tall posts and beams",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-11/construction-library-3-frame.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-library-4-floor",
+    "building": "Library",
+    "stage": 4,
+    "prompt": "Stage 4 Floor: plank floor inside",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-11/construction-library-4-floor.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-library-5-roof",
+    "building": "Library",
+    "stage": 5,
+    "prompt": "Stage 5 Roof: steep rafters half covered",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-11/construction-library-5-roof.png",
+    "width": 48,
+    "height": 64
+  },
+  {
+    "name": "construction-tavern-1-ground",
+    "building": "Tavern",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-12/construction-tavern-1-ground.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-tavern-2-foundation",
+    "building": "Tavern",
+    "stage": 2,
+    "prompt": "Stage 2 Foundation: stone base",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-12/construction-tavern-2-foundation.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-tavern-3-frame",
+    "building": "Tavern",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: posts and beams",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-12/construction-tavern-3-frame.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-tavern-4-walls",
+    "building": "Tavern",
+    "stage": 4,
+    "prompt": "Stage 4 Walls: log walls half up",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-12/construction-tavern-4-walls.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-tavern-5-roof",
+    "building": "Tavern",
+    "stage": 5,
+    "prompt": "Stage 5 Roof: half-thatched roof",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-12/construction-tavern-5-roof.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "name": "construction-stage-1-ground",
+    "building": "Stage",
+    "stage": 1,
+    "prompt": "Stage 1 Ground: stakes and string",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-13/construction-stage-1-ground.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-stage-2-floor",
+    "building": "Stage",
+    "stage": 2,
+    "prompt": "Stage 2 Floor: raised plank platform",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-13/construction-stage-2-floor.png",
+    "width": 48,
+    "height": 48
+  },
+  {
+    "name": "construction-stage-3-frame",
+    "building": "Stage",
+    "stage": 3,
+    "prompt": "Stage 3 Frame: back posts without pennants",
+    "status": "generated-awaiting-final-style-and-alignment-audit",
+    "file": "construction-13/construction-stage-3-frame.png",
+    "width": 48,
+    "height": 48
+  }
+]

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Desertod.LoadTests;
@@ -36,11 +36,11 @@ async Task<string> RunPhaseAsync(Phase phase)
 {
     Log($"phase {phase.Name}: preparing {phase.Villages} village(s), {phase.Villages * phase.CitizensPerVillage} citizens, {phase.Villages * phase.ViewersPerVillage} viewers");
     var stats = new BroadcastStats();
-    await using var governor = await Player.SignInAsync(options.BaseUri, $"gov-{phase.Name}-{runId}", "");
+    await using var tsar = await Player.SignInAsync(options.BaseUri, $"tsar-{phase.Name}-{runId}", "");
     var slugs = new List<string>();
     for (var index = 0; index < phase.Villages; index++)
     {
-        var created = await governor.Http.PostAsJsonAsync("/api/villages",
+        var created = await tsar.Http.PostAsJsonAsync("/api/villages",
             new { name = $"Load {phase.Name} {index} {runId}", description = (string?)null, isPrivate = false });
         created.EnsureSuccessStatusCode();
         slugs.Add((await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("slug").GetString()!);

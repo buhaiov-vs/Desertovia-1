@@ -1,0 +1,36 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "prop-tree-variant-3",
+      "width": 16,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Generate ONE transparent RPG prop matching reference 1 Tiny Town and reference 2 Tiny Farm. Tall dark-green spruce, layered drooping triangular branches and a brown trunk. Small subdued ground shadow only, no grassy mound or ground tile. Full tree visible and centered, fills most of 1:2 portrait canvas with narrow transparent margin. Intended native resolution 16x32, enlarged with square pixels. Extremely simple Kenney-like pixel art: broad flat clusters, three muted green shades and two brown shades. Distinct readable silhouette at tiny size. No gradients, texture, tiny individual leaves, glow, colored edge fringe, text, frame or extra objects."
+    },
+    {
+      "name": "prop-tree-variant-4",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Generate ONE transparent RPG prop matching reference 1 Tiny Town and reference 2 Tiny Farm. Small young spruce, simple dark-green cone shape, short thin brown trunk. Small subdued ground shadow only, no grassy mound or ground tile. Full tree visible and centered, fills most of square canvas with narrow transparent margin. Intended native resolution 16x16, enlarged with square pixels. Extremely simple Kenney-like pixel art: broad flat clusters, three muted green shades and two brown shades. Distinct readable silhouette at tiny size. No gradients, texture, tiny individual leaves, glow, colored edge fringe, text, frame or extra objects."
+    },
+    {
+      "name": "prop-tree-variant-5",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Generate ONE transparent RPG prop matching reference 1 Tiny Town and reference 2 Tiny Farm. Round bushy oak with a dark-green round crown and a short thick brown trunk. Small subdued ground shadow only, no grassy mound or ground tile. Full tree visible and centered, fills most of square canvas with narrow transparent margin. Intended native resolution 16x16, enlarged with square pixels. Extremely simple Kenney-like pixel art: broad flat clusters, three muted green shades and two brown shades. Distinct readable silhouette at tiny size. No gradients, texture, tiny individual leaves, glow, colored edge fringe, text, frame or extra objects."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "icon-tsar-bridge",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 UI icon for cozy medieval Slavic village game. Arched wooden bridge with railings over a small blue river patch. Clear arch opening and simple wooden rails. Strict 16x16 logical pixel grid enlarged to square canvas. Each logical pixel is a large solid square. Fit within 14x14 pixels with one pixel transparent margin. Simple chunky Kenney Tiny Town shapes, at most three flat shades per material. Warm earthy palette, light from top-left. South-facing top-down three-quarter view, not isometric. Fully transparent outside object. No scenery beyond requested river patch, no text, gradients, antialiasing, haze, neon fringes, fine texture, black outline or extra panels."
+    },
+    {
+      "name": "icon-great-granary",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 UI icon for cozy medieval Slavic village game. Wide log granary with a big golden thatched roof and exactly two grain sacks beside the entrance. Broad low silhouette. Strict 16x16 logical pixel grid enlarged to square canvas. Each logical pixel is a large solid square. Fit within 14x14 pixels with one pixel transparent margin. Simple chunky Kenney Tiny Town shapes, at most three flat shades per material. Warm earthy palette, light from top-left. South-facing top-down three-quarter view, not isometric. Fully transparent outside object. No scenery beyond requested river patch, no text, gradients, antialiasing, haze, neon fringes, fine texture, black outline or extra panels."
+    },
+    {
+      "name": "icon-bell-tower",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 UI icon for cozy medieval Slavic village game. White bell tower with a golden onion dome and a bronze bell clearly visible inside an open dark arch. Tall compact silhouette. Strict 16x16 logical pixel grid enlarged to square canvas. Each logical pixel is a large solid square. Fit within 14x14 pixels with one pixel transparent margin. Simple chunky Kenney Tiny Town shapes, at most three flat shades per material. Warm earthy palette, light from top-left. South-facing top-down three-quarter view, not isometric. Fully transparent outside object. No scenery beyond requested river patch, no text, gradients, antialiasing, haze, neon fringes, fine texture, black outline or extra panels."
+    }
+  ]
+}

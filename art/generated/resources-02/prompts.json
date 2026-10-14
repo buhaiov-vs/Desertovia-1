@@ -1,0 +1,35 @@
+{
+  "generator": "Built-in image_gen",
+  "samples": [
+    {
+      "name": "item-stone",
+      "size": 16,
+      "prompt": "Use case: stylized-concept. Single isolated inventory sprite for a cozy medieval Slavic village RPG. Both attached sheets are style references only: match the simple Kenney Tiny Farm / Tiny Town pixel art. Tiny 16x16 logical pixel icon enlarged to 1024x1024; each logical pixel a solid square, extremely sparse detail and large clear pixel clusters. Single centered silhouette, 1 logical pixel margin. Top-down three-quarter view showing top and south-facing front, not isometric. Warm earthy restricted palette, at most 3 flat shades per material, darker local-color outlines, upper-left lighting. Truly transparent background. No scenery, ground, shadow, text, label, border, gradient, texture noise, soft edges, antialiasing, realistic detail or pure black outline. Subject: Small pile of three rough grey field stones, one large in front and two smaller behind."
+    },
+    {
+      "name": "item-food",
+      "size": 16,
+      "prompt": "Use case: stylized-concept. Single isolated inventory sprite for a cozy medieval Slavic village RPG. Both attached sheets are style references only: match the simple Kenney Tiny Farm / Tiny Town pixel art. Tiny 16x16 logical pixel icon enlarged to 1024x1024; each logical pixel a solid square, extremely sparse detail and large clear pixel clusters. Single centered silhouette, 1 logical pixel margin. Top-down three-quarter view showing top and south-facing front, not isometric. Warm earthy restricted palette, at most 3 flat shades per material, darker local-color outlines, upper-left lighting. Truly transparent background. No scenery, ground, shadow, text, label, border, gradient, texture noise, soft edges, antialiasing, realistic detail or pure black outline. Subject: Small woven bast basket filled with red berries, a turnip and a piece of meat. Simplify each food into a few large pixels so it reads at 16x16."
+    },
+    {
+      "name": "item-coal",
+      "size": 16,
+      "prompt": "Use case: stylized-concept. Single isolated inventory sprite for a cozy medieval Slavic village RPG. Both attached sheets are style references only: match the simple Kenney Tiny Farm / Tiny Town pixel art. Tiny 16x16 logical pixel icon enlarged to 1024x1024; each logical pixel a solid square, extremely sparse detail and large clear pixel clusters. Single centered silhouette, 1 logical pixel margin. Top-down three-quarter view showing top and south-facing front, not isometric. Warm earthy restricted palette, at most 3 flat shades per material, darker local-color outlines, upper-left lighting. Truly transparent background. No scenery, ground, shadow, text, label, border, gradient, texture noise, soft edges, antialiasing, realistic detail or pure black outline. Subject: Three angular lumps of coal, very dark blue-grey with small light glints on the edges."
+    },
+    {
+      "name": "item-iron-ore",
+      "size": 16,
+      "prompt": "Use case: stylized-concept. Single isolated inventory sprite for a cozy medieval Slavic village RPG. Both attached sheets are style references only: match the simple Kenney Tiny Farm / Tiny Town pixel art. Tiny 16x16 logical pixel icon enlarged to 1024x1024; each logical pixel a solid square, extremely sparse detail and large clear pixel clusters. Single centered silhouette, 1 logical pixel margin. Top-down three-quarter view showing top and south-facing front, not isometric. Warm earthy restricted palette, at most 3 flat shades per material, darker local-color outlines, upper-left lighting. Truly transparent background. No scenery, ground, shadow, text, label, border, gradient, texture noise, soft edges, antialiasing, realistic detail or pure black outline. Subject: One chunky rust-brown rock with grey metallic flecks and orange rust spots."
+    },
+    {
+      "name": "item-iron-ingot",
+      "size": 16,
+      "prompt": "Use case: stylized-concept. Single isolated inventory sprite for a cozy medieval Slavic village RPG. Both attached sheets are style references only: match the simple Kenney Tiny Farm / Tiny Town pixel art. Tiny 16x16 logical pixel icon enlarged to 1024x1024; each logical pixel a solid square, extremely sparse detail and large clear pixel clusters. Single centered silhouette, 1 logical pixel margin. Top-down three-quarter view showing top and south-facing front, not isometric. Warm earthy restricted palette, at most 3 flat shades per material, darker local-color outlines, upper-left lighting. Truly transparent background. No scenery, ground, shadow, text, label, border, gradient, texture noise, soft edges, antialiasing, realistic detail or pure black outline. Subject: Two trapezoid iron bars stacked crosswise, cool grey with a bright top edge."
+    },
+    {
+      "name": "item-planks",
+      "size": 16,
+      "prompt": "Use case: stylized-concept. Single isolated inventory sprite for a cozy medieval Slavic village RPG. Both attached sheets are style references only: match the simple Kenney Tiny Farm / Tiny Town pixel art. Tiny 16x16 logical pixel icon enlarged to 1024x1024; each logical pixel a solid square, extremely sparse detail and large clear pixel clusters. Single centered silhouette, 1 logical pixel margin. Top-down three-quarter view showing top and south-facing front, not isometric. Warm earthy restricted palette, at most 3 flat shades per material, darker local-color outlines, upper-left lighting. Truly transparent background. No scenery, ground, shadow, text, label, border, gradient, texture noise, soft edges, antialiasing, realistic detail or pure black outline. Subject: Neat stack of four sawn light-brown boards seen from the side, straight edges, sparse visible wood grain lines."
+    }
+  ]
+}

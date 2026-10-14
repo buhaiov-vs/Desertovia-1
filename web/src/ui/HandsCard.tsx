@@ -4,7 +4,7 @@ import { useI18n } from '../i18n'
 import { ResourceIcon } from './TileIcon'
 /**
  * Goods the citizen carries until they take them to storage.
- * "Tell the Governor" copies a ready-made line for the player to paste into the stream chat.
+ * "Tell the Tsar" copies a ready-made line for the player to paste into the stream chat.
  */
 export function HandsCard({
   citizen,

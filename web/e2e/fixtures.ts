@@ -30,18 +30,24 @@ export function uniqueName(prefix: string) {
 }
 
 /** Signs in through whichever login panel is on screen. */
-export async function developmentLogin(page: Page, name: string) {
+export async function developmentLogin(page: Page, name: string, characterName = name) {
   const panel = page.locator('section.login')
   const form = panel.locator('form', { has: page.getByPlaceholder('Any name') })
   await form.getByPlaceholder('Any name').fill(name)
   await form.getByRole('button', { name: 'Sign in' }).click()
   await expect(panel).toBeHidden()
+  const creation = page.locator('form.character-creation')
+  await expect(creation).toBeVisible()
+  await creation.getByLabel('Name', { exact: true }).fill(characterName)
+  await creation.getByRole('button', { name: 'Create character', exact: true }).click()
+  await expect(creation).toBeHidden()
 }
 
 export async function expectVillageView(page: Page) {
   await expect(page.locator('.splash')).toBeHidden()
   await expect(page.locator('canvas').first()).toBeVisible()
-  await expect(page.locator('.hud-top .village-name')).not.toBeEmpty()
+  await expect(page.locator('.hud-resources')).toBeVisible()
+  await expect(page.locator('.hud-buttons')).toBeVisible()
 }
 
 /** Opens the game menu with the first bottom bar button: "Menu" on desktop, the Village tab on phones. */

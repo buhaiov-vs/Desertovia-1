@@ -1,6 +1,7 @@
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
+using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
 using Desertod.Domain.Storage;
 using Desertod.Domain.Weather;
@@ -30,15 +31,15 @@ internal static class TestWorld
         return village;
     }
 
-    /// <summary>Forecasts the same weather for every day within two weeks of <see cref="Now"/>, so the sky's own draw never decides a test.</summary>
+    /// <summary>Forecasts the same weather for every period within two weeks of <see cref="Now"/>, so the sky's own draw never decides a test.</summary>
     public static void SetSky(Village village, bool rain)
     {
         village.Forecasts.Clear();
-        var today = WeatherRules.DayOf(Now);
-        var days = (long)(TimeSpan.FromDays(14) / WeatherRules.DayLength);
-        for (var day = today - days; day <= today + days; day++)
+        var current = DayCycle.PeriodOf(Now);
+        var periods = (long)(TimeSpan.FromDays(14) / DayCycle.PeriodLength);
+        for (var period = current - periods; period <= current + periods; period++)
         {
-            village.Forecasts.Add(new WeatherForecast { Day = day, Rain = rain, SaysRain = !rain, MadeAt = Now });
+            village.Forecasts.Add(new WeatherForecast { Day = period, Rain = rain, SaysRain = !rain, MadeAt = Now });
         }
     }
 
@@ -54,6 +55,14 @@ internal static class TestWorld
         }
 
         citizen.StoredEnergy = citizen.MaximumEnergy;
+        return citizen;
+    }
+
+    /// <summary>Sets a skill level directly, past the stats it would need.</summary>
+    public static Citizen WithSkill(this Citizen citizen, Skill skill, int level)
+    {
+        citizen.Skills.RemoveAll(s => s.Kind == skill);
+        citizen.Skills.Add(new SkillProgress { Kind = skill, Level = level });
         return citizen;
     }
 

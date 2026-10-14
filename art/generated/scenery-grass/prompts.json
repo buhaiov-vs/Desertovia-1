@@ -1,0 +1,36 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "terrain-grass-plain",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Create ONE square opaque seamless RPG ground tile, intended native size 16x16. References 1 and 2 are Kenney style guides only. Match their very simple flat pixel-art grass, no outline. Draw on a strictly 16 by 16 logical pixel grid enlarged uniformly to fill the whole output. Every logical pixel is one flat solid color, no antialiasing, no gradients, no microtexture, no lighting, no vignette, no frame, no text. Meadow green base, use only two muted greens . Plain short meadow grass, almost flat green with just a few sparse darker pixels, very little detail so it repeats thousands of times. Keep every outer edge entirely the same flat meadow green so repeated tiles have no seams. Top-down terrain, full bleed, opaque. Do not draw a floating grass block or a patch on background."
+    },
+    {
+      "name": "terrain-grass-variant-1",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Create ONE square opaque seamless RPG ground tile, intended native size 16x16. References 1 and 2 are Kenney style guides only. Match their very simple flat pixel-art grass, no outline. Draw on a strictly 16 by 16 logical pixel grid enlarged uniformly to fill the whole output. Every logical pixel is one flat solid color, no antialiasing, no gradients, no microtexture, no lighting, no vignette, no frame, no text. Meadow green base, use only two muted greens . The same plain meadow grass with exactly two small darker grass tufts inside the tile. Keep every outer edge entirely the same flat meadow green so repeated tiles have no seams. Top-down terrain, full bleed, opaque. Do not draw a floating grass block or a patch on background."
+    },
+    {
+      "name": "terrain-grass-variant-2",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Create ONE square opaque seamless RPG ground tile, intended native size 16x16. References 1 and 2 are Kenney style guides only. Match their very simple flat pixel-art grass, no outline. Draw on a strictly 16 by 16 logical pixel grid enlarged uniformly to fill the whole output. Every logical pixel is one flat solid color, no antialiasing, no gradients, no microtexture, no lighting, no vignette, no frame, no text. Meadow green base, use only two muted greens plus white and yellow for flowers. The same plain meadow grass with exactly three tiny white and yellow flowers inside the tile. Keep every outer edge entirely the same flat meadow green so repeated tiles have no seams. Top-down terrain, full bleed, opaque. Do not draw a floating grass block or a patch on background."
+    }
+  ]
+}

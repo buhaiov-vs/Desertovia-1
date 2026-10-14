@@ -1,0 +1,27 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-citizen-male-1-carry-frame-1",
+      "width": 16,
+      "height": 16,
+      "prompt": "Exactly ONE young Slavic peasant character in ONE pose holding ONE small tied burlap sack OVER HIS HEAD with both hands. Not a sprite sheet. Same character as first reference, short brown hair, belted pale blue-grey kosovorotka, trousers and bast shoes. Match chunky minimal Kenney pixel style of other references. Transparent 16x16 logical pixel canvas enlarged nearest-neighbor. Character+sack about 14 logical pixels tall, centered; feet near bottom, sack fully inside canvas. Face visible under sack, hands raised at either side supporting it. Flat solid colors: skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothing #c0cbdc/#8b9bb4/#52607c. Sack two shades warm tan. No gradients, texture, antialiasing, glow, shadow, scenery, text or extra people. Carrying step A: screen-LEFT foot lower/forward, screen-right foot higher/back. Keep sack level.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-1-carry-frame-2",
+      "width": 16,
+      "height": 16,
+      "prompt": "Exactly ONE young Slavic peasant character in ONE pose holding ONE small tied burlap sack OVER HIS HEAD with both hands. Not a sprite sheet. Same character as first reference, short brown hair, belted pale blue-grey kosovorotka, trousers and bast shoes. Match chunky minimal Kenney pixel style of other references. Transparent 16x16 logical pixel canvas enlarged nearest-neighbor. Character+sack about 14 logical pixels tall, centered; feet near bottom, sack fully inside canvas. Face visible under sack, hands raised at either side supporting it. Flat solid colors: skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothing #c0cbdc/#8b9bb4/#52607c. Sack two shades warm tan. No gradients, texture, antialiasing, glow, shadow, scenery, text or extra people. Carrying step B: screen-RIGHT foot lower/forward, screen-left foot higher/back. Keep sack level, same size and head placement.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

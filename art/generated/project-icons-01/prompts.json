@@ -1,0 +1,36 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "icon-tsar-s-monument",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied tile sheets are STYLE references only. Single 16x16 icon for medieval Slavic village game. Small grey stone statue of a crowned Tsar holding a sceptre, standing on a square stone pedestal. Entire monument visible. Fill 14x14 logical pixels with one pixel transparent margin. Strict 16x16 logical pixel grid enlarged into square image, each art pixel a large flat square. Kenney Tiny Town simplicity: at most 3 flat shades per material, warm muted palette, top-left light. Top-down three-quarter south-facing view, not isometric. Transparent outside subject; no background scenery, text, labels, gradients, antialiasing, neon fringes, haze, excessive detail, black outline or multiple panels."
+    },
+    {
+      "name": "icon-fishing-pier",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied tile sheets are STYLE references only. Single 16x16 icon for medieval Slavic village game. Short wooden plank pier on poles over a small patch of blue water, with one fishing rod leaning on it. Clear pier silhouette. Fill 14x14 logical pixels with one pixel transparent margin. Strict 16x16 logical pixel grid enlarged into square image, each art pixel a large flat square. Kenney Tiny Town simplicity: at most 3 flat shades per material, warm muted palette, top-left light. Top-down three-quarter south-facing view, not isometric. Transparent outside subject; no background scenery, text, labels, gradients, antialiasing, neon fringes, haze, excessive detail, black outline or multiple panels."
+    },
+    {
+      "name": "icon-palisade",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied tile sheets are STYLE references only. Single 16x16 icon for medieval Slavic village game. Four sharpened upright wooden logs side by side, bound with a horizontal rope. Clearly pointed tips, simple brown timber wall. Fill 14x14 logical pixels with one pixel transparent margin. Strict 16x16 logical pixel grid enlarged into square image, each art pixel a large flat square. Kenney Tiny Town simplicity: at most 3 flat shades per material, warm muted palette, top-left light. Top-down three-quarter south-facing view, not isometric. Transparent outside subject; no background scenery, text, labels, gradients, antialiasing, neon fringes, haze, excessive detail, black outline or multiple panels."
+    }
+  ]
+}

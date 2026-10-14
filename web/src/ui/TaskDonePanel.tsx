@@ -1,9 +1,37 @@
 import type { ReactNode } from 'react'
-import type { Catalog, Citizen, CycleReport } from '../api'
+import type { Catalog, Citizen, CycleReport, FightReport } from '../api'
 import { useI18n } from '../i18n'
 import { NotificationToggle } from './NotificationToggle'
 import { ResourceIcon, TaskIcon } from './TileIcon'
 import { seconds } from './texts'
+
+/** A beast that attacked on the way: who won, the gear used, what broke and what was taken from the carcass. */
+export function FightSummary({ fight }: { fight: FightReport }) {
+  const i18n = useI18n()
+  const { t } = i18n
+  const enemy = i18n.enemy(fight.enemy).toLowerCase()
+  const gear = [fight.weapon, fight.armor].filter((kind): kind is string => kind !== null).map((kind) => i18n.resource(kind))
+  return (
+    <div className={`fight-report${fight.won ? ' won' : ''}`}>
+      <strong>{t(fight.won ? 'fight.won' : 'fight.lost', { enemy })}</strong>
+      <div className="small">
+        {t('fight.power', { power: i18n.amount(fight.power) })} / {i18n.amount(fight.enemyPower)} ·{' '}
+        {gear.length > 0 ? t('fight.gear', { gear: gear.join(', ') }) : t('fight.unarmed')}
+      </div>
+      {fight.loot.length > 0 && <div className="small">{t('fight.loot', { goods: i18n.goods(fight.loot) })}</div>}
+      {fight.broken.length > 0 && (
+        <div className="small warning">{t('fight.broken', { gear: fight.broken.map((kind) => i18n.resource(kind)).join(', ') })}</div>
+      )}
+      {fight.injured && fight.injuredUntil && (
+        <div className="small warning">
+          {t('fight.wounded', {
+            time: new Date(fight.injuredUntil).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }),
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 /** Pops up when the player's own cycle finishes; can be hidden to keep watching the village. */
 export function TaskDonePanel({
@@ -50,13 +78,21 @@ export function TaskDonePanel({
         <p>
           <strong>{i18n.task(report.taskId)}</strong>
         </p>
+        {report.fight && <FightSummary fight={report.fight} />}
         <ul className="done-results">
-          {report.produced.map((item) => (
-            <li key={item.resource}>
-              <ResourceIcon kind={item.resource} scale={1} /> {i18n.produced(item.resource, item.amount)}
-              {(task?.effect === 'Deliver' || report.siteId) && ` ${t('done.toProject')}`}
-            </li>
-          ))}
+          {report.produced.map((item) => {
+            const lost = report.lost?.find((good) => good.resource === item.resource)?.amount ?? 0
+            const carried = report.carried.some((good) => good.resource === item.resource)
+            return (
+              <li key={item.resource}>
+                <ResourceIcon kind={item.resource} scale={1} /> {i18n.produced(item.resource, item.amount, item.amount - lost)}
+                {(task?.effect === 'Deliver' || report.siteId) && ` ${t('done.toProject')}`}
+                {(lost > 0 || carried) && (
+                  <span className="warning"> {t(lost > 0 ? 'done.handsFull' : 'done.storageFull')}</span>
+                )}
+              </li>
+            )
+          })}
           {report.projectContribution > 0 && report.produced.length === 0 && (
             <li>{t('done.contribution', { amount: i18n.amount(report.projectContribution) })}</li>
           )}
@@ -82,12 +118,10 @@ export function TaskDonePanel({
           {report.renownGained > 0 && <li>{t('done.renown', { amount: i18n.amount(report.renownGained) })}</li>}
           {report.rareFind && <li className="highlight">{t('done.rare')}</li>}
           {report.tired && <li className="warning">{t('done.tired')}</li>}
-          {report.carried.map((item) => (
-            <li className="warning" key={`carried-${item.resource}`}>
-              {t('done.carried', { goods: i18n.held(item.resource, item.amount) })}
-            </li>
-          ))}
-          {report.overflowed && report.carried.length === 0 && <li className="warning">{t('done.overflow')}</li>}
+          {report.repaired > 0 && <li>{t('report.repaired', { amount: i18n.amount(report.repaired) })}</li>}
+          {report.overflowed && report.carried.length === 0 && !(report.fight && !report.fight.won) && (
+            <li className="warning">{t('done.overflow')}</li>
+          )}
         </ul>
         {hands}
         {inGrace ? (

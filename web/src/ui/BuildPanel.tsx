@@ -12,13 +12,16 @@ import { useI18n } from '../i18n'
 import { TileIcon } from './TileIcon'
 import { BUILDING_SIGNS, taskIcon } from '../game/worldMap'
 
-/** The Governor's plans. Blueprints are free; citizens bring what a building takes, repeats a little more each. */
+/** The rulers' plans. Blueprints are free; citizens bring what a building takes, repeats a little more each. */
 export function BuildPanel({
+  tsar,
   catalog,
   village,
   onPlace,
   onWithdraw,
 }: {
+  /** The Tsar; false for a citizen the Tsar appointed Governor. */
+  tsar: boolean
   catalog: Catalog
   village: VillageState
   onPlace: (definition: BuildingDefinition) => void
@@ -55,8 +58,8 @@ export function BuildPanel({
   return (
     <>
       <section className="card">
-        <h3>{t('governor.title')}</h3>
-        <p className="small">{t('governor.role')}</p>
+        <h3>{t(tsar ? 'tsar.title' : 'governor.title')}</h3>
+        <p className="small">{t(tsar ? 'tsar.role' : 'governor.role')}</p>
       </section>
 
       <section className="card">

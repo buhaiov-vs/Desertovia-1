@@ -14,6 +14,10 @@ public sealed class StorageBuilding
     public required string PlotId { get; set; }
 
     public DateTimeOffset BuiltAt { get; set; }
+
+    /// <summary>Harm done by raiders, 0 to <see cref="Combat.CombatRules.MaximumDamage"/>; repaired by citizens.</summary>
+    public int Damage { get; set; }
+
     public List<StoredGood> Goods { get; set; } = [];
 
     public StorageDefinition Definition => StorageCatalog.Get(Kind);

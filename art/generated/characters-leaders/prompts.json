@@ -1,0 +1,25 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-tsar",
+      "width": 16,
+      "height": 16,
+      "prompt": "Single tiny 16x16 pixel art character for cozy medieval Slavic village game, matching supplied Kenney Tiny Town and Tiny Farm reference sheets. Design strictly on 16x16 logical grid then enlarge with nearest-neighbor; about 14 pixels tall, feet on bottom row, centered with transparent surroundings. South-facing, slight overhead view. Extremely simple chunky square pixel clusters and readable silhouette. Flat colors at most 2 shades/material, top-left lighting; no gradients, textures, antialiasing, tiny details, glow, ground shadow, scenery, text, borders or extra characters. Village leader voivode in tall fur-trimmed hat and long red caftan with gold trim, holding a tall staff. Show embroidery as just two gold pixels; simple face and beard. Skin EXACT #f7c282 light and #e19a65 shade; beard EXACT #bd6c4a light and #763b36 dark. Those colors reserved for skin/hair only. Dark clay red coat, straw gold trim and staff, brown fur. One square pixel eyes.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-elder-priest",
+      "width": 16,
+      "height": 16,
+      "prompt": "Single tiny 16x16 pixel art character for cozy medieval Slavic village game, matching supplied Kenney Tiny Town and Tiny Farm reference sheets. Design strictly on 16x16 logical grid then enlarge with nearest-neighbor; about 14 pixels tall, feet on bottom row, centered with transparent surroundings. South-facing, slight overhead view. Extremely simple chunky square pixel clusters and readable silhouette. Flat colors at most 2 shades/material, top-left lighting; no gradients, textures, antialiasing, tiny details, glow, ground shadow, scenery, text, borders or extra characters. Old Orthodox monk in black hooded robe and tall black hat klobuk, long white beard, small wooden cross on his chest, leaning on a crooked wooden staff. Fixed colors, not recolored. Charcoal robe with one slightly lighter shade, warm pale skin, ivory beard, warm brown staff and cross. Clearly separate staff silhouette, slightly stooped posture. Minimal one-pixel eyes.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

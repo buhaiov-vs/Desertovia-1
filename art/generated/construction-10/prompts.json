@@ -1,0 +1,34 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-workshop-1-ground",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-workshop-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit workshop reference into construction stage 1: Only four short ground stakes joined by string marking the rectangular footprint. No stones, walls, posts, tools or roof. Remove benches, doors, barrels, tools, materials and decorative props. Preserve original 4:3 canvas, building footprint, camera and base anchor coordinates. No zoom, shifting or recentering; retain transparent empty space above early stages. All prior construction remains; no later elements. Crisp 64x48 logical pixel art enlarged with square solid pixels, simple earthy Kenney-like palette, three flat shades per material maximum. No gradients, glow, halos, blur, antialiasing, text, labels or scenery. Real transparency outside structure and inside open frame."
+    },
+    {
+      "name": "construction-workshop-2-foundation",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-workshop-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit workshop reference into construction stage 2: Only a low grey stone foundation base, no timber frame or roof. Remove benches, doors, barrels, tools, materials and decorative props. Preserve original 4:3 canvas, building footprint, camera and base anchor coordinates. No zoom, shifting or recentering; retain transparent empty space above early stages. All prior construction remains; no later elements. Crisp 64x48 logical pixel art enlarged with square solid pixels, simple earthy Kenney-like palette, three flat shades per material maximum. No gradients, glow, halos, blur, antialiasing, text, labels or scenery. Real transparency outside structure and inside open frame."
+    },
+    {
+      "name": "construction-workshop-3-frame",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-workshop-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit workshop reference into construction stage 3: Low grey stone foundation base with upright timber posts and connecting beams, open frame with no walls or roof covering. Remove benches, doors, barrels, tools, materials and decorative props. Preserve original 4:3 canvas, building footprint, camera and base anchor coordinates. No zoom, shifting or recentering; retain transparent empty space above early stages. All prior construction remains; no later elements. Crisp 64x48 logical pixel art enlarged with square solid pixels, simple earthy Kenney-like palette, three flat shades per material maximum. No gradients, glow, halos, blur, antialiasing, text, labels or scenery. Real transparency outside structure and inside open frame."
+    },
+    {
+      "name": "construction-workshop-4-roof",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-workshop-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit workshop reference into construction stage 4: Low grey stone base with timber posts and connecting beams, roof rafters exactly half covered in golden thatch and half exposed. No walls. Remove benches, doors, barrels, tools, materials and decorative props. Preserve original 4:3 canvas, building footprint, camera and base anchor coordinates. No zoom, shifting or recentering; retain transparent empty space above early stages. All prior construction remains; no later elements. Crisp 64x48 logical pixel art enlarged with square solid pixels, simple earthy Kenney-like palette, three flat shades per material maximum. No gradients, glow, halos, blur, antialiasing, text, labels or scenery. Real transparency outside structure and inside open frame."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "prompt": "Edit target: horizontal palisade image. Remove ALL brown haze and halo outside the three wooden logs and rope. Everything outside solid wood and rope must be fully transparent alpha zero, including all gaps. Preserve three logs and rope, with sharp square pixel edges. No glow, shadow, colored fringe or backdrop. Square tile canvas, horizontal rope reaches left and right edges.",
+  "result": "v2 retains severe halo; preserved but not selected"
+}

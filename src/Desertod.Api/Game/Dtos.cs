@@ -1,5 +1,7 @@
 using Desertod.Domain.Buildings;
 using Desertod.Domain.Catalog;
+using Desertod.Domain.Combat;
+using Desertod.Domain.Dungeons;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Farming;
 using Desertod.Domain.Projects;
@@ -17,12 +19,34 @@ namespace Desertod.Api.Game;
 /// <param name="Capacity">Amount plus free room in all storage that accepts the good; null when unlimited.</param>
 public sealed record ResourceDto(ResourceKind Kind, int Amount, int? Capacity);
 
-/// <param name="Fill">0 to 1; drawn as stacks on the building, the only storage hint the Governor gets.</param>
+/// <param name="Fill">0 to 1; drawn as stacks on the building, the only storage hint the Tsar gets.</param>
 public sealed record StorageSlotDto(ResourceKind Kind, double Fill);
 
-public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots);
+/// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
+public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots, int Damage);
 
-public sealed record StructureDto(BuildingKind Kind, string PlotId);
+/// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
+public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage);
+
+/// <summary>An attack on the way, or a fought one kept for the record.</summary>
+/// <param name="AnnouncedAt">Players see an attack on the way from then on; clients hide it before.</param>
+public sealed record RaidDto(
+    Guid Id,
+    RaidSource Source,
+    EnemyKind Enemy,
+    int Count,
+    int Wave,
+    int Waves,
+    DateTimeOffset AnnouncedAt,
+    DateTimeOffset StrikesAt,
+    RaidOutcome Outcome,
+    DateTimeOffset? ResolvedAt,
+    int Killed,
+    int Defenders,
+    int Injured,
+    int DamagedBuildings,
+    IReadOnlyList<ResourceAmount> Stolen,
+    IReadOnlyList<ResourceAmount> Loot);
 
 /// <param name="Room">Work a labor job can take right now; it cannot run ahead of the delivered material.</param>
 public sealed record SiteJobDto(string JobId, int Done, int Required, int Room);
@@ -33,17 +57,34 @@ public sealed record SiteStageDto(string Id, int CrewNeeded, int Hands, IReadOnl
 
 public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages);
 
-/// <param name="Count">Animals now; the map shows a share of them, the Governor never sees the number.</param>
+/// <param name="Count">Animals now; the map shows a share of them, the Tsar never sees the number.</param>
 public sealed record HerdDto(AnimalKind Kind, int Count, int Capacity, string Habitat);
 
 public sealed record TreeDto(int X, int Y);
+
+public sealed record RavineSpanDto(int X, int Top, int Height);
+
+public sealed record MountainPassDto(int X, int Y, bool Horizontal);
+
+/// <param name="Cleared">Worked away by citizens: walkers pass and the map shows bare ground.</param>
+public sealed record ObstacleDto(ObstacleKind Kind, int X, int Y, bool Cleared);
+
+/// <summary>The ravine, mountain features and obstacles of the wild land; the client shapes the map around them.</summary>
+public sealed record WildsDto(
+    IReadOnlyList<RavineSpanDto> Ravine,
+    IReadOnlyList<MountainPassDto> Passes,
+    IReadOnlyList<ObstacleDto> Obstacles,
+    int CaveX,
+    int CaveY,
+    int LookoutX,
+    int LookoutY);
 
 /// <param name="Growth">0 when sown, 1 when ripe; 0 for an empty bed.</param>
 /// <param name="WateredUntil">The bed is wet until then.</param>
 /// <param name="Thirsty">Growing and drying out soon: watering reaches it.</param>
 public sealed record FieldBedDto(string PlotId, int Index, CropKind? Crop, double Growth, DateTimeOffset? WateredUntil, bool Thirsty);
 
-/// <param name="Available">Not discovered and every technology it builds on is; the Governor can put it to the vote.</param>
+/// <param name="Available">Not discovered and every technology it builds on is; the Tsar or a Governor can put it to the vote.</param>
 /// <param name="CrewNeeded">Different citizens the research needs, scaled down for small streams.</param>
 public sealed record TechnologyStateDto(
     string Id,
@@ -58,9 +99,9 @@ public sealed record PollOptionDto(string TechnologyId, int Votes);
 
 public sealed record PollBallotDto(Guid CitizenId, string TechnologyId);
 
-/// <param name="Electorate">Active citizens now, or when the poll closed.</param>
+/// <param name="Electorate">Active citizens who are present now, or when the poll closed.</param>
 /// <param name="VotesNeeded">Votes that close the poll: more than half of <paramref name="Electorate"/>.</param>
-/// <param name="Winner">Null while open, or when the Governor cancelled the poll.</param>
+/// <param name="Winner">Null while open, or when the poll was cancelled.</param>
 public sealed record TechnologyPollDto(
     Guid Id,
     IReadOnlyList<PollOptionDto> Options,
@@ -71,14 +112,24 @@ public sealed record TechnologyPollDto(
     DateTimeOffset? ClosedAt,
     string? Winner);
 
-/// <param name="SaysRain">What the Synoptic announced; the weather it brought stays secret until the day comes.</param>
+/// <param name="SaysRain">What the Synoptic announced; the weather it brought stays secret until the period comes.</param>
 public sealed record ForecastDto(Guid CitizenId, bool SaysRain, DateTimeOffset MadeAt);
 
-/// <param name="Raining">Weather of the current weather day.</param>
-/// <param name="DayEndsAt">When the current weather day ends and the next one's weather comes.</param>
-/// <param name="Today">The forecast that was made for the current day, if any.</param>
-/// <param name="Tomorrow">The forecast for the next day; null until a Synoptic makes one.</param>
-public sealed record WeatherDto(bool Raining, DateTimeOffset DayEndsAt, ForecastDto? Today, ForecastDto? Tomorrow);
+/// <summary>The sky of the current period: a daytime or a night, see <see cref="DayCycle"/>.</summary>
+/// <param name="Kind">Weather of the current period.</param>
+/// <param name="Raining">Rain or a thunderstorm: the rain effects apply.</param>
+/// <param name="Night">The current period is the night half of the day.</param>
+/// <param name="PeriodEndsAt">When the current period ends and the next one's weather comes.</param>
+/// <param name="Current">The forecast that was made for the current period, if any.</param>
+/// <param name="Next">The forecast for the next period; null until a Synoptic makes one.</param>
+public sealed record WeatherDto(
+    WeatherKind Kind,
+    bool Raining,
+    bool Night,
+    DateTimeOffset PeriodStartedAt,
+    DateTimeOffset PeriodEndsAt,
+    ForecastDto? Current,
+    ForecastDto? Next);
 
 /// <param name="Trees">
 /// Standing trees on the camp land, those waiting to be felled on construction sites included;
@@ -87,7 +138,12 @@ public sealed record WeatherDto(bool Raining, DateTimeOffset DayEndsAt, Forecast
 /// <param name="CurrentResearch">The technology the last vote chose; null until a vote chooses an undiscovered one.</param>
 /// <param name="Poll">The open vote on the next discovery, or the last closed one.</param>
 /// <param name="Fields">Beds of every farm.</param>
-/// <param name="Governor">The village owner's figure on the map.</param>
+/// <param name="Tsar">The village owner's figure on the map.</param>
+/// <param name="Dungeon">The dungeon run under way, or one that ended a moment ago; see <see cref="DungeonRules.ShownAfterEnd"/>.</param>
+/// <param name="Explored">
+/// Land the tribe has seen, walks under way included, as base64: one bit per tile of <see cref="WorldMap.Land"/>,
+/// row by row from the top-left, lowest bit first.
+/// </param>
 public sealed record VillageStateDto(
     Guid Id,
     string Slug,
@@ -111,13 +167,17 @@ public sealed record VillageStateDto(
     int GoldVeinRemaining,
     IReadOnlyList<FieldBedDto> Fields,
     WeatherDto Weather,
-    GovernorDto Governor);
+    TsarDto Tsar,
+    string Explored,
+    IReadOnlyList<RaidDto> Raids,
+    WildsDto? Wilds,
+    DungeonDto? Dungeon);
 
 /// <param name="Appearance">Null until the owner creates their character.</param>
-/// <param name="Spot">Where the Governor walked to; null while they stand at the campfire.</param>
-public sealed record GovernorDto(string Name, Appearance? Appearance, TilePoint? Spot);
+/// <param name="Spot">Where the Tsar walked to; null while they stand at the campfire.</param>
+public sealed record TsarDto(string Name, Appearance? Appearance, TilePoint? Spot);
 
-/// <param name="Objectives">Governor objectives (planning) carry no numbers; citizen objectives carry progress.</param>
+/// <param name="Objectives">Rulers' objectives (planning) carry no numbers; citizen objectives carry progress.</param>
 public sealed record QuestDto(Guid Id, QuestKind Kind, ResourceKind? Resource, DateTimeOffset StartedAt, IReadOnlyList<QuestObjective> Objectives);
 
 public sealed record ProjectMaterialDto(ResourceKind Kind, int Delivered, int Required);
@@ -140,14 +200,18 @@ public sealed record ProjectDto(
     int BuildersWorking,
     bool NeedsEngineer);
 
-/// <param name="Subtitle">Written by the Governor, shown under the name on the map.</param>
+/// <param name="Subtitle">Written by the Tsar, shown under the name on the map.</param>
+/// <param name="IsGovernor">Appointed by the Tsar: may plan buildings and call votes.</param>
 /// <param name="SiteId">Plot the citizen works on: a construction site, or the building where they research.</param>
 /// <param name="Spot">Spot on the map the citizen gathers at, picked by the player.</param>
 /// <param name="IdleSpot">Where the player sent the citizen to stand while not working.</param>
+/// <param name="InjuredUntil">Wounded until then; null when not wounded.</param>
+/// <param name="Weapon">Weapon taken from the armory for the current task.</param>
 public sealed record CitizenSummaryDto(
     Guid Id,
     string Name,
     string? Subtitle,
+    bool IsGovernor,
     Appearance? Appearance,
     string TitleRoleId,
     string? TaskId,
@@ -158,10 +222,18 @@ public sealed record CitizenSummaryDto(
     WorkState State,
     DateTimeOffset? CycleStartedAt,
     DateTimeOffset? CycleEndsAt,
-    IReadOnlyList<ResourceKind> Carrying);
+    IReadOnlyList<ResourceKind> Carrying,
+    DateTimeOffset? InjuredUntil,
+    ResourceKind? Weapon);
 
 /// <param name="InviteCode">Only sent to the owner of a private village.</param>
-public sealed record VillageDto(VillageStateDto State, bool IsOwner, string? InviteCode, IReadOnlyList<CitizenSummaryDto> Citizens);
+/// <param name="AwayCitizenIds">Citizens who are away, see <see cref="CitizenPresence"/>: hidden from the map while idle.</param>
+public sealed record VillageDto(
+    VillageStateDto State,
+    bool IsOwner,
+    string? InviteCode,
+    IReadOnlyList<CitizenSummaryDto> Citizens,
+    IReadOnlyList<Guid> AwayCitizenIds);
 
 public sealed record VillageListItemDto(string Slug, string Name, bool IsOwner);
 
@@ -172,7 +244,15 @@ public sealed record InviteDto(string InviteCode);
 public sealed record StatDto(Stat Stat, int Level, int Experience, int ExperienceToNext);
 
 /// <param name="ExperienceToNext">0 at the maximum level.</param>
-public sealed record SkillDto(Skill Skill, int Level, int Experience, int ExperienceToNext);
+/// <param name="NextLevel">Stats the next level needs; empty at the maximum level.</param>
+/// <param name="WaitsForStats">The experience for the next level is there, but the stats are not; it comes once they are.</param>
+public sealed record SkillDto(
+    Skill Skill,
+    int Level,
+    int Experience,
+    int ExperienceToNext,
+    IReadOnlyList<StatRequirement> NextLevel,
+    bool WaitsForStats);
 
 /// <param name="SiteId">Plot of the construction site the citizen works on.</param>
 /// <param name="Spot">Spot on the map the last task gathered at, picked by the player.</param>
@@ -182,9 +262,14 @@ public sealed record SkillDto(Skill Skill, int Level, int Experience, int Experi
 /// <param name="EnergyPerHour">Energy regained per hour at the current shelter, hunger and weather.</param>
 /// <param name="ForecastReliability">Chance the weather turns out opposite to this citizen's forecast; null if not a Synoptic.</param>
 /// <param name="DrinkReadyAt">When the next vigor drink may be drunk; null if never drunk.</param>
+/// <param name="InjuredUntil">Wounded until then; null when not wounded.</param>
+/// <param name="Power">Fight power with the weapon in hand; see <see cref="CombatRules.Power"/>.</param>
+/// <param name="IsGovernor">Appointed by the Tsar: may plan buildings and call votes.</param>
 public sealed record CitizenDto(
     Guid Id,
     string Name,
+    string? Subtitle,
+    bool IsGovernor,
     Appearance? Appearance,
     string TitleRoleId,
     CitizenStatus Status,
@@ -213,7 +298,12 @@ public sealed record CitizenDto(
     DateTimeOffset ServerNow,
     string? TechnologyId,
     double? ForecastReliability,
-    DateTimeOffset? DrinkReadyAt);
+    DateTimeOffset? DrinkReadyAt,
+    DateTimeOffset? InjuredUntil,
+    ResourceKind? Weapon,
+    ResourceKind? Armor,
+    int Arrows,
+    double Power);
 
 public sealed record RulesDto(
     int CycleSeconds,
@@ -229,10 +319,28 @@ public sealed record RulesDto(
     int SkillBonusLevels,
     double SkillYieldPerLevel,
     double SkillWorkTimePerLevel,
-    double VigorDrinkEnergy);
+    double VigorDrinkEnergy,
+    double SightRadius,
+    double NightAmbushMultiplier,
+    int MaximumDamage,
+    double EnergyBase,
+    double EnergyPerEndurance,
+    double EnergyFullRegenerationHours,
+    double EnergyCostPerCycle,
+    double TiredYieldMultiplier,
+    double HungryExperienceMultiplier,
+    double HungryRegenerationMultiplier,
+    double UnderTreesRegeneration,
+    double RainUnderTreesRegeneration,
+    double StreakPerRenewal,
+    double StreakMaximumBonus,
+    double MoraleMinimum,
+    double MoraleMaximum);
 
+/// <param name="DevTools">Development and local deployments: the client shows helpers such as the day-night toggle.</param>
 public sealed record CatalogDto(
     IReadOnlyList<RoleDefinition> Roles,
+    IReadOnlyList<SkillDefinition> Skills,
     IReadOnlyList<TaskDefinition> Tasks,
     IReadOnlyList<ProjectDefinition> Projects,
     IReadOnlyList<StorageDefinition> Storages,
@@ -244,7 +352,14 @@ public sealed record CatalogDto(
     IReadOnlyDictionary<QuestKind, QuestReward> QuestRewards,
     RulesDto Rules,
     IReadOnlyList<TechnologyDefinition> Technologies,
-    IReadOnlyList<CropDefinition> Crops);
+    IReadOnlyList<CropDefinition> Crops,
+    IReadOnlyList<EnemyDefinition> Enemies,
+    IReadOnlyList<WeaponDefinition> Weapons,
+    IReadOnlyList<ArmorDefinition> Armors,
+    IReadOnlyList<HeroClassDefinition> HeroClasses,
+    IReadOnlyList<DungeonFoe> DungeonFoes,
+    IReadOnlyList<DungeonInfoDto> Dungeons,
+    bool DevTools);
 
 public sealed record CreateVillageRequest(string Name, string? Description = null, bool IsPrivate = false);
 
@@ -266,7 +381,7 @@ public sealed record StartJobRequest(string PlotId, int Stage, string JobId);
 /// <param name="X">Top-left tile of the building.</param>
 public sealed record PlaceBlueprintRequest(BuildingKind Kind, int X, int Y);
 
-/// <param name="TechnologyIds">Available technologies the Governor puts to the vote.</param>
+/// <param name="TechnologyIds">Available technologies put to the vote.</param>
 public sealed record OpenPollRequest(IReadOnlyList<string> TechnologyIds);
 
 public sealed record VoteRequest(string TechnologyId);
@@ -274,8 +389,14 @@ public sealed record VoteRequest(string TechnologyId);
 /// <param name="Subtitle">Null or blank removes the subtitle.</param>
 public sealed record SetSubtitleRequest(string? Subtitle);
 
-/// <param name="Rain">The Synoptic announces rain for the next weather day; false announces sun.</param>
+/// <param name="IsGovernor">True appoints the citizen Governor, false dismisses them.</param>
+public sealed record SetGovernorRequest(bool IsGovernor);
+
+/// <param name="Rain">The Synoptic announces rain for the next day or night; false announces a clear sky.</param>
 public sealed record ForecastRequest(bool Rain);
+
+/// <param name="Enemy">Zombies or skeletons.</param>
+public sealed record CallUndeadRequest(EnemyKind Enemy, RaidSize Size);
 
 public static class DtoMapper
 {
@@ -283,8 +404,11 @@ public static class DtoMapper
         this Village village,
         WorkContext context,
         IReadOnlyList<string> completedProjects,
+        int electorate,
         IReadOnlyList<VillageQuest> quests,
-        GovernorDto governor,
+        TsarDto tsar,
+        IReadOnlyList<Trip> citizenTrips,
+        DungeonRun? dungeon,
         DateTimeOffset now) => new(
         village.Id,
         village.Slug,
@@ -303,9 +427,10 @@ public static class DtoMapper
                 s.Kind,
                 s.PlotId,
                 s.Goods.OrderBy(g => g.Kind).Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
-                s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList()))
+                s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList(),
+                s.Damage))
             .ToList(),
-        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId)).ToList(),
+        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage)).ToList(),
         village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount)).ToList(),
         context.Project is { } project ? project.ToDto(context) : null,
         completedProjects,
@@ -333,7 +458,7 @@ public static class DtoMapper
                     TechnologyRules.CrewNeeded(technology, context.RecentCitizenCount));
             })
             .ToList(),
-        village.Poll?.ToDto(context.ActiveCitizenCount),
+        village.Poll?.ToDto(electorate),
         GoldVein.Remaining(village),
         village.Fields
             .OrderBy(b => b.PlotId)
@@ -341,16 +466,55 @@ public static class DtoMapper
             .Select(b => new FieldBedDto(b.PlotId, b.Index, b.Crop, FarmRules.GrowthOf(village, b, now), b.WateredUntil, FarmRules.IsThirsty(village, b, now)))
             .ToList(),
         village.ToWeatherDto(now),
-        governor);
+        tsar,
+        Convert.ToBase64String(Exploration.Seen(
+            village.Explored,
+            village.TsarTrip is null ? citizenTrips : citizenTrips.Append(village.TsarTrip),
+            now,
+            village.Wilds?.Lookout)),
+        village.Raids.OrderBy(r => r.StrikesAt).Select(r => r.ToDto()).ToList(),
+        village.Wilds?.ToDto(),
+        dungeon?.ToDto());
+
+    public static WildsDto ToDto(this Wilds wilds) => new(
+        wilds.Ravine.Select(s => new RavineSpanDto(s.X, s.Top, s.Height)).ToList(),
+        wilds.Passes.Select(p => new MountainPassDto(p.X, p.Y, p.Horizontal)).ToList(),
+        wilds.Obstacles.Select(o => new ObstacleDto(o.Kind, o.X, o.Y, !Wilderness.Stands(o))).ToList(),
+        wilds.CaveX,
+        wilds.CaveY,
+        wilds.LookoutX,
+        wilds.LookoutY);
+
+    public static RaidDto ToDto(this Raid raid) => new(
+        raid.Id,
+        raid.Source,
+        raid.Enemy,
+        raid.Count,
+        raid.Wave,
+        raid.Waves,
+        raid.AnnouncedAt,
+        raid.StrikesAt,
+        raid.Outcome,
+        raid.ResolvedAt,
+        raid.Killed,
+        raid.Defenders,
+        raid.Injured,
+        raid.DamagedBuildings,
+        raid.Stolen.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
+        raid.Loot.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList());
 
     public static WeatherDto ToWeatherDto(this Village village, DateTimeOffset now)
     {
-        var day = WeatherRules.DayOf(now);
+        var period = DayCycle.PeriodOf(now);
+        var kind = WeatherRules.WeatherOf(village, period);
         return new WeatherDto(
-            WeatherRules.IsRaining(village, day),
-            WeatherRules.DayStart(day + 1),
-            WeatherRules.ForecastFor(village, day)?.ToDto(),
-            WeatherRules.ForecastFor(village, day + 1)?.ToDto());
+            kind,
+            WeatherRules.IsWet(kind),
+            DayCycle.IsNight(period),
+            DayCycle.PeriodStart(period),
+            DayCycle.PeriodStart(period + 1),
+            WeatherRules.ForecastFor(village, period)?.ToDto(),
+            WeatherRules.ForecastFor(village, period + 1)?.ToDto());
     }
 
     private static ForecastDto ToDto(this WeatherForecast forecast) => new(forecast.CitizenId, forecast.SaysRain, forecast.MadeAt);
@@ -423,8 +587,9 @@ public static class DtoMapper
             citizen.Id,
             citizen.Name,
             citizen.Subtitle,
+            citizen.IsGovernor,
             citizen.Appearance,
-            GameCatalog.TitleFor(citizen.Stats).Id,
+            GameCatalog.TitleFor(citizen).Id,
             active ? citizen.CurrentTaskId : null,
             active && citizen.CurrentSiteId is null ? GameCatalog.FindTask(citizen.CurrentTaskId!)?.Workplace : null,
             active ? citizen.CurrentSiteId : null,
@@ -433,14 +598,18 @@ public static class DtoMapper
             state,
             citizen.CycleStartedAt,
             citizen.CycleEndsAt,
-            citizen.Load.Select(g => g.Kind).ToList());
+            citizen.Load.Select(g => g.Kind).ToList(),
+            CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
+            citizen.Weapon);
     }
 
     public static CitizenDto ToDto(this Citizen citizen, Village village, DateTimeOffset now) => new(
         citizen.Id,
         citizen.Name,
+        citizen.Subtitle,
+        citizen.IsGovernor,
         citizen.Appearance,
-        GameCatalog.TitleFor(citizen.Stats).Id,
+        GameCatalog.TitleFor(citizen).Id,
         citizen.Status,
         Enum.GetValues<Stat>()
             .Select(stat => new StatDto(
@@ -452,7 +621,15 @@ public static class DtoMapper
         citizen.Stats.Total,
         citizen.Skills
             .OrderBy(s => s.Kind)
-            .Select(s => new SkillDto(s.Kind, s.Level, s.Experience, SkillRules.ExperienceToNext(s.Level)))
+            .Select(s => new SkillDto(
+                s.Kind,
+                s.Level,
+                s.Experience,
+                SkillRules.ExperienceToNext(s.Level),
+                s.Level < GameRules.SkillMaximum ? SkillCatalog.Get(s.Kind).RequirementsFor(s.Level + 1) : [],
+                s.Level < GameRules.SkillMaximum
+                    && s.Experience >= SkillRules.ExperienceToNext(s.Level)
+                    && !SkillRules.CanReachNext(citizen, s.Kind)))
             .ToList(),
         citizen.Renown,
         citizen.CurrentEnergy(now, village),
@@ -476,10 +653,16 @@ public static class DtoMapper
         now,
         citizen.CurrentTechnologyId,
         WeatherRules.IsSynoptic(village, citizen) ? WeatherRules.Reliability(citizen.SkillLevel(Skill.Weatherlore)) : null,
-        VigorDrinks.ReadyAt(citizen));
+        VigorDrinks.ReadyAt(citizen),
+        CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
+        citizen.Weapon,
+        citizen.Armor,
+        citizen.Arrows,
+        Math.Round(CombatRules.Power(citizen), 1));
 
-    public static CatalogDto Catalog { get; } = new(
+    public static CatalogDto Catalog(GameOptions options) => new(
         GameCatalog.Roles,
+        SkillCatalog.Skills,
         GameCatalog.Tasks,
         ProjectCatalog.Projects,
         StorageCatalog.Storages,
@@ -503,7 +686,30 @@ public static class DtoMapper
             GameRules.SkillBonusLevels,
             GameRules.SkillYieldPerLevel,
             GameRules.SkillWorkTimePerLevel,
-            GameRules.VigorDrinkEnergy),
+            GameRules.VigorDrinkEnergy,
+            Exploration.SightRadius,
+            CombatRules.NightAmbushMultiplier,
+            CombatRules.MaximumDamage,
+            GameRules.EnergyBase,
+            GameRules.EnergyPerEndurance,
+            GameRules.EnergyFullRegenerationHours,
+            GameRules.EnergyCostPerCycle,
+            GameRules.TiredYieldMultiplier,
+            GameRules.HungryExperienceMultiplier,
+            GameRules.HungryRegenerationMultiplier,
+            GameRules.UnderTreesRegeneration,
+            WeatherRules.UnderTreesRegeneration,
+            GameRules.StreakPerRenewal,
+            GameRules.StreakMaximumBonus,
+            GameRules.MoraleMinimum,
+            GameRules.MoraleMaximum),
         TechnologyCatalog.Technologies,
-        FarmCatalog.Crops);
+        FarmCatalog.Crops,
+        EnemyCatalog.Enemies,
+        ArmoryCatalog.Weapons,
+        ArmoryCatalog.Armors,
+        HeroClassCatalog.Classes,
+        [.. DungeonCatalog.Foes.Values],
+        DungeonMapper.Dungeons(),
+        options.DevTools);
 }

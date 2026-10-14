@@ -1,0 +1,46 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "effect-campfire-flames-frame-1",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent pixel-art campfire flame animation frame 1 of four: central tongue upright. Red outer silhouette, orange middle, pale yellow core. NO logs, stones, smoke, sparks, ground or shadow. Match tiny simple flat pixel-art style of reference Tiny Town and Tiny Farm. Intended 16x16 logical pixel square, flame about 10 pixels tall, bottom center base on bottom row, same base width 8 pixels. Top 6 rows empty transparent. Uniform large square pixel blocks, only three flat colors. No gradients, glow, edge fringe, texture, text. Full flame visible."
+    },
+    {
+      "name": "effect-campfire-flames-frame-2",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent pixel-art campfire flame animation frame 2 of four: central tongue leaning slightly left. Red outer silhouette, orange middle, pale yellow core. NO logs, stones, smoke, sparks, ground or shadow. Match tiny simple flat pixel-art style of reference Tiny Town and Tiny Farm. Intended 16x16 logical pixel square, flame about 10 pixels tall, bottom center base on bottom row, same base width 8 pixels. Top 6 rows empty transparent. Uniform large square pixel blocks, only three flat colors. No gradients, glow, edge fringe, texture, text. Full flame visible."
+    },
+    {
+      "name": "effect-campfire-flames-frame-3",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent pixel-art campfire flame animation frame 3 of four: two tongues, right tongue tallest. Red outer silhouette, orange middle, pale yellow core. NO logs, stones, smoke, sparks, ground or shadow. Match tiny simple flat pixel-art style of reference Tiny Town and Tiny Farm. Intended 16x16 logical pixel square, flame about 10 pixels tall, bottom center base on bottom row, same base width 8 pixels. Top 6 rows empty transparent. Uniform large square pixel blocks, only three flat colors. No gradients, glow, edge fringe, texture, text. Full flame visible."
+    },
+    {
+      "name": "effect-campfire-flames-frame-4",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent pixel-art campfire flame animation frame 4 of four: central tongue leaning slightly right. Red outer silhouette, orange middle, pale yellow core. NO logs, stones, smoke, sparks, ground or shadow. Match tiny simple flat pixel-art style of reference Tiny Town and Tiny Farm. Intended 16x16 logical pixel square, flame about 10 pixels tall, bottom center base on bottom row, same base width 8 pixels. Top 6 rows empty transparent. Uniform large square pixel blocks, only three flat colors. No gradients, glow, edge fringe, texture, text. Full flame visible."
+    }
+  ]
+}

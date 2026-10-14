@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-10-14",
+  "phase": "telegram_launch",
+  "architecture": "adapt_existing_dotnet_react_pixi",
+  "source_commits": {
+    "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
+    "legacy_042": "21f831ae08a0dc10a8c3c11de2f4b048a326decf",
+    "legacy_043_unreleased": "6897f76c2d8fa0b6fbfb0ce7e26048d997e4a0e6",
+    "latest_upstream_inspected": "e23bc943bac17e55d4d5a0b0805d07d53de02108"
+  },
+  "source_repository": "buhaiov-vs/Desertovia",
+  "release_repository": "desertod666/Desertovia",
+  "viewer_snapshot": {
+    "checked_on": "2026-10-13",
+    "record_count": 47,
+    "duplicates": [
+      [
+        44,
+        45
+      ]
+    ],
+    "raw_records_stored": false
+  },
+  "documentation": "completed",
+  "game_code_changed": true,
+  "runtime_tests_on_new_base": true,
+  "deployed": true,
+  "live_checked_on_recorded_date": true,
+  "features": [
+    {
+      "id": "DZ-01",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-02",
+      "state": "auth_launch_released_full_access_policy_adaptation_pending",
+      "checks": [
+        "signed MiniApp/widget shared account",
+        "browser bot confirmation",
+        "mounted cookie",
+        "public pending and forged proof rejection"
+      ]
+    },
+    {
+      "id": "DZ-03",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-04",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-05",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-06",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-07",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-08",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-09",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-10",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-11",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-12",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-13",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-14",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-15",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-16",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-17",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-18",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-19",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-20",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-21",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-22",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-23",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-24",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-25",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-26",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-27",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-28",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-29",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-30",
+      "state": "future",
+      "checks": []
+    },
+    {
+      "id": "DZ-31",
+      "state": "future",
+      "checks": []
+    },
+    {
+      "id": "DZ-32",
+      "state": "future",
+      "checks": []
+    },
+    {
+      "id": "DZ-33",
+      "state": "adapt_existing_dungeon_additional_ideas_future",
+      "checks": []
+    },
+    {
+      "id": "DZ-34",
+      "state": "adapt_existing_features",
+      "checks": []
+    },
+    {
+      "id": "DZ-35",
+      "state": "paused",
+      "checks": []
+    }
+  ],
+  "latest_upstream_merged": true,
+  "current_adaptation_list": "CURRENT_ADAPTATION_LIST.md",
+  "preserve_all_upstream_features": true,
+  "chat_modes": [
+    "hidden_with_toasts",
+    "quarter",
+    "fullscreen"
+  ],
+  "latest_decisions": [
+    "D-013",
+    "D-014",
+    "D-015"
+  ],
+  "launch_checks": {
+    "miniapp_unit_and_flow": 13,
+    "legacy_proxy_tests": 83,
+    "web_build": true,
+    "backend_build": true,
+    "final_suite": 465,
+    "public_switch": true,
+    "domain_tests": 305,
+    "api_tests": 160,
+    "oracle_health": true,
+    "production_browser_pc_phone": true,
+    "browser_confirmation_isolated": true,
+    "public_login_pending": true,
+    "real_user_confirmation": "requires_user_telegram_action",
+    "upstream_e2e": {
+      "passed": 19,
+      "skipped": 1,
+      "ci_run": 38527480846,
+      "code_and_test_commit": "d76d08741ee9055e844bbb9acfdc49aa5374272b"
+    },
+    "shared_bot_and_housing_active": true,
+    "legacy_backup_exists": true
+  },
+  "deployed_sha": "6c8587e95ab7d4d2d401363fb4d152bbb4efcf8b",
+  "launch_document": "TELEGRAM_LAUNCH.md"
+}

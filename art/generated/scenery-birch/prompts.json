@@ -1,0 +1,39 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "terrain-trampled-earth",
+      "width": 16,
+      "height": 16,
+      "transparent": false,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE RPG sprite. Reference images Tiny Town and Tiny Farm define the simple flat low-resolution pixel-art style. Packed brown earth around a campfire, a few pebbles and ash specks. No fire, no logs, no grass. Seamless opaque full-bleed terrain, viewed straight down. Intended native size 16x16, with matching square proportions. Uniform square pixel grid enlarged for output. Very simple silhouette, sparse details, muted natural colors, 2-3 shades per material. No gradients, soft texture, tiny speckles, outlines outside the silhouette, glow, frame or text."
+    },
+    {
+      "name": "prop-tree-variant-1",
+      "width": 16,
+      "height": 32,
+      "transparent": true,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE RPG sprite. Reference images Tiny Town and Tiny Farm define the simple flat low-resolution pixel-art style. Tall birch tree, white trunk with black marks, round light-green crown, small ground shadow. Tall portrait canvas, tree two tiles high. Full tree visible, transparent around it. Intended native size 16x32, with matching 1:2 portrait proportions. Uniform square pixel grid enlarged for output. Very simple silhouette, sparse details, muted natural colors, 2-3 shades per material. No gradients, soft texture, tiny speckles, outlines outside the silhouette, glow, frame or text."
+    },
+    {
+      "name": "prop-tree-variant-2",
+      "width": 16,
+      "height": 16,
+      "transparent": true,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE RPG sprite. Reference images Tiny Town and Tiny Farm define the simple flat low-resolution pixel-art style. Small young birch with a round light-green crown and a thin white trunk with black marks, small ground shadow. Square canvas, one-tile tree. Full tree visible, transparent around it. Intended native size 16x16, with matching square proportions. Uniform square pixel grid enlarged for output. Very simple silhouette, sparse details, muted natural colors, 2-3 shades per material. No gradients, soft texture, tiny speckles, outlines outside the silhouette, glow, frame or text."
+    }
+  ]
+}

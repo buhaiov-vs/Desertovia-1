@@ -20,4 +20,10 @@ public enum ResourceKind
     Flax,
     Grain,
     VigorDrink,
+    Spear,
+    Bow,
+    Arrows,
+    Sword,
+    Shield,
+    LeatherArmor,
 }

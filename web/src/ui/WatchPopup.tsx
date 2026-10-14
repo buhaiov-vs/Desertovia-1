@@ -7,7 +7,7 @@ import { ProjectPanel } from './ProjectPanel'
 import { popupStyle } from './TargetPopup'
 import { ResourceIcon } from './TileIcon'
 
-/** Places the Governor can click to watch: they never work, so the popup only shows how far the village got. */
+/** Places the Tsar can click to watch: they never work, so the popup only shows how far the village got. */
 export function watchable(target: WorldTarget, village: VillageState) {
   switch (target.kind) {
     case 'site':

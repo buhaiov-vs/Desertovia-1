@@ -1,0 +1,37 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-deer-frame-1",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE red deer stag sprite facing RIGHT for cozy medieval village RPG. Match simple chunky Kenney Tiny Town and Tiny Farm reference sprites. Strict 16x16 logical pixel canvas enlarged nearest neighbor. Body approximately 12 logical pixels long; small antlers, white belly and tail, warm russet brown coat, dark brown hooves and one-square eye. Minimal solid pixel clusters, 2 flat shades per material, no gradients or texture or antialiasing. Entire animal fits within canvas with transparent surroundings, feet aligned near bottom row, no ground or shadow, no lettering, no other animals. Slight overhead side view consistent with top-down game. Standing still with four legs supporting body, small branching antlers.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-deer-frame-2",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE red deer stag sprite facing RIGHT for cozy medieval village RPG. Match simple chunky Kenney Tiny Town and Tiny Farm reference sprites. Strict 16x16 logical pixel canvas enlarged nearest neighbor. Body approximately 12 logical pixels long; small antlers, white belly and tail, warm russet brown coat, dark brown hooves and one-square eye. Minimal solid pixel clusters, 2 flat shades per material, no gradients or texture or antialiasing. Entire animal fits within canvas with transparent surroundings, feet aligned near bottom row, no ground or shadow, no lettering, no other animals. Slight overhead side view consistent with top-down game. Trotting frame A: front near leg reaches forward right, rear near leg extends backward left; opposite legs tucked. Same deer proportions. Third image is identity reference: preserve exactly this deer, coat markings, antlers and body proportions; change only leg pose as requested.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png",
+        "W:/Pet-projects/Desertod/web/public/assets/generated/animals-deer/character-deer-frame-1-source.png"
+      ]
+    },
+    {
+      "name": "character-deer-frame-3",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE red deer stag sprite facing RIGHT for cozy medieval village RPG. Match simple chunky Kenney Tiny Town and Tiny Farm reference sprites. Strict 16x16 logical pixel canvas enlarged nearest neighbor. Body approximately 12 logical pixels long; small antlers, white belly and tail, warm russet brown coat, dark brown hooves and one-square eye. Minimal solid pixel clusters, 2 flat shades per material, no gradients or texture or antialiasing. Entire animal fits within canvas with transparent surroundings, feet aligned near bottom row, no ground or shadow, no lettering, no other animals. Slight overhead side view consistent with top-down game. Trotting frame B: opposite diagonal leg pair extends, near front leg tucked backward and near rear leg forward. Same deer proportions. Third image is identity reference: preserve exactly this deer, coat markings, antlers and body proportions; change only leg pose as requested.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png",
+        "W:/Pet-projects/Desertod/web/public/assets/generated/animals-deer/character-deer-frame-1-source.png"
+      ]
+    }
+  ]
+}

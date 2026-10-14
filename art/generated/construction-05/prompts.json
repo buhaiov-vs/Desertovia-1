@@ -1,0 +1,41 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-storehouse-1-ground",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-storehouse-preview.png",
+      "prompt": "Use case: precise-object-edit. Create construction stage 1 of the reference storehouse: Only four short wooden stakes joined by string marking a rectangle on the ground. Remove ALL building components. All prior construction remains; no later elements. Remove stored goods, doors and decorative props. Keep reference camera, footprint and ground anchor positions on unchanged 4:3 canvas. Do not zoom, shift or recenter; early stages leave transparent space above. Strict 64x48 logical pixel sprite enlarged with solid square pixels, Kenney-style simple warm earthy flat colors, three shades per material maximum. No gradients, halos, blur, antialiasing, labels, text, panels or scenery. Real transparent background and openings."
+    },
+    {
+      "name": "construction-storehouse-2-foundation",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-storehouse-preview.png",
+      "prompt": "Use case: precise-object-edit. Create construction stage 2 of the reference storehouse: Only a low rectangular grey stone foundation base. No posts, walls, plank floor or roof. All prior construction remains; no later elements. Remove stored goods, doors and decorative props. Keep reference camera, footprint and ground anchor positions on unchanged 4:3 canvas. Do not zoom, shift or recenter; early stages leave transparent space above. Strict 64x48 logical pixel sprite enlarged with solid square pixels, Kenney-style simple warm earthy flat colors, three shades per material maximum. No gradients, halos, blur, antialiasing, labels, text, panels or scenery. Real transparent background and openings."
+    },
+    {
+      "name": "construction-storehouse-3-frame",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-storehouse-preview.png",
+      "prompt": "Use case: precise-object-edit. Create construction stage 3 of the reference storehouse: Low grey stone foundation with upright wooden posts and connecting beams. Open frame only, no walls, floor planks or roof. All prior construction remains; no later elements. Remove stored goods, doors and decorative props. Keep reference camera, footprint and ground anchor positions on unchanged 4:3 canvas. Do not zoom, shift or recenter; early stages leave transparent space above. Strict 64x48 logical pixel sprite enlarged with solid square pixels, Kenney-style simple warm earthy flat colors, three shades per material maximum. No gradients, halos, blur, antialiasing, labels, text, panels or scenery. Real transparent background and openings."
+    },
+    {
+      "name": "construction-storehouse-4-floor",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-storehouse-preview.png",
+      "prompt": "Use case: precise-object-edit. Create construction stage 4 of the reference storehouse: Low grey stone foundation, upright wooden posts and connecting beams, with a plank floor laid inside the open frame. No walls or roof covering. All prior construction remains; no later elements. Remove stored goods, doors and decorative props. Keep reference camera, footprint and ground anchor positions on unchanged 4:3 canvas. Do not zoom, shift or recenter; early stages leave transparent space above. Strict 64x48 logical pixel sprite enlarged with solid square pixels, Kenney-style simple warm earthy flat colors, three shades per material maximum. No gradients, halos, blur, antialiasing, labels, text, panels or scenery. Real transparent background and openings."
+    },
+    {
+      "name": "construction-storehouse-5-roof",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-storehouse-preview.png",
+      "prompt": "Use case: precise-object-edit. Create construction stage 5 of the reference storehouse: Low grey stone foundation, upright wooden posts and beams, completed plank floor and roof rafters exactly half covered with wooden shingles. Other roof half exposed. No walls or stored goods. All prior construction remains; no later elements. Remove stored goods, doors and decorative props. Keep reference camera, footprint and ground anchor positions on unchanged 4:3 canvas. Do not zoom, shift or recenter; early stages leave transparent space above. Strict 64x48 logical pixel sprite enlarged with solid square pixels, Kenney-style simple warm earthy flat colors, three shades per material maximum. No gradients, halos, blur, antialiasing, labels, text, panels or scenery. Real transparent background and openings."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "character-citizen-male-1-carry-frame-2",
+  "width": 16,
+  "height": 16,
+  "prompt": "Edit this ONE character to the opposite carrying step. Keep canvas dimensions, transparency, sack, raised arms, face, hair, torso and belt unchanged. ONLY switch the legs: image-RIGHT boot is lower/forward, image-LEFT boot is raised/back. Do not mirror whole image. Preserve the same pixel art colors and body scale. Exactly one character and one sack.",
+  "reference": [
+    "W:/Pet-projects/Desertod/web/public/assets/generated/citizen-carry-male-1/character-citizen-male-1-carry-frame-1-source.png"
+  ]
+}

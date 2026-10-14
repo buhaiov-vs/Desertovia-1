@@ -1,0 +1,46 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-flax-sprout",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single sprite for cozy medieval Slavic village farming game. A few very thin blue-green flax shoots with narrow leaves, short seedlings centered in 5x5 logical pixels. No flowers. Strict 16x16 logical pixel grid enlarged to square canvas, each logical pixel one large flat square. Kenney Tiny Farm simplicity, three flat shades per material maximum. Top-left light, south-facing top-down three-quarter view. Fully transparent background and spaces between stalks; no ground, soil, shadow, pot or scenery. No gradients, antialiasing, neon fringes, haze, tiny realistic details, text or additional objects. Preserve clear silhouette at actual 16x16 size."
+    },
+    {
+      "name": "prop-flax-young",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single sprite for cozy medieval Slavic village farming game. Tall slender blue-green flax stalks with tiny narrow leaves, no flowers, centered in 8x10 logical pixels. Strict 16x16 logical pixel grid enlarged to square canvas, each logical pixel one large flat square. Kenney Tiny Farm simplicity, three flat shades per material maximum. Top-left light, south-facing top-down three-quarter view. Fully transparent background and spaces between stalks; no ground, soil, shadow, pot or scenery. No gradients, antialiasing, neon fringes, haze, tiny realistic details, text or additional objects. Preserve clear silhouette at actual 16x16 size."
+    },
+    {
+      "name": "prop-flax-ripe",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single sprite for cozy medieval Slavic village farming game. Tall slender flax stalks topped with small sky-blue five-petal flowers, centered in 11x13 logical pixels. Sparse stems and narrow leaves, not broad foliage. Strict 16x16 logical pixel grid enlarged to square canvas, each logical pixel one large flat square. Kenney Tiny Farm simplicity, three flat shades per material maximum. Top-left light, south-facing top-down three-quarter view. Fully transparent background and spaces between stalks; no ground, soil, shadow, pot or scenery. No gradients, antialiasing, neon fringes, haze, tiny realistic details, text or additional objects. Preserve clear silhouette at actual 16x16 size."
+    },
+    {
+      "name": "icon-flax-harvested",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single sprite for cozy medieval Slavic village farming game. Small sheaf of cut flax stalks with a few sky-blue flowers, gathered in a bundle, centered in 12x14 logical pixels. Clearly cut stem ends. Strict 16x16 logical pixel grid enlarged to square canvas, each logical pixel one large flat square. Kenney Tiny Farm simplicity, three flat shades per material maximum. Top-left light, south-facing top-down three-quarter view. Fully transparent background and spaces between stalks; no ground, soil, shadow, pot or scenery. No gradients, antialiasing, neon fringes, haze, tiny realistic details, text or additional objects. Preserve clear silhouette at actual 16x16 size."
+    }
+  ]
+}

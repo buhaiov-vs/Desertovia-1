@@ -6,9 +6,9 @@ The decisions in section 10 are settled. Phase 1 (storage buildings, carried goo
 
 ## 1. Core idea
 
-| | Streamer (Governor) | Citizens (subscribers) |
+| | Streamer (Tsar) | Citizens (subscribers) |
 |---|---|---|
-| Does | Places buildings, roads and storage; sets storage orders; issues decrees; chooses the next monument | Gather, craft, haul, build; pick their own jobs every 90 seconds |
+| Does | Places buildings, roads and storage; sets storage orders; issues decrees; chooses the next monument | Gather, craft, haul, build; pick their own jobs every few minutes |
 | Never does | Gathers or carries anything | Places buildings or decides the layout |
 | Knows | The city and its **numbers**: stock, capacity, what each building takes and how much was delivered | The same numbers, plus why their own job is blocked |
 | Learns about problems | From the numbers, the map and the chat of the streaming platform | Directly from the game |
@@ -17,7 +17,7 @@ The fun is the loop between the two: citizens hit a wall, they complain in chat 
 
 ## 2. Information rules
 
-**Decision (2026-10-12):** the Governor sees the numbers. The earlier rule "the Governor has no ledger" (resource and capacity numbers, material progress and shortage speech bubbles hidden from the owner's page) is dropped: planning without knowing what a building takes or what storage holds was more frustrating than fun.
+**Decision (2026-10-12):** the Tsar sees the numbers. The earlier rule "the Tsar has no ledger" (resource and capacity numbers, material progress and shortage speech bubbles hidden from the owner's page) is dropped: planning without knowing what a building takes or what storage holds was more frustrating than fun.
 
 The streamer's view (the owner's game page):
 
@@ -26,10 +26,10 @@ The streamer's view (the owner's game page):
 - Need and story quest progress with numbers.
 - Citizen speech bubbles about full storage and hunger.
 
-The Governor still never works, so the actions stay with the citizens. The citizen's view keeps everything it has (inventory with numbers, error messages), plus:
+The Tsar still never works, so the actions stay with the citizens. The citizen's view keeps everything it has (inventory with numbers, error messages), plus:
 
 - A clear blocked state: "Woodyard is full — your 3 wood stays in your hands."
-- A **"Tell the Governor" helper** that copies a ready-made chat line to the clipboard, for example `Woodyard full 200/200 — we need another woodyard!`. The player pastes it into Twitch, YouTube or Telegram chat themselves. This helps players talk to the streamer without the game talking for them.
+- A **"Tell the Tsar" helper** that copies a ready-made chat line to the clipboard, for example `Woodyard full 200/200 — we need another woodyard!`. The player pastes it into Twitch, YouTube or Telegram chat themselves. This helps players talk to the streamer without the game talking for them.
 
 The village owner cannot have a citizen in their own village.
 
@@ -74,14 +74,15 @@ When a citizen's cycle finishes:
 ```text
 Produced = Yield (as in game-design.md section 6.1)
 Stored   = min(Produced, free space for that good in connected storage)
-Carried  = Produced − Stored          (stays in the citizen's hands)
+Carried  = min(Produced − Stored, 10 − already in hands)   (stays in the citizen's hands)
+Lost     = Produced − Stored − Carried
 ```
 
-- A citizen holding goods **cannot start a task that produces the same good** ("Your hands are full. Unload first or pick another job."). They are free to take any other job.
+- Hands hold at most **10 of one good**, the same limit as taking goods out of storage. Whatever fits neither in storage nor in hands is lost; the task report shows it as "+2(0) food (storage and hands are full)".
+- A citizen **cannot start a task when every good it produces has full hands and full storage** ("Your hands are full of wood and storage has no room for it."). They are free to take any other job.
 - Carried goods unload automatically as soon as space appears (the server retries every settlement tick). The citizen walks to the storage building on the map and stands there holding the load, so a crowd of woodcutters around a full Woodyard is visible to the streamer.
 - Carried goods can be used directly: *Deliver wood* to a construction site takes from the citizen's hands first. This gives players something useful to do while waiting for a new Woodyard.
-- A citizen can **drop the load** (the goods are lost) to get back to the same job.
-- Carry limit: one cycle's yield per good. A citizen never holds more than one load.
+- A citizen can **drop the load** (the goods are lost) to make room in their hands.
 
 Experience for the blocked cycle:
 
@@ -114,7 +115,7 @@ Tasks are no longer always available. A task can be done only if the streamer ha
 - Job places fill first come, first served. A citizen who renews within the grace window keeps their place.
 - When a workplace is full, the task shows "No free job places" to the citizen and nothing to the streamer, except a visible crowd around the building.
 - Building a second hut adds more job places. This is the streamer's main lever for steering the economy.
-- Role and stat requirements from game-design.md still apply. The workplace is an additional requirement.
+- Skill level requirements from game-design.md still apply. The workplace is an additional requirement.
 - Starting village: Town Hall, City gate, one Woodcutter's hut, one Quarry, one Farm.
 
 ## 5. Roads and distance
@@ -136,7 +137,7 @@ Up to 10 tiles is free; at 40 tiles or more yield drops to 70%.
 - The streamer opens **Build mode** (owner only), picks a building and places it on the tile grid. Valid tiles glow, invalid ones turn red; roads are drawn by dragging.
 - Placing a building creates a **construction site**, which reuses the existing project system (game-design.md section 7): materials must be delivered by citizens and labor must be done. Small buildings skip the Survey phase. The Engineer supervision rule applies only to large buildings and monuments.
 - **Monuments** (Tsar Bridge, Bell Tower, later churches and the monastery) are the big co-operative goals and keep survey, supervision and the 20% contribution cap. As in Zeus, monuments are what the city is remembered for.
-- Several construction sites can be open at once. The streamer sets their priority order. Citizens see the priority as "Governor's priority" next to delivery tasks, but may still choose freely.
+- Several construction sites can be open at once. The streamer sets their priority order. Citizens see the priority as "Tsar's priority" next to delivery tasks, but may still choose freely.
 - Demolishing returns 50% of the materials to connected storage; goods stored inside a demolished storage building are moved out if there is space, otherwise lost.
 - To stop the streamer from flooding the map with sites that nobody can finish, at most **3 construction sites plus 1 monument** can be open at once.
 
@@ -184,7 +185,7 @@ Suggested order of implementation:
 ## 10. Decisions
 
 1. **How much the streamer sees:** everything citizens see, numbers included (changed on 2026-10-12; it was visual only).
-2. **Full storage:** workers keep the load and cannot repeat the same job.
+2. **Full storage:** workers keep up to 10 of a good in their hands; the rest is lost.
 3. **Owner as a citizen:** the streamer cannot be a citizen in their own village.
 4. **Job places per workplace:** yes (Zeus style), in phase 3.
 5. **Roads and distance:** in a later phase.

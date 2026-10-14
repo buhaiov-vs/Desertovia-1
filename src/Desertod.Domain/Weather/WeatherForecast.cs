@@ -1,9 +1,9 @@
 namespace Desertod.Domain.Weather;
 
-/// <summary>A Synoptic's forecast for one weather day, and the weather it brought.</summary>
+/// <summary>A Synoptic's forecast for one day or night, and the weather it brought.</summary>
 public sealed class WeatherForecast
 {
-    /// <summary>Weather day the forecast is for; see <see cref="WeatherRules.DayOf"/>.</summary>
+    /// <summary>Period (a daytime or a night) the forecast is for; see <see cref="DayCycle.PeriodOf"/>.</summary>
     public long Day { get; set; }
 
     public Guid CitizenId { get; set; }

@@ -1,7 +1,11 @@
+using Desertod.Domain.Chat;
+using Desertod.Domain.Dungeons;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Projects;
 using Desertod.Domain.Quests;
+using Desertod.Domain.World;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Desertod.Infrastructure.Data;
 
@@ -14,6 +18,8 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
     public DbSet<Citizen> Citizens => Set<Citizen>();
     public DbSet<VillageProject> VillageProjects => Set<VillageProject>();
     public DbSet<VillageQuest> VillageQuests => Set<VillageQuest>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<DungeonRun> DungeonRuns => Set<DungeonRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -108,8 +114,34 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 poll.OwnsMany(p => p.Ballots);
             });
             village.OwnsMany(v => v.Forecasts, forecast => forecast.ToJson());
+            village.OwnsMany(v => v.Raids, raid =>
+            {
+                raid.ToJson();
+                raid.Property(r => r.Source).HasConversion<string>();
+                raid.Property(r => r.Enemy).HasConversion<string>();
+                raid.Property(r => r.Outcome).HasConversion<string>();
+                raid.Ignore(r => r.IsPending);
+                raid.OwnsMany(r => r.Stolen, good => good.Property(g => g.Kind).HasConversion<string>());
+                raid.OwnsMany(r => r.Loot, good => good.Property(g => g.Kind).HasConversion<string>());
+            });
+            village.OwnsOne(v => v.Wilds, wilds =>
+            {
+                wilds.ToJson();
+                wilds.Ignore(w => w.CaveMouth);
+                wilds.Ignore(w => w.Lookout);
+                wilds.OwnsMany(w => w.Ravine);
+                wilds.OwnsMany(w => w.Passes);
+                wilds.OwnsMany(w => w.Obstacles, obstacle =>
+                {
+                    obstacle.Property(o => o.Kind).HasConversion<string>();
+                    obstacle.Ignore(o => o.Tile);
+                    obstacle.Ignore(o => o.Center);
+                });
+            });
+            village.HasIndex(v => v.NextRaidAt);
             village.Property(v => v.ChosenTechnology).HasMaxLength(32);
-            village.Ignore(v => v.GovernorSpot);
+            village.Ignore(v => v.TsarSpot);
+            village.OwnsOne(v => v.TsarTrip, MapTrip);
             village.Property<uint>("Version").IsRowVersion();
         });
 
@@ -140,10 +172,13 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             citizen.Property(c => c.CurrentTaskId).HasMaxLength(32);
             citizen.Property(c => c.CurrentSiteId).HasMaxLength(16);
             citizen.Property(c => c.CurrentTechnologyId).HasMaxLength(32);
+            citizen.Property(c => c.Weapon).HasConversion<string>().HasMaxLength(16);
+            citizen.Property(c => c.Armor).HasConversion<string>().HasMaxLength(16);
             citizen.Ignore(c => c.RegenerationMultiplier);
             citizen.Ignore(c => c.SleepsUnderTrees);
             citizen.Ignore(c => c.Spot);
             citizen.Ignore(c => c.IdleSpot);
+            citizen.OwnsOne(c => c.Trip, MapTrip);
             citizen.HasOne<Village>().WithMany().HasForeignKey(c => c.VillageId);
             citizen.HasOne<Account>().WithMany().HasForeignKey(c => c.AccountId);
             citizen.OwnsOne(c => c.Stats, stats => stats.Ignore(s => s.Total));
@@ -197,5 +232,48 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             contribution.HasKey(c => new { c.VillageQuestId, c.CitizenId });
             contribution.HasOne<Citizen>().WithMany().HasForeignKey(c => c.CitizenId);
         });
+
+        modelBuilder.Entity<ChatMessage>(message =>
+        {
+            message.HasKey(m => m.Id);
+            message.HasIndex(m => new { m.VillageId, m.SentAt });
+            message.Property(m => m.AuthorName).HasMaxLength(ChatMessage.AuthorNameMaximumLength);
+            message.Property(m => m.Text).HasMaxLength(ChatMessage.TextMaximumLength);
+            message.Ignore(m => m.IsTsar);
+            message.HasOne<Village>().WithMany().HasForeignKey(m => m.VillageId);
+            message.HasOne<Account>().WithMany().HasForeignKey(m => m.AccountId);
+            message.HasOne<Citizen>().WithMany().HasForeignKey(m => m.CitizenId);
+        });
+
+        modelBuilder.Entity<DungeonRun>(run =>
+        {
+            run.HasKey(r => r.Id);
+            run.HasIndex(r => new { r.VillageId, r.Phase });
+            run.Property(r => r.DungeonId).HasMaxLength(32);
+            run.Property(r => r.Phase).HasConversion<string>().HasMaxLength(16);
+            run.Property(r => r.Outcome).HasConversion<string>().HasMaxLength(16);
+            run.Ignore(r => r.IsActive);
+            run.Ignore(r => r.Tsar);
+            run.HasOne<Village>().WithMany().HasForeignKey(r => r.VillageId);
+            run.OwnsMany(r => r.Heroes, hero =>
+            {
+                hero.ToJson();
+                hero.Property(h => h.Class).HasConversion<string>();
+                hero.Property(h => h.Killer).HasConversion<string>();
+                hero.PrimitiveCollection(h => h.Broken).ElementType(e => e.HasConversion<string>());
+                hero.Ignore(h => h.IsTsar);
+                hero.OwnsMany(h => h.Loot, good => good.Property(g => g.Kind).HasConversion<string>());
+            });
+            run.Property<uint>("Version").IsRowVersion();
+        });
+    }
+
+    private static void MapTrip<TOwner>(OwnedNavigationBuilder<TOwner, Trip> trip)
+        where TOwner : class
+    {
+        trip.ToJson();
+        trip.Ignore(t => t.From);
+        trip.Ignore(t => t.To);
+        trip.Ignore(t => t.ArrivesAt);
     }
 }

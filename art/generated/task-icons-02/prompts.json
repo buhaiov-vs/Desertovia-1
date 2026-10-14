@@ -1,0 +1,35 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "icon-task-cut-reeds",
+      "prompt": "ONE tiny task icon for cozy medieval Slavic village game. Match supplied Kenney Tiny Town/Tiny Farm minimal chunky pixel-art style. Strict 16x16 logical pixel grid enlarged nearest-neighbor: each logical pixel a solid square, maximum 16 across canvas. Flat earthy colors, only two shades per material, one dark colored outline pixel. Transparent background, centered with one logical pixel margin. No gradients, texture, antialiasing, glow, shadow, text, border or scenery. Curved iron sickle with short wooden handle crossing TWO cattail reeds, brown cylindrical seed heads and green stalks. Very simple readable silhouette.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "icon-task-hunt",
+      "prompt": "ONE tiny task icon for cozy medieval Slavic village game. Match supplied Kenney Tiny Town/Tiny Farm minimal chunky pixel-art style. Strict 16x16 logical pixel grid enlarged nearest-neighbor: each logical pixel a solid square, maximum 16 across canvas. Flat earthy colors, only two shades per material, one dark colored outline pixel. Transparent background, centered with one logical pixel margin. No gradients, texture, antialiasing, glow, shadow, text, border or scenery. Brown hare head in right-facing profile, long ears, with a simple tan rope snare loop in front of its nose. Clear open loop, no full animal, no hunter.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "icon-task-track-game",
+      "prompt": "ONE tiny task icon for cozy medieval Slavic village game. Match supplied Kenney Tiny Town/Tiny Farm minimal chunky pixel-art style. Strict 16x16 logical pixel grid enlarged nearest-neighbor: each logical pixel a solid square, maximum 16 across canvas. Flat earthy colors, only two shades per material, one dark colored outline pixel. Transparent background, centered with one logical pixel margin. No gradients, texture, antialiasing, glow, shadow, text, border or scenery. Wooden hunting bow with taut string beside one split deer hoof print. Two dark brown pointed halves form the hoof print. Bow and print distinct, no arrow or deer.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in the game or the server does not work as expected.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a village as the Tsar
+        2. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Production server
+        - Local development
+        - Docker (deploy/docker-compose.yml)
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: Chrome 140 on Windows, Safari on iPhone 15, ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Screenshots, console errors or server logs

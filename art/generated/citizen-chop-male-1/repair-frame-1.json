@@ -1,0 +1,4 @@
+{
+  "mode": "built-in image_gen",
+  "prompt": "Keep ONLY the LEFT character with axe raised. Remove the entire right character and its axe. Reframe the remaining single character centered on a square transparent canvas, filling most of it with small margin. Exactly ONE character, ONE pose, ONE axe, not a sprite sheet. Preserve the left character appearance, pose and colors. Crisp pixel art."
+}

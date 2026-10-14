@@ -1,0 +1,26 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "prop-onion-dome-gold",
+      "width": 16,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent 16x32 logical-pixel RPG architecture prop, enlarged portrait canvas 1:2. Gold onion dome on a SHORT white stone drum, gold Orthodox cross on top with short upper bar, longer middle bar and slanted lower foot bar. Entire cross/dome/drum visible, no full building or roof underneath. Simple bulbous onion silhouette, front-facing slightly overhead matching reference Tiny Town and Tiny Farm pixel style. Extremely simple broad flat pixel clusters and limited muted palette, no gradients, tiny masonry detail, glow, edge fringe, text or backdrop. Centered with narrow transparent margin."
+    },
+    {
+      "name": "prop-onion-dome-blue",
+      "width": 16,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent 16x32 logical-pixel RPG architecture prop, enlarged portrait canvas 1:2. Blue onion dome with a few small gold stars on a SHORT white stone drum, gold Orthodox cross on top with short upper bar, longer middle bar and slanted lower foot bar. Entire cross/dome/drum visible, no full building or roof underneath. Simple bulbous onion silhouette, front-facing slightly overhead matching reference Tiny Town and Tiny Farm pixel style. Extremely simple broad flat pixel clusters and limited muted palette, no gradients, tiny masonry detail, glow, edge fringe, text or backdrop. Centered with narrow transparent margin."
+    }
+  ]
+}

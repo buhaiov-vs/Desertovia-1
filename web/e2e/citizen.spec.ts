@@ -5,6 +5,7 @@ import {
   expect,
   expectVillageView,
   openInventory,
+  openMenu,
   test,
   uniqueName,
   visitEveryTab,
@@ -24,24 +25,15 @@ test.describe('citizen', () => {
   test('signs in, creates a character, opens every panel and starts a task', async ({ page }) => {
     test.slow()
     await page.goto(`/v/${DEMO_SLUG}`)
-    await developmentLogin(page, uniqueName('citizen'))
+    await developmentLogin(page, uniqueName('citizen'), 'Smoky')
     await expectVillageView(page)
 
     const inventoryBefore = await openInventory(page)
-    await expect(inventoryBefore.getByRole('heading', { name: 'Village storage' })).toBeVisible()
+    await expect(inventoryBefore.getByRole('heading', { name: /Village storage/ })).toBeVisible()
+    await expect(inventoryBefore.getByRole('heading', { name: /Smoky/ })).toBeVisible()
     await closeModal(page, 'Inventory')
 
-    await page.locator('.hud-status').getByRole('button', { name: 'Join the game' }).click()
-    const menu = page.getByRole('dialog', { name: 'Menu' })
-    await expect(menu.locator('nav.tabs button.active')).toHaveText('Character')
-
-    const form = menu.locator('form.character-creation')
-    await expect(form.getByRole('heading', { name: 'Join the tribe' })).toBeVisible()
-    await form.getByRole('button', { name: 'Random', exact: true }).click()
-    await form.getByLabel('Name', { exact: true }).fill('Smoky')
-    await form.getByRole('button', { name: 'Start playing' }).click()
-
-    await expect(menu.locator('nav.tabs button.active')).toHaveText('Tasks')
+    const menu = await openMenu(page)
     await visitEveryTab(page, ['Village', 'Character', 'Tasks', 'Tech', 'Settings'])
 
     await menu.locator('nav.tabs button', { hasText: 'Character' }).click()

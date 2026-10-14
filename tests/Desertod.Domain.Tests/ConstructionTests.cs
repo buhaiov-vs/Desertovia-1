@@ -211,7 +211,7 @@ public class ConstructionTests
 
         Assert.Contains(village.Structures, s => s.Kind == BuildingKind.LeanTo);
         ShelterRules.Assign(village, citizens, now);
-        Assert.Equal([0.75, 0.75, GameRules.UnderTreesRegeneration], citizens.Select(c => c.ShelterQuality));
+        Assert.Equal([0.9, 0.9, GameRules.UnderTreesRegeneration], citizens.Select(c => c.ShelterQuality));
     }
 
     [Fact]

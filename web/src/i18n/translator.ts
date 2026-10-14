@@ -1,4 +1,15 @@
-import { ApiError, type CycleReport, type Era, type ProjectPhase, type RoleTier, type Skill, type Stat } from '../api'
+import {
+  ApiError,
+  type CycleReport,
+  type DungeonRun,
+  type Era,
+  type HeroClass,
+  type ProjectPhase,
+  type RaidReport,
+  type RoleTier,
+  type Skill,
+  type Stat,
+} from '../api'
 import { en, type Dictionary, type UiKey } from './en'
 import { ru } from './ru'
 
@@ -60,14 +71,21 @@ export function createTranslator(language: Language) {
   const dictionary = DICTIONARIES[language]
   const t = (key: UiKey, parameters?: Parameters) => format(dictionary.ui[key] ?? en.ui[key], parameters)
   const amount = (value: number) => formatAmount(value, language)
+  const held = (kind: string, value: number) =>
+    t('amount.held', { amount: amount(value), resource: resource(kind).toLowerCase() })
   const resource = (kind: string) => dictionary.resources[kind] ?? en.resources[kind] ?? kind
   const animal = (kind: string) => dictionary.animals[kind] ?? en.animals[kind] ?? kind
   const animalHint = (kind: string) => dictionary.animalHints[kind] ?? en.animalHints[kind] ?? ''
+  const enemy = (kind: string) => dictionary.enemies[kind] ?? en.enemies[kind] ?? kind
   const crop = (kind: string) => dictionary.crops[kind] ?? en.crops[kind] ?? kind
   const cropHint = (kind: string) => dictionary.cropHints[kind] ?? en.cropHints[kind] ?? ''
   /** "+3 wood" in English, "дерево +3" in Russian: the word order avoids number agreement. */
-  const produced = (kind: string, value: number) =>
-    t('amount.produced', { amount: amount(value), resource: resource(kind).toLowerCase() })
+  /** "+2 food"; with `kept` below `value` some was lost: "+2(0) food". */
+  const produced = (kind: string, value: number, kept = value) =>
+    t('amount.produced', {
+      amount: kept < value ? `${amount(value)}(${amount(kept)})` : amount(value),
+      resource: resource(kind).toLowerCase(),
+    })
   const role = (id: string) => dictionary.roles[id] ?? en.roles[id] ?? id
   const job = (id: string) => dictionary.jobs[id] ?? en.jobs[id] ?? id
   /** Tasks and construction jobs share one name space in reports and the feed. */
@@ -89,12 +107,12 @@ export function createTranslator(language: Language) {
     const parameters = { resource: quest.resource ? resource(quest.resource).toLowerCase() : '' }
     return { title: format(entry.title, parameters), story: format(entry.story, parameters) }
   }
-  /** The Governor's wording speaks about citizens' work; its numbers, if any, follow it in brackets. */
-  const objective = (id: string, governor: boolean, parameters?: Parameters & { current?: string; required?: string }) => {
+  /** The rulers' wording speaks about citizens' work; its numbers, if any, follow it in brackets. */
+  const objective = (id: string, ruler: boolean, parameters?: Parameters & { current?: string; required?: string }) => {
     const entry = dictionary.objectives[id] ?? en.objectives[id]
     if (!entry) return id
-    if (!governor) return format(entry.citizen, parameters)
-    const text = format(entry.governor, parameters)
+    if (!ruler) return format(entry.citizen, parameters)
+    const text = format(entry.ruler, parameters)
     return parameters?.current !== undefined && parameters.required !== undefined
       ? `${text} (${parameters.current} / ${parameters.required})`
       : text
@@ -140,7 +158,12 @@ export function createTranslator(language: Language) {
 
   const describeReport = (report: CycleReport) => {
     const parts: string[] = []
+    if (report.fight) {
+      const name = enemy(report.fight.enemy).toLowerCase()
+      parts.push(t(report.fight.won ? 'report.fightWon' : 'report.fightLost', { enemy: name }))
+    }
     for (const item of report.produced) parts.push(produced(item.resource, item.amount))
+    if (report.repaired > 0) parts.push(t('report.repaired', { amount: amount(report.repaired) }))
     if (report.moraleGained > 0) parts.push(t('report.morale', { value: amount(report.moraleGained * 100) }))
     if (report.projectContribution > 0 && report.produced.length === 0) {
       parts.push(t('report.contribution', { amount: amount(report.projectContribution) }))
@@ -156,7 +179,39 @@ export function createTranslator(language: Language) {
     return `${report.citizenName} — ${task(report.taskId)}${parts.length ? `: ${parts.join(', ')}` : ''}`
   }
 
+  const goods = (list: Array<{ resource: string; amount: number }>) =>
+    list.map((item) => held(item.resource, item.amount)).join(', ')
+
+  const heroClass = (value: HeroClass) => t(`class.${value}`)
+  const heroClassHint = (value: HeroClass) => t(`classHint.${value}`)
+
+  /** One line for the chronicle about a dungeon run that just ended. */
+  const describeDungeon = (run: DungeonRun) => {
+    const values = { slain: run.slain, foes: run.foes }
+    if (run.outcome === 'Victory') return t('feed.dungeon.Victory', values)
+    if (run.outcome === 'Defeat') return t('feed.dungeon.Defeat', values)
+    return t('feed.dungeon.Abandoned', values)
+  }
+
+  /** One line for the chronicle: the outcome, then what it cost or brought. */
+  const describeRaid = (report: RaidReport) => {
+    const name = enemy(report.enemy)
+    const parts = [
+      report.repelled
+        ? t('raid.repelled', { killed: report.killed, enemy: name.toLowerCase() })
+        : t('raid.lost', { enemy: name }),
+    ]
+    if (report.waves > 1) parts.push(t('raid.wave', { wave: report.wave, waves: report.waves }))
+    if (report.loot.length > 0) parts.push(t('raid.loot', { goods: goods(report.loot) }))
+    if (report.stolen.length > 0) parts.push(t('raid.stolen', { goods: goods(report.stolen) }))
+    const wounded = [...report.defenders.filter((defender) => defender.injured), ...report.victims].map((citizen) => citizen.name)
+    if (wounded.length > 0) parts.push(t('raid.injured', { names: wounded.join(', ') }))
+    if (report.damagedPlots.length > 0) parts.push(t('raid.damaged', { count: report.damagedPlots.length }))
+    return parts.join(' · ')
+  }
+
   const speechFor = (report: CycleReport) => {
+    if (report.fight) return t(report.fight.won ? 'speech.fightWon' : 'speech.fightLost')
     if (report.buildingCompleted) return t('speech.built', { building: building(report.buildingCompleted).name })
     if (report.technologyDiscovered && report.technologyId) {
       return t('speech.discovered', { technology: technology(report.technologyId).name })
@@ -186,11 +241,13 @@ export function createTranslator(language: Language) {
     amount,
     produced,
     /** An amount of goods held or carried: "3 wood" in English, "дерево: 3" in Russian. */
-    held: (kind: string, value: number) =>
-      t('amount.held', { amount: amount(value), resource: resource(kind).toLowerCase() }),
+    held,
+    /** "3 wood, 1 leather". */
+    goods,
     resource,
     animal,
     animalHint,
+    enemy,
     crop,
     cropHint,
     role,
@@ -213,6 +270,10 @@ export function createTranslator(language: Language) {
     priestLines: dictionary.priestLines,
     error,
     describeReport,
+    describeRaid,
+    describeDungeon,
+    heroClass,
+    heroClassHint,
     speechFor,
   }
 }

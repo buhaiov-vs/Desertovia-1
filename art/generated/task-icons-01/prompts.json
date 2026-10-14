@@ -1,0 +1,35 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "icon-task-chop-wood",
+      "prompt": "One tiny inventory/task icon for cozy medieval Slavic village game, style matching supplied Kenney Tiny Town and Tiny Farm. Strict 16x16 logical pixel art enlarged with nearest-neighbor; very chunky simple squares, flat colors maximum two shades per material, earthy palette. Entire subject centered with one logical pixel transparent margin. Transparent background. No gradients, texture, antialiasing, shadows, lettering, border, scenery or extra subjects. Woodcutter's iron axe stuck in a short brown log, two small wood chips flying. Broad grey axe head and short tan cut face on log, instantly readable.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "icon-task-quarry-stone",
+      "prompt": "One tiny inventory/task icon for cozy medieval Slavic village game, style matching supplied Kenney Tiny Town and Tiny Farm. Strict 16x16 logical pixel art enlarged with nearest-neighbor; very chunky simple squares, flat colors maximum two shades per material, earthy palette. Entire subject centered with one logical pixel transparent margin. Transparent background. No gradients, texture, antialiasing, shadows, lettering, border, scenery or extra subjects. Hand pick with wooden handle and grey iron head angled above two grey stones. Simple strong silhouette, two distinct stones.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "icon-task-forage",
+      "prompt": "One tiny inventory/task icon for cozy medieval Slavic village game, style matching supplied Kenney Tiny Town and Tiny Farm. Strict 16x16 logical pixel art enlarged with nearest-neighbor; very chunky simple squares, flat colors maximum two shades per material, earthy palette. Entire subject centered with one logical pixel transparent margin. Transparent background. No gradients, texture, antialiasing, shadows, lettering, border, scenery or extra subjects. A small hand picking one red berry from a small green berry sprig. Only a few leaves and a clear red berry, compact readable silhouette.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

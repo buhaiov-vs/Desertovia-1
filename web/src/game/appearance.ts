@@ -1,7 +1,8 @@
+import { appPath } from '../paths'
 import type { Appearance, Gender } from '../api'
 import { TILE } from './sheets'
 
-const SHEET_URL = '/assets/kenney/tiny-dungeon.png'
+const SHEET_URL = appPath('/assets/kenney/tiny-dungeon.png')
 const SHEET_COLUMNS = 12
 
 type Layer = 'hair' | 'outfit'

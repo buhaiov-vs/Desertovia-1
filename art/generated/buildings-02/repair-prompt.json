@@ -1,0 +1,6 @@
+{
+  "generator": "Built-in image_gen",
+  "asset": "building-drying-rack-v2-source.png",
+  "prompt": "Use case: background-extraction. Edit the supplied drying rack sprite. Remove ALL dark red/brown glow, halo, haze and backdrop outside the solid pixel-art objects and from every open gap between posts, ropes, hanging foods and hide. Those empty regions must be completely transparent alpha zero. Preserve the existing drying rack geometry, reed roof, two posts, crossbar, rope, meat, hide and berries. Hard crisp pixel boundaries, no soft transition, no drop shadow, no background color. Do not add anything. Transparent PNG.",
+  "result": "Halo persists; variant not selected. Requires a fresh generation or another repair."
+}

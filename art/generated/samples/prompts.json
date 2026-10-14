@@ -1,0 +1,24 @@
+{
+  "generator": "Built-in image_gen",
+  "references": [
+    "kenney/tiny-town.png",
+    "kenney/tiny-farm.png"
+  ],
+  "samples": [
+    {
+      "name": "item-wood",
+      "size": 16,
+      "prompt": "Use case: stylized-concept. Create a single game sprite for Desertod, a cozy medieval Slavic river village game. Attached tiny-town.png and tiny-farm.png are STYLE REFERENCES ONLY. Match their extremely simple chunky pixel clusters, warm restrained colors and top-down three-quarter view showing top and south-facing front; not isometric. Flat colors, 2-3 shades per material, top-left light, dark local-color edges, no pure black outline. Genuine transparent background. No text, labels, watermark, scene, ground, shadow, gradients, antialiasing, noise, detailed illustration or tiny decorative details. Single centered subject. 16x16 logical pixel canvas enlarged exactly 64x to 1024x1024. Every logical pixel is one uniform 64x64 square aligned to the grid. One logical pixel transparent margin. Three short chopped logs stacked in a small pyramid, light end grain rings visible on front, brown bark. Use very few large pixel clusters like the reference resource icons."
+    },
+    {
+      "name": "building-hut",
+      "size": 48,
+      "prompt": "Use case: stylized-concept. Create a single game sprite for Desertod, a cozy medieval Slavic river village game. Attached tiny-town.png and tiny-farm.png are STYLE REFERENCES ONLY. Match their extremely simple chunky pixel clusters, warm restrained colors and top-down three-quarter view showing top and south-facing front; not isometric. Flat colors, 2-3 shades per material, top-left light, dark local-color edges, no pure black outline. Genuine transparent background. No text, labels, watermark, scene, ground, shadow, gradients, antialiasing, noise, detailed illustration or tiny decorative details. Single centered subject. 48x48 logical pixel canvas enlarged exactly 32x to 1536x1536. Every logical pixel is one uniform 32x32 square aligned to the grid. One logical pixel transparent margin. Small Slavic peasant hut, low grey stone base, whitewashed clay walls between dark timber beams, thick golden thatched roof, hide hanging in the south-facing doorway, one small window. Footprint 3x3 tiles. Match reference buildings' flat front elevation with visible roof top, no angled isometric sides. Simple sparse thatch pixels."
+    },
+    {
+      "name": "character-citizen-male-1",
+      "size": 16,
+      "prompt": "Use case: stylized-concept. Create a single game sprite for Desertod, a cozy medieval Slavic river village game. Attached tiny-town.png and tiny-farm.png are STYLE REFERENCES ONLY. Match their extremely simple chunky pixel clusters, warm restrained colors and top-down three-quarter view showing top and south-facing front; not isometric. Flat colors, 2-3 shades per material, top-left light, dark local-color edges, no pure black outline. Genuine transparent background. No text, labels, watermark, scene, ground, shadow, gradients, antialiasing, noise, detailed illustration or tiny decorative details. Single centered subject. 16x16 logical pixel canvas enlarged exactly 64x to 1024x1024. Every logical pixel is one uniform 64x64 square aligned to the grid. Young Slavic peasant man with short hair, belted long shirt (kosovorotka), trousers, bast shoes, arms at sides, facing viewer south. Full body 14 logical pixels tall, tiny chibi proportions matching the reference people; feet at bottom row. Exact flat recolorable palette: skin #f7c282 and #e19a65; hair #bd6c4a and #763b36; clothing #c0cbdc #8b9bb4 #52607c. No other regions use those colors. Brown belt and bast shoes. Simple face with two single pixel eyes."
+    }
+  ]
+}

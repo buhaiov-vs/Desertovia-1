@@ -132,7 +132,7 @@ export function CreateCharacterForm({ suggestedName, onCreated }: { suggestedNam
   )
 }
 
-/** Public villages are joined as soon as they open; a private one first asks for the Governor's invite code. */
+/** Public villages are joined as soon as they open; a private one first asks for the Tsar's invite code. */
 export function JoinVillageForm({
   joining,
   error,

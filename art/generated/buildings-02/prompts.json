@@ -1,0 +1,107 @@
+{
+  "generator": "Built-in image_gen",
+  "samples": [
+    {
+      "name": "building-drying-rack",
+      "width": 32,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 32x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 32×48 building (footprint 2×2 tiles, poles rise 1 tile above): wooden drying rack of two posts and a crossbar under a small reed roof, strips of red meat, a tan hide and bunches of berries hanging from it."
+    },
+    {
+      "name": "building-town-hall",
+      "width": 80,
+      "height": 80,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 80x80 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 80×80 building (footprint 5×4 tiles, roof rises 1 tile above): large two-storey log hall (terem) with a steep wooden shingle roof, carved wooden gable trim with a round window, wide arched double door, two red banners beside it."
+    },
+    {
+      "name": "building-woodyard",
+      "width": 64,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 64x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 64×48 building (footprint 4×3 tiles): long open-sided timber shed on four posts under a long brown shingle roof, stacks of logs, planks and reed bundles under it."
+    },
+    {
+      "name": "building-stone-yard",
+      "width": 64,
+      "height": 64,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 64x64 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 64×64 building (footprint 4×4 tiles): walled yard of dry-stacked grey stone with a wide dark gateway in the front, piles of stone, rust ore and black coal visible inside, small thatched lean roof at the back."
+    },
+    {
+      "name": "building-granary",
+      "width": 48,
+      "height": 64,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 48x64 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 48×64 building (footprint 3×3 tiles, roof rises 1 tile above): log granary standing on short stone stilts, small door reached by a plank ramp, thatched roof, grain sacks leaning by the ramp."
+    },
+    {
+      "name": "building-storehouse",
+      "width": 64,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 64x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 64×48 building (footprint 4×3 tiles): long sturdy plank storehouse with a shingle roof and a wide double door with iron hinges, crates and a barrel outside."
+    },
+    {
+      "name": "building-treasury",
+      "width": 48,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 48x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 48×48 building (footprint 3×3 tiles): small squat stone building with thick walls, a grey slate roof, a heavy iron-barred door with a big lock, a glint of gold through a tiny barred window."
+    },
+    {
+      "name": "building-farm",
+      "width": 48,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 48x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 48×48 building (footprint 3×3 tiles): three horizontal rows of dry ploughed brown soil beds separated by narrow grass paths, a low wattle fence along the edges, no plants (crops are drawn on top)."
+    },
+    {
+      "name": "building-mine",
+      "width": 48,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 48x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 48×48 building (footprint 3×3 tiles): dark mine entrance cut into a grey rocky hillside, framed by thick timber supports, wooden rails coming out with a small ore cart, a pile of ore beside it."
+    },
+    {
+      "name": "building-smithy",
+      "width": 48,
+      "height": 64,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 48x64 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 48×64 building (footprint 3×3 tiles, chimney rises 1 tile above): stone-and-timber smithy with an open front, a glowing orange forge and stone chimney inside, an anvil on a stump in front, grey shingle roof."
+    },
+    {
+      "name": "building-workshop",
+      "width": 64,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 64x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 64×48 building (footprint 4×3 tiles): long plank workshop with a long cream-brown roof, a sawhorse with a log and a saw in front, a crate of tools, a small window."
+    },
+    {
+      "name": "building-library",
+      "width": 48,
+      "height": 64,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 48x64 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 48×64 building (footprint 3×3 tiles, roof rises 1 tile above): tall narrow stone building with a steep roof, tall arched windows, a round rose window in the gable, a small wooden cross-shaped finial."
+    },
+    {
+      "name": "building-tavern",
+      "width": 64,
+      "height": 64,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 64x64 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 64×64 building (footprint 4×3 tiles, roof rises 1 tile above): big cozy log tavern with a long orange-brown roof, warm lit window, a barrel of kvass and a bench by the door, a hanging mug sign."
+    },
+    {
+      "name": "building-bakery",
+      "width": 48,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 48x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 48×48 building (footprint 3×3 tiles): open-fronted timber shelter on a stone base over a large domed clay oven with a glowing mouth, a flour sack and a tray of round loaves beside it."
+    },
+    {
+      "name": "building-stage",
+      "width": 48,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 48x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 48×48 building (footprint 3×2 tiles, posts rise 1 tile above): small raised plank stage with two carved wooden posts at the back corners carrying red and gold pennants, a three-step stair in front."
+    },
+    {
+      "name": "building-market",
+      "width": 64,
+      "height": 48,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 64x48 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 64×48 building (footprint 4×3 tiles): row of two wooden market stalls with a red-and-white striped awning, goods on the counter (bread, pots, cloth), crates and sacks in front."
+    },
+    {
+      "name": "building-barracks",
+      "width": 80,
+      "height": 80,
+      "prompt": "Use case: stylized-concept. One isolated building sprite for a cozy medieval Slavic village game. The attached Tiny Town and Tiny Farm sheets are STYLE REFERENCES. Match their sparse pixel clusters and clear simplified silhouettes, very limited warm earthy palette, 2-3 flat colors per material, dark local color edges and top-left light. Top-down three-quarter game view: top and south-facing front visible, no isometric diamond, no perspective vanishing points. Strict 80x80 logical pixel canvas, enlarged for output with uniformly square pixels. Transparent background, 1 logical pixel margin. Keep details simple enough for the small native sprite size; no gradients, antialiasing, elaborate texture, soft shadows, text, watermark, additional scenery or characters. Front faces down with doorway at bottom. Subject and required canvas: 80×80 building (footprint 5×4 tiles, towers rise 1 tile above): fortified log barracks with a battlemented palisade top, two war banners, a heavy iron-bound gate, a rack of spears by the door."
+    }
+  ]
+}

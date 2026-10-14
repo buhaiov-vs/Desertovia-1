@@ -8,6 +8,8 @@ public static class ResourceNames
         ResourceKind.IronOre => "iron ore",
         ResourceKind.IronIngot => "iron",
         ResourceKind.ResearchPoints => "knowledge",
+        ResourceKind.LeatherArmor => "leather armor",
+        ResourceKind.VigorDrink => "vigor drink",
         _ => kind.ToString().ToLowerInvariant(),
     };
 }

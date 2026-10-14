@@ -1,0 +1,34 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-bakery-1-ground",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-bakery-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit bakery reference into construction stage 1: Only four short corner stakes linked by string marking the bakery footprint. No building, oven, stones, posts or roof. Preserve square canvas, footprint, camera and ground coordinates. Keep remaining components at original scale and positions; early stages leave transparent empty space above. Remove bread, tools, food and decorative props. Show prior construction but no later elements. Strict 48x48 logical pixel art enlarged using solid square pixels, simple warm earthy Kenney-like palette with three flat shades per material. No gradients, soft edges, halos, blur, labels, text or scenery. Fully transparent outside structure and inside open frame."
+    },
+    {
+      "name": "construction-bakery-2-foundation",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-bakery-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit bakery reference into construction stage 2: Only a low grey stone base at the bakery footprint. No oven, wooden posts, walls or roof. Preserve square canvas, footprint, camera and ground coordinates. Keep remaining components at original scale and positions; early stages leave transparent empty space above. Remove bread, tools, food and decorative props. Show prior construction but no later elements. Strict 48x48 logical pixel art enlarged using solid square pixels, simple warm earthy Kenney-like palette with three flat shades per material. No gradients, soft edges, halos, blur, labels, text or scenery. Fully transparent outside structure and inside open frame."
+    },
+    {
+      "name": "construction-bakery-3-oven",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-bakery-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit bakery reference into construction stage 3: Stone base with a half-built clay oven dome: bottom half of dome and low arched mouth visible, unfinished open top, no fire. No wooden posts or roof. Preserve square canvas, footprint, camera and ground coordinates. Keep remaining components at original scale and positions; early stages leave transparent empty space above. Remove bread, tools, food and decorative props. Show prior construction but no later elements. Strict 48x48 logical pixel art enlarged using solid square pixels, simple warm earthy Kenney-like palette with three flat shades per material. No gradients, soft edges, halos, blur, labels, text or scenery. Fully transparent outside structure and inside open frame."
+    },
+    {
+      "name": "construction-bakery-4-roof",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-bakery-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit bakery reference into construction stage 4: Stone base and complete cold clay dome oven with dark mouth; wooden posts and rafters overhead with exactly half the roof covered in golden thatch, other half exposed rafters. No fire or smoke. Preserve square canvas, footprint, camera and ground coordinates. Keep remaining components at original scale and positions; early stages leave transparent empty space above. Remove bread, tools, food and decorative props. Show prior construction but no later elements. Strict 48x48 logical pixel art enlarged using solid square pixels, simple warm earthy Kenney-like palette with three flat shades per material. No gradients, soft edges, halos, blur, labels, text or scenery. Fully transparent outside structure and inside open frame."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+name: Feature or game idea
+description: A new mechanic, balance change or improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: What should change, from the point of view of a viewer, a Tsar or a streamer.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What problem it solves or what fun it adds.
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Relation to the game design
+      description: Sections of docs/game-design.md or docs/roadmap.md this touches, if any.

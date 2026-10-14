@@ -1,0 +1,46 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-survey-peg",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Reference images are style guides only. One 16x16 logical pixel sprite enlarged to 1024x1024 with each logical pixel a solid 64x64 square, strict aligned 16 by 16 grid. Subject: one short pointed wooden stake driven into the ground, with a strip of red cloth tied on top and a small ground shadow. Cozy medieval Slavic village game. Match reference simplicity: flat warm earth colors, 2-3 shades per material, light top left. South-facing top-down view, not isometric. Transparent background, one pixel margin, single object. No gradients, antialiasing, neon edge colors, glow, haze, tiny details, text, logos or scenery."
+    },
+    {
+      "name": "prop-construction-signboard",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Reference images are style guides only. One 16x16 logical pixel sprite enlarged to 1024x1024 with each logical pixel a solid 64x64 square, strict aligned 16 by 16 grid. Subject: a small blank wooden board nailed to a post, with a hammer hanging from a nail and a small ground shadow. Blank board, absolutely no markings or letters. Cozy medieval Slavic village game. Match reference simplicity: flat warm earth colors, 2-3 shades per material, light top left. South-facing top-down view, not isometric. Transparent background, one pixel margin, single object. No gradients, antialiasing, neon edge colors, glow, haze, tiny details, text, logos or scenery."
+    },
+    {
+      "name": "terrain-blueprint-ground",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Reference images are style guides only. One 16x16 logical pixel sprite enlarged to 1024x1024 with each logical pixel a solid 64x64 square, strict aligned 16 by 16 grid. Subject: seamless bare trampled light-brown earth with a few wood chips and footprints. Fill the entire square edge to edge with opaque earth; opposite edges match for seamless repeating terrain. No transparency or border. Cozy medieval Slavic village game. Match reference simplicity: flat warm earth colors, 2-3 shades per material, light top left. South-facing top-down view, not isometric. Opaque seamless tile. No gradients, antialiasing, neon edge colors, glow, haze, tiny details, text, logos or scenery."
+    },
+    {
+      "name": "prop-storage-pallet",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Reference images are style guides only. One 16x16 logical pixel sprite enlarged to 1024x1024 with each logical pixel a solid 64x64 square, strict aligned 16 by 16 grid. Subject: a low flat wooden pallet of exactly three planks seen from top-down three-quarter view, empty, occupying the bottom half of the canvas. No goods or ground shadow. Preserve empty upper half. Cozy medieval Slavic village game. Match reference simplicity: flat warm earth colors, 2-3 shades per material, light top left. South-facing top-down view, not isometric. Transparent background, one pixel margin, single object. No gradients, antialiasing, neon edge colors, glow, haze, tiny details, text, logos or scenery."
+    }
+  ]
+}

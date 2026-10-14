@@ -1,0 +1,25 @@
+{
+  "generator": "Built-in image_gen",
+  "samples": [
+    {
+      "name": "building-heap",
+      "size": 32,
+      "prompt": "Use case: stylized-concept. A single cozy medieval Slavic village game building sprite. Attached Tiny Town and Tiny Farm sheets are style references only. Match simple low-resolution chunky pixel art, flat earthy colors, at most 3 shades per material, top-left light, darker local-color outlines. Top-down three-quarter view, top visible and south-facing front, not isometric. Strict 32x32 logical pixel grid enlarged 32x to 1024x1024, solid square pixels, no gradients or anti-aliasing or noise. Centered complete structure with 1 logical pixel margin. Transparent outside the described structure, no added environment or text. 32×32 building (footprint 2×2 tiles): patch of bare trampled earth with four short wooden posts at the corners joined by a low rope, an untidy pile of logs, stones and a basket in the middle."
+    },
+    {
+      "name": "building-lean-to",
+      "size": 32,
+      "prompt": "Use case: stylized-concept. A single cozy medieval Slavic village game building sprite. Attached Tiny Town and Tiny Farm sheets are style references only. Match simple low-resolution chunky pixel art, flat earthy colors, at most 3 shades per material, top-left light, darker local-color outlines. Top-down three-quarter view, top visible and south-facing front, not isometric. Strict 32x32 logical pixel grid enlarged 32x to 1024x1024, solid square pixels, no gradients or anti-aliasing or noise. Centered complete structure with 1 logical pixel margin. Transparent outside the described structure, no added environment or text. 32×32 building (footprint 2×2 tiles): primitive lean-to shelter, long wooden poles slanted from the ground on the left up to a crossbar on two forked posts on the right, covered with bundles of yellow reeds, open front with two straw bedrolls inside."
+    },
+    {
+      "name": "building-wood-pile",
+      "size": 32,
+      "prompt": "Use case: stylized-concept. A single cozy medieval Slavic village game building sprite. Attached Tiny Town and Tiny Farm sheets are style references only. Match simple low-resolution chunky pixel art, flat earthy colors, at most 3 shades per material, top-left light, darker local-color outlines. Top-down three-quarter view, top visible and south-facing front, not isometric. Strict 32x32 logical pixel grid enlarged 32x to 1024x1024, solid square pixels, no gradients or anti-aliasing or noise. Centered complete structure with 1 logical pixel margin. Transparent outside the described structure, no added environment or text. 32×32 building (footprint 2×2 tiles): neat stack of split firewood logs between two pairs of upright stakes, end grain facing the viewer, a chopping block with an axe in front."
+    },
+    {
+      "name": "building-stone-pile",
+      "size": 32,
+      "prompt": "Use case: stylized-concept. A single cozy medieval Slavic village game building sprite. Attached Tiny Town and Tiny Farm sheets are style references only. Match simple low-resolution chunky pixel art, flat earthy colors, at most 3 shades per material, top-left light, darker local-color outlines. Top-down three-quarter view, top visible and south-facing front, not isometric. Strict 32x32 logical pixel grid enlarged 32x to 1024x1024, solid square pixels, no gradients or anti-aliasing or noise. Centered complete structure with 1 logical pixel margin. Transparent outside the described structure, no added environment or text. 32×32 building (footprint 2×2 tiles): low ring of large grey boulders enclosing a heap of smaller grey stones."
+    }
+  ]
+}

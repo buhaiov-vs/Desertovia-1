@@ -11,7 +11,7 @@ const ACCESS: { isPrivate: boolean; label: UiKey; hint: UiKey }[] = [
   { isPrivate: true, label: 'newVillage.private', hint: 'newVillage.privateHint' },
 ]
 
-/** Where a streamer founds a village and becomes its Governor. */
+/** Where a streamer founds a village and becomes its Tsar. */
 export function CreateVillagePage() {
   const navigate = useNavigate()
   const i18n = useI18n()

@@ -8,20 +8,24 @@ using Desertod.Domain.Technologies;
 namespace Desertod.Domain.Weather;
 
 /// <summary>
-/// The sky over the village. Time is cut into weather days of <see cref="DayLength"/>; each one is sunny or rainy for the
-/// whole village. The sky of a day is drawn from the village id, so it needs no stored state and every server agrees on it,
-/// unless a Synoptic forecast the day. The Synoptic is famously wrong: what he announces does not happen,
-/// the more surely the better he knows the weather.
+/// The sky over the village. Every daytime and every night (a period of <see cref="DayCycle"/>) draws its own
+/// <see cref="WeatherKind"/> for the whole village as it begins. The draw comes from the village id and the period, so it
+/// needs no stored state and every server agrees on it, unless a Synoptic forecast the period. The Synoptic is famously
+/// wrong: what he announces does not happen, the more surely the better he knows the weather.
 /// </summary>
 public static class WeatherRules
 {
     public const string SynopticRole = "synoptic";
 
-    public static TimeSpan DayLength { get; } = TimeSpan.FromHours(3);
-
-    /// <summary>Every weather day draws its own rain chance between these.</summary>
+    /// <summary>Every period draws its own rain chance between these.</summary>
     public const double MinimumRainChance = 0.05;
     public const double MaximumRainChance = 0.10;
+
+    public const double WindChance = 0;
+    public const double ThunderstormChance = 0;
+
+    /// <summary>Kinds the sky draws, in the order their chances are stacked; whatever is left is <see cref="WeatherKind.Clear"/>.</summary>
+    private static readonly WeatherKind[] Drawn = [WeatherKind.Rain, WeatherKind.Thunderstorm, WeatherKind.Wind];
 
     /// <summary>Chance the weather turns out opposite to the forecast, at Weatherlore 0 and at the maximum level.</summary>
     public const double MinimumReliability = 0.6;
@@ -63,21 +67,58 @@ public static class WeatherRules
         BuildingKind.Mine, BuildingKind.Barracks,
     ];
 
-    public static long DayOf(DateTimeOffset time) => (time - DateTimeOffset.UnixEpoch).Ticks / DayLength.Ticks;
+    public static double RainChance(Village village, long period) =>
+        MinimumRainChance + (MaximumRainChance - MinimumRainChance) * Noise(village.Id, period, 1);
 
-    public static DateTimeOffset DayStart(long day) => DateTimeOffset.UnixEpoch + DayLength * day;
+    public static double Chance(Village village, long period, WeatherKind kind) => kind switch
+    {
+        WeatherKind.Rain => RainChance(village, period),
+        WeatherKind.Wind => WindChance,
+        WeatherKind.Thunderstorm => ThunderstormChance,
+        _ => 0,
+    };
 
-    public static double RainChance(Village village, long day) =>
-        MinimumRainChance + (MaximumRainChance - MinimumRainChance) * Noise(village.Id, day, 1);
+    /// <summary>Rain and thunderstorms: what the rain effects follow.</summary>
+    public static bool IsWet(WeatherKind kind) => kind is WeatherKind.Rain or WeatherKind.Thunderstorm;
 
-    /// <summary>The weather of the day as the sky draws it, without a forecast.</summary>
-    public static bool SkyRains(Village village, long day) => Noise(village.Id, day, 2) < RainChance(village, day);
+    /// <summary>The weather of the period as the sky draws it when the period begins, without a forecast.</summary>
+    public static WeatherKind SkyDraws(Village village, long period)
+    {
+        var roll = Noise(village.Id, period, 2);
+        var threshold = 0.0;
+        foreach (var kind in Drawn)
+        {
+            threshold += Chance(village, period, kind);
+            if (roll < threshold)
+            {
+                return kind;
+            }
+        }
 
-    public static WeatherForecast? ForecastFor(Village village, long day) => village.Forecasts.FirstOrDefault(f => f.Day == day);
+        return WeatherKind.Clear;
+    }
 
-    public static bool IsRaining(Village village, long day) => ForecastFor(village, day)?.Rain ?? SkyRains(village, day);
+    public static bool SkyRains(Village village, long period) => IsWet(SkyDraws(village, period));
 
-    public static bool IsRaining(Village village, DateTimeOffset time) => IsRaining(village, DayOf(time));
+    public static WeatherForecast? ForecastFor(Village village, long period) => village.Forecasts.FirstOrDefault(f => f.Day == period);
+
+    /// <summary>A forecast only decides whether it is wet; a dry period keeps the rest of what the sky drew.</summary>
+    public static WeatherKind WeatherOf(Village village, long period)
+    {
+        var drawn = SkyDraws(village, period);
+        return ForecastFor(village, period) switch
+        {
+            null => drawn,
+            { Rain: true } => IsWet(drawn) ? drawn : WeatherKind.Rain,
+            _ => IsWet(drawn) ? WeatherKind.Clear : drawn,
+        };
+    }
+
+    public static WeatherKind WeatherOf(Village village, DateTimeOffset time) => WeatherOf(village, DayCycle.PeriodOf(time));
+
+    public static bool IsRaining(Village village, long period) => IsWet(WeatherOf(village, period));
+
+    public static bool IsRaining(Village village, DateTimeOffset time) => IsRaining(village, DayCycle.PeriodOf(time));
 
     /// <summary>Hours of rain between the two moments.</summary>
     public static double RainHours(Village village, DateTimeOffset from, DateTimeOffset to) =>
@@ -105,16 +146,16 @@ public static class WeatherRules
     public static double Reliability(int weatherlore) =>
         MinimumReliability + (MaximumReliability - MinimumReliability) * Math.Clamp(weatherlore, 0, GameRules.SkillMaximum) / GameRules.SkillMaximum;
 
-    /// <summary>The village knows the weather lore and the citizen has the stats of a Synoptic.</summary>
+    /// <summary>The village knows the weather lore and the citizen has the Weatherlore of a Synoptic.</summary>
     public static bool IsSynoptic(Village village, Citizen citizen)
     {
         var role = GameCatalog.FindRole(SynopticRole)!;
-        return TechnologyRules.Knows(village, role.Technology) && role.IsQualified(citizen.Stats);
+        return TechnologyRules.Knows(village, role.Technology) && role.IsQualified(citizen);
     }
 
     /// <summary>
     /// A Synoptic who has just slept (idle, past the grace window of the last task) announces the weather of the next
-    /// weather day. Only the first forecast of a day counts. The weather turns out opposite to the announcement with
+    /// day or night. Only the first forecast of a period counts. The weather turns out opposite to the announcement with
     /// <see cref="Reliability"/>; otherwise the sky does what it would have done anyway.
     /// </summary>
     public static WeatherForecast Forecast(Village village, Citizen citizen, bool saysRain, Random random, DateTimeOffset now)
@@ -127,10 +168,10 @@ public static class WeatherRules
                 new Dictionary<string, object> { ["technology"] = role.Technology! });
         }
 
-        if (!role.IsQualified(citizen.Stats))
+        if (!role.IsQualified(citizen))
         {
-            throw new GameRuleException("task.roleRequired", $"You lack the skills for the {role.Name} role.",
-                new Dictionary<string, object> { ["roleId"] = role.Id });
+            throw new GameRuleException("task.roleRequired", $"Only a {role.Name} ({role.Skill} {role.SkillLevel}) can do this.",
+                new Dictionary<string, object> { ["roleId"] = role.Id, ["skill"] = role.Skill.ToString()!, ["level"] = role.SkillLevel });
         }
 
         if (citizen.Status != CitizenStatus.Active)
@@ -143,22 +184,22 @@ public static class WeatherRules
             throw new GameRuleException("forecast.notRested", "A Synoptic reads the sky right after sleeping. Rest first.");
         }
 
-        var day = DayOf(now) + 1;
-        if (ForecastFor(village, day) is not null)
+        var period = DayCycle.PeriodOf(now) + 1;
+        if (ForecastFor(village, period) is not null)
         {
-            throw new GameRuleException("forecast.alreadyMade", "The weather of the next day has already been forecast.");
+            throw new GameRuleException("forecast.alreadyMade", "The weather of the next day or night has already been forecast.");
         }
 
         var reversed = random.NextDouble() < Reliability(citizen.SkillLevel(Skill.Weatherlore));
         var forecast = new WeatherForecast
         {
-            Day = day,
+            Day = period,
             CitizenId = citizen.Id,
             SaysRain = saysRain,
-            Rain = reversed ? !saysRain : SkyRains(village, day),
+            Rain = reversed ? !saysRain : SkyRains(village, period),
             MadeAt = now,
         };
-        village.Forecasts.RemoveAll(f => DayStart(f.Day + 1) < now - ForecastMemory);
+        village.Forecasts.RemoveAll(f => DayCycle.PeriodStart(f.Day + 1) < now - ForecastMemory);
         village.Forecasts.Add(forecast);
         return forecast;
     }
@@ -202,22 +243,22 @@ public static class WeatherRules
             from = to - Lookback;
         }
 
-        for (var day = DayOf(from); from < to; day++)
+        for (var period = DayCycle.PeriodOf(from); from < to; period++)
         {
-            var next = DayStart(day + 1);
+            var next = DayCycle.PeriodStart(period + 1);
             var end = next < to ? next : to;
-            yield return (from, end, IsRaining(village, day));
+            yield return (from, end, IsRaining(village, period));
             from = end;
         }
     }
 
     /// <summary>A number in [0, 1) that depends only on the arguments.</summary>
-    private static double Noise(Guid seed, long day, ulong salt)
+    private static double Noise(Guid seed, long period, ulong salt)
     {
         Span<byte> bytes = stackalloc byte[16];
         seed.TryWriteBytes(bytes);
         var state = Mix(BitConverter.ToUInt64(bytes) ^ Mix(BitConverter.ToUInt64(bytes[8..])));
-        state = Mix(state ^ unchecked((ulong)day * 0x9E3779B97F4A7C15UL ^ salt * 0xD1B54A32D192ED03UL));
+        state = Mix(state ^ unchecked((ulong)period * 0x9E3779B97F4A7C15UL ^ salt * 0xD1B54A32D192ED03UL));
         return (state >> 11) * (1.0 / (1UL << 53));
     }
 

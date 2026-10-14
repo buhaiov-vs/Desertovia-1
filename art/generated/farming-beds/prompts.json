@@ -1,0 +1,63 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "dry: generate with style references; wet: edit dry counterpart",
+  "samples": [
+    {
+      "name": "terrain-dry-bed-left",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Style references: Kenney tile sheets. Produce exactly ONE square terrain tile, no sprite sheet. 16×16 terrain tile: left end of a raised bed of dry light-brown ploughed soil with horizontal furrows, rounded left edge, grass path above and below. Tiles seamlessly with the middle piece on its right. Cozy medieval Slavic village farming game. Strict 16x16 logical pixel grid enlarged: every pixel is a large flat square, no subpixel detail. Top-down, no isometric perspective. Opaque tile with sage-green grass top three and bottom three logical pixel rows. Soil band occupies middle ten rows. Three simple continuous horizontal furrows at matching heights. Light warm brown dry soil. Soil rounded only at left end, reaches right canvas edge. Maximum 3 flat soil colors and 2 grass colors. No gradients, noise, shading textures, plants, labels, outlines around canvas, objects, shadows, transparent gaps or extra panels."
+    },
+    {
+      "name": "terrain-dry-bed-middle",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Style references: Kenney tile sheets. Produce exactly ONE square terrain tile, no sprite sheet. 16×16 terrain tile: middle of a raised bed of dry light-brown ploughed soil with horizontal furrows, grass path above and below, seamless to the left and right. Cozy medieval Slavic village farming game. Strict 16x16 logical pixel grid enlarged: every pixel is a large flat square, no subpixel detail. Top-down, no isometric perspective. Opaque tile with sage-green grass top three and bottom three logical pixel rows. Soil band occupies middle ten rows. Three simple continuous horizontal furrows at matching heights. Light warm brown dry soil. Soil reaches both left and right canvas edges, no rounded ends. Maximum 3 flat soil colors and 2 grass colors. No gradients, noise, shading textures, plants, labels, outlines around canvas, objects, shadows, transparent gaps or extra panels."
+    },
+    {
+      "name": "terrain-dry-bed-right",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Style references: Kenney tile sheets. Produce exactly ONE square terrain tile, no sprite sheet. 16×16 terrain tile: right end of a raised bed of dry light-brown ploughed soil with horizontal furrows, rounded right edge, grass path above and below. Cozy medieval Slavic village farming game. Strict 16x16 logical pixel grid enlarged: every pixel is a large flat square, no subpixel detail. Top-down, no isometric perspective. Opaque tile with sage-green grass top three and bottom three logical pixel rows. Soil band occupies middle ten rows. Three simple continuous horizontal furrows at matching heights. Light warm brown dry soil. Soil rounded only at right end, reaches left canvas edge. Maximum 3 flat soil colors and 2 grass colors. No gradients, noise, shading textures, plants, labels, outlines around canvas, objects, shadows, transparent gaps or extra panels."
+    },
+    {
+      "name": "terrain-wet-bed-left",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/farming-beds/terrain-dry-bed-left-source.png"
+      ],
+      "prompt": "Use case: precise-object-edit. Edit the supplied dry farming-bed tile to its wet version. Preserve EXACT shape, furrow positions, grass bands, edge positions and all composition. Change ONLY soil from light tan to dark wet brown, and add two tiny water glints. Keep grass unchanged. Opaque seamless terrain tile. Simplify to flat colors, no gradients; strict 16x16 logical pixel grid, enlarged square pixels. No text, objects, plants or new details."
+    },
+    {
+      "name": "terrain-wet-bed-middle",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/farming-beds/terrain-dry-bed-middle-source.png"
+      ],
+      "prompt": "Use case: precise-object-edit. Edit the supplied dry farming-bed tile to its wet version. Preserve EXACT shape, furrow positions, grass bands, edge positions and all composition. Change ONLY soil from light tan to dark wet brown, and add one tiny water glint. Keep grass unchanged. Opaque seamless terrain tile. Simplify to flat colors, no gradients; strict 16x16 logical pixel grid, enlarged square pixels. No text, objects, plants or new details."
+    },
+    {
+      "name": "terrain-wet-bed-right",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/farming-beds/terrain-dry-bed-right-source.png"
+      ],
+      "prompt": "Use case: precise-object-edit. Edit the supplied dry farming-bed tile to its wet version. Preserve EXACT shape, furrow positions, grass bands, edge positions and all composition. Change ONLY soil from light tan to dark wet brown, and add two tiny water glints. Keep grass unchanged. Opaque seamless terrain tile. Simplify to flat colors, no gradients; strict 16x16 logical pixel grid, enlarged square pixels. No text, objects, plants or new details."
+    }
+  ]
+}

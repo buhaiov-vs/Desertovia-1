@@ -1,0 +1,12 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+
+[*.{ts,tsx,js,mjs,json,css,html,yml,yaml,md}]
+indent_size = 2
+
+[*.{csproj,props,targets,slnx,xml}]
+indent_size = 2

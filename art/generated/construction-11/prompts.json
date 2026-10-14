@@ -1,0 +1,41 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-library-1-ground",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-library-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference library to construction stage 1: Only four short corner stakes joined by thin string marking the footprint. No stones, posts, walls or roof. Remove windows, doors, books, decorations and all finished facade. Preserve original 3:4 canvas, camera, footprint and ground anchor positions. Do not zoom, shift or recenter. Leave transparent space above early low stages. Retain all previous construction, no later components. Strict 48x64 logical pixel art enlarged with square pixels; Kenney-like simple warm flat palette, max three shades per material. No gradients, halo, glow, soft edges, antialiasing, text, labels or scenery. Transparent outside structure and in open frame."
+    },
+    {
+      "name": "construction-library-2-foundation",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-library-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference library to construction stage 2: Only a low grey stone foundation base, no timber, walls or roof. Remove windows, doors, books, decorations and all finished facade. Preserve original 3:4 canvas, camera, footprint and ground anchor positions. Do not zoom, shift or recenter. Leave transparent space above early low stages. Retain all previous construction, no later components. Strict 48x64 logical pixel art enlarged with square pixels; Kenney-like simple warm flat palette, max three shades per material. No gradients, halo, glow, soft edges, antialiasing, text, labels or scenery. Transparent outside structure and in open frame."
+    },
+    {
+      "name": "construction-library-3-frame",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-library-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference library to construction stage 3: Low grey stone base with tall upright timber posts and connecting beams. Open frame without walls, plank floor or roof covering. Remove windows, doors, books, decorations and all finished facade. Preserve original 3:4 canvas, camera, footprint and ground anchor positions. Do not zoom, shift or recenter. Leave transparent space above early low stages. Retain all previous construction, no later components. Strict 48x64 logical pixel art enlarged with square pixels; Kenney-like simple warm flat palette, max three shades per material. No gradients, halo, glow, soft edges, antialiasing, text, labels or scenery. Transparent outside structure and in open frame."
+    },
+    {
+      "name": "construction-library-4-floor",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-library-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference library to construction stage 4: Low grey stone base, tall timber posts and connecting beams with plank floor laid inside. No walls or roof covering. Remove windows, doors, books, decorations and all finished facade. Preserve original 3:4 canvas, camera, footprint and ground anchor positions. Do not zoom, shift or recenter. Leave transparent space above early low stages. Retain all previous construction, no later components. Strict 48x64 logical pixel art enlarged with square pixels; Kenney-like simple warm flat palette, max three shades per material. No gradients, halo, glow, soft edges, antialiasing, text, labels or scenery. Transparent outside structure and in open frame."
+    },
+    {
+      "name": "construction-library-5-roof",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-library-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference library to construction stage 5: Low grey stone base, tall timber posts, connecting beams and plank floor, with steep pointed roof rafters exactly half covered in reddish roof tiles matching the reference and half exposed. No walls. Remove windows, doors, books, decorations and all finished facade. Preserve original 3:4 canvas, camera, footprint and ground anchor positions. Do not zoom, shift or recenter. Leave transparent space above early low stages. Retain all previous construction, no later components. Strict 48x64 logical pixel art enlarged with square pixels; Kenney-like simple warm flat palette, max three shades per material. No gradients, halo, glow, soft edges, antialiasing, text, labels or scenery. Transparent outside structure and in open frame."
+    }
+  ]
+}

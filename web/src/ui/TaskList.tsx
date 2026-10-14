@@ -3,10 +3,13 @@ import {
   blockedByLoad,
   fieldsBlock,
   GOLD_VEIN,
+  isArmed,
   type Catalog,
   type Citizen,
   type FieldBed,
   type Herd,
+  type Resource,
+  type Skill,
   type Task,
 } from '../api'
 import { useI18n, type Translator } from '../i18n'
@@ -52,12 +55,21 @@ function describeOutcome(task: Task, catalog: Catalog, i18n: Translator) {
       return t('outcome.roam')
     case 'Unload':
       return t('outcome.unload')
+    case 'Guard':
+      return t('outcome.guard')
+    case 'Repair':
+      return t('outcome.repair', { amount: i18n.amount(task.baseYield) })
     case 'NotAvailableYet':
       return ''
     default:
       return task.outputs.map((o) => i18n.produced(o.resource, o.amount)).join(', ')
   }
 }
+
+/** Work more than this many craft levels below the citizen's teaches only a quarter; mirrors the server. */
+const CHALLENGE_THRESHOLD = 3
+
+const skillLevel = (citizen: Citizen, skill: Skill) => citizen.skills.find((s) => s.skill === skill)?.level ?? 0
 
 /** Hunting needs at least one whole animal; mirrors the server. */
 const MINIMUM_TO_HUNT = 1
@@ -73,6 +85,7 @@ export function TaskCard({
   wildlife,
   goldVein,
   fields,
+  resources,
   disabled,
   onStart,
 }: {
@@ -88,22 +101,17 @@ export function TaskCard({
   goldVein: number
   /** Beds of the village farms; farm work needs a bed to do it on. */
   fields: FieldBed[]
+  /** Village stock; a task is locked when neither storage nor hands have room for what it produces. */
+  resources: Resource[]
   disabled: boolean
   onStart: (task: Task) => void
 }) {
   const i18n = useI18n()
   const { t } = i18n
   const role = catalog.roles.find((r) => r.id === task.roleId)!
-  const level = (stat: string) => citizen.stats.find((s) => s.stat === stat)?.level ?? 0
-  const huntingSkill = task.hunt?.dexterity ?? 0
-  const farmingSkill = catalog.crops.find((crop) => crop.kind === task.crop)?.endurance ?? 0
-  const craftLevel = citizen.skills.find((s) => s.skill === task.skill)?.level ?? 0
+  const craftLevel = skillLevel(citizen, task.skill)
   const mastery = Math.min(Math.max(craftLevel - task.skillLevel, 0), catalog.rules.skillBonusLevels)
-  const qualified =
-    role.requirements.every((r) => level(r.stat) >= r.minimum) &&
-    level('Dexterity') >= huntingSkill &&
-    level('Endurance') >= farmingSkill &&
-    craftLevel >= task.skillLevel
+  const qualified = craftLevel >= task.skillLevel
   const missingBuilding = task.requiredBuilding && !built.has(task.requiredBuilding) ? task.requiredBuilding : null
   const missingProject = task.requiredProject && !built.has(task.requiredProject) ? task.requiredProject : null
   const missingTechnology =
@@ -123,17 +131,12 @@ export function TaskCard({
     !huntedOut &&
     !veinDug &&
     fieldsBlocked === null
-  const tooEasy = level(task.primary) > task.tierRequirement + 3
-  const handsFull = blockedByLoad(task, citizen)
+  const tooEasy = craftLevel > task.skillLevel + CHALLENGE_THRESHOLD
+  const handsFull = blockedByLoad(task, citizen, resources, catalog.rules.takeLimit)
   const isCurrent = citizen.taskId === task.id && citizen.state !== 'Idle'
   const name = i18n.task(task.id)
   const outcome = describeOutcome(task, catalog, i18n)
-  const requirements = [
-    ...role.requirements.map((r) => `${i18n.stat(r.stat)} ${r.minimum}`),
-    ...(huntingSkill > 0 ? [`${i18n.stat('Dexterity')} ${huntingSkill}`] : []),
-    ...(farmingSkill > 0 ? [`${i18n.stat('Endurance')} ${farmingSkill}`] : []),
-    ...(task.skillLevel > 0 ? [`${i18n.skill(task.skill)} ${task.skillLevel}`] : []),
-  ].join(', ')
+  const requirements = `${i18n.skill(task.skill)} ${task.skillLevel}`
   const inputs = task.inputs.map((input) => `${input.amount} ${i18n.resource(input.resource).toLowerCase()}`).join(', ')
 
   return (
@@ -176,6 +179,14 @@ export function TaskCard({
             {t('task.prey', { animal: i18n.animal(herd.kind), count: herd.count, capacity: herd.capacity })}
           </span>
         )}
+        {task.danger && (
+          <span className="task-meta task-danger">
+            {t('task.danger', {
+              enemies: task.danger.enemies.map((kind) => i18n.enemy(kind).toLowerCase()).join(', '),
+            })}
+          </span>
+        )}
+        {isArmed(task) && <span className="task-meta">{t('task.armed')}</span>}
         {!qualified && <span className="task-lock">{t('task.requires', { requirements })}</span>}
         {qualified && missingBuilding && (
           <span className="task-lock">{t('task.needsBuilding', { building: i18n.building(missingBuilding).name })}</span>
@@ -239,14 +250,11 @@ interface Variants {
   group: UiKey
   /** Name of a variant the citizen is not skilled enough for. */
   unknown: UiKey
-  /** Stat that is the skill, and the level a task needs. */
-  stat: 'Dexterity' | 'Endurance'
-  level: (task: Task) => number
   name: (task: Task) => string
   /** What the citizen notices of a variant they cannot do yet: a riddle, not a name. */
   hint: (task: Task) => string
-  /** Lock text of an unknown variant. */
-  locked: (level: number) => string
+  /** Lock text of an unknown variant: the craft level it needs. */
+  locked: (task: Task) => string
 }
 
 /**
@@ -256,8 +264,7 @@ interface Variants {
 function VariantCard({ tasks, variants, ...props }: CardProps & { tasks: Task[]; variants: Variants }) {
   const { t } = useI18n()
   const { citizen } = props
-  const skill = citizen.stats.find((s) => s.stat === variants.stat)?.level ?? 0
-  const known = (task: Task) => skill >= variants.level(task)
+  const known = (task: Task) => skillLevel(citizen, task.skill) >= task.skillLevel
   const current = tasks.find((task) => task.id === citizen.taskId)
   const [chosenId, setChosenId] = useState<string | null>(null)
   const chosen = tasks.find((task) => task.id === (chosenId ?? current?.id)) ?? tasks.find(known) ?? tasks[0]
@@ -285,7 +292,7 @@ function VariantCard({ tasks, variants, ...props }: CardProps & { tasks: Task[];
           <span className="task-text">
             <span className="task-name">{t(variants.unknown)}</span>
             <span className="task-meta">{variants.hint(chosen)}</span>
-            <span className="task-lock">{variants.locked(variants.level(chosen))}</span>
+            <span className="task-lock">{variants.locked(chosen)}</span>
           </span>
         </button>
       )}
@@ -298,7 +305,7 @@ export function TaskList({ tasks, ...props }: CardProps & { tasks: Task[] }) {
   const { t } = i18n
   const hunts = tasks.filter((task) => task.hunt !== null)
   const seeds = tasks.filter((task) => task.crop !== null)
-  const cropLevel = (task: Task) => props.catalog.crops.find((crop) => crop.kind === task.crop)?.endurance ?? 0
+  const locked = (task: Task) => t('task.variantLocked', { skill: i18n.skill(task.skill), level: task.skillLevel })
   return (
     <div className="task-grid">
       {tasks.map((task) => {
@@ -310,11 +317,9 @@ export function TaskList({ tasks, ...props }: CardProps & { tasks: Task[] }) {
               variants={{
                 group: 'task.huntPrey',
                 unknown: 'task.preyUnknown',
-                stat: 'Dexterity',
-                level: (hunt) => hunt.hunt!.dexterity,
                 name: (hunt) => i18n.animal(hunt.hunt!.prey),
                 hint: (hunt) => i18n.animalHint(hunt.hunt!.prey),
-                locked: (level) => t('task.preyLocked', { level }),
+                locked,
               }}
               {...props}
             />
@@ -328,11 +333,9 @@ export function TaskList({ tasks, ...props }: CardProps & { tasks: Task[] }) {
               variants={{
                 group: 'task.chooseSeed',
                 unknown: 'task.seedUnknown',
-                stat: 'Endurance',
-                level: cropLevel,
                 name: (seed) => i18n.crop(seed.crop!),
                 hint: (seed) => i18n.cropHint(seed.crop!),
-                locked: (level) => t('task.seedLocked', { level }),
+                locked,
               }}
               {...props}
             />

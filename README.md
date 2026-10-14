@@ -1,6 +1,15 @@
 # Desertod
 
-Audience village game for streamers. Game rules: [docs/game-design.md](docs/game-design.md). Progress and plans: [docs/roadmap.md](docs/roadmap.md).
+Audience village game for streamers. Game rules: [docs/game-design.md](docs/game-design.md). Progress and plans: [docs/roadmap.md](docs/roadmap.md). How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+[![CI](https://github.com/buhaiov-vs/Desertovia/actions/workflows/ci.yml/badge.svg)](https://github.com/buhaiov-vs/Desertovia/actions/workflows/ci.yml)
+
+## Дезертовия: технический план адаптации
+
+Инженерия этого проекта сохраняется как основа нашей версии. Карта правил,
+сопоставление модулей, решения владельца, предложения зрителей и план переноса:
+[docs/dezertovia/README.md](docs/dezertovia/README.md).
+Сейчас подготовлены документы; игровой код не изменён.
 
 ## Structure
 
@@ -28,7 +37,7 @@ Pages (everything except signing in needs an account; there are no anonymous vis
 
 - `/` — sign in, list your villages, browse open villages.
 - `/new` — streamers found a village: name, optional description, open or invite-only. The owner of an invite-only village finds the invite link and code in Settings and can replace the code; `/v/{slug}?invite={code}` fills it in for viewers.
-- `/v/{slug}` — citizen page: asks to sign in first, then create a character, pick tasks, renew every 90 seconds.
+- `/v/{slug}` — citizen page: asks to sign in first, then create a character, pick tasks, renew every few minutes.
 
 ### Bots
 
@@ -46,7 +55,7 @@ dotnet run --project tools/Desertod.Bots -- --village <slug> --count 5
 | `--base` | `http://localhost:5080` (the API in Development, not the Vite server) |
 | `--prefix` | `bot`; accounts are `bot1`, `bot2`, … and the same names rejoin the same citizens on the next run |
 
-Bots only build what the Governor plans: in a new village they drop their loads until the Governor places a storage blueprint. Ctrl+C stops them; their citizens stay in the village.
+Bots only build what the Tsar plans: in a new village they drop their loads until the Tsar places a storage blueprint. Ctrl+C stops them; their citizens stay in the village.
 
 ## Run everything in Docker
 
@@ -62,6 +71,26 @@ docker compose -f deploy/docker-compose.yml up -d --build
 - The application applies database migrations at startup; if a migration fails, it does not start.
 - Only Caddy publishes ports (80 and 443). PostgreSQL is on an internal network without internet access.
 - Stop with `docker compose -f deploy/docker-compose.yml down`. Data stays in Docker volumes; `down -v` deletes it.
+
+### Redeploy from main
+
+`/opt/desertod` on the server is a checkout of `main`. A restricted SSH key can redeploy it and nothing else: whatever command the caller sends, the server runs `/usr/local/bin/desertod-redeploy` (a root-owned copy of `deploy/redeploy-main.sh`), which fetches `main` and runs `docker compose up -d --build`.
+
+```powershell
+ssh -i $HOME\.ssh\desertod-redeploy deploy@91-98-8-14.sslip.io
+```
+
+Give someone redeploy rights (run from the repository root with your own unrestricted key; the `.pub` file is their public key):
+
+```powershell
+scp deploy/redeploy-main.sh deploy/setup-redeploy.sh $HOME\.ssh\desertod-redeploy.pub deploy@91-98-8-14.sslip.io:/tmp/
+ssh deploy@91-98-8-14.sslip.io "sh /tmp/setup-redeploy.sh /tmp/desertod-redeploy.pub"
+```
+
+- The first run creates the server's read-only GitHub key and prints it; add it under the repository's Settings → Deploy keys and run the script again.
+- Run the script again after changing `deploy/redeploy-main.sh`: the server keeps its own copy, so a merged change does not alter what restricted keys can do until the owner installs it.
+- Files that are tracked in git are overwritten on every redeploy; keep server settings in `deploy/.env` only.
+- Take the rights back by deleting the key's line from `~/.ssh/authorized_keys` on the server.
 
 ### Database backups
 
@@ -157,5 +186,7 @@ npm run test:e2e                  # or npm run test:e2e:ui to watch them run
 ```
 
 The browser tests start their own backend (port 5181, database `desertod_e2e`, created automatically) and a production build of the client under `vite preview` (port 5191), so a running development setup is left alone. Set `DESERTOD_E2E_CONNECTION` to use another database. Failures leave screenshots and traces in `web/test-results`; `npx playwright show-report` opens the report.
+
+All three suites, the frontend lint and build, and a Docker image build run on every pull request and every push to `main` ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
 
 While `dotnet run` holds `src/Desertod.Api/bin`, build the .NET tests elsewhere: `dotnet test Desertod.slnx --artifacts-path $env:TEMP\desertod-test-build`.

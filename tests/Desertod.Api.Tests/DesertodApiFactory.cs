@@ -2,7 +2,9 @@ using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
 
 namespace Desertod.Api.Tests;
@@ -13,7 +15,13 @@ namespace Desertod.Api.Tests;
 /// </summary>
 public sealed class DesertodApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    /// <summary>Signs Telegram logins in tests; without a bot user name the login page does not offer Telegram.</summary>
+    public const string TelegramBotToken = "123456:test-bot-token";
+
     private readonly PostgreSqlContainer database = new PostgreSqlBuilder("postgres:17").Build();
+
+    /// <summary>The game's clock; see <see cref="TestClock"/>.</summary>
+    public TestClock Clock { get; } = new();
 
     public async Task InitializeAsync() => await database.StartAsync();
 
@@ -23,8 +31,16 @@ public sealed class DesertodApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("ConnectionStrings:Desertod", database.GetConnectionString());
         builder.UseSetting("Authentication:Twitch:ClientId", "");
         builder.UseSetting("Authentication:Google:ClientId", "");
-        builder.UseSetting("Authentication:Telegram:BotToken", "");
+        builder.UseSetting("Authentication:Telegram:BotToken", TelegramBotToken);
+        builder.UseSetting("Authentication:Password:AccountsPerAddress", "3");
+        // Tests move the clock forward; beasts must not strike the test villages while they do.
+        builder.UseSetting("Game:PeacefulTime", "7.00:00:00");
         builder.ConfigureServices(services => services.AddTransient<IStartupFilter, TestAddressStartupFilter>());
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton<TimeProvider>(Clock);
+        });
     }
 
     /// <summary>The test server has no client address; tests pick one with <see cref="AddressHeader"/>.</summary>

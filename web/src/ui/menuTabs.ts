@@ -12,8 +12,13 @@ export const TABS: Record<MenuTab, UiKey> = {
   settings: 'tab.settings',
 }
 
-/** Citizens work and research discoveries; the Governor (village owner) builds and calls votes on discoveries. */
-export const tabsFor = (governor: boolean): MenuTab[] =>
-  governor
+/**
+ * Citizens work and research discoveries; the Tsar (village owner) never works. The rulers, the Tsar and the
+ * Governors the Tsar appointed among the citizens, build and call votes on discoveries.
+ */
+export const tabsFor = (tsar: boolean, ruler: boolean): MenuTab[] =>
+  tsar
     ? ['village', 'build', 'technologies', 'settings']
-    : ['village', 'character', 'tasks', 'technologies', 'settings']
+    : ruler
+      ? ['village', 'character', 'tasks', 'build', 'technologies', 'settings']
+      : ['village', 'character', 'tasks', 'technologies', 'settings']

@@ -30,7 +30,7 @@ import { flagTitle, notify, useTitleReset } from '../notifications'
 import { GameCanvas, type GameCanvasHandle, type Placement } from '../game/GameCanvas'
 import { HandsCard } from '../ui/HandsCard'
 import { PRIEST_ID, TSAR_ID } from '../game/VillageWorld'
-import { useLiveVillage, useMediaQuery, usePriest, useServerNow } from '../hooks'
+import { useLiveVillage, useMediaQuery, useServerNow } from '../hooks'
 import { GameMenu } from '../ui/GameMenu'
 import type { MenuTab } from '../ui/menuTabs'
 import { BottomBar, TopBar } from '../ui/Hud'
@@ -188,7 +188,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
       flagTitle('★', titleRef.current)
     },
     onChatMessage: (message) => {
-      canvas.current?.say(message.citizenId ?? TSAR_ID, message.text, chatBubbleSeconds(message.text))
+      canvas.current?.say(message.isChaplain ? PRIEST_ID : message.citizenId ?? TSAR_ID, message.text, chatBubbleSeconds(message.text))
     },
     onRaidFought: (fought) => {
       const line = i18n.describeRaid(fought)
@@ -223,7 +223,6 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   }, [title, catalog])
   useTitleReset(title)
 
-  usePriest(canvas, live.state)
 
   // The village owner is the Tsar: rules and plans, never works. Governors are citizens the Tsar lets plan too.
   const tsar = live.isOwner

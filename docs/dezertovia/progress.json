@@ -269,13 +269,24 @@
     }
   },
   "night_building_assets": {
-    "state": "prepared_not_integrated",
-    "decision": "D-018",
+    "state": "integrated_locally_checked_deployment_pending",
+    "decision": "D-019",
     "count": 26,
     "branch": "art/night-buildings",
     "gallery": "art/night-buildings/day-night-comparison.png",
     "validation": "art/night-buildings/validation.json",
     "live_changed": false,
-    "alignment_required_before_crossfade": true
+    "alignment_required_before_crossfade": false
+  },
+  "night_building_chat_release": {
+    "branch": "feat/night-buildings-chaplain-chat",
+    "state": "local_checks_passed_full_browser_and_ci_pending",
+    "backend_tests": 474,
+    "pairs": 26,
+    "phone_fixes": [
+      "full_width_task_text",
+      "warehouse_quantity_draft"
+    ],
+    "live_changed": false
   }
 }

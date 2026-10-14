@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { resolve } from 'node:path'
 
 // End-to-end tests run their own backend next to the development one.
 const base = (process.env.VITE_APP_BASE ?? '/').replace(/\/?$/, '/')
@@ -61,6 +62,7 @@ export default defineConfig(({ command }) => {
     build: {
       outDir: '../src/Desertod.Api/wwwroot',
       emptyOutDir: true,
+      ...(process.env.DESERTOD_E2E_HARNESS ? { rolldownOptions: { input: { main: resolve('index.html'), lighting: resolve('e2e/harness.html') } } } : {}),
     },
   }
 })

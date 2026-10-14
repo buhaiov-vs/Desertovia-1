@@ -55,8 +55,10 @@ function TakeRow({ good, limit, take }: { good: ResourceAmount; limit: number; t
   const { t } = i18n
   const held = take.citizen.load.find((carried) => carried.resource === good.resource)?.amount ?? 0
   const most = Math.max(0, Math.min(limit - held, good.amount))
-  const [chosen, setChosen] = useState<number | null>(null)
-  const amount = Math.min(chosen ?? most, most)
+  const [chosen, setChosen] = useState<string | null>(null)
+  const draft = chosen ?? String(most)
+  const amount = Number(draft)
+  const valid = draft.trim() !== '' && Number.isInteger(amount) && amount >= 1 && amount <= most
 
   return (
     <li>
@@ -69,20 +71,18 @@ function TakeRow({ good, limit, take }: { good: ResourceAmount; limit: number; t
         min={1}
         max={most}
         step={1}
-        value={amount}
+        value={draft}
         disabled={take.disabled || most < 1}
         aria-label={t('storage.takeAmount')}
         onChange={(event) => {
-          const value = Math.floor(Number(event.target.value))
-          setChosen(Number.isFinite(value) ? Math.max(1, value) : null)
+          setChosen(event.target.value)
         }}
       />
       <button
-        disabled={take.disabled || most < 1 || amount < 1}
+        disabled={take.disabled || most < 1 || !valid}
         title={t('storage.takeTitle', { amount: i18n.amount(limit) })}
         onClick={() => {
-          take.onTake(good.resource, amount)
-          setChosen(null)
+          if (valid) take.onTake(good.resource, amount)
         }}
       >
         {t('storage.take')}

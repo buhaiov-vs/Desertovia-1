@@ -22,6 +22,30 @@ namespace Desertod.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Desertod.Domain.Chat.ChaplainMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VillageId", "SentAt");
+
+                    b.ToTable("ChaplainMessages");
+                });
+
             modelBuilder.Entity("Desertod.Domain.Chat.ChatMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -570,6 +594,15 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .HasFilter("\"Status\" = 'Active'");
 
                     b.ToTable("VillageQuests");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Chat.ChaplainMessage", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Desertod.Domain.Chat.ChatMessage", b =>

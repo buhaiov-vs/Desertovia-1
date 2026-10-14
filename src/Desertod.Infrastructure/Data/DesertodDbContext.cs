@@ -19,6 +19,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
     public DbSet<VillageProject> VillageProjects => Set<VillageProject>();
     public DbSet<VillageQuest> VillageQuests => Set<VillageQuest>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ChaplainMessage> ChaplainMessages => Set<ChaplainMessage>();
     public DbSet<DungeonRun> DungeonRuns => Set<DungeonRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -243,6 +244,14 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             message.HasOne<Village>().WithMany().HasForeignKey(m => m.VillageId);
             message.HasOne<Account>().WithMany().HasForeignKey(m => m.AccountId);
             message.HasOne<Citizen>().WithMany().HasForeignKey(m => m.CitizenId);
+        });
+
+        modelBuilder.Entity<ChaplainMessage>(message =>
+        {
+            message.HasKey(m => m.Id);
+            message.HasIndex(m => new { m.VillageId, m.SentAt });
+            message.Property(m => m.Text).HasMaxLength(ChatMessage.TextMaximumLength);
+            message.HasOne<Village>().WithMany().HasForeignKey(m => m.VillageId);
         });
 
         modelBuilder.Entity<DungeonRun>(run =>

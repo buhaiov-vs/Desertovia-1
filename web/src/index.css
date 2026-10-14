@@ -2269,10 +2269,18 @@ textarea {
   }
 
   .hud-status {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr));
     min-width: 0;
+    max-width: 100%;
     width: 100%;
-    justify-content: stretch;
+    gap: 6px;
+    overflow-wrap: anywhere;
   }
+  .hud-status .next-action { grid-column: 1 / -1; min-width: 0; }
+  .hud-status > button { max-width: 100%; overflow-wrap: anywhere; }
+  .hud-left, .hud-bottom { min-width: 0; max-width: 100%; }
+  .hud-needs .resource-chip { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
   .hud-status:empty { display: none; }
   .hud-status > button { flex: 1; min-width: 0; white-space: normal; }
 

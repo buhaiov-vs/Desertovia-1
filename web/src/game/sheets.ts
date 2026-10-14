@@ -3,6 +3,8 @@ import type { CSSProperties } from 'react'
 import { Assets, Rectangle, Spritesheet, Texture, type TextureSource } from 'pixi.js'
 import atlas from '../assets/sprites.json'
 import atlasUrl from '../assets/sprites.png'
+import nightAtlas from '../assets/night/buildings.json'
+import nightAtlasUrl from '../assets/night/buildings.png'
 
 export const TILE = 16
 
@@ -51,14 +53,16 @@ export class TileSet {
   private readonly sources: Record<SheetName, TextureSource>
   private readonly art: Spritesheet
   private readonly cache = new Map<string, Texture>()
+  private readonly night: Spritesheet
 
-  private constructor(sources: Record<SheetName, TextureSource>, art: Spritesheet) {
+  private constructor(sources: Record<SheetName, TextureSource>, art: Spritesheet, night: Spritesheet) {
     this.sources = sources
     this.art = art
+    this.night = night
   }
 
   static async load(): Promise<TileSet> {
-    const [entries, art] = await Promise.all([
+    const [entries, art, night] = await Promise.all([
       Promise.all(
         (Object.keys(SHEETS) as SheetName[]).map(async (name) => {
           const texture = await Assets.load<Texture>(SHEETS[name].url)
@@ -73,9 +77,18 @@ export class TileSet {
         await sheet.parse()
         return sheet
       })(),
+      (async () => {
+        const texture = await Assets.load<Texture>(nightAtlasUrl)
+        texture.source.scaleMode = 'nearest'
+        const sheet = new Spritesheet(texture, nightAtlas)
+        await sheet.parse()
+        return sheet
+      })(),
     ])
-    return new TileSet(Object.fromEntries(entries) as Record<SheetName, TextureSource>, art)
+    return new TileSet(Object.fromEntries(entries) as Record<SheetName, TextureSource>, art, night)
   }
+
+  nightBuilding(name: string): Texture { return this.night.textures[name] }
 
   get(tile: TileRef): Texture {
     if ('art' in tile) return this.art.textures[tile.art]

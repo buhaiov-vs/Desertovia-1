@@ -1,0 +1,49 @@
+{
+  "state": "proposal_not_runtime_asset",
+  "source_sha256": "6d0383a95939a331450cf68533f719eb156ef5d9f95e014f8a3737b0b1a2ba49",
+  "source_size": [
+    1774,
+    887
+  ],
+  "alpha_range": [
+    0,
+    255
+  ],
+  "frames": {
+    "day": {
+      "file": "hospital-day-draft.png",
+      "size": [
+        887,
+        887
+      ],
+      "bounds": [
+        0,
+        7,
+        887,
+        887
+      ]
+    },
+    "night": {
+      "file": "hospital-night-draft.png",
+      "size": [
+        887,
+        887
+      ],
+      "bounds": [
+        0,
+        0,
+        885,
+        887
+      ]
+    }
+  },
+  "existing_reference": "art/outlined-buildings/building-bakery-day.png (PR18)",
+  "needs_before_runtime": [
+    "approve hospital appearance",
+    "normalize pixel scale and outline to shared baked profile",
+    "register common visible body/ground bounds",
+    "validate transitions and pack prepared atlases"
+  ],
+  "integrated": false,
+  "deployed": false
+}

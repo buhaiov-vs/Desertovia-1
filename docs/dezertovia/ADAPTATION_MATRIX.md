@@ -155,3 +155,9 @@ DZ-31 отдельно повышен до PLAN/P2: дуэльная больн�
 существующие patients/heal_tiers/payment у бота. Настоящие свечи остаются у бота;
 срок24 реальных часа не превращать в12 игровых часов обморока. DZ-33/прочие
 боевые идеи не меняются. Подробнее NEXT_TODO.md.
+
+D-025 /DZ-31/A-29 current focus: PLAN + hospital ART PROPOSAL. HOSPITAL_PLAN.md
+описывает staged external status, pause/recovery, existing bot treatment/deep link,
+durable idempotency перед embedded heal payment, common hospital construction.
+Native Injury/Remedy/CombatRules сохраняются; external duel срок отдельно.
+Графика art/hospital-proposal не интегрирована. Никакого deployment/списаний.

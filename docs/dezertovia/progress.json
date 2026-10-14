@@ -307,7 +307,7 @@
     "stronger_campfire_style_lighting": true
   },
   "construction_visual_plan": {
-    "state": "planned_documentation_only",
+    "state": "hut_pilot_implemented_local_desktop_passed_ci_pending",
     "decision": "D-020",
     "document": "CONSTRUCTION_VISUAL_PLAN.md",
     "pilot": "Hut",
@@ -320,6 +320,16 @@
       "nested_world_lighting",
       "completion_cleanup",
       "phone_desktop_day_night"
-    ]
+    ],
+    "branch": "feat/hut-construction-visuals",
+    "implemented_types": [
+      "Hut"
+    ],
+    "remaining_types": "Other building art and special projects remain planned",
+    "local_checks": {
+      "build": true,
+      "lint": true,
+      "desktop_browser": 1
+    }
   }
 }

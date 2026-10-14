@@ -1,5 +1,7 @@
 // Test-only entry point; excluded from normal production builds.
-import { Application, Container } from 'pixi.js'
+import { VillageWorld } from '../src/game/VillageWorld'
+import { HutConstruction, siteVisualKey } from '../src/game/HutConstruction'
+import { Application, Container, Graphics, Text } from 'pixi.js'
 import { createRoot } from 'react-dom/client'
 import { useState } from 'react'
 import { BuildingLighting } from '../src/game/BuildingLighting'
@@ -9,7 +11,7 @@ import { StorageCard } from '../src/ui/StorageCard'
 import { BottomBar } from '../src/ui/Hud'
 import { ChatPanel } from '../src/ui/ChatPanel'
 import { I18nProvider } from '../src/i18n'
-import type { Catalog, Citizen } from '../src/api'
+import type { Catalog, Citizen, Site, VillageState } from '../src/api'
 import '../src/index.css'
 
 const app=new Application(); await app.init({width:650,height:700,backgroundAlpha:0,resolution:1,preference:'webgl'})
@@ -60,3 +62,54 @@ function Controls(){
  </I18nProvider>
 }
 createRoot(document.getElementById('app')!).render(<Controls/>);
+
+// Production construction class, rendered with the real catalog and map darkness layering.
+const hutDefinition=catalog.buildings.find(building=>building.kind==='Hut')!
+const constructionApp=new Application();await constructionApp.init({width:640,height:350,background:0x83b765,resolution:1,preference:'webgl'})
+constructionApp.canvas.id='construction-preview';document.body.appendChild(constructionApp.canvas)
+const constructionRoot=new Container();constructionRoot.scale.set(2);constructionApp.stage.addChild(constructionRoot)
+const dark=new Graphics().rect(0,0,320,175).fill({color:0x0b1640,alpha:1});dark.alpha=0
+const constructionLights=new Container()
+const sampleSite=(stage:number):Site=>({kind:'Hut',plotId:'8,8',stage,progress:stage===5?0.94:stage/6,
+ stages:hutDefinition.stages.map(def=>({id:def.id,crewNeeded:def.crew,hands:1,
+ jobs:def.jobs.map(job=>({jobId:job.jobId,required:job.amount,done:job.amount,room:0}))}))})
+const constructionViews=hutDefinition.stages.map((_,i)=>{
+ const view=new HutConstruction(tiles,sampleSite(i),hutDefinition,2+(i%4)*5,2+Math.floor(i/4)*5)
+ constructionRoot.addChild(view);constructionLights.addChild(view.light)
+ const label=new Text({text:['Подготовка','Основание','Каркас','Стены','Крыша','Отделка'][i],style:{fontSize:6,fill:0x201b10}})
+ label.position.set(view.x,view.y-8);constructionRoot.addChild(label)
+ return view
+})
+const completedHut=new BuildingLighting(tiles,'Hut',12,7);constructionRoot.addChild(completedHut);constructionLights.addChild(completedHut.light)
+const completeLabel=new Text({text:'Готово',style:{fontSize:6,fill:0x201b10}});completeLabel.position.set(192,104);constructionRoot.addChild(completeLabel)
+constructionRoot.addChild(dark,constructionLights)
+Object.assign(window,{constructionTest:{
+ render:(night:number)=>{dark.alpha=night*0.55;constructionViews.forEach(view=>view.setNight(night));completedHut.setNight(night);constructionApp.renderer.render(constructionApp.stage)},
+ phases:()=>constructionViews.map(view=>view.phase),
+ coordinates:()=>constructionViews.map(view=>({position:[view.x,view.y],light:[view.light.x,view.light.y]})),
+ delivery:()=>{const before=sampleSite(2);before.stages[2].jobs[0].done=0;const key=JSON.stringify(siteVisualKey(before));before.stages[2].jobs[0].done=1;return key!==JSON.stringify(siteVisualKey(before))},
+ cleanup:()=>{const before=constructionLights.children.length;for(let i=0;i<20;i++){const view=new HutConstruction(tiles,sampleSite(5),hutDefinition,20,20);constructionRoot.addChild(view);constructionLights.addChild(view.light);view.setNight(1);view.destroy({children:true})}return {before,after:constructionLights.children.length}},
+ lightLevels:()=>constructionViews.map(view=>view.light.alpha),
+ mapCheck:async()=>{
+  const host=document.createElement('div');host.id='construction-map';host.style.cssText='width:640px;height:480px';document.body.appendChild(host)
+  const world=await VillageWorld.create(host,{minimap:false})
+  world.setCatalog(catalog)
+  const state=structuredClone(result.state) as VillageState
+  state.sites=[sampleSite(5)];state.structures=state.structures.filter(s=>s.plotId!=='8,8');state.storages=state.storages.filter(s=>s.plotId!=='8,8')
+  world.setVillage(state);world.setNightOverride(false);world.centerOn(9.5,9.5)
+  const internals=world as unknown as {buildingViews:Container[];buildingLights:Container;litBuildings:Set<Container>}
+  const initial=internals.buildingViews.find(view=>view instanceof HutConstruction) as HutConstruction
+  const attached=initial.light.parent===internals.buildingLights && initial.light.x===128 && initial.light.y===128
+  state.sites[0].stages[5].jobs[0].done=1
+  world.setVillage(state)
+  const refreshed=internals.buildingViews.find(view=>view instanceof HutConstruction)
+  const deliveryRefresh=refreshed!==initial && initial.destroyed && initial.light.destroyed
+  state.sites=[];state.structures.push({kind:'Hut',plotId:'8,8',damage:0})
+  world.setVillage(state)
+  const completed=!internals.buildingViews.some(view=>view instanceof HutConstruction)
+  const detached=refreshed!.destroyed
+  // Keep the completed map alive briefly for a real renderer capture; caller can switch to night.
+  Object.assign(window,{constructionMap:world})
+  return {attached,deliveryRefresh,completed,detached}
+ },
+}})

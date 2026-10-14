@@ -398,5 +398,25 @@
     "public_release_header_verified": true,
     "public_bundle_version_verified": true,
     "public_providers_verified": true
+  },
+  "latest_owner_todo": {
+    "decision": "D-024",
+    "document": "NEXT_TODO.md",
+    "state": "documented_source_reviewed_not_implemented",
+    "checked_on": "2026-10-14",
+    "game_code_changed": false,
+    "live_changed": false,
+    "sources": [
+      "Desertovia main0.5.1 domain/catalog/renderer/UI",
+      "tools/sprite-outline507e92b prepared only",
+      "TG-bots57aeff7 duel/prihod source, live tariffs not read"
+    ],
+    "priorities": [
+      "P0 mobile bridge report reproduction",
+      "P1 map labels/cards/Cyrillic",
+      "P1 castle/kingdom expansion",
+      "P1 energy slow-work/collapse and existing drinks adaptation",
+      "P2 shared duel hospital and existing healing tariffs"
+    ]
   }
 }

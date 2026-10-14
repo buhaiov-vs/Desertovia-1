@@ -38,7 +38,7 @@ RULES_AND_SOURCES.md, а в реализации — читать указанн
 | DZ-11 | D/Projects/ProjectCatalog.cs, ProjectRules.cs; Buildings/ConstructionSite.cs; A blueprint methods | Стадийную стройку и размещение | Наши зависимости и расход; bridge 60/фence 12/walls 20, параллельные задания разных объектов. Прогресс блокирует уже законченные этапы | Не открывается берег раньше моста; забор работает параллельно, стены после дерева |
 | DZ-12 | D Buildings/BuildingCatalog.cs, ConstructionRules.cs; Village.Structures | Постройки и их стадии | Level/Condition и jobs подготовки/расширения/обслуживания; существующий pipeline Start/Settle. Износ от выполненного производства, не декоративного времени | 1–3, подготовка/20/40 работ, condition ≥30, ремонт не выдаёт два завершения |
 | DZ-13 | D Catalog TaskDefinition Inputs/Outputs, ResourceKind.cs; CycleEngine.Start/Settle | Каталог/проверку рецептов и существующие цепочки | Добавить недостающие ресурсы и наши рецепты/требования зданий; различить Bread/Meals/Fish/Flour, не свести всё к Food | Производства потребляют ровно резерв и выдают результат однократно; изготовление видно в отчёте |
-| DZ-14 | D/Rules/Energy.cs, VigorDrinks.cs; CycleEngine | Хранение энергии и TimeProvider | Настроить предел/расход/еда/отдых под наше правило; не оставлять двойной расход weather + старой EnergyCost или бесплатную регенерацию по иной шкале без решения | Недостаток энергии не списывает материал/зарплату; отдых не оплачивается |
+| DZ-14 | D/Rules/Energy.cs, VigorDrinks.cs; CycleEngine | Хранение энергии и TimeProvider | D-024 PLAN: энергия0 замедляет работу, не ходьбу; перегруз → обморок/восстановление. Адаптировать существующие VigorDrink/рецепт под высокий уровень и продажу; учитывать тестовое окно | Серверные состояния/очередь/reconnect не обходят отдых; нет дублирования расходов/наград |
 | DZ-15 | D/Skills/SkillRules.cs, Progression.cs, StatBlock; Citizen.Skills | Структуры навыков/опыта и вычисления progression | Наши профессии сохраняют независимый опыт. Сопоставить уровни, силу/ум/харизму и вещи; временно ограничить несогласованные boosts основы | Смена роли не обнуляет опыт, интеллект не расширяет queue, бонусы не меняют текущий job |
 | DZ-16 | D WorldMap, Village, Citizen.Load; D StorageRules.Take; I DbContext | Проекцию/коллизии/размещение и физический груз | KingdomBoundary + ownership/funding policy для каждого reserve/take/deliver/build. Клиентский scope лишь запрос, сервер выбирает допустимый | Игрок снаружи не тратит treasury через crafting, очередь, courier или forged coordinates |
 | DZ-17 | D ConstructionRules.PlaceBlueprint/ConstructionSite; A blueprint endpoints | Проверки свободной земли и стадии строительства | Личное владение, заявки pending/approved/ready, дом/социальное жильё, уровень и возврат резерва через существующие сервисы | Чужой дом не строится/не продаётся; отклонение возвращает резерв один раз |
@@ -53,7 +53,7 @@ RULES_AND_SOURCES.md, а в реализации — читать указанн
 | DZ-27 | D/GameRuleException.cs; A/Game/GameExceptionHandler.cs; W i18n/TaskList/NextAction | Коды ошибок и локализацию/React state | Перевод наших кратких ошибок и stable selection/draft между SignalR snapshots, без нового дизайна | Android picker не размонтируется, action/site/deposit сохраняются, причина видна без hover |
 | DZ-28 | A notifier/settlement + новый уведомительный bridge; W/notifications.ts | Отдельные события клиенту и согласие | Opt-in subscription, отправка после commit через outbox/delivery state, bot UID mapping | Job не заканчивается дважды из-за повторной доставки; физические устройства проверены отдельно |
 | DZ-29 | D/Quests/QuestRules.cs, StoryQuests; D Rules/Expeditions, Weather; W signals | Существующие механизмы квестов/событий/эмоций | Настроить наши мирные события/разведку/достижения; безопасная neighbor emote, не health damage | Не появляется новый бой/пассивная выплата; событие завершено один раз |
-| DZ-30 | D Projects/ConstructionRules + KingdomBoundary | Те же проекты/стройка/карта | ПОЗЖЕ: замок/расширение/ночной work multiplier, после выбора параметров | До решения не менять начальный мир и сроки |
+| DZ-30 | D Projects/ConstructionRules + KingdomBoundary | Те же проекты/стройка/карта | D-024 PLAN/P1: повысить приоритет царского замка/расширений; ночной work multiplier остаётся отдельным прежним планом | Не сбрасывать мир, параметры/расположение выбираются перед реализацией |
 | DZ-31/33 | D entities/quests + future combat/recovery modules | Слои Domain/Api/EF, не отдельный игровой сервер | ПОЗЖЕ: текстовый бой/лечение; дуэльный срок через ID и подписанное событие, не общий перенос bot DB | Не вводить в мирный этап; запланированные награды без дубля/сброса роли |
 | DZ-32 | D technologies/projects/catalog | Существующие технологии и уровни | ПОЗЖЕ: регионы/типы материалов/станки, связать с царскими общими целями | Не включать все 7 тиров из предложения как принятый баланс |
 | DZ-34/35 | Все несогласованные feature entry points | Код расширяемости и графику автора | Сценарии кланов/атак скрыты/недоступны в нашей конфигурации; без нового рисования | Endpoint тоже запрещает сценарий, не только отсутствует кнопка |
@@ -144,3 +144,14 @@ interrupted для всех окон + modal-backdrop stacking. Регресси
 D-022 RELEASED/VERIFIED14.10.2026:0.5.1, SHA ad88be344908a7fb42bc434ce89aad94c92d1665,
 CI38571676265 (474 backend/55 browser passed/1 skipped), deploy38573019933,
 check38573303603; публичные release header и bundle проверены.
+
+## D-024: последняя сверка владельца (PLAN/BUG REPORT, не реализация)
+
+Подписи/карточки/кириллица: VillageWorld/CSS/React panels, A-25/27, P1.
+Мост: author Tsar river crossing и отдельный RopeBridge/ravine, A-26, P0,
+жалоба требует phone/PC воспроизведения; вертикальная ориентация не доказывает
+невозможность ПК/телефона. Castle отсутствует, A-28, P1, существующие projects/sites.
+DZ-31 отдельно повышен до PLAN/P2: дуэльная больница через ID/узкий статус,
+существующие patients/heal_tiers/payment у бота. Настоящие свечи остаются у бота;
+срок24 реальных часа не превращать в12 игровых часов обморока. DZ-33/прочие
+боевые идеи не меняются. Подробнее NEXT_TODO.md.

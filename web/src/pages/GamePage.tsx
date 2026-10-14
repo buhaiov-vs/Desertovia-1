@@ -106,6 +106,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
   const [chaplainOpen, setChaplainOpen] = useState(false)
+  const [chatFull, setChatFull] = useState(false)
   const [panel, setPanel] = useState<Panel>('none')
   const [tab, setTab] = useState<MenuTab>('village')
   const [report, setReport] = useState<CycleReport | null>(null)
@@ -718,14 +719,14 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     : null
 
   return (
-    <div className={uiHidden ? 'game-root ui-hidden' : 'game-root'}>
+    <div className={`game-root${uiHidden ? ' ui-hidden' : ''}${chatFull ? ' chat-full-active' : ''}`}>
       <GameCanvas
         ref={canvas}
         village={live.state}
         citizens={shownCitizens}
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
-        obscured={panel !== 'none' || chaplainOpen || pollSetup || subtitleFor !== null}
+        obscured={chatFull || panel !== 'none' || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
         onCitizenPick={pickCitizen}
@@ -845,6 +846,11 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
           )}
         </div>
         <ChatPanel
+          key={slug}
+          population={{total:citizens.length,online:citizens.filter(c=>!live.away.has(c.id)).length}}
+          incoming={live.chatArrivals}
+          interrupted={panel !== 'none' || chaplainOpen || pollSetup || subtitleFor !== null}
+          onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}
           member={live.member}

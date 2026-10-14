@@ -145,3 +145,11 @@ D-020 implementation authorization: owner subsequently said «Делай». Impl
 the hut pilot first, preserving server rules and prepared final art. Shared light
 and delivery-refresh fixes apply to the construction renderer; further type-specific
 art remains the next stage of the documented rollout. Record verification before release.
+
+
+## D-021: перенести режимы чата и всплывающие уведомления
+
+14.10.2026 владелец попросил чат прежней0.4: скрытый с уведомлениями, четверть
+и полный экран, удобные кнопки без ухудшения оформления/функций новой основы.
+После плана сказал «Приступай». Реализация на существующем ChatPanel/SignalR;
+историю не объявлять новыми сообщениями. Подробности: [CHAT_MODES.md](CHAT_MODES.md).

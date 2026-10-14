@@ -76,6 +76,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [feed, setFeed] = useState<FeedEntry[]>([])
   const [chat, setChat] = useState<ChatMessage[]>([])
+  const [chatArrivals, setChatArrivals] = useState<ChatMessage[]>([])
   /** The hub connection once it has joined the village. */
   const [hub, setHub] = useState<HubConnection | null>(null)
   const [error, setError] = useState<unknown>(null)
@@ -92,6 +93,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     setChat((previous) => mergeChat(previous, [message]))
     if (announced.current.has(message.id)) return
     announced.current.add(message.id)
+    setChatArrivals(previous => [...previous,message].slice(-CHAT_LENGTH))
     callbacks.current.onChatMessage?.(message)
   }, [])
 
@@ -158,7 +160,10 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
       await connection.invoke('JoinVillage', slug)
       if (!memberRef.current) return
       const history = await joinChat(connection, slug)
-      if (history && !cancelled) setChat((previous) => mergeChat(previous, history))
+      if (history && !cancelled) {
+        for (const message of history) announced.current.add(message.id)
+        setChat((previous) => mergeChat(previous, history))
+      }
     })
 
     const load = async () => {
@@ -215,7 +220,10 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     let cancelled = false
     joinChat(hub, slug).then(
       (history) => {
-        if (history && !cancelled) setChat((previous) => mergeChat(previous, history))
+        if (history && !cancelled) {
+          for (const message of history) announced.current.add(message.id)
+          setChat((previous) => mergeChat(previous, history))
+        }
       },
       () => {
         // The next reconnect tries again.
@@ -233,7 +241,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     [],
   )
 
-  return { state, setState, citizens, away, updateCitizen, isOwner, inviteCode, setInviteCode, feed, chat, sendChat, member, error }
+  return { state, setState, citizens, away, updateCitizen, isOwner, inviteCode, setInviteCode, feed, chat, chatArrivals, sendChat, member, error }
 }
 
 /**

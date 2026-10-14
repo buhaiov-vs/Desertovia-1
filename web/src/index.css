@@ -2372,3 +2372,49 @@ textarea {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
+/* Chat modes retain the game's timber/gold skin; the map stays interactive above compact chat. */
+.chat-panel[data-mode] { min-width: 0; z-index: 70; }
+.chat-panel[data-mode="hidden"] { background: none; border: 0; box-shadow: none; padding: 0; width: min(400px, 100%); }
+.chat-launch { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; font-weight: 700; }
+.chat-launch svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.chat-panel[data-mode="quarter"] { height: clamp(190px, 25dvh, 300px); }
+.chat-content:not([hidden]) { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 6px; }
+.chat-content[hidden] { display: none; }
+.chat-panel[data-mode] .chat-lines { flex: 1; min-height: 0; max-height: none; overflow-anchor: none; }
+.chat-panel[data-mode] .chat-head { flex: 0 0 auto; min-width: 0; gap: 4px; }
+.chat-panel[data-mode] .chat-head strong { overflow-wrap: anywhere; }
+.chat-panel[data-mode] .chat-head .chip { min-height: 36px; max-width: 100px; white-space: normal; font-size: 0.72rem; }
+.chat-control { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 44px; min-height: 44px; padding: 6px; }
+.chat-control svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.chat-panel[data-mode] .chat-form { flex: 0 0 auto; }
+.chat-panel[data-mode] .chat-form input { min-height: 44px; font-size: 16px; }
+.chat-panel[data-mode] .chat-form button { min-height: 44px; max-width: 40%; overflow-wrap: anywhere; }
+.chat-panel[data-mode="full"] { position: fixed; inset: 0; width: auto; height: auto; margin: 0; z-index: 100; padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); border-color: var(--gold); border-radius: 0; background: linear-gradient(140deg,#382716,#21180f); font-size: 1rem; }
+.chat-panel[data-mode="full"] .chat-head { border-bottom: 1px solid #8c693d; padding-bottom: 6px; }
+.chat-panel[data-mode="full"] .chat-lines { padding: 10px 4px; user-select: text; }
+.chat-jump { align-self: center; min-height: 36px; font-size: 0.82rem; }
+.chat-toasts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; max-width: min(360px,100%); }
+.chat-toast { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 44px; padding: 8px 12px; width: 100%; color: #fff3d6; background: rgba(43,29,14,0.94); border: 1px solid var(--gold); border-radius: 8px; text-align: left; animation: chat-toast-in 150ms ease-out; }
+.chat-toast strong { color: var(--gold); overflow-wrap: anywhere; }
+.chat-toast span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+@keyframes chat-toast-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 1100px) { .chat-panel[data-mode="hidden"] { width: min(400px,32vw); } }
+@media (max-width: 720px) {
+ .chat-panel[data-mode="quarter"] { width: 100%; height: clamp(180px,25dvh,280px); padding: 6px 8px; }
+ .chat-panel[data-mode="hidden"] { width: 100%; margin-bottom: 6px; }
+ .chat-panel[data-mode="full"] { width: auto; margin: 0; }
+ .chat-panel[data-mode] .chat-head .chip { max-width: 80px; padding: 4px 6px; }
+}
+@media (prefers-color-scheme: dark) {
+ .chat-panel[data-mode="full"] { background: #171b1c; }
+ .chat-panel[data-mode="quarter"], .chat-toast { background: rgba(23,27,28,0.96); }
+}
+@media (prefers-reduced-motion: reduce) { .chat-toast { animation: none; } }
+
+.hud.chat-full > :not(.chat-panel) { visibility: hidden; }
+
+.game-root.chat-full-active > .ui-toggle { display: none; }
+
+.chat-heading { flex: 1; min-width: 0; text-align: left; }
+.chat-population { display: block; font-size: 0.72rem; line-height: 1.3; color: #ddcbaa; overflow-wrap: anywhere; font-weight: 400; }
+.chat-launch .chat-population { color: inherit; opacity: 0.8; }

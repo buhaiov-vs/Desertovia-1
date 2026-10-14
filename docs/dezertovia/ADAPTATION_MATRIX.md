@@ -123,3 +123,12 @@ RULES_AND_SOURCES.md, а в реализации — читать указанн
 | Остальные здания и проекты после хижины | Отдельные типы и setVillage/PROJECT_SITES, прежний fallback | Не потерять открытые конструкции, мост/пирс/ограды/памятник и их этапы |
 
 Полная спецификация: [CONSTRUCTION_VISUAL_PLAN.md](CONSTRUCTION_VISUAL_PLAN.md). Пилот Hut и общие исправления выпущены; изображения остальных типов пока PLAN.
+
+
+### D-021 — чат0/¼/full, реализация
+
+| Требование | Адаптация | Проверка |
+| --- | --- | --- |
+| Режимы и удобные кнопки | ChatPanel, HUD CSS, GamePage obscured | Телефон/ПК, реальные границы, draft/preference/scroll |
+| Уведомления и непрочитанные | useLiveVillage chatArrivals, ChatPanel bounded toasts | History/own исключены, live/burst/expiry, jump |
+| Клавиатура и сохранение функций | VisualViewport, fullscreen inert/Tab/Escape, события/членство/SignalR без смены API | Resize, отправка/ошибки, прежний browser suite |

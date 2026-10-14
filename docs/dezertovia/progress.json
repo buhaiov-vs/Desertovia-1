@@ -422,7 +422,7 @@
   "hospital_plan": {
     "decision": "D-028",
     "document": "HOSPITAL_PLAN.md",
-    "state": "implemented_local_checks_in_progress_not_deployed",
+    "state": "implemented_verified_locally_not_deployed",
     "branch": "feat/hospital",
     "game_code_changed": true,
     "live_changed": false,
@@ -435,11 +435,13 @@
     "checks": [
       "311 domain tests passed",
       "171 API tests passed, including 3 cross-service hospital cases with fake bridge",
-      "22 focused bot/proxy/identity tests passed",
-      "frontend build and lint passed (existing warning policy)",
+      "23 focused bot/proxy/identity tests passed after final access fix",
+      "773 full bot tests passed before final access-only fix; latest full suite in PR CI",
+      "16 browser tests passed on phone and desktop: confirmation/retry/320px + all27 prepared buildings alpha/lighting",
+      "frontend production build and lint passed (warning-only baseline)",
       "asset deterministic rebuild and common pixel/outline registration passed"
     ],
-    "next_stage": "finish repository CI and retain without deploying",
+    "next_stage": "review paired repository PRs; no deployment authorized",
     "recovery_bonuses": {
       "decision": "D-026",
       "state": "implemented_candidate_balance_not_live",
@@ -468,9 +470,9 @@
     "implementation": {
       "document": "HOSPITAL_IMPLEMENTATION.md",
       "bot_branch": "feat/desertovia-hospital",
-      "bot_commit": "7db4193",
+      "bot_commit": "9da022d",
       "bot_pr": "https://github.com/desertod666/TG-bots/pull/32",
-      "game_pr": null,
+      "game_pr": "https://github.com/desertod666/Desertovia/pull/23",
       "feature_flag": "Game__HospitalEnabled",
       "feature_flag_default": false,
       "game_migration": "AddExternalRecovery",
@@ -480,6 +482,11 @@
       "hospital_levels": 3,
       "deployed": false,
       "release_version_changed": false
+    },
+    "ci": {
+      "game_pr": 23,
+      "bot_pr": 32,
+      "state": "running_on_github_not_deployment"
     }
   },
   "routing_incident": {

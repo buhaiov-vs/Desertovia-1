@@ -50,6 +50,7 @@ export interface MenuProps {
   onTab: (tab: MenuTab) => void
   onClose: () => void
   village: VillageState
+  population: { total: number; online: number }
   /** The village owner: rules and plans, never works, sees no storage numbers. */
   tsar: boolean
   /** The Tsar, or a citizen the Tsar appointed Governor: plans buildings and calls votes. */
@@ -147,6 +148,9 @@ export function GameMenu(props: MenuProps) {
         </header>
 
         <div className="modal-body">
+          {tab === 'village' && <section className="card village-population" title={t('chat.populationHelp')}>
+            {t('chat.population', props.population)}
+          </section>}
           {citizen && <NextAction citizen={citizen} catalog={catalog} now={now} pending={pending} onCancel={props.onCancelTask} />}
           {error && <p className="error">{error}</p>}
 

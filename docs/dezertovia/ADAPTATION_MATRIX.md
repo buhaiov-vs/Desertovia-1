@@ -136,3 +136,7 @@ RULES_AND_SOURCES.md, а в реализации — читать указанн
 Счётчик: жители/citizen presence,5мин grace; не NPC/не видимые working offline.
 Версия: web/package.json0.5.0→SettingsPanel0.5, источник единственный.
 Выпуск и проверки D-021: [CHAT_MODES.md](CHAT_MODES.md).
+
+D-022 /0.5.1: компактная ChatPanel.launch, население GameMenu.village,
+interrupted для всех окон + modal-backdrop stacking. Регрессии размера,
+голосования, unread и настоящего GameMenu проверяются в chat-modes.spec.ts.

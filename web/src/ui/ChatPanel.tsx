@@ -27,9 +27,7 @@ export function ChatPanel({
   incoming = EMPTY_INCOMING,
   onModeChange,
   interrupted = false,
-  population,
 }: {
-  population?: { total: number; online: number }
   incoming?: ChatMessage[]
   onModeChange?: (mode: ChatMode) => void
   interrupted?: boolean
@@ -106,7 +104,7 @@ export function ChatPanel({
   useEffect(()=>{
     try { localStorage.setItem(MODE_KEY,mode) } catch { /* Private storage can be unavailable. */ }
     onModeChangeRef.current?.(mode)
-    if(mode==='hidden')return
+    if(mode==='hidden'||interrupted)return
     if(nearBottom.current)toBottom()
     else if(list.current) {
       list.current.scrollTop=scrollTop.current
@@ -114,7 +112,7 @@ export function ChatPanel({
       const line=saved ? [...list.current.querySelectorAll<HTMLElement>('[data-line-key]')].find(el=>el.dataset.lineKey===saved.key) : undefined
       if(line&&saved)list.current.scrollTop+=line.getBoundingClientRect().top-list.current.getBoundingClientRect().top-saved.offset
     }
-  },[mode,toBottom])
+  },[mode,toBottom,interrupted])
   useEffect(()=>{if(interrupted&&mode==='full')changeMode('quarter')},[interrupted,mode,changeMode])
   useEffect(()=>{
     const fresh=incoming.filter(message=>!processed.current.has(message.id))
@@ -123,19 +121,19 @@ export function ChatPanel({
     if(processed.current.size>200)processed.current=new Set(incoming.map(message=>message.id))
     const other=fresh.filter(message=>!own(message))
     if(other.length===0)return
-    if(collapsed||!nearBottom.current)setUnread(count=>count+other.length)
-    if(collapsed)setToasts(previous=>[...previous,...other.map(message=>({message,expires:Date.now()+4200}))].slice(-2))
-  },[incoming,collapsed,own])
+    if(interrupted||collapsed||!nearBottom.current)setUnread(count=>count+other.length)
+    if(collapsed&&!interrupted)setToasts(previous=>[...previous,...other.map(message=>({message,expires:Date.now()+4200}))].slice(-2))
+  },[incoming,collapsed,own,interrupted])
   useEffect(()=>{
     if(toasts.length===0)return
     const timer=window.setTimeout(()=>setToasts(previous=>previous.filter(toast=>toast.expires>Date.now())),Math.max(0,Math.min(...toasts.map(toast=>toast.expires))-Date.now()))
     return ()=>window.clearTimeout(timer)
   },[toasts])
   useEffect(()=>{
-    if(!collapsed&&nearBottom.current)toBottom()
-  },[lines,collapsed,toBottom])
+    if(!interrupted&&!collapsed&&nearBottom.current)toBottom()
+  },[lines,collapsed,interrupted,toBottom])
   useEffect(()=>{
-    if(mode!=='full')return
+    if(mode!=='full'||interrupted)return
     const vv=window.visualViewport
     const update=()=>setViewport(vv ? {left:vv.offsetLeft,top:vv.offsetTop,width:vv.width,height:vv.height} : {})
     update();vv?.addEventListener('resize',update);vv?.addEventListener('scroll',update)
@@ -144,9 +142,9 @@ export function ChatPanel({
     parent?.classList.add('chat-full')
     const previous=siblings.map(el=>el.inert);siblings.forEach(el=>el.inert=true)
     return ()=>{parent?.classList.remove('chat-full');vv?.removeEventListener('resize',update);vv?.removeEventListener('scroll',update);siblings.forEach((el,i)=>el.inert=previous[i])}
-  },[mode])
+  },[mode,interrupted])
   useEffect(()=>{
-    if(collapsed)return
+    if(collapsed||interrupted)return
     const key=(event:KeyboardEvent)=>{
       if(event.key==='Escape') { event.preventDefault();changeMode(mode==='full'?'quarter':'hidden');requestAnimationFrame(()=>launch.current?.focus()) }
       if(event.key==='Tab'&&mode==='full'){
@@ -157,7 +155,7 @@ export function ChatPanel({
       }
     }
     document.addEventListener('keydown',key);return ()=>document.removeEventListener('keydown',key)
-  },[mode,collapsed,changeMode])
+  },[mode,collapsed,changeMode,interrupted])
 
   const toggleActivities = () => {
     const next = !showActivities
@@ -183,7 +181,7 @@ export function ChatPanel({
   }
 
   return (
-    <section ref={panel} className={`chat-panel${collapsed ? ' collapsed' : ''}`} data-mode={mode}
+    <section ref={panel} className={`chat-panel${collapsed ? ' collapsed' : ''}`} data-mode={mode} data-interrupted={interrupted} inert={interrupted}
       style={mode==='full'?viewport:undefined} role={mode==='full'?'dialog':'region'} aria-modal={mode==='full'?true:undefined} aria-label={t('chat.title')}>
       {collapsed&&toasts.length>0&&<div className="chat-toasts" aria-live="polite" aria-atomic="false">
         {toasts.map(({message})=><button key={message.id} className="chat-toast" onClick={()=>{nearBottom.current=true;changeMode('quarter')}}>
@@ -191,9 +189,9 @@ export function ChatPanel({
         </button>)}
       </div>}
       {collapsed ? <button ref={launch} className="chat-launch" aria-label={t('chat.open')} aria-expanded={false} onClick={()=>changeMode('quarter')}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z"/></svg> <span className="chat-heading">{t('chat.title')}{population&&<span className="chat-population" title={t('chat.populationHelp')}>{t('chat.population',population)}</span>}</span>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z"/></svg> <span className="chat-heading">{t('chat.title')}</span>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
       </button> : <div className="chat-head">
-        <div className="chat-heading"><strong>{t('chat.title')}</strong>{population&&<span className="chat-population" title={t('chat.populationHelp')}>{t('chat.population',population)}</span>}</div>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
+        <div className="chat-heading"><strong>{t('chat.title')}</strong></div>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
         <button className={`chip${showActivities?' active':''}`} aria-pressed={showActivities} title={t('chat.activitiesTitle')} onClick={toggleActivities}>{t('chat.activities')}</button>
         <button className="chat-control" aria-label={t(mode==='full'?'chat.quarter':'chat.full')} title={t(mode==='full'?'chat.quarter':'chat.full')} onClick={()=>changeMode(mode==='full'?'quarter':'full')}>
           {mode==='full'?'¼':<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6M15 3h6v6M3 15v6h6M21 15v6h-6"/></svg>}

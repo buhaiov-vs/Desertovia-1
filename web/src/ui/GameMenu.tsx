@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import {
   blockedByLoad,
   builtKinds,
@@ -8,10 +9,14 @@ import {
   type BuildingDefinition,
   type Catalog,
   type Citizen,
+  type EnemyKind,
   type Me,
+  type RaidSize,
   type Task,
   type VillageState,
 } from '../api'
+import { UndeadPanel } from './RaidBanner'
+import { DungeonPanel } from './Dungeon'
 import type { FeedEntry } from '../hooks'
 import { useI18n } from '../i18n'
 import type { UiKey } from '../i18n/en'
@@ -45,8 +50,10 @@ export interface MenuProps {
   onTab: (tab: MenuTab) => void
   onClose: () => void
   village: VillageState
-  /** The village owner: plans and builds, never works, sees no storage numbers. */
-  isOwner: boolean
+  /** The village owner: rules and plans, never works, sees no storage numbers. */
+  tsar: boolean
+  /** The Tsar, or a citizen the Tsar appointed Governor: plans buildings and calls votes. */
+  ruler: boolean
   /** Only known to the owner of a private village. */
   inviteCode: string | null
   onNewInviteCode: () => Promise<void>
@@ -61,7 +68,7 @@ export interface MenuProps {
   onStart: (task: Task) => void
   onStartJob: (choice: JobChoice) => void
   onCancelTask: () => void
-  /** Opens the open vote, or lets the Governor call one. */
+  /** Opens the open vote, or lets the rulers call one. */
   onPoll: () => void
   onResearch: () => void
   /** Reloads the account after signing out. */
@@ -71,6 +78,16 @@ export interface MenuProps {
   joining: boolean
   joinError: string | null
   feed: FeedEntry[]
+  onCallUndead: (enemy: EnemyKind, size: RaidSize) => void
+  onCancelUndead: () => void
+  undeadError: string | null
+  onOpenDungeon: () => void
+  onCancelDungeon: () => void
+  dungeonError: string | null
+  /** The citizen leaves the village for good; asks first. */
+  onLeaveVillage: () => void
+  /** The Tsar deletes the village; asks first. */
+  onDeleteVillage: () => void
 }
 
 function JoinPrompt(props: MenuProps) {
@@ -96,7 +113,7 @@ function JoinPrompt(props: MenuProps) {
 }
 
 export function GameMenu(props: MenuProps) {
-  const { tab, onTab, onClose, village, catalog, citizen, now, pending, error, onStart, onStartJob, isOwner: governor } = props
+  const { tab, onTab, onClose, village, catalog, citizen, now, pending, error, onStart, onStartJob, tsar, ruler } = props
   const i18n = useI18n()
   const { t } = i18n
   const [filter, setFilter] = useState<TaskFilter>('all')
@@ -118,7 +135,7 @@ export function GameMenu(props: MenuProps) {
       <div className="modal menu" role="dialog" aria-label={t('menu.title')}>
         <header className="modal-header">
           <nav className="tabs">
-            {tabsFor(governor).map((key) => (
+            {tabsFor(tsar, ruler).map((key) => (
               <button key={key} className={`tab ${tab === key ? 'active' : ''}`} onClick={() => onTab(key)}>
                 {t(TABS[key])}
               </button>
@@ -138,7 +155,8 @@ export function GameMenu(props: MenuProps) {
               <QuestPanel
                 village={village}
                 catalog={catalog}
-                governor={governor}
+                tsar={tsar}
+                ruler={ruler}
                 citizen={citizen}
                 disabled={disabled}
                 onStart={onStart}
@@ -158,7 +176,7 @@ export function GameMenu(props: MenuProps) {
                   </button>
                   <button
                     className="big"
-                    disabled={disabled || !roam || blockedByLoad(roam, citizen) !== null}
+                    disabled={disabled || !roam || blockedByLoad(roam, citizen, village.resources, catalog.rules.takeLimit) !== null}
                     onClick={() => roam && onStart(roam)}
                   >
                     {t('action.roam')}
@@ -171,7 +189,7 @@ export function GameMenu(props: MenuProps) {
                   </button>
                   <button
                     className="big"
-                    disabled={disabled || !expedition || blockedByLoad(expedition, citizen) !== null}
+                    disabled={disabled || !expedition || blockedByLoad(expedition, citizen, village.resources, catalog.rules.takeLimit) !== null}
                     onClick={() => expedition && onStart(expedition)}
                   >
                     {t('action.expedition')}
@@ -181,10 +199,10 @@ export function GameMenu(props: MenuProps) {
               {village.project && (
                 <ProjectPanel project={village.project} completed={village.completedProjects} />
               )}
-              {governor ? (
+              {tsar ? (
                 <section className="card">
-                  <h3>{t('governor.title')}</h3>
-                  <p className="small">{t('governor.role')}</p>
+                  <h3>{t('tsar.title')}</h3>
+                  <p className="small">{t('tsar.role')}</p>
                   <button className="primary" onClick={() => onTab('build')}>
                     {t('hud.build')}
                   </button>
@@ -205,6 +223,7 @@ export function GameMenu(props: MenuProps) {
                         wildlife={village.wildlife}
                         goldVein={village.goldVeinRemaining}
                         fields={village.fields}
+                        resources={village.resources}
                         disabled={disabled}
                         onStart={onStart}
                       />
@@ -213,6 +232,24 @@ export function GameMenu(props: MenuProps) {
                 </section>
               ) : (
                 <JoinPrompt {...props} />
+              )}
+              {tsar && (
+                <UndeadPanel
+                  village={village}
+                  pending={pending}
+                  error={props.undeadError}
+                  onCall={props.onCallUndead}
+                  onCancel={props.onCancelUndead}
+                />
+              )}
+              {tsar && (
+                <DungeonPanel
+                  village={village}
+                  pending={pending}
+                  error={props.dungeonError}
+                  onOpen={props.onOpenDungeon}
+                  onCancel={props.onCancelDungeon}
+                />
               )}
               <section className="card">
                 <h3>{t('menu.chronicle')}</h3>
@@ -224,7 +261,11 @@ export function GameMenu(props: MenuProps) {
                       <li key={entry.key}>
                         {entry.kind === 'cycle'
                           ? i18n.describeReport(entry.report)
-                          : t('feed.built', { project: i18n.project(entry.completion.projectId).name })}
+                          : entry.kind === 'raid'
+                            ? i18n.describeRaid(entry.report)
+                            : entry.kind === 'dungeon'
+                              ? i18n.describeDungeon(entry.run)
+                              : t('feed.built', { project: i18n.project(entry.completion.projectId).name })}
                       </li>
                     ))}
                   </ul>
@@ -237,15 +278,15 @@ export function GameMenu(props: MenuProps) {
             <SettingsPanel
               village={village}
               me={props.me}
-              isOwner={governor}
+              isOwner={tsar}
               inviteCode={props.inviteCode}
               onNewInviteCode={props.onNewInviteCode}
               onAccountChanged={props.onAccountChanged}
             />
           )}
 
-          {tab === 'build' && governor && (
-            <BuildPanel catalog={catalog} village={village} onPlace={props.onPlace} onWithdraw={props.onWithdraw} />
+          {tab === 'build' && ruler && (
+            <BuildPanel tsar={tsar} catalog={catalog} village={village} onPlace={props.onPlace} onWithdraw={props.onWithdraw} />
           )}
 
           {tab === 'technologies' && (
@@ -253,7 +294,7 @@ export function GameMenu(props: MenuProps) {
               catalog={catalog}
               village={village}
               citizen={citizen}
-              governor={governor}
+              ruler={ruler}
               disabled={disabled}
               onPoll={props.onPoll}
               onResearch={props.onResearch}
@@ -261,7 +302,7 @@ export function GameMenu(props: MenuProps) {
           )}
 
           {tab === 'character' &&
-            (citizen ? <CharacterSheet citizen={citizen} catalog={catalog} /> : <JoinPrompt {...props} />)}
+            (citizen ? <CharacterSheet citizen={citizen} catalog={catalog} structures={village.structures} /> : <JoinPrompt {...props} />)}
 
           {tab === 'tasks' &&
             (citizen ? (
@@ -297,6 +338,7 @@ export function GameMenu(props: MenuProps) {
                         wildlife={village.wildlife}
                         goldVein={village.goldVeinRemaining}
                         fields={village.fields}
+                        resources={village.resources}
                         disabled={disabled}
                         onStart={onStart}
                       />
@@ -307,6 +349,22 @@ export function GameMenu(props: MenuProps) {
             ) : (
               <JoinPrompt {...props} />
             ))}
+        </div>
+        <div className="menu-actions">
+          {tsar ? (
+            <button className="danger" disabled={pending} onClick={props.onDeleteVillage}>
+              {t('menu.deleteVillage')}
+            </button>
+          ) : (
+            citizen && (
+              <button className="danger" disabled={pending} onClick={props.onLeaveVillage}>
+                {t('menu.leaveVillage')}
+              </button>
+            )
+          )}
+          <Link to="/" className="button">
+            {t('menu.toMainMenu')}
+          </Link>
         </div>
         <footer className="modal-footer muted small">{t('menu.hint')}</footer>
       </div>

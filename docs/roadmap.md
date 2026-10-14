@@ -1,6 +1,6 @@
 # Desertod — Roadmap
 
-Status as of 2026-10-13, 01:50 (production readiness check: both builds and both Docker images build, 216 domain tests and 31 integration tests pass; deployed to the Hetzner server on 2026-10-13). Design documents: [game-design.md](game-design.md), [streamer-mode.md](streamer-mode.md), [cooperative-building.md](cooperative-building.md).
+Status as of 2026-10-13, 23:59 (dungeon #1 added: both builds succeed, 298 domain tests and 138 integration tests pass; production readiness check and deployment to the Hetzner server on 2026-10-13). Design documents: [game-design.md](game-design.md), [streamer-mode.md](streamer-mode.md), [cooperative-building.md](cooperative-building.md).
 
 ## How to use this file
 
@@ -16,7 +16,7 @@ Status as of 2026-10-13, 01:50 (production readiness check: both builds and both
 - Wild start: a campfire and no storage (the Heap is built first), stats at 0, name-only character creation, seven starting tasks.
 - Buildable buildings: Heap, Lean-to, Wood pile, Stone pile, Drying rack, Hut, Woodyard, Stone yard, Granary.
 - Tribe needs (quests): hunger, cold, storage room; Renown split among contributors.
-- Discoveries (technologies): 16 discoveries in Camp, Village and Town eras; the Governor calls a vote and citizens choose, qualified citizens research at the discovery's building with a crew requirement; discoveries unlock Farm, Bakery, Workshop, Mine, Smithy, Library, Tavern, Stage and Storehouse, roles and yield bonuses. New early tasks: Tell stories, Study plants, Explore the land. See [cooperative-building.md](cooperative-building.md), section 5.
+- Discoveries (technologies): 16 discoveries in Camp, Village and Town eras; the Tsar or a Governor calls a vote and citizens choose, qualified citizens research at the discovery's building with a crew requirement; discoveries unlock Farm, Bakery, Workshop, Mine, Smithy, Library, Tavern, Stage and Storehouse, roles and yield bonuses. New early tasks: Tell stories, Study plants, Explore the land. See [cooperative-building.md](cooperative-building.md), section 5.
 - Wildlife: rabbit, deer and bird herds per village that shrink when hunted and grow back over time; Hunt rabbits, Hunt birds (feathers), Hunt deer (Hunter). See [cooperative-building.md](cooperative-building.md), section 8.
 - Farming: 3 beds per Farm; sow turnips, carrots, cabbage, flax or rye (better seeds need more Endurance), water the beds (anyone), harvest; Farmer title. Bakery (Baking discovery): Bakers bake grain into food. See [cooperative-building.md](cooperative-building.md), Farming.
 - Backend: ASP.NET Core, PostgreSQL, SignalR live updates, background cycle settlement, concurrency retries, translatable error codes.
@@ -76,7 +76,7 @@ Goal: long-term goals. See [cooperative-building.md](cooperative-building.md), s
 
 ## Phase 3 — Streamer tools
 
-Goal: more for the Governor to do on stream. See [streamer-mode.md](streamer-mode.md).
+Goal: more for the Tsar to do on stream. See [streamer-mode.md](streamer-mode.md).
 
 - [ ] Decrees: Festival, Bell call, Tax relief, Call to the site.
 - [ ] Construction site priority order.
@@ -89,7 +89,7 @@ Goal: "we need more people". See [cooperative-building.md](cooperative-building.
 - [ ] Job places per job and per workplace.
 - [ ] Heavy jobs (need two citizens in overlapping cycles).
 - [ ] Group hunting bonus.
-- [ ] Arrows made from feathers, used by hunting (feathers are collected but have no use yet).
+- [x] Arrows made from feathers (Fletch arrows, Archery), shot by bows in fights.
 - [ ] Personal share cap per stage.
 
 ## Phase 5 — Subscriber integration
@@ -107,7 +107,13 @@ Goal: an endless list of goals.
 
 - [ ] Town and Stronghold ages: Stone yard upgrades, Treasury, Market, Barracks. (Storehouse, Tavern, Stage, Library and Mine are buildable behind discoveries.)
 - [ ] Roads and haul distance.
-- [ ] Raids and defense: Patrol (Guard) and Command (Captain).
+- [x] Raids and defense: beast ambushes on hunts and expeditions, night raids on the camp, undead events called by the Tsar, Keep watch, Patrol (Guard) and Command (Captain), a shared armory (spears, bows and arrows, swords, leather armor, shields) that wears out, wounds healed by remedies or poultices, damaged buildings and repairs, Barracks. See [game-design.md](game-design.md), section 12.
+- [x] Dungeon #1, the Dead Lands: the Tsar opens it, a 60-second gathering with a class picker (classes from the gear in storage and the citizen's crafts), the march to the edge of the land, a live fight on a separate map (`/v/:slug/dungeon/:runId`) against 7 kinds of undead with aggro ranges, shared rewards per kill, wounds for knocked-out heroes, a 15-minute limit; the Tsar fights as the Voivode. See [game-design.md](game-design.md), section 13.
+- [ ] Hand-drawn sprites for the Dead Lands (listed as New in [sprites.md](sprites.md), section 23).
+- [ ] Balance dungeon foes, classes and rewards from a play-test.
+- [ ] More dungeons.
+- [ ] Balance enemy power, raid chance and gear from a play-test.
+- [ ] Hand-drawn sprites for the enemies (they are drawn in code in `web/src/game/enemies.ts`).
 - [ ] Trade at the Market (Merchant).
 - [ ] Diplomacy between villages (Envoy, Negotiate).
 - [ ] Draft plans (Architect) and Lead a crew (Foreman).

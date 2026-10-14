@@ -1,0 +1,38 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-rabbit-carried",
+      "subject": "Brown dead wild hare hanging head DOWN, hind legs together at TOP where hunter holds it; long ears droop downward, small white tail, tan belly.",
+      "width": 16,
+      "height": 16,
+      "prompt": "Tiny pixel art game sprite for cozy medieval Slavic village, matching supplied Kenney Tiny Town/Tiny Farm sheets. Single inventory-like carried game animal asset on transparent background, no hunter or hands shown. Strict logical 16x16 grid enlarged nearest-neighbor, simple chunky square clusters, flat warm earthy colors maximum 2 shades per material. Centered with one logical pixel free margin, readable at native 16x16. No gradients, texture, antialiasing, scenery, text, borders, ground or shadow. Non-graphic hunted animal, eyes closed, no blood or wounds. Brown dead wild hare hanging head DOWN, hind legs together at TOP where hunter holds it; long ears droop downward, small white tail, tan belly.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-deer-carried",
+      "subject": "Dead red deer slung horizontally across a hunter's shoulders viewed from FRONT, but do not draw the hunter. Russet body across top/middle, four limp legs hanging on both sides, head drooping at one end with small antlers, white belly and tail. Sized to overlay atop a 16x16 citizen.",
+      "width": 16,
+      "height": 16,
+      "prompt": "Tiny pixel art game sprite for cozy medieval Slavic village, matching supplied Kenney Tiny Town/Tiny Farm sheets. Single inventory-like carried game animal asset on transparent background, no hunter or hands shown. Strict logical 16x16 grid enlarged nearest-neighbor, simple chunky square clusters, flat warm earthy colors maximum 2 shades per material. Centered with one logical pixel free margin, readable at native 16x16. No gradients, texture, antialiasing, scenery, text, borders, ground or shadow. Non-graphic hunted animal, eyes closed, no blood or wounds. Dead red deer slung horizontally across a hunter's shoulders viewed from FRONT, but do not draw the hunter. Russet body across top/middle, four limp legs hanging on both sides, head drooping at one end with small antlers, white belly and tail. Sized to overlay atop a 16x16 citizen.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-bird-carried",
+      "subject": "Two small brown dead birds with orange-red breasts hanging head DOWN by their feet from one short string at TOP. Two distinct small silhouettes side by side, eyes closed, wings folded, tiny beaks pointed down.",
+      "width": 16,
+      "height": 16,
+      "prompt": "Tiny pixel art game sprite for cozy medieval Slavic village, matching supplied Kenney Tiny Town/Tiny Farm sheets. Single inventory-like carried game animal asset on transparent background, no hunter or hands shown. Strict logical 16x16 grid enlarged nearest-neighbor, simple chunky square clusters, flat warm earthy colors maximum 2 shades per material. Centered with one logical pixel free margin, readable at native 16x16. No gradients, texture, antialiasing, scenery, text, borders, ground or shadow. Non-graphic hunted animal, eyes closed, no blood or wounds. Two small brown dead birds with orange-red breasts hanging head DOWN by their feet from one short string at TOP. Two distinct small silhouettes side by side, eyes closed, wings folded, tiny beaks pointed down.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-tavern-1-ground",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-tavern-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit tavern reference into construction stage 1: Only four short wooden corner stakes linked by thin string marking the footprint. No building elements. Remove signs, benches, barrels, doors, glazing, chimney and props. Preserve square canvas, original footprint, camera and ground anchor positions. No zoom, shifting or recentering; preserve empty transparent upper canvas on low stages. Keep all prior construction. Crisp 64x64 logical pixel sprite enlarged with square pixels. Simple Kenney-like warm earthy flat colors, three shades per material maximum. No gradients, antialiasing, halo, haze, text or scenery. Transparent outside structure and inside open frame."
+    },
+    {
+      "name": "construction-tavern-2-foundation",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-tavern-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit tavern reference into construction stage 2: Only a low rectangular grey stone base. No timber frame, walls or roof. Remove signs, benches, barrels, doors, glazing, chimney and props. Preserve square canvas, original footprint, camera and ground anchor positions. No zoom, shifting or recentering; preserve empty transparent upper canvas on low stages. Keep all prior construction. Crisp 64x64 logical pixel sprite enlarged with square pixels. Simple Kenney-like warm earthy flat colors, three shades per material maximum. No gradients, antialiasing, halo, haze, text or scenery. Transparent outside structure and inside open frame."
+    },
+    {
+      "name": "construction-tavern-3-frame",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-tavern-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit tavern reference into construction stage 3: Grey stone base with wooden posts and beams, open frame. No walls or roof covering. Remove signs, benches, barrels, doors, glazing, chimney and props. Preserve square canvas, original footprint, camera and ground anchor positions. No zoom, shifting or recentering; preserve empty transparent upper canvas on low stages. Keep all prior construction. Crisp 64x64 logical pixel sprite enlarged with square pixels. Simple Kenney-like warm earthy flat colors, three shades per material maximum. No gradients, antialiasing, halo, haze, text or scenery. Transparent outside structure and inside open frame."
+    },
+    {
+      "name": "construction-tavern-4-walls",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-tavern-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit tavern reference into construction stage 4: Grey stone base, posts and beams with horizontal log walls halfway up. Upper walls open. No roof covering. Remove signs, benches, barrels, doors, glazing, chimney and props. Preserve square canvas, original footprint, camera and ground anchor positions. No zoom, shifting or recentering; preserve empty transparent upper canvas on low stages. Keep all prior construction. Crisp 64x64 logical pixel sprite enlarged with square pixels. Simple Kenney-like warm earthy flat colors, three shades per material maximum. No gradients, antialiasing, halo, haze, text or scenery. Transparent outside structure and inside open frame."
+    },
+    {
+      "name": "construction-tavern-5-roof",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-tavern-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit tavern reference into construction stage 5: Grey stone base, posts and beams with COMPLETED full-height log walls and roof rafters exactly half covered in golden thatch, half exposed. Dark door opening without door. Remove signs, benches, barrels, doors, glazing, chimney and props. Preserve square canvas, original footprint, camera and ground anchor positions. No zoom, shifting or recentering; preserve empty transparent upper canvas on low stages. Keep all prior construction. Crisp 64x64 logical pixel sprite enlarged with square pixels. Simple Kenney-like warm earthy flat colors, three shades per material maximum. No gradients, antialiasing, halo, haze, text or scenery. Transparent outside structure and inside open frame."
+    }
+  ]
+}

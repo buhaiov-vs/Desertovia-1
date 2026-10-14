@@ -1,0 +1,38 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-citizen-male-4",
+      "subject": "Slavic peasant man in round felt cap with hair visible at sides, long belted coat. Cap and coat use clothing colors.",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE game-ready tiny pixel art medieval Slavic citizen, in the simple chunky Kenney Tiny Town/Tiny Farm style of the two reference sheets. Strict logical 16x16 pixel grid enlarged to output size by nearest neighbor: maximum 14 pixels high and 10 pixels wide, single-square eyes, minimal details, all blocks equal size. Facing viewer/south, slight top-down view, standing with feet on bottom row, arms at sides, centered. Transparent background, no shadow. Flat solid colors ONLY: skin #f7c282 and #e19a65; hair #bd6c4a and #763b36; clothing #c0cbdc, #8b9bb4 and #52607c. Exact hex colors essential for game palette swapping. Each pixel square absolutely uniform solid color, no texture, gradients, shading within squares, antialiasing, stray edge pixels, glow or black outline. Shoes muted brown. No scenery, lettering, frames, tools, additional people. Subject: Slavic peasant man in round felt cap with hair visible at sides, long belted coat. Cap and coat use clothing colors.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-5",
+      "subject": "Slavic hunter-looking man with hood over head, fringe of hair and short cloak. Hood and cloak use clothing colors, face skin colors, fringe hair colors.",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE game-ready tiny pixel art medieval Slavic citizen, in the simple chunky Kenney Tiny Town/Tiny Farm style of the two reference sheets. Strict logical 16x16 pixel grid enlarged to output size by nearest neighbor: maximum 14 pixels high and 10 pixels wide, single-square eyes, minimal details, all blocks equal size. Facing viewer/south, slight top-down view, standing with feet on bottom row, arms at sides, centered. Transparent background, no shadow. Flat solid colors ONLY: skin #f7c282 and #e19a65; hair #bd6c4a and #763b36; clothing #c0cbdc, #8b9bb4 and #52607c. Exact hex colors essential for game palette swapping. Each pixel square absolutely uniform solid color, no texture, gradients, shading within squares, antialiasing, stray edge pixels, glow or black outline. Shoes muted brown. No scenery, lettering, frames, tools, additional people. Subject: Slavic hunter-looking man with hood over head, fringe of hair and short cloak. Hood and cloak use clothing colors, face skin colors, fringe hair colors.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-female-2",
+      "subject": "Slavic peasant woman with headscarf tied under chin, long skirt and apron. Headscarf uses hair colors; skirt and apron use clothing colors.",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE game-ready tiny pixel art medieval Slavic citizen, in the simple chunky Kenney Tiny Town/Tiny Farm style of the two reference sheets. Strict logical 16x16 pixel grid enlarged to output size by nearest neighbor: maximum 14 pixels high and 10 pixels wide, single-square eyes, minimal details, all blocks equal size. Facing viewer/south, slight top-down view, standing with feet on bottom row, arms at sides, centered. Transparent background, no shadow. Flat solid colors ONLY: skin #f7c282 and #e19a65; hair #bd6c4a and #763b36; clothing #c0cbdc, #8b9bb4 and #52607c. Exact hex colors essential for game palette swapping. Each pixel square absolutely uniform solid color, no texture, gradients, shading within squares, antialiasing, stray edge pixels, glow or black outline. Shoes muted brown. No scenery, lettering, frames, tools, additional people. Subject: Slavic peasant woman with headscarf tied under chin, long skirt and apron. Headscarf uses hair colors; skirt and apron use clothing colors.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

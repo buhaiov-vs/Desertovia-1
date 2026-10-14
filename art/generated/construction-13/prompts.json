@@ -1,0 +1,27 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-stage-1-ground",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-stage-preview.png",
+      "prompt": "Use case: precise-object-edit. Input is finished Stage building, edit target. Create construction phase: Only four short survey stakes connected by plain beige string at the corners of the platform footprint. Remove platform, steps, posts, pennants and decorations. Keep original square canvas, camera, platform footprint and ground anchor. Preserve empty upper space; do not zoom or recenter. Crisp 48x48 logical pixel art, shown enlarged. Warm brown wood, three flat shades per material, Kenney Tiny Town / Tiny Farm simplicity. Sharp square pixels. Transparent background including gaps. No halo, gradients, antialiasing, colored fringe, scenery, text or additional props."
+    },
+    {
+      "name": "construction-stage-2-floor",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-stage-preview.png",
+      "prompt": "Use case: precise-object-edit. Input is finished Stage building, edit target. Create construction phase: Keep only the raised plank platform and front steps, in exactly their current position. Remove all tall back posts, pennants and red decorations. Keep original square canvas, camera, platform footprint and ground anchor. Preserve empty upper space; do not zoom or recenter. Crisp 48x48 logical pixel art, shown enlarged. Warm brown wood, three flat shades per material, Kenney Tiny Town / Tiny Farm simplicity. Sharp square pixels. Transparent background including gaps. No halo, gradients, antialiasing, colored fringe, scenery, text or additional props."
+    },
+    {
+      "name": "construction-stage-3-frame",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-stage-preview.png",
+      "prompt": "Use case: precise-object-edit. Input is finished Stage building, edit target. Create construction phase: Keep raised plank platform, front steps and two tall back posts. Remove every pennant and all red decorations. No overhead beam. Keep original square canvas, camera, platform footprint and ground anchor. Preserve empty upper space; do not zoom or recenter. Crisp 48x48 logical pixel art, shown enlarged. Warm brown wood, three flat shades per material, Kenney Tiny Town / Tiny Farm simplicity. Sharp square pixels. Transparent background including gaps. No halo, gradients, antialiasing, colored fringe, scenery, text or additional props."
+    }
+  ]
+}

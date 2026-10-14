@@ -163,13 +163,13 @@ public static class StoryQuests
         return new(id, QuestAudience.Citizens, counted >= quest.Target, counted, quest.Target);
     }
 
-    /// <summary>The Governor plans the building, citizens build it.</summary>
+    /// <summary>The Tsar or a Governor plans the building, citizens build it.</summary>
     private static QuestObjective[] Building(string id, BuildingKind kind, Village village)
     {
         var built = Built(village, kind);
         return
         [
-            new($"plan-{id}", QuestAudience.Governor, built || village.Sites.Any(s => s.Kind == kind)),
+            new($"plan-{id}", QuestAudience.Rulers, built || village.Sites.Any(s => s.Kind == kind)),
             new($"build-{id}", QuestAudience.Citizens, built),
         ];
     }

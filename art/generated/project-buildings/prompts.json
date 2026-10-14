@@ -1,0 +1,26 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "building-great-granary",
+      "width": 64,
+      "height": 48,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single world building for cozy medieval Slavic village game. Big long log granary on stone stilts, huge golden thatched roof, two wide doors, sacks, logs and stones stacked beside it. Wide landscape canvas 4:3. Strict 64x48 logical pixel grid enlarged with large flat square art pixels. Simple chunky Kenney Tiny Town style, three flat shades per material maximum, muted warm earthy palette. Top-left light, top-down three-quarter south-facing view (front door at bottom), not isometric. Entire building visible with one logical pixel margin, centered. Fully transparent outside building and props. No ground slab, shadow, scenery, text, gradients, antialiasing, haze, neon fringes, fine texture or extra panels."
+    },
+    {
+      "name": "building-bell-tower",
+      "width": 48,
+      "height": 64,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single world building for cozy medieval Slavic village game. Tall white stone bell tower with square base, open arched belfry containing a bronze bell, topped with golden onion dome and gold Orthodox cross with three crossbars (short upper, long middle, slanted lower). Portrait canvas 3:4. Strict 48x64 logical pixel grid enlarged with large flat square art pixels. Simple chunky Kenney Tiny Town style, three flat shades per material maximum, muted warm earthy palette. Top-left light, top-down three-quarter south-facing view (front door at bottom), not isometric. Entire building visible with one logical pixel margin, centered. Fully transparent outside building and props. No ground slab, shadow, scenery, text, gradients, antialiasing, haze, neon fringes, fine texture or extra panels."
+    }
+  ]
+}

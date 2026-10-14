@@ -1,0 +1,46 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "terrain-stony-ground",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Generate exactly ONE opaque 16x16 logical-pixel RPG terrain tile enlarged as crisp pixel art. Input images 1 and 2 are style references: Kenney Tiny Town and Tiny Farm. Match their simple low-resolution, flat-color pixel style. Meadow grass with several loose grey stones of different sizes. Sparse low stones, not boulders. All four edges plain meadow green. Full bleed square terrain seen directly from above, no perspective, no floating block, no surrounding background, no text. Very limited flat palette: meadow #78B85A, darker grass #579548, mud #99724C, river #5B9CB5, light ripple #9BC6CD, stone #8F9696 and #B6BAB3. Use only the colors relevant to this tile. Every pixel aligns to one strict 16 by 16 grid, uniformly enlarged; no tiny details, gradients, soft edges, noise, shadows, highlights beyond this flat palette. Preserve flat edge colors for tiling."
+    },
+    {
+      "name": "terrain-river-water",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Generate exactly ONE opaque 16x16 logical-pixel RPG terrain tile enlarged as crisp pixel art. Input images 1 and 2 are style references: Kenney Tiny Town and Tiny Farm. Match their simple low-resolution, flat-color pixel style. Open mid-blue river water with a few short light ripple strokes running top to bottom. Flat blue base touches all four sides; seamless repeating water. Full bleed square terrain seen directly from above, no perspective, no floating block, no surrounding background, no text. Very limited flat palette: meadow #78B85A, darker grass #579548, mud #99724C, river #5B9CB5, light ripple #9BC6CD, stone #8F9696 and #B6BAB3. Use only the colors relevant to this tile. Every pixel aligns to one strict 16 by 16 grid, uniformly enlarged; no tiny details, gradients, soft edges, noise, shadows, highlights beyond this flat palette. Preserve flat edge colors for tiling."
+    },
+    {
+      "name": "terrain-river-west-bank",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Generate exactly ONE opaque 16x16 logical-pixel RPG terrain tile enlarged as crisp pixel art. Input images 1 and 2 are style references: Kenney Tiny Town and Tiny Farm. Match their simple low-resolution, flat-color pixel style. River water occupies RIGHT half, muddy grassy shore occupies LEFT half. Thin pale foam line at shore. Top and bottom edges identical. Leftmost edge green, rightmost edge mid blue. Full bleed square terrain seen directly from above, no perspective, no floating block, no surrounding background, no text. Very limited flat palette: meadow #78B85A, darker grass #579548, mud #99724C, river #5B9CB5, light ripple #9BC6CD, stone #8F9696 and #B6BAB3. Use only the colors relevant to this tile. Every pixel aligns to one strict 16 by 16 grid, uniformly enlarged; no tiny details, gradients, soft edges, noise, shadows, highlights beyond this flat palette. Preserve flat edge colors for tiling."
+    },
+    {
+      "name": "terrain-river-east-bank",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Generate exactly ONE opaque 16x16 logical-pixel RPG terrain tile enlarged as crisp pixel art. Input images 1 and 2 are style references: Kenney Tiny Town and Tiny Farm. Match their simple low-resolution, flat-color pixel style. River water occupies LEFT half, muddy grassy shore occupies RIGHT half. Thin pale foam line at shore. Top and bottom edges identical. Leftmost edge mid blue, rightmost edge green. Full bleed square terrain seen directly from above, no perspective, no floating block, no surrounding background, no text. Very limited flat palette: meadow #78B85A, darker grass #579548, mud #99724C, river #5B9CB5, light ripple #9BC6CD, stone #8F9696 and #B6BAB3. Use only the colors relevant to this tile. Every pixel aligns to one strict 16 by 16 grid, uniformly enlarged; no tiny details, gradients, soft edges, noise, shadows, highlights beyond this flat palette. Preserve flat edge colors for tiling."
+    }
+  ]
+}

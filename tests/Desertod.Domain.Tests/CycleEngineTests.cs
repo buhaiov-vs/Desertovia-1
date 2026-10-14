@@ -4,6 +4,7 @@ using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
+using Desertod.Domain.Storage;
 using Desertod.Domain.Technologies;
 using Desertod.Domain.World;
 using static Desertod.Domain.Tests.TestWorld;
@@ -24,7 +25,7 @@ public class CycleEngineTests
         var citizen = CharacterCreation.Create(Guid.NewGuid(), Guid.NewGuid(), "Bob", Now);
 
         Assert.Equal(0, citizen.Stats.Total);
-        Assert.Equal(GameRules.FirstLevelExperience, Progression.ExperienceToNext(0));
+        Assert.Equal(GameRules.FirstLevelExperience, Progression.Curve(0));
         Assert.Throws<GameRuleException>(() => CharacterCreation.Create(Guid.NewGuid(), Guid.NewGuid(), " ", Now));
     }
 
@@ -54,12 +55,12 @@ public class CycleEngineTests
     }
 
     [Fact]
-    public void Start_WithoutRole_IsRejected()
+    public void Start_WithoutTheSkill_IsRejected()
     {
         var (citizen, village) = Setup();
 
         var error = Assert.Throws<GameRuleException>(() => CycleEngine.Start(citizen, Task("survey"), WorkContext.For(village), Now));
-        Assert.Equal("task.roleRequired", error.Code);
+        Assert.Equal("task.skillRequired", error.Code);
     }
 
     [Fact]
@@ -165,10 +166,10 @@ public class CycleEngineTests
     }
 
     [Fact]
-    public void Carrying_BlocksTheSameGood_ButNotOtherJobs()
+    public void FullHandsAndStorage_BlockTheSameGood_ButNotOtherJobs()
     {
         var (citizen, village) = Setup();
-        citizen.Carry(ResourceKind.Wood, 2);
+        citizen.Carry(ResourceKind.Wood, StorageRules.TakeLimit);
         village.Store(ResourceKind.Wood, 1000);
 
         var error = Assert.Throws<GameRuleException>(() =>
@@ -179,10 +180,27 @@ public class CycleEngineTests
     }
 
     [Fact]
+    public void FullStorage_HandsTakeUpToTheLimit_AndTheRestIsLost()
+    {
+        var (citizen, village) = Setup();
+        citizen.Carry(ResourceKind.Wood, StorageRules.TakeLimit - 1);
+        village.Store(ResourceKind.Wood, 1000);
+
+        CycleEngine.Start(citizen, Task("chop-wood"), WorkContext.For(village), Now);
+        var report = Finish(citizen, WorkContext.For(village));
+
+        var produced = report.Produced.Single().Amount;
+        Assert.Equal(StorageRules.TakeLimit, citizen.Carried(ResourceKind.Wood));
+        Assert.Equal(1, report.Carried.Single().Amount);
+        Assert.Equal(produced - 1, report.Lost.Single().Amount);
+        Assert.True(report.Overflowed);
+    }
+
+    [Fact]
     public void Carrying_BlocksExpeditions()
     {
         var (citizen, village) = Setup();
-        citizen.Carry(ResourceKind.Stone, 1);
+        citizen.WithSkill(Skill.Exploring, Task("expedition").SkillLevel).Carry(ResourceKind.Stone, 1);
 
         var error = Assert.Throws<GameRuleException>(() =>
             CycleEngine.Start(citizen, Task("expedition"), WorkContext.For(village), Now));
@@ -363,21 +381,36 @@ public class CycleEngineTests
     }
 
     [Fact]
-    public void EveryStat_HasFullExperienceTaskAtEveryLevel()
+    public void CraftsWithMasterWork_HaveFullExperienceTaskAtEveryLevel()
     {
-        foreach (var stat in Enum.GetValues<Stat>())
-        {
-            var requirements = GameCatalog.Tasks
-                .Where(t => t.Primary == stat)
-                .Select(t => t.TierRequirement)
-                .ToHashSet();
+        var available = GameCatalog.Tasks.Where(t => t.Effect != TaskEffect.NotAvailableYet).ToList();
+        var crafts = available.Where(t => t.SkillLevel == GameCatalog.MasterSkill).Select(t => t.Skill).Distinct().ToList();
+        Assert.NotEmpty(crafts);
 
-            for (var level = 1; level <= GameRules.StatMaximum; level++)
+        foreach (var skill in crafts)
+        {
+            var requirements = available.Where(t => t.Skill == skill).Select(t => t.SkillLevel).ToHashSet();
+            for (var level = 0; level < GameRules.SkillMaximum; level++)
             {
                 Assert.True(
                     requirements.Any(r => r <= level && Progression.ChallengeMultiplier(level, r) == 1.0),
-                    $"{stat} has no full-experience task at level {level}.");
+                    $"{skill} has no full-experience task at level {level}.");
             }
         }
+    }
+
+    [Fact]
+    public void FarTooEasyWork_TeachesLittle()
+    {
+        var village = NewVillage();
+        var novice = NewCitizen(village);
+        var woodcutter = NewCitizen(village).WithSkill(Skill.Woodcutting, GameRules.ChallengeThreshold + 1);
+
+        CycleEngine.Start(novice, Task("chop-wood"), WorkContext.For(village), Now);
+        CycleEngine.Start(woodcutter, Task("chop-wood"), WorkContext.For(village), Now);
+
+        var full = Finish(novice, WorkContext.For(village)).PrimaryExperience;
+        var penalized = Finish(woodcutter, WorkContext.For(village)).PrimaryExperience;
+        Assert.Equal(YieldMath.Whole(full * GameRules.ChallengePenalty), penalized);
     }
 }

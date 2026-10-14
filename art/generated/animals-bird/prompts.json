@@ -1,0 +1,37 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-bird-frame-1",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE extremely tiny pixel-art brown bird with orange-red breast, bullfinch-like, facing RIGHT. Cozy medieval village RPG sprite matching Kenney Tiny Town/Tiny Farm supplied sheets. Transparent 16x16 logical canvas enlarged nearest-neighbor. Body only SIX logical pixels long, centered, ample transparent margin. Brown head/back/tail, orange-red breast, tiny tan beak, one dark brown pixel eye. Minimal chunky solid squares, only two brown shades and single orange-red accent. No gradients, textures, soft edges, antialiasing, shadow, scenery, branch, letters or extra birds. Keep bird body same position and size in every pose. Perched pose with wings folded against body, two tiny feet below.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-bird-frame-2",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE extremely tiny pixel-art brown bird with orange-red breast, bullfinch-like, facing RIGHT. Cozy medieval village RPG sprite matching Kenney Tiny Town/Tiny Farm supplied sheets. Transparent 16x16 logical canvas enlarged nearest-neighbor. Body only SIX logical pixels long, centered, ample transparent margin. Brown head/back/tail, orange-red breast, tiny tan beak, one dark brown pixel eye. Minimal chunky solid squares, only two brown shades and single orange-red accent. No gradients, textures, soft edges, antialiasing, shadow, scenery, branch, letters or extra birds. Keep bird body same position and size in every pose. Flying pose with wings raised UP above body, feet tucked. Third reference is this same bird. Preserve EXACT canvas dimensions, body size and body center placement; only change wings to the requested pose. Do not zoom or enlarge the bird.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png",
+        "W:/Pet-projects/Desertod/web/public/assets/generated/animals-bird/character-bird-frame-1-source.png"
+      ]
+    },
+    {
+      "name": "character-bird-frame-3",
+      "width": 16,
+      "height": 16,
+      "prompt": "ONE extremely tiny pixel-art brown bird with orange-red breast, bullfinch-like, facing RIGHT. Cozy medieval village RPG sprite matching Kenney Tiny Town/Tiny Farm supplied sheets. Transparent 16x16 logical canvas enlarged nearest-neighbor. Body only SIX logical pixels long, centered, ample transparent margin. Brown head/back/tail, orange-red breast, tiny tan beak, one dark brown pixel eye. Minimal chunky solid squares, only two brown shades and single orange-red accent. No gradients, textures, soft edges, antialiasing, shadow, scenery, branch, letters or extra birds. Keep bird body same position and size in every pose. Flying pose with wings lowered DOWN below body, feet tucked. Third reference is this same bird. Preserve EXACT canvas dimensions, body size and body center placement; only change wings to the requested pose. Do not zoom or enlarge the bird.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png",
+        "W:/Pet-projects/Desertod/web/public/assets/generated/animals-bird/character-bird-frame-1-source.png"
+      ]
+    }
+  ]
+}

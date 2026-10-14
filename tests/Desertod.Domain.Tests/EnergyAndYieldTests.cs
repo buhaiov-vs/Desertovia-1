@@ -5,18 +5,18 @@ namespace Desertod.Domain.Tests;
 public class EnergyAndYieldTests
 {
     [Theory]
-    [InlineData(1, 68)]
-    [InlineData(10, 140)]
+    [InlineData(1, 37)]
+    [InlineData(10, 46)]
     public void EnergyMaximum_DependsOnEndurance(int endurance, double expected) =>
         Assert.Equal(expected, Energy.Maximum(endurance));
 
     [Fact]
-    public void Energy_RegeneratesFromEmptyToFullInTwentyHours()
+    public void Energy_RegeneratesFromEmptyToFullInADay()
     {
         var start = DateTimeOffset.UnixEpoch;
 
-        Assert.Equal(34, Energy.Current(0, start, start.AddHours(10), 1), 6);
-        Assert.Equal(68, Energy.Current(0, start, start.AddHours(30), 1));
+        Assert.Equal(18.5, Energy.Current(0, start, start.AddHours(12), 1), 6);
+        Assert.Equal(37, Energy.Current(0, start, start.AddHours(30), 1));
     }
 
     [Theory]

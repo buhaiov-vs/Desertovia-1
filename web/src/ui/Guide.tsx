@@ -6,7 +6,7 @@ import { FoldHead } from './Hud'
 import type { UiKey } from '../i18n/en'
 import type { MenuTab } from './menuTabs'
 
-type Role = 'citizen' | 'governor'
+type Role = 'citizen' | 'tsar'
 
 interface Step {
   id: string
@@ -24,10 +24,10 @@ const STEPS: Record<Role, Step[]> = {
     { id: 'needs', text: 'guide.citizen.needs', action: 'guide.citizen.needsAction', tab: 'village' },
     { id: 'build', text: 'guide.citizen.build', action: 'guide.citizen.buildAction', tab: 'village' },
   ],
-  governor: [
-    { id: 'blueprint', text: 'guide.governor.blueprint', action: 'guide.governor.blueprintAction', tab: 'build' },
-    { id: 'invite', text: 'guide.governor.invite', action: 'guide.governor.inviteAction' },
-    { id: 'needs', text: 'guide.governor.needs', action: 'guide.governor.needsAction', tab: 'village' },
+  tsar: [
+    { id: 'blueprint', text: 'guide.tsar.blueprint', action: 'guide.tsar.blueprintAction', tab: 'build' },
+    { id: 'invite', text: 'guide.tsar.invite', action: 'guide.tsar.inviteAction' },
+    { id: 'needs', text: 'guide.tsar.needs', action: 'guide.tsar.needsAction', tab: 'village' },
   ],
 }
 
@@ -50,7 +50,7 @@ function load(role: Role): Progress {
 
 /** Steps the player has reached by playing; once reached a step stays done even if the state changes back. */
 function reached(role: Role, village: VillageState, citizen: Citizen | null | undefined, menuTab: MenuTab | null) {
-  if (role === 'governor') {
+  if (role === 'tsar') {
     return {
       blueprint: village.sites.length > 0 || village.structures.length > 0 || village.storages.length > 1,
       needs: menuTab === 'village',
@@ -68,7 +68,7 @@ function reached(role: Role, village: VillageState, citizen: Citizen | null | un
 /** First-session guide: one step at a time, detected from what the player actually does. */
 export function Guide({
   slug,
-  governor,
+  tsar,
   inviteCode,
   village,
   citizen,
@@ -77,7 +77,7 @@ export function Guide({
   onMenu,
 }: {
   slug: string
-  governor: boolean
+  tsar: boolean
   inviteCode: string | null
   village: VillageState
   citizen: Citizen | null | undefined
@@ -87,7 +87,7 @@ export function Guide({
   onMenu: (tab: MenuTab) => void
 }) {
   const { t } = useI18n()
-  const role: Role = governor ? 'governor' : 'citizen'
+  const role: Role = tsar ? 'tsar' : 'citizen'
   const [saved, setSaved] = useState<Progress>(() => load(role))
   const [copied, setCopied] = useState(false)
   const [collapsed, toggle] = useCollapsed('guide', false)

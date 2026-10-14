@@ -34,10 +34,10 @@ public enum QuestStatus
     Completed,
 }
 
-/// <summary>Who an objective is for: the Governor plans, citizens do the work.</summary>
+/// <summary>Who an objective is for: the rulers (the Tsar and the Governors) plan, citizens do the work.</summary>
 public enum QuestAudience
 {
-    Governor,
+    Rulers,
     Citizens,
 }
 

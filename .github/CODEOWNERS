@@ -1,0 +1,6 @@
+# Files that decide what runs on the server. With "Require review from Code Owners" in the main ruleset,
+# changes here need the owner's approval; everything else merges on passing checks.
+/deploy/ @buhaiov-vs
+/Dockerfile @buhaiov-vs
+/.dockerignore @buhaiov-vs
+/.github/ @buhaiov-vs

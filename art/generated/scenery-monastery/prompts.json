@@ -1,0 +1,26 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "building-monastery-church",
+      "width": 48,
+      "height": 64,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent RPG building sprite. Old white stone Orthodox church, arched door and narrow windows, a drum topped with a blue onion dome with small gold stars and a gold Orthodox cross. Entire building including cross visible. Style references Tiny Town and Tiny Farm: match their very simple flat pixel art, broad chunky clusters, limited muted palette and slightly overhead front-facing game view. Native size 48x64, matching 3:4 portrait proportions. No dramatic isometric angle. No tiny ornamental texture, gradients, glow, outline fringe, text, scenery, people or surrounding ground tile. Centered complete building with narrow transparent margin, subtle small base shadow."
+    },
+    {
+      "name": "building-monk-cell",
+      "width": 48,
+      "height": 48,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent RPG building sprite. Small whitewashed monk's cell with a dark wooden roof, a tiny arched door and one small window, a wooden cross over the door. Humble compact monastery house. Style references Tiny Town and Tiny Farm: match their very simple flat pixel art, broad chunky clusters, limited muted palette and slightly overhead front-facing game view. Native size 48x48, matching square proportions. No dramatic isometric angle. No tiny ornamental texture, gradients, glow, outline fringe, text, scenery, people or surrounding ground tile. Centered complete building with narrow transparent margin, subtle small base shadow."
+    }
+  ]
+}

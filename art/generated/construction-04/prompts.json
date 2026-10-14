@@ -1,0 +1,41 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-granary-1-ground",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-granary-preview.png",
+      "prompt": "Use case: precise-object-edit. Make construction stage 1 of this granary: Only four short survey stakes joined by thin string at ground level. No walls, stones, stilts, roof, grain or sacks. Keep footprint, camera, canvas 3:4 proportions and base anchors matching the finished reference. Preserve transparent empty space above short early stages. Do not recenter or magnify. Show all construction completed so far but none of later stages. Remove sacks, ramp and decorative props. Strict 48x64 logical pixel art enlarged with square pixels. Warm Kenney-like simple flat colors, three shades per material maximum; no gradients, antialiasing, halo, text, scenery or panels. Transparent outside structure and inside open areas."
+    },
+    {
+      "name": "construction-granary-2-foundation",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-granary-preview.png",
+      "prompt": "Use case: precise-object-edit. Make construction stage 2 of this granary: Only four squat grey stone stilts marking the foundation. No timber, walls, roof, steps or stored goods. Keep footprint, camera, canvas 3:4 proportions and base anchors matching the finished reference. Preserve transparent empty space above short early stages. Do not recenter or magnify. Show all construction completed so far but none of later stages. Remove sacks, ramp and decorative props. Strict 48x64 logical pixel art enlarged with square pixels. Warm Kenney-like simple flat colors, three shades per material maximum; no gradients, antialiasing, halo, text, scenery or panels. Transparent outside structure and inside open areas."
+    },
+    {
+      "name": "construction-granary-3-frame",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-granary-preview.png",
+      "prompt": "Use case: precise-object-edit. Make construction stage 3 of this granary: Four grey stone stilts supporting floor beams and vertical timber posts with connecting beams. Open empty structure, no walls or roof covering. Keep footprint, camera, canvas 3:4 proportions and base anchors matching the finished reference. Preserve transparent empty space above short early stages. Do not recenter or magnify. Show all construction completed so far but none of later stages. Remove sacks, ramp and decorative props. Strict 48x64 logical pixel art enlarged with square pixels. Warm Kenney-like simple flat colors, three shades per material maximum; no gradients, antialiasing, halo, text, scenery or panels. Transparent outside structure and inside open areas."
+    },
+    {
+      "name": "construction-granary-4-walls",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-granary-preview.png",
+      "prompt": "Use case: precise-object-edit. Make construction stage 4 of this granary: Stone stilts, floor beams and upright timber frame with horizontal log walls built halfway up, upper half open. No roof covering. Keep footprint, camera, canvas 3:4 proportions and base anchors matching the finished reference. Preserve transparent empty space above short early stages. Do not recenter or magnify. Show all construction completed so far but none of later stages. Remove sacks, ramp and decorative props. Strict 48x64 logical pixel art enlarged with square pixels. Warm Kenney-like simple flat colors, three shades per material maximum; no gradients, antialiasing, halo, text, scenery or panels. Transparent outside structure and inside open areas."
+    },
+    {
+      "name": "construction-granary-5-roof",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-granary-preview.png",
+      "prompt": "Use case: precise-object-edit. Make construction stage 5 of this granary: Stone stilts, floor and completed log walls supporting steep timber rafters, exactly one half of the roof covered with golden thatch and the other half open rafters. No stored goods. Keep footprint, camera, canvas 3:4 proportions and base anchors matching the finished reference. Preserve transparent empty space above short early stages. Do not recenter or magnify. Show all construction completed so far but none of later stages. Remove sacks, ramp and decorative props. Strict 48x64 logical pixel art enlarged with square pixels. Warm Kenney-like simple flat colors, three shades per material maximum; no gradients, antialiasing, halo, text, scenery or panels. Transparent outside structure and inside open areas."
+    }
+  ]
+}

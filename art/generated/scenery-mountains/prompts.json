@@ -1,0 +1,80 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate bare assets; edit matching mossy variants",
+  "samples": [
+    {
+      "name": "terrain-mountain-rock",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. ONE RPG pixel-art asset matching the simple flat, chunky pixel style of reference 1 Tiny Town and reference 2 Tiny Farm. No text, no gradients, no soft edges, no texture noise, no glow. Very limited muted gray-brown palette, large flat pixel clusters. Opaque square 16x16 logical-pixel seamless terrain tile, enlarged uniformly. Bare grey-brown mountain rock with a few cracks and darker patches, no grass. Flat top-down rocky ground filling entire canvas, not a boulder or mountain. Matching edges, sparse detail."
+    },
+    {
+      "name": "prop-mountain-peak-1",
+      "width": 32,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "transparent": true,
+      "prompt": "Use case: stylized-concept. ONE RPG pixel-art asset matching the simple flat, chunky pixel style of reference 1 Tiny Town and reference 2 Tiny Farm. No text, no gradients, no soft edges, no texture noise, no glow. Very limited muted gray-brown palette, large flat pixel clusters. Transparent square 32x32 logical-pixel prop, enlarged uniformly. One tall central jagged summit with low shoulders. Jagged grey rock peak filling the bottom of the canvas, broad rocky base reaching the bottom edge so neighboring peaks can overlap into a ridge. Upper corners transparent. Light faces on the LEFT, shadow faces on the RIGHT. Simplified stepped pixel silhouette, 4 flat rock colors, a few bold crevices. No snow, no moss, no trees, no surrounding terrain or backdrop. Consistent overhead RPG world-prop view."
+    },
+    {
+      "name": "prop-mountain-peak-2",
+      "width": 32,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "transparent": true,
+      "prompt": "Use case: stylized-concept. ONE RPG pixel-art asset matching the simple flat, chunky pixel style of reference 1 Tiny Town and reference 2 Tiny Farm. No text, no gradients, no soft edges, no texture noise, no glow. Very limited muted gray-brown palette, large flat pixel clusters. Transparent square 32x32 logical-pixel prop, enlarged uniformly. Two unequal jagged summits, tallest on the left. Jagged grey rock peak filling the bottom of the canvas, broad rocky base reaching the bottom edge so neighboring peaks can overlap into a ridge. Upper corners transparent. Light faces on the LEFT, shadow faces on the RIGHT. Simplified stepped pixel silhouette, 4 flat rock colors, a few bold crevices. No snow, no moss, no trees, no surrounding terrain or backdrop. Consistent overhead RPG world-prop view."
+    },
+    {
+      "name": "prop-mountain-peak-3",
+      "width": 32,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "transparent": true,
+      "prompt": "Use case: stylized-concept. ONE RPG pixel-art asset matching the simple flat, chunky pixel style of reference 1 Tiny Town and reference 2 Tiny Farm. No text, no gradients, no soft edges, no texture noise, no glow. Very limited muted gray-brown palette, large flat pixel clusters. Transparent square 32x32 logical-pixel prop, enlarged uniformly. One broad low asymmetric rocky peak with tallest point on the right. Jagged grey rock peak filling the bottom of the canvas, broad rocky base reaching the bottom edge so neighboring peaks can overlap into a ridge. Upper corners transparent. Light faces on the LEFT, shadow faces on the RIGHT. Simplified stepped pixel silhouette, 4 flat rock colors, a few bold crevices. No snow, no moss, no trees, no surrounding terrain or backdrop. Consistent overhead RPG world-prop view."
+    },
+    {
+      "name": "prop-mountain-peak-1-mossy",
+      "width": 32,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/scenery-mountains/prop-mountain-peak-1-source.png"
+      ],
+      "transparent": true,
+      "prompt": "Edit target image 1 into its mossy variant. Preserve the exact rock silhouette, canvas placement, broad bottom-edge base, peak heights, existing rock faces and left-lit/right-shadow lighting. Add several flat muted green moss patches on the slopes, mainly lower ledges; leave most rock visible. Same simple chunky pixel art; no bushes, trees, flowers, grass outside the silhouette, no new rocks. Preserve the transparent background. Do not change dimensions or crop. Intended native size 32x32. Moss should be broad readable clusters in two muted greens, not fine texture. No glow, no extra shadow, no text."
+    },
+    {
+      "name": "prop-mountain-peak-2-mossy",
+      "width": 32,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/scenery-mountains/prop-mountain-peak-2-source.png"
+      ],
+      "transparent": true,
+      "prompt": "Edit target image 1 into its mossy variant. Preserve the exact rock silhouette, canvas placement, broad bottom-edge base, peak heights, existing rock faces and left-lit/right-shadow lighting. Add several flat muted green moss patches on the slopes, mainly lower ledges; leave most rock visible. Same simple chunky pixel art; no bushes, trees, flowers, grass outside the silhouette, no new rocks. Preserve the transparent background. Do not change dimensions or crop. Intended native size 32x32. Moss should be broad readable clusters in two muted greens, not fine texture. No glow, no extra shadow, no text."
+    },
+    {
+      "name": "prop-mountain-peak-3-mossy",
+      "width": 32,
+      "height": 32,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/scenery-mountains/prop-mountain-peak-3-source.png"
+      ],
+      "transparent": true,
+      "prompt": "Edit target image 1 into its mossy variant. Preserve the exact rock silhouette, canvas placement, broad bottom-edge base, peak heights, existing rock faces and left-lit/right-shadow lighting. Add several flat muted green moss patches on the slopes, mainly lower ledges; leave most rock visible. Same simple chunky pixel art; no bushes, trees, flowers, grass outside the silhouette, no new rocks. Preserve the transparent background. Do not change dimensions or crop. Intended native size 32x32. Moss should be broad readable clusters in two muted greens, not fine texture. No glow, no extra shadow, no text."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-cabbage-sprout",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Input images are STYLE references only. Single sprite for cozy medieval Slavic village farming game. Three tiny round pale-green cabbage leaves at center, occupying only 5x4 logical pixels; tiny seedling, no cabbage head. Strict 16x16 logical pixel grid enlarged to square canvas. Every logical pixel is one large solid square. Kenney Tiny Farm simplicity. Only three flat pale/sage green shades, light top-left, simple chunky silhouette. Top-down three-quarter south-facing view. Transparent background and gaps, no ground, shadow, pot or scenery. No gradients, antialiasing, haze, neon outlines, tiny veins, texture, text or extra subjects."
+    },
+    {
+      "name": "prop-cabbage-young",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Input images are STYLE references only. Single sprite for cozy medieval Slavic village farming game. Loose open rosette of pale-green cabbage leaves, centered, 8x7 logical pixels. Distinct open leaves, no tight round head yet. Strict 16x16 logical pixel grid enlarged to square canvas. Every logical pixel is one large solid square. Kenney Tiny Farm simplicity. Only three flat pale/sage green shades, light top-left, simple chunky silhouette. Top-down three-quarter south-facing view. Transparent background and gaps, no ground, shadow, pot or scenery. No gradients, antialiasing, haze, neon outlines, tiny veins, texture, text or extra subjects."
+    },
+    {
+      "name": "prop-cabbage-ripe",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Input images are STYLE references only. Single sprite for cozy medieval Slavic village farming game. Big round tight cabbage head with outer leaves spread around it, centered, 12x11 logical pixels. Closed pale-green head and darker outer leaves. Strict 16x16 logical pixel grid enlarged to square canvas. Every logical pixel is one large solid square. Kenney Tiny Farm simplicity. Only three flat pale/sage green shades, light top-left, simple chunky silhouette. Top-down three-quarter south-facing view. Transparent background and gaps, no ground, shadow, pot or scenery. No gradients, antialiasing, haze, neon outlines, tiny veins, texture, text or extra subjects."
+    },
+    {
+      "name": "icon-cabbage-harvested",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Input images are STYLE references only. Single sprite for cozy medieval Slavic village farming game. One round pale-green harvested cabbage head with tightly folded leaves. Centered, 14x13 logical pixels, one pixel margin. No stem or roots. Strict 16x16 logical pixel grid enlarged to square canvas. Every logical pixel is one large solid square. Kenney Tiny Farm simplicity. Only three flat pale/sage green shades, light top-left, simple chunky silhouette. Top-down three-quarter south-facing view. Transparent background and gaps, no ground, shadow, pot or scenery. No gradients, antialiasing, haze, neon outlines, tiny veins, texture, text or extra subjects."
+    }
+  ]
+}

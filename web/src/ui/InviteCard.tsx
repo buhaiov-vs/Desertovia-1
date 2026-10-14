@@ -3,7 +3,7 @@ import { inviteLink, type VillageState } from '../api'
 import { useI18n } from '../i18n'
 import type { UiKey } from '../i18n/en'
 
-/** The Governor's invite: a link for open villages, a link and a replaceable code for private ones. */
+/** The Tsar's invite: a link for open villages, a link and a replaceable code for private ones. */
 export function InviteCard({
   village,
   inviteCode,

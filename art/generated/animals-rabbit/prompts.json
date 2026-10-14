@@ -1,0 +1,37 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-rabbit-frame-1",
+      "width": 16,
+      "height": 16,
+      "prompt": "Single brown wild hare game sprite, facing RIGHT, for a cozy top-down medieval village. Match minimal chunky pixel art of supplied Kenney Tiny Town/Tiny Farm sheets. Transparent 16x16 logical canvas enlarged with nearest neighbor: each logical pixel is a big solid square, at most 16 squares across entire canvas. Hare body about 9 logical pixels long, long ears, small white tail on LEFT rump, one dark brown square eye, tan belly, two flat brown shades maximum. No texture, gradients, antialiasing, ground, shadows, text or extra subjects. Keep whole animal inside canvas. Sitting on haunches, feet at bottom row. Upright ears.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-rabbit-frame-2",
+      "width": 16,
+      "height": 16,
+      "prompt": "Single brown wild hare game sprite, facing RIGHT, for a cozy top-down medieval village. Match minimal chunky pixel art of supplied Kenney Tiny Town/Tiny Farm sheets. Transparent 16x16 logical canvas enlarged with nearest neighbor: each logical pixel is a big solid square, at most 16 squares across entire canvas. Hare body about 9 logical pixels long, long ears, small white tail on LEFT rump, one dark brown square eye, tan belly, two flat brown shades maximum. No texture, gradients, antialiasing, ground, shadows, text or extra subjects. Keep whole animal inside canvas. Mid-hop launching forward right, elongated body, hind legs pushing back left, forelegs reaching right, ears angled slightly back. Feet near bottom row. Third reference is this same hare in its sitting pose: preserve its identity and colors, change only pose as requested.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png",
+        "W:/Pet-projects/Desertod/web/public/assets/generated/animals-rabbit/character-rabbit-frame-1-source.png"
+      ]
+    },
+    {
+      "name": "character-rabbit-frame-3",
+      "width": 16,
+      "height": 16,
+      "prompt": "Single brown wild hare game sprite, facing RIGHT, for a cozy top-down medieval village. Match minimal chunky pixel art of supplied Kenney Tiny Town/Tiny Farm sheets. Transparent 16x16 logical canvas enlarged with nearest neighbor: each logical pixel is a big solid square, at most 16 squares across entire canvas. Hare body about 9 logical pixels long, long ears, small white tail on LEFT rump, one dark brown square eye, tan belly, two flat brown shades maximum. No texture, gradients, antialiasing, ground, shadows, text or extra subjects. Keep whole animal inside canvas. Mid-hop landing, forefeet reaching down toward bottom row, hind legs tucked under body, long ears angled back. Same animal proportions and colors. Third reference is this same hare in its sitting pose: preserve its identity and colors, change only pose as requested.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png",
+        "W:/Pet-projects/Desertod/web/public/assets/generated/animals-rabbit/character-rabbit-frame-1-source.png"
+      ]
+    }
+  ]
+}

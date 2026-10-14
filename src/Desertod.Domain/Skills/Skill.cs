@@ -24,6 +24,7 @@ public enum Skill
     Trading,
     Guarding,
     Weatherlore,
+    Weaponcraft,
 }
 
 public sealed class SkillProgress

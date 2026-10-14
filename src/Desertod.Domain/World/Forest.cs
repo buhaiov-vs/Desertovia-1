@@ -130,7 +130,7 @@ public static class Forest
         village.Trees.Where(tree => area.Overlaps(tree.Tile) && Stands(village, tree, now));
 
     /// <summary>
-    /// Trees standing where the Governor plans a building stay standing until its builders fell them,
+    /// Trees standing where a building is planned stay standing until its builders fell them,
     /// so regrown stumps stop counting as felled. Returns how many trees stand there.
     /// </summary>
     public static int Hold(Village village, TileArea area, DateTimeOffset now)

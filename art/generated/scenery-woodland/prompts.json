@@ -1,0 +1,36 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "prop-tree-stump",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent RPG world prop. Low cut tree stump with light growth rings on the top and a few wood chips around it. Brown bark, light tan exposed cut surface. Reference images are Kenney Tiny Town and Tiny Farm style guides; match their very simple low resolution pixel art. Intended 16x16 logical pixels enlarged, square canvas, full object centered with narrow transparent margin. Broad flat pixel clusters, few muted colors, no gradients or fine texture. Readable at tiny native size. No glow, no colored outline fringe, no text, no background scene or ground tile. Slight overhead view matching references."
+    },
+    {
+      "name": "prop-sapling",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent RPG world prop. Tiny sapling with a thin stem and exactly three small green leaves next to an old low cut stump. The new shoot and old stump both clearly visible. Reference images are Kenney Tiny Town and Tiny Farm style guides; match their very simple low resolution pixel art. Intended 16x16 logical pixels enlarged, square canvas, full object centered with narrow transparent margin. Broad flat pixel clusters, few muted colors, no gradients or fine texture. Readable at tiny native size. No glow, no colored outline fringe, no text, no background scene or ground tile. Slight overhead view matching references."
+    },
+    {
+      "name": "prop-berry-bush",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "ONE transparent RPG world prop. Round low green bush dotted with bright red berries, small subdued ground shadow. No visible tree trunk, no grass mound. Reference images are Kenney Tiny Town and Tiny Farm style guides; match their very simple low resolution pixel art. Intended 16x16 logical pixels enlarged, square canvas, full object centered with narrow transparent margin. Broad flat pixel clusters, few muted colors, no gradients or fine texture. Readable at tiny native size. No glow, no colored outline fringe, no text, no background scene or ground tile. Slight overhead view matching references."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-bridge-deck",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are style guides. Single modular 16x16 world prop for medieval Slavic village. Bridge deck of thick planks running TOP TO BOTTOM (across deck), seamless left and right. Four broad vertical planks fill the central band, reaching left and right edges, transparent above/below. No railing or poles. Square canvas, strict 16x16 logical pixel grid enlarged, each pixel a large solid square. Extremely simple Kenney Tiny Town shapes, three flat warm brown colors. Railing top horizontal beam centered at logical row 5 and supports reach row 14. South-facing top-down three-quarter view, not isometric. Transparent outside wood, no water, ground, shadows or scenery. No gradients, haze, glow, antialiasing, neon fringes, fine texture, text or extra panels."
+    },
+    {
+      "name": "prop-bridge-railing-left",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are style guides. Single modular 16x16 world prop for medieval Slavic village. Start of wooden bridge railing: carved end post on LEFT and horizontal top rail running out to RIGHT edge. Transparent beneath rail. Square canvas, strict 16x16 logical pixel grid enlarged, each pixel a large solid square. Extremely simple Kenney Tiny Town shapes, three flat warm brown colors. Railing top horizontal beam centered at logical row 5 and supports reach row 14. South-facing top-down three-quarter view, not isometric. Transparent outside wood, no water, ground, shadows or scenery. No gradients, haze, glow, antialiasing, neon fringes, fine texture, text or extra panels."
+    },
+    {
+      "name": "prop-bridge-railing-middle",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are style guides. Single modular 16x16 world prop for medieval Slavic village. Wooden bridge railing section: horizontal top rail and exactly two balusters, seamless left and right. Top rail reaches both horizontal edges at same height. Transparent gaps beneath. Square canvas, strict 16x16 logical pixel grid enlarged, each pixel a large solid square. Extremely simple Kenney Tiny Town shapes, three flat warm brown colors. Railing top horizontal beam centered at logical row 5 and supports reach row 14. South-facing top-down three-quarter view, not isometric. Transparent outside wood, no water, ground, shadows or scenery. No gradients, haze, glow, antialiasing, neon fringes, fine texture, text or extra panels."
+    },
+    {
+      "name": "prop-bridge-railing-right",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are style guides. Single modular 16x16 world prop for medieval Slavic village. End of wooden bridge railing: horizontal top rail coming from LEFT edge to a carved end post on RIGHT. Transparent beneath rail. Square canvas, strict 16x16 logical pixel grid enlarged, each pixel a large solid square. Extremely simple Kenney Tiny Town shapes, three flat warm brown colors. Railing top horizontal beam centered at logical row 5 and supports reach row 14. South-facing top-down three-quarter view, not isometric. Transparent outside wood, no water, ground, shadows or scenery. No gradients, haze, glow, antialiasing, neon fringes, fine texture, text or extra panels."
+    }
+  ]
+}

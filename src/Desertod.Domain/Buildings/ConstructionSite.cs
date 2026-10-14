@@ -1,6 +1,6 @@
 namespace Desertod.Domain.Buildings;
 
-/// <summary>A blueprint the Governor placed. Citizens build it stage by stage; nothing happens on its own.</summary>
+/// <summary>A blueprint the Tsar or a Governor placed. Citizens build it stage by stage; nothing happens on its own.</summary>
 public sealed class ConstructionSite
 {
     public BuildingKind Kind { get; set; }
@@ -154,4 +154,7 @@ public sealed class Structure
     public BuildingKind Kind { get; set; }
     public required string PlotId { get; set; }
     public DateTimeOffset BuiltAt { get; set; }
+
+    /// <summary>Harm done by raiders, 0 to <see cref="Combat.CombatRules.MaximumDamage"/>; repaired by citizens.</summary>
+    public int Damage { get; set; }
 }

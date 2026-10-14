@@ -6,6 +6,7 @@ packages:
   - curl
   - unattended-upgrades
   - fail2ban
+  - git
 
 users:
   - name: deploy

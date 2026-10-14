@@ -1,0 +1,49 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-citizen-male-1-walk-frame-1",
+      "width": 16,
+      "height": 16,
+      "prompt": "Create ONE frame of south-facing walking animation of EXACT young male peasant in first image: same short hair, face, belted kosovorotka, trousers and bast shoes. Other two references are Kenney style guides. Transparent background, strict 16x16 logical pixel sprite enlarged nearest-neighbor, about 14 pixels tall. Preserve canvas dimensions, head size, torso size and horizontal center between frames. Simplify to chunky flat squares. Exact skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c. No gradients, texture, antialiasing, shadows, scenery, text, props or additional people. Contact A: screen-left leg forward toward viewer, left foot lower; screen-right leg back, foot higher. Screen-right arm swings forward, left arm back. Head at normal height.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-1-walk-frame-2",
+      "width": 16,
+      "height": 16,
+      "prompt": "Create ONE frame of south-facing walking animation of EXACT young male peasant in first image: same short hair, face, belted kosovorotka, trousers and bast shoes. Other two references are Kenney style guides. Transparent background, strict 16x16 logical pixel sprite enlarged nearest-neighbor, about 14 pixels tall. Preserve canvas dimensions, head size, torso size and horizontal center between frames. Simplify to chunky flat squares. Exact skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c. No gradients, texture, antialiasing, shadows, scenery, text, props or additional people. Passing A: screen-right knee passing forward, feet close under hips; arms near sides. Head and torso ONE logical pixel higher than contact frame.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-1-walk-frame-3",
+      "width": 16,
+      "height": 16,
+      "prompt": "Create ONE frame of south-facing walking animation of EXACT young male peasant in first image: same short hair, face, belted kosovorotka, trousers and bast shoes. Other two references are Kenney style guides. Transparent background, strict 16x16 logical pixel sprite enlarged nearest-neighbor, about 14 pixels tall. Preserve canvas dimensions, head size, torso size and horizontal center between frames. Simplify to chunky flat squares. Exact skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c. No gradients, texture, antialiasing, shadows, scenery, text, props or additional people. Contact B: screen-right leg forward toward viewer, right foot lower; screen-left leg back, foot higher. Screen-left arm swings forward, right arm back. Head at normal height.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-1-walk-frame-4",
+      "width": 16,
+      "height": 16,
+      "prompt": "Create ONE frame of south-facing walking animation of EXACT young male peasant in first image: same short hair, face, belted kosovorotka, trousers and bast shoes. Other two references are Kenney style guides. Transparent background, strict 16x16 logical pixel sprite enlarged nearest-neighbor, about 14 pixels tall. Preserve canvas dimensions, head size, torso size and horizontal center between frames. Simplify to chunky flat squares. Exact skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c. No gradients, texture, antialiasing, shadows, scenery, text, props or additional people. Passing B: screen-left knee passing forward, feet close under hips; arms near sides in opposite swing to passing A. Head and torso ONE logical pixel higher than contact frame.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

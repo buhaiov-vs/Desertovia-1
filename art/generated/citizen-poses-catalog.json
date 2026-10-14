@@ -1,0 +1,1204 @@
+[
+  {
+    "name": "character-citizen-male-1-walk-frame-1",
+    "style": "male-1",
+    "action": "walk",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-passing-pose-correction",
+    "file": "citizen-walk-male-1/character-citizen-male-1-walk-frame-1-v2.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-walk-frame-2",
+    "style": "male-1",
+    "action": "walk",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-passing-pose-correction",
+    "file": "citizen-walk-male-1/character-citizen-male-1-walk-frame-2-v2.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-walk-frame-3",
+    "style": "male-1",
+    "action": "walk",
+    "frame": 3,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-passing-pose-correction",
+    "file": "citizen-walk-male-1/character-citizen-male-1-walk-frame-3-v2.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-walk-frame-4",
+    "style": "male-1",
+    "action": "walk",
+    "frame": 4,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-passing-pose-correction",
+    "file": "citizen-walk-male-1/character-citizen-male-1-walk-frame-4-v2.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-chop-frame-1",
+    "style": "male-1",
+    "action": "chop",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-alignment-correction",
+    "file": "citizen-chop-male-1/character-citizen-male-1-chop-frame-1.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-chop-frame-2",
+    "style": "male-1",
+    "action": "chop",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-alignment-correction",
+    "file": "citizen-chop-male-1/character-citizen-male-1-chop-frame-2.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-dig-frame-1",
+    "style": "male-1",
+    "action": "dig",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-alignment-correction",
+    "file": "citizen-dig-male-1/character-citizen-male-1-dig-frame-1.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-dig-frame-2",
+    "style": "male-1",
+    "action": "dig",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-alignment-correction",
+    "file": "citizen-dig-male-1/character-citizen-male-1-dig-frame-2.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-carry-frame-1",
+    "style": "male-1",
+    "action": "carry",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-alignment-audit",
+    "file": "citizen-carry-male-1/character-citizen-male-1-carry-frame-1.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-carry-frame-2",
+    "style": "male-1",
+    "action": "carry",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-alignment-audit",
+    "file": "citizen-carry-male-1/character-citizen-male-1-carry-frame-2.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-sow-frame-1",
+    "style": "male-1",
+    "action": "sow",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-alignment-correction",
+    "file": "citizen-sow-male-1/character-citizen-male-1-sow-frame-1.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-sow-frame-2",
+    "style": "male-1",
+    "action": "sow",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "generated-awaiting-palette-and-alignment-correction",
+    "file": "citizen-sow-male-1/character-citizen-male-1-sow-frame-2.png",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-fish-frame-1",
+    "style": "male-1",
+    "action": "fish",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-fish-frame-2",
+    "style": "male-1",
+    "action": "fish",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-build-frame-1",
+    "style": "male-1",
+    "action": "build",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-build-frame-2",
+    "style": "male-1",
+    "action": "build",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-1-asleep-frame-1",
+    "style": "male-1",
+    "action": "asleep",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-walk-frame-1",
+    "style": "male-2",
+    "action": "walk",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-walk-frame-2",
+    "style": "male-2",
+    "action": "walk",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-walk-frame-3",
+    "style": "male-2",
+    "action": "walk",
+    "frame": 3,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-walk-frame-4",
+    "style": "male-2",
+    "action": "walk",
+    "frame": 4,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-chop-frame-1",
+    "style": "male-2",
+    "action": "chop",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-chop-frame-2",
+    "style": "male-2",
+    "action": "chop",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-dig-frame-1",
+    "style": "male-2",
+    "action": "dig",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-dig-frame-2",
+    "style": "male-2",
+    "action": "dig",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-carry-frame-1",
+    "style": "male-2",
+    "action": "carry",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-carry-frame-2",
+    "style": "male-2",
+    "action": "carry",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-sow-frame-1",
+    "style": "male-2",
+    "action": "sow",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-sow-frame-2",
+    "style": "male-2",
+    "action": "sow",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-fish-frame-1",
+    "style": "male-2",
+    "action": "fish",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-fish-frame-2",
+    "style": "male-2",
+    "action": "fish",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-build-frame-1",
+    "style": "male-2",
+    "action": "build",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-build-frame-2",
+    "style": "male-2",
+    "action": "build",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-2-asleep-frame-1",
+    "style": "male-2",
+    "action": "asleep",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-walk-frame-1",
+    "style": "male-3",
+    "action": "walk",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-walk-frame-2",
+    "style": "male-3",
+    "action": "walk",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-walk-frame-3",
+    "style": "male-3",
+    "action": "walk",
+    "frame": 3,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-walk-frame-4",
+    "style": "male-3",
+    "action": "walk",
+    "frame": 4,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-chop-frame-1",
+    "style": "male-3",
+    "action": "chop",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-chop-frame-2",
+    "style": "male-3",
+    "action": "chop",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-dig-frame-1",
+    "style": "male-3",
+    "action": "dig",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-dig-frame-2",
+    "style": "male-3",
+    "action": "dig",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-carry-frame-1",
+    "style": "male-3",
+    "action": "carry",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-carry-frame-2",
+    "style": "male-3",
+    "action": "carry",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-sow-frame-1",
+    "style": "male-3",
+    "action": "sow",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-sow-frame-2",
+    "style": "male-3",
+    "action": "sow",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-fish-frame-1",
+    "style": "male-3",
+    "action": "fish",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-fish-frame-2",
+    "style": "male-3",
+    "action": "fish",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-build-frame-1",
+    "style": "male-3",
+    "action": "build",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-build-frame-2",
+    "style": "male-3",
+    "action": "build",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-3-asleep-frame-1",
+    "style": "male-3",
+    "action": "asleep",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-walk-frame-1",
+    "style": "male-4",
+    "action": "walk",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-walk-frame-2",
+    "style": "male-4",
+    "action": "walk",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-walk-frame-3",
+    "style": "male-4",
+    "action": "walk",
+    "frame": 3,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-walk-frame-4",
+    "style": "male-4",
+    "action": "walk",
+    "frame": 4,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-chop-frame-1",
+    "style": "male-4",
+    "action": "chop",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-chop-frame-2",
+    "style": "male-4",
+    "action": "chop",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-dig-frame-1",
+    "style": "male-4",
+    "action": "dig",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-dig-frame-2",
+    "style": "male-4",
+    "action": "dig",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-carry-frame-1",
+    "style": "male-4",
+    "action": "carry",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-carry-frame-2",
+    "style": "male-4",
+    "action": "carry",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-sow-frame-1",
+    "style": "male-4",
+    "action": "sow",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-sow-frame-2",
+    "style": "male-4",
+    "action": "sow",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-fish-frame-1",
+    "style": "male-4",
+    "action": "fish",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-fish-frame-2",
+    "style": "male-4",
+    "action": "fish",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-build-frame-1",
+    "style": "male-4",
+    "action": "build",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-build-frame-2",
+    "style": "male-4",
+    "action": "build",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-4-asleep-frame-1",
+    "style": "male-4",
+    "action": "asleep",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-walk-frame-1",
+    "style": "male-5",
+    "action": "walk",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-walk-frame-2",
+    "style": "male-5",
+    "action": "walk",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-walk-frame-3",
+    "style": "male-5",
+    "action": "walk",
+    "frame": 3,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-walk-frame-4",
+    "style": "male-5",
+    "action": "walk",
+    "frame": 4,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-chop-frame-1",
+    "style": "male-5",
+    "action": "chop",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-chop-frame-2",
+    "style": "male-5",
+    "action": "chop",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-dig-frame-1",
+    "style": "male-5",
+    "action": "dig",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-dig-frame-2",
+    "style": "male-5",
+    "action": "dig",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-carry-frame-1",
+    "style": "male-5",
+    "action": "carry",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-carry-frame-2",
+    "style": "male-5",
+    "action": "carry",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-sow-frame-1",
+    "style": "male-5",
+    "action": "sow",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-sow-frame-2",
+    "style": "male-5",
+    "action": "sow",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-fish-frame-1",
+    "style": "male-5",
+    "action": "fish",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-fish-frame-2",
+    "style": "male-5",
+    "action": "fish",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-build-frame-1",
+    "style": "male-5",
+    "action": "build",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-build-frame-2",
+    "style": "male-5",
+    "action": "build",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-male-5-asleep-frame-1",
+    "style": "male-5",
+    "action": "asleep",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-walk-frame-1",
+    "style": "female-1",
+    "action": "walk",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-walk-frame-2",
+    "style": "female-1",
+    "action": "walk",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-walk-frame-3",
+    "style": "female-1",
+    "action": "walk",
+    "frame": 3,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-walk-frame-4",
+    "style": "female-1",
+    "action": "walk",
+    "frame": 4,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-chop-frame-1",
+    "style": "female-1",
+    "action": "chop",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-chop-frame-2",
+    "style": "female-1",
+    "action": "chop",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-dig-frame-1",
+    "style": "female-1",
+    "action": "dig",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-dig-frame-2",
+    "style": "female-1",
+    "action": "dig",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-carry-frame-1",
+    "style": "female-1",
+    "action": "carry",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-carry-frame-2",
+    "style": "female-1",
+    "action": "carry",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-sow-frame-1",
+    "style": "female-1",
+    "action": "sow",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-sow-frame-2",
+    "style": "female-1",
+    "action": "sow",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-fish-frame-1",
+    "style": "female-1",
+    "action": "fish",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-fish-frame-2",
+    "style": "female-1",
+    "action": "fish",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-build-frame-1",
+    "style": "female-1",
+    "action": "build",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-build-frame-2",
+    "style": "female-1",
+    "action": "build",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-1-asleep-frame-1",
+    "style": "female-1",
+    "action": "asleep",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-walk-frame-1",
+    "style": "female-2",
+    "action": "walk",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-walk-frame-2",
+    "style": "female-2",
+    "action": "walk",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-walk-frame-3",
+    "style": "female-2",
+    "action": "walk",
+    "frame": 3,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-walk-frame-4",
+    "style": "female-2",
+    "action": "walk",
+    "frame": 4,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-chop-frame-1",
+    "style": "female-2",
+    "action": "chop",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-chop-frame-2",
+    "style": "female-2",
+    "action": "chop",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-dig-frame-1",
+    "style": "female-2",
+    "action": "dig",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-dig-frame-2",
+    "style": "female-2",
+    "action": "dig",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-carry-frame-1",
+    "style": "female-2",
+    "action": "carry",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-carry-frame-2",
+    "style": "female-2",
+    "action": "carry",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-sow-frame-1",
+    "style": "female-2",
+    "action": "sow",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-sow-frame-2",
+    "style": "female-2",
+    "action": "sow",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-fish-frame-1",
+    "style": "female-2",
+    "action": "fish",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-fish-frame-2",
+    "style": "female-2",
+    "action": "fish",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-build-frame-1",
+    "style": "female-2",
+    "action": "build",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-build-frame-2",
+    "style": "female-2",
+    "action": "build",
+    "frame": 2,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  },
+  {
+    "name": "character-citizen-female-2-asleep-frame-1",
+    "style": "female-2",
+    "action": "asleep",
+    "frame": 1,
+    "width": 16,
+    "height": 16,
+    "status": "pending",
+    "deferredByUser": true
+  }
+]

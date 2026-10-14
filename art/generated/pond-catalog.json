@@ -1,0 +1,290 @@
+[
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-0000",
+    "mask": 0,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "grass",
+      "NE": "grass",
+      "SE": "grass",
+      "SW": "grass"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 0. Exact corner materials: NW=grass, NE=grass, SE=grass, SW=grass. Entire tile plain meadow grass with two tiny dark grass specks. No water or sand. No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-0000.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-0001",
+    "mask": 1,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "water",
+      "NE": "grass",
+      "SE": "grass",
+      "SW": "grass"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 1. Exact corner materials: NW=water, NE=grass, SE=grass, SW=grass. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-0001.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-0010",
+    "mask": 2,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "grass",
+      "NE": "water",
+      "SE": "grass",
+      "SW": "grass"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 2. Exact corner materials: NW=grass, NE=water, SE=grass, SW=grass. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-0010.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-0011",
+    "mask": 3,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "water",
+      "NE": "water",
+      "SE": "grass",
+      "SW": "grass"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 3. Exact corner materials: NW=water, NE=water, SE=grass, SW=grass. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-0011.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-0100",
+    "mask": 4,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "grass",
+      "NE": "grass",
+      "SE": "water",
+      "SW": "grass"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 4. Exact corner materials: NW=grass, NE=grass, SE=water, SW=grass. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-0100.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-0101",
+    "mask": 5,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "water",
+      "NE": "grass",
+      "SE": "water",
+      "SW": "grass"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 5. Exact corner materials: NW=water, NE=grass, SE=water, SW=grass. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material. For diagonal water corners, keep the two water regions disconnected with grass connecting through the center. No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-0101.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-0110",
+    "mask": 6,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "grass",
+      "NE": "water",
+      "SE": "water",
+      "SW": "grass"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 6. Exact corner materials: NW=grass, NE=water, SE=water, SW=grass. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-0110.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-0111",
+    "mask": 7,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "water",
+      "NE": "water",
+      "SE": "water",
+      "SW": "grass"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 7. Exact corner materials: NW=water, NE=water, SE=water, SW=grass. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-0111.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-1000",
+    "mask": 8,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "grass",
+      "NE": "grass",
+      "SE": "grass",
+      "SW": "water"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 8. Exact corner materials: NW=grass, NE=grass, SE=grass, SW=water. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-1000.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-1001",
+    "mask": 9,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "water",
+      "NE": "grass",
+      "SE": "grass",
+      "SW": "water"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 9. Exact corner materials: NW=water, NE=grass, SE=grass, SW=water. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-1001.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-1010",
+    "mask": 10,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "grass",
+      "NE": "water",
+      "SE": "grass",
+      "SW": "water"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 10. Exact corner materials: NW=grass, NE=water, SE=grass, SW=water. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material. For diagonal water corners, keep the two water regions disconnected with grass connecting through the center. No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-1010.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-1011",
+    "mask": 11,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "water",
+      "NE": "water",
+      "SE": "grass",
+      "SW": "water"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 11. Exact corner materials: NW=water, NE=water, SE=grass, SW=water. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-1011.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-1100",
+    "mask": 12,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "grass",
+      "NE": "grass",
+      "SE": "water",
+      "SW": "water"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 12. Exact corner materials: NW=grass, NE=grass, SE=water, SW=water. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-1100.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-1101",
+    "mask": 13,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "water",
+      "NE": "grass",
+      "SE": "water",
+      "SW": "water"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 13. Exact corner materials: NW=water, NE=grass, SE=water, SW=water. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-1101.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-1110",
+    "mask": 14,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "grass",
+      "NE": "water",
+      "SE": "water",
+      "SW": "water"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 14. Exact corner materials: NW=grass, NE=water, SE=water, SW=water. Draw connected regions determined by these four corner materials, not four boxes. Any edge whose endpoints differ changes material exactly at its midpoint; matching endpoints have that material along the entire edge. Grass meets water with a narrow sandy rim and pale shallow-water line. Keep each corner a solid patch of its assigned material.  No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-1110.png",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "section": "8-scenery",
+    "kind": "terrain",
+    "name": "terrain-pond-shore-1111",
+    "mask": 15,
+    "bitOrder": "bit0=NW, bit1=NE, bit2=SE, bit3=SW; 1=water",
+    "corners": {
+      "NW": "water",
+      "NE": "water",
+      "SE": "water",
+      "SW": "water"
+    },
+    "prompt": "ONE square opaque game terrain tile. Style references: image 1 Tiny Town, image 2 Tiny Farm. Match their very simple flat pixel-art terrain. Design at exactly 16x16 logical pixels, uniformly enlarged. Large square pixel blocks only, absolutely no gradients, microtexture, lighting or antialiasing. Top-down, full bleed, no border, no text, no surrounding background. Palette: grass #78B85A, darker grass #579548, pond #5C9F9A, shallow #91C4B2, sand #CFB57C. Wang CORNER autotile mask 15. Exact corner materials: NW=water, NE=water, SE=water, SW=water. Entire tile plain pond water with one small ripple. No grass, sand or lily pad. No extra objects.",
+    "status": "generated-awaiting-final-style-and-seam-audit",
+    "file": "scenery-pond/terrain-pond-shore-1111.png",
+    "width": 16,
+    "height": 16
+  }
+]

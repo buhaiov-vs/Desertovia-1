@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using AspNet.Security.OAuth.Twitch;
+using Desertod.Api.Game;
 using Desertod.Infrastructure.Accounts;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Desertod.Api.Auth;
 
@@ -53,19 +55,31 @@ public static class AuthenticationSetup
                     PermitLimit = Math.Max(1, passwordOptions.AttemptsPerMinute),
                     Window = TimeSpan.FromMinutes(1),
                 }));
+            options.AddPolicy(ChatService.RateLimit, http => RateLimitPartition.GetSlidingWindowLimiter(
+                http.User.GetAccountId()?.ToString() ?? ClientAddress.Of(http) ?? "unknown",
+                _ => new SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromSeconds(10),
+                    SegmentsPerWindow = 5,
+                }));
             options.OnRejected = async (context, cancellationToken) =>
             {
                 var problems = context.HttpContext.RequestServices.GetRequiredService<IProblemDetailsService>();
+                var chat = context.HttpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName
+                           == ChatService.RateLimit;
                 var problem = new ProblemDetailsContext
                 {
                     HttpContext = context.HttpContext,
                     ProblemDetails =
                     {
                         Status = StatusCodes.Status429TooManyRequests,
-                        Detail = "Too many attempts. Wait a minute and try again.",
+                        Detail = chat
+                            ? "You are writing too fast. Wait a few seconds."
+                            : "Too many attempts. Wait a minute and try again.",
                     },
                 };
-                problem.ProblemDetails.Extensions["code"] = "auth.tooManyAttempts";
+                problem.ProblemDetails.Extensions["code"] = chat ? "chat.tooFast" : "auth.tooManyAttempts";
                 problem.ProblemDetails.Extensions["arguments"] = new Dictionary<string, object>();
                 await problems.TryWriteAsync(problem);
             };

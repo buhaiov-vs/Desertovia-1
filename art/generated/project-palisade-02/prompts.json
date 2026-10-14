@@ -1,0 +1,46 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-palisade-corner-south-west",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 modular world prop for medieval Slavic village. Palisade corner joining wall going UP and wall going RIGHT, with a thicker corner log at lower-left bend. Clear L footprint open to upper right. Top-down three-quarter south-facing view, not isometric. Logs stand upright, not sideways spikes. Strict 16x16 logical pixel grid enlarged to square canvas; every art pixel a large solid square. Very simple chunky Kenney Tiny Town style, three flat warm brown shades and beige rope. Top-left light. Fully transparent outside wall and gate post, no ground or shadow. No haze, glow, gradients, antialiasing, neon fringes, fine bark texture, text, labels or extra panels. Shape must read at native 16x16 size."
+    },
+    {
+      "name": "prop-palisade-end",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 modular world prop for medieval Slavic village. Palisade wall coming from LEFT canvas edge ending in one thick post on RIGHT. Sharpened upright logs bound with rope; no wall beyond right post. Top-down three-quarter south-facing view, not isometric. Logs stand upright, not sideways spikes. Strict 16x16 logical pixel grid enlarged to square canvas; every art pixel a large solid square. Very simple chunky Kenney Tiny Town style, three flat warm brown shades and beige rope. Top-left light. Fully transparent outside wall and gate post, no ground or shadow. No haze, glow, gradients, antialiasing, neon fringes, fine bark texture, text, labels or extra panels. Shape must read at native 16x16 size."
+    },
+    {
+      "name": "prop-palisade-gate-post-north",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 modular world prop for medieval Slavic village. Palisade wall coming from TOP canvas edge ending in a tall thick gate post with a carved top. Gate opening BELOW must remain empty transparent. North-south wall in map space. Top-down three-quarter south-facing view, not isometric. Logs stand upright, not sideways spikes. Strict 16x16 logical pixel grid enlarged to square canvas; every art pixel a large solid square. Very simple chunky Kenney Tiny Town style, three flat warm brown shades and beige rope. Top-left light. Fully transparent outside wall and gate post, no ground or shadow. No haze, glow, gradients, antialiasing, neon fringes, fine bark texture, text, labels or extra panels. Shape must read at native 16x16 size."
+    },
+    {
+      "name": "prop-palisade-gate-post-south",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 modular world prop for medieval Slavic village. Tall thick gate post with a carved top, palisade wall continuing DOWN to bottom canvas edge. Gate opening ABOVE must remain empty transparent. North-south wall in map space. Top-down three-quarter south-facing view, not isometric. Logs stand upright, not sideways spikes. Strict 16x16 logical pixel grid enlarged to square canvas; every art pixel a large solid square. Very simple chunky Kenney Tiny Town style, three flat warm brown shades and beige rope. Top-left light. Fully transparent outside wall and gate post, no ground or shadow. No haze, glow, gradients, antialiasing, neon fringes, fine bark texture, text, labels or extra panels. Shape must read at native 16x16 size."
+    }
+  ]
+}

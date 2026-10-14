@@ -1,5 +1,7 @@
 using Desertod.Domain.Buildings;
+using Desertod.Domain.Entities;
 using Desertod.Domain.Farming;
+using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
 using Desertod.Domain.World;
@@ -51,42 +53,63 @@ public enum TaskEffect
     /// <summary>Gathers a ripe farm bed into storage.</summary>
     Harvest,
 
+    /// <summary>Watches over the camp; raids striking while the cycle runs meet the watchers. See <see cref="Combat.RaidRules"/>.</summary>
+    Guard,
+
+    /// <summary>Mends the most damaged building by <see cref="TaskDefinition.BaseYield"/> points.</summary>
+    Repair,
+
     /// <summary>Needs streamer events or other villages, which are not implemented yet.</summary>
     NotAvailableYet,
 }
 
 public sealed record StatRequirement(Stat Stat, int Minimum);
 
+/// <summary>
+/// A profession: a title earned by a level in a craft, and the group its tasks are listed under.
+/// It does not gate the tasks; each task needs its own level of the craft.
+/// </summary>
+/// <param name="Skill">Craft of the profession; null for laborers, which everyone is.</param>
+/// <param name="SkillLevel">Level of <paramref name="Skill"/> that earns the title.</param>
 /// <param name="Technology">The village must have discovered it before anyone can work in this role.</param>
 public sealed record RoleDefinition(
     string Id,
     string Name,
     RoleTier Tier,
-    IReadOnlyList<StatRequirement> Requirements,
+    Skill? Skill,
+    int SkillLevel,
     string? Technology = null)
 {
-    public bool IsQualified(StatBlock stats) => Requirements.All(r => stats.Get(r.Stat) >= r.Minimum);
+    public bool IsQualified(Citizen citizen) => Skill is not { } skill || citizen.SkillLevel(skill) >= SkillLevel;
 }
 
 public sealed record ResourceAmount(ResourceKind Resource, int Amount);
 
 /// <param name="Animals">Animals caught per cycle at a stat factor of 1 while the herd is abundant; the task's outputs are for that catch.</param>
-/// <param name="Dexterity">Dexterity level needed to hunt this prey; Dexterity is the hunting skill.</param>
-public sealed record HuntDefinition(AnimalKind Prey, int Animals, int Dexterity = 0);
+public sealed record HuntDefinition(AnimalKind Prey, int Animals);
+
+/// <summary>Beasts that may jump at a citizen out in the wild; see <see cref="Combat.CombatRules.Ambush"/>.</summary>
+/// <param name="Chance">Chance per cycle in daylight; higher at night.</param>
+/// <param name="Enemies">Who may attack, each as likely as its ambush weight.</param>
+public sealed record DangerDefinition(double Chance, IReadOnlyList<Combat.EnemyKind> Enemies);
 
 /// <param name="RequiredBuilding">The task can be done only once the village has this building.</param>
 /// <param name="WorkSeconds">Time spent working; walking time is added on top.</param>
 /// <param name="Hunt">Set for hunting: the catch comes out of the village's herd of this animal.</param>
 /// <param name="RequiredProject">The task can be done only once the village has finished this project.</param>
 /// <param name="RequiredTechnology">The task can be done only once the village has discovered this technology.</param>
-/// <param name="Crop">Set for sowing: the crop put in the bed. Its Endurance level is the farming skill needed.</param>
-/// <param name="Skill">Craft the task trains; levels above <paramref name="SkillLevel"/> make it yield more and take less time.</param>
-/// <param name="SkillLevel">Level of <paramref name="Skill"/> needed to do the task.</param>
+/// <param name="Crop">Set for sowing: the crop put in the bed.</param>
+/// <param name="SkillLevel">
+/// Level of <paramref name="Skill"/> needed to do the task. Levels above it make the task yield more and take less time;
+/// far above it, the task teaches little (the challenge rule).
+/// </param>
+/// <param name="Skill">Craft the task trains.</param>
+/// <param name="Danger">Set for work out in the wild, where beasts may attack.</param>
 public sealed record TaskDefinition(
     string Id,
     string Name,
     string RoleId,
-    int TierRequirement,
+    int SkillLevel,
     Stat Primary,
     Stat Secondary,
     Skill Skill,
@@ -96,9 +119,9 @@ public sealed record TaskDefinition(
     IReadOnlyList<ResourceAmount> Inputs,
     string Workplace,
     BuildingKind? RequiredBuilding = null,
-    int WorkSeconds = 90,
+    int WorkSeconds = GameRules.GatherSeconds,
     HuntDefinition? Hunt = null,
     string? RequiredProject = null,
     string? RequiredTechnology = null,
     CropKind? Crop = null,
-    int SkillLevel = 0);
+    DangerDefinition? Danger = null);

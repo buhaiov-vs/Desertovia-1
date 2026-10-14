@@ -100,7 +100,7 @@ const MINIMUM_STAMINA = 0.2
 /** Top of a citizen's head above their feet, in world pixels. */
 const CARRY_HEIGHT = 17
 
-const BLOCKING: number[] = [Terrain.Water, Terrain.Reeds]
+const BLOCKING: number[] = [Terrain.Water, Terrain.Reeds, Terrain.Mountain, Terrain.Ravine, Terrain.Thicket, Terrain.Rockfall]
 
 interface Animal {
   kind: AnimalKind
@@ -143,7 +143,7 @@ function drawLook(look: AnimalLook): GraphicsContext {
 
 /**
  * Game animals living all over the wild land. How many are drawn follows the herds on the server,
- * so the Governor sees the land empty out without ever seeing a number. Hunters on duty chase one animal
+ * so the Tsar sees the land empty out without ever seeing a number. Hunters on duty chase one animal
  * and always catch it when their chase time is up.
  */
 export class WildlifeLayer {
@@ -157,8 +157,15 @@ export class WildlifeLayer {
   /** Caught animals, carried by their hunter until the cycle ends. */
   private readonly carried = new Map<string, { kind: AnimalKind; view: Graphics }>()
 
+  /** Whether anyone sees a point of the world, in world pixels; animals out of sight are hidden. */
+  private seen: (worldX: number, worldY: number) => boolean = () => true
+
   constructor(layer: Container) {
     this.layer = layer
+  }
+
+  setSight(seen: (worldX: number, worldY: number) => boolean) {
+    this.seen = seen
   }
 
   setTerrain(terrain: Uint8Array) {
@@ -216,6 +223,7 @@ export class WildlifeLayer {
     let found: Animal | null = null
     let best = reach
     for (const animal of this.animals) {
+      if (!animal.view.visible) continue
       // Animals stand on their feet: the body is drawn above (x, y).
       const distance = Math.hypot(animal.x - worldX, animal.y - 3 - worldY)
       if (distance <= best) {
@@ -271,6 +279,7 @@ export class WildlifeLayer {
 
       const hop = this.moving(animal) ? Math.abs(Math.sin(animal.phase)) * -look.hop : 0
       animal.view.position.set(Math.round(animal.x), Math.round(animal.y + hop))
+      animal.view.visible = this.seen(animal.x, animal.y)
       if (sortDepth) animal.view.zIndex = animal.y
       animal.view.alpha = Math.min(1, animal.view.alpha + seconds)
     }

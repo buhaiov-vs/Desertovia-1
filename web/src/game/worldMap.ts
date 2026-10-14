@@ -1,4 +1,4 @@
-import { plotPosition, type AnimalKind, type Catalog, type TileArea, type TilePoint, type VillageState } from '../api'
+import { plotPosition, type AnimalKind, type Catalog, type TileArea, type TilePoint, type VillageState, type Wilds } from '../api'
 import { EXTRAS, battle, dungeon, factory, farm, rogue, town, type TileRef } from './sheets'
 
 /**
@@ -54,6 +54,29 @@ export function canBuildAt(catalog: Catalog, village: VillageState, x: number, y
   )
 }
 
+/**
+ * Same check as the server for a rope bridge: the ravine runs through every column of the footprint between its top
+ * row (the north rim) and its bottom row (the south rim, the yard), and no other building is there.
+ */
+export function canBridgeAt(village: VillageState, x: number, y: number) {
+  const ravine = village.wilds?.ravine ?? []
+  for (let column = x; column < x + PLOT_WIDTH; column++) {
+    const span = ravine.find((candidate) => candidate.x === column)
+    if (!span || span.top <= y || span.top + span.height >= y + PLOT_HEIGHT) return false
+  }
+  const area = footprint(x, y)
+  return !buildingFootprints(village).some((taken) => overlaps(taken, area))
+}
+
+/** Footprints of the finished rope bridges: walkers cross the ravine there. */
+export const bridgeCrossings = (village: VillageState): TileArea[] =>
+  village.structures.flatMap((structure) => {
+    const plot = structure.kind === ROPE_BRIDGE ? plotPosition(structure.plotId) : null
+    return plot ? [footprint(plot.x, plot.y)] : []
+  })
+
+export const ROPE_BRIDGE = 'RopeBridge'
+
 /** True when a building or an open site covers the tile; its trees belong to the builders, not to wood gatherers. */
 export const tileBuiltOver = (village: VillageState, x: number, y: number) =>
   buildingFootprints(village).some((taken) => overlaps(taken, { x, y, width: 1, height: 1 }))
@@ -98,8 +121,24 @@ export const Terrain = {
   Bush: 4,
   Reeds: 5,
   Clearing: 6,
+  Mountain: 7,
+  /** Nobody walks into the ravine; a finished rope bridge carries walkers over it. */
+  Ravine: 8,
+  /** Thickets and rockfalls block the way until citizens clear them; cleared tiles become grass. */
+  Thicket: 9,
+  Rockfall: 10,
+  /** Wet ground: walkers wade through it slowly, so their ways go around it when they can. */
+  Marsh: 11,
+  Cave: 12,
+  /** The top of the lookout peak, and the trail up to it. */
+  Lookout: 13,
+  Trail: 14,
 } as const
 export type Terrain = (typeof Terrain)[keyof typeof Terrain]
+
+/** Rocky peaks of the mountain ridges: bare grey ones and grey ones overgrown with moss. */
+const MOUNTAIN_PEAKS = [rogue(1251), rogue(1252), rogue(1253)]
+const MOSSY_PEAKS = [rogue(1308), rogue(1309), rogue(1310)]
 
 export interface MapLayout {
   /** Rows from MAP_TOP, columns from MAP_LEFT. */
@@ -108,6 +147,12 @@ export interface MapLayout {
   bushes: Array<{ x: number; y: number }>
   reeds: Array<{ x: number; y: number }>
   ponds: Array<{ x: number; y: number; radiusX: number; radiusY: number }>
+  /** Mountain tiles with the peak drawn over each. */
+  mountains: Array<{ x: number; y: number; peak: TileRef }>
+  /** Wet tiles around the ponds. */
+  marsh: Array<{ x: number; y: number }>
+  /** Tiles of the trail up to the lookout. */
+  trail: Array<{ x: number; y: number }>
   /** One entry per tile, row by row from the top-left corner of the map. */
   terrain: Uint8Array
 }
@@ -144,7 +189,7 @@ export const PRIEST_SPOT = { x: 13.6, y: 12.6 }
 export type BuildingCell = TileRef | TileRef[]
 
 /**
- * Finished buildings drawn from tiles, each with its own roof, walls and props so the Governor can tell them apart.
+ * Finished buildings drawn from tiles, each with its own roof, walls and props so the Tsar can tell them apart.
  * Shelters and racks of the wild age and the open stage are drawn as shapes instead.
  */
 export const BUILDING_TILES: Record<string, BuildingCell[][]> = {
@@ -298,6 +343,7 @@ export const BUILDING_SIGNS: Record<string, TileRef> = {
   Stage: battle(70),
   Market: farm(74),
   Barracks: dungeon(104),
+  RopeBridge: town(73),
 }
 
 /** The old monastery on the far bank: the Tsar Bridge is meant to reach it. Scenery, not part of the village. */
@@ -401,14 +447,27 @@ export const PROJECT_AREAS: Record<string, TileArea[]> = {
 /** Deck of the Tsar Bridge: the only way across the river once it is finished. */
 export const BRIDGE_DECK: TileArea = { x: RIVER_LEFT, y: ROAD_TOP, width: RIVER_RIGHT - RIVER_LEFT + 1, height: 2 }
 
-/** Why a walk cannot be made: the spot is in water, or the river lies between and no bridge crosses it. */
-export type WalkBlock = 'water' | 'river'
+/**
+ * Why a walk cannot be made: the spot is in water, on a mountain or in the ravine, the river lies between and no
+ * bridge crosses it, mountains wall the spot off, or the ravine lies between and no rope bridge spans it.
+ */
+export type WalkBlock = 'water' | 'river' | 'mountain' | 'ravine'
+
+/** How many times longer a step through marsh takes than one over dry ground. */
+const MARSH_COST = 3
 
 /**
- * The way on foot between two points, in tiles: the turns to take, ending at `to`. Water stops walkers, except the
- * deck of a finished bridge. A walker already standing in water may still walk out of it.
+ * The way on foot between two points, in tiles: the turns to take, ending at `to`. Water, mountains, the ravine,
+ * thickets and rockfalls stop walkers, except the deck of a finished bridge and the `crossings` of finished rope
+ * bridges. A walker may still walk off the tile they stand on, and up to the thicket or rockfall they are sent to clear.
  */
-export function findWay(terrain: Uint8Array, from: TilePoint, to: TilePoint, bridge: boolean): TilePoint[] | WalkBlock {
+export function findWay(
+  terrain: Uint8Array,
+  from: TilePoint,
+  to: TilePoint,
+  bridge: boolean,
+  crossings: TileArea[] = [],
+): TilePoint[] | WalkBlock {
   const startX = Math.floor(from.x)
   const startY = Math.floor(from.y)
   const goalX = Math.floor(to.x)
@@ -417,21 +476,76 @@ export function findWay(terrain: Uint8Array, from: TilePoint, to: TilePoint, bri
   const index = (x: number, y: number) => (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
   const onDeck = (x: number, y: number) =>
     x >= BRIDGE_DECK.x && x < BRIDGE_DECK.x + BRIDGE_DECK.width && y >= BRIDGE_DECK.y && y < BRIDGE_DECK.y + BRIDGE_DECK.height
-  const walkable = (x: number, y: number) =>
-    inside(x, y) && (terrain[index(x, y)] !== Terrain.Water || (bridge && onDeck(x, y)) || (x === startX && y === startY))
+  const onCrossing = (x: number, y: number) =>
+    crossings.some((area) => x >= area.x && x < area.x + area.width && y >= area.y && y < area.y + area.height)
+  const passable = (x: number, y: number, climbing: boolean, bridging: boolean) => {
+    if (!inside(x, y)) return false
+    if (x === startX && y === startY) return true
+    const kind = terrain[index(x, y)]
+    if (kind === Terrain.Thicket || kind === Terrain.Rockfall) return x === goalX && y === goalY
+    if (kind === Terrain.Water) return bridge && onDeck(x, y)
+    if (kind === Terrain.Ravine) return bridging || onCrossing(x, y)
+    return climbing || kind !== Terrain.Mountain
+  }
+  const walkable = (x: number, y: number) => passable(x, y, false, false)
+  const stepCost = (x: number, y: number) => (terrain[index(x, y)] === Terrain.Marsh ? MARSH_COST : 1)
 
-  if (!walkable(goalX, goalY)) return 'water'
+  if (!walkable(goalX, goalY)) {
+    const kind = inside(goalX, goalY) ? terrain[index(goalX, goalY)] : Terrain.Water
+    return kind === Terrain.Mountain ? 'mountain' : kind === Terrain.Ravine ? 'ravine' : 'water'
+  }
+  // A straight line never cuts through marsh, so walkers keep to the dry way the search found around it.
+  const dry = (x: number, y: number) =>
+    walkable(x, y) && (stepCost(x, y) === 1 || (x === startX && y === startY) || (x === goalX && y === goalY))
   const clear = (a: TilePoint, b: TilePoint) => {
     const steps = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.1)
     for (let step = 1; step <= steps; step++) {
       const share = step / steps
-      if (!walkable(Math.floor(a.x + (b.x - a.x) * share), Math.floor(a.y + (b.y - a.y) * share))) return false
+      if (!dry(Math.floor(a.x + (b.x - a.x) * share), Math.floor(a.y + (b.y - a.y) * share))) return false
     }
     return true
   }
   if (clear(from, to)) return [to]
 
-  // A* over tiles, eight ways; a diagonal step may not cut the corner of water.
+  const start = index(startX, startY)
+  const goal = index(goalX, goalY)
+  const cameFrom = searchTiles(start, goal, walkable, stepCost)
+  if (!cameFrom) {
+    if (searchTiles(start, goal, (x, y) => passable(x, y, true, false), stepCost)) return 'mountain'
+    return searchTiles(start, goal, (x, y) => passable(x, y, false, true), stepCost) ? 'ravine' : 'river'
+  }
+
+  const centres: TilePoint[] = []
+  for (let node = cameFrom[goal]; node !== start && node !== -1; node = cameFrom[node]) {
+    centres.unshift({ x: (node % MAP_WIDTH) + MAP_LEFT + 0.5, y: Math.floor(node / MAP_WIDTH) + MAP_TOP + 0.5 })
+  }
+  const points = [from, ...centres, to]
+  // Straightens the tile steps: from each turn, head for the farthest point still in plain sight.
+  const way: TilePoint[] = []
+  let at = 0
+  while (at < points.length - 1) {
+    let next = points.length - 1
+    while (next > at + 1 && !clear(points[at], points[next])) next--
+    way.push(points[next])
+    at = next
+  }
+  return way
+}
+
+/**
+ * A* over tiles, eight ways; a diagonal step may not cut the corner of a blocked tile, and a step costs its length
+ * times the `stepCost` (at least 1) of the tile it enters. Returns the tile each tile was reached from, or null when the
+ * goal cannot be reached.
+ */
+function searchTiles(
+  start: number,
+  goal: number,
+  walkable: (x: number, y: number) => boolean,
+  stepCost: (x: number, y: number) => number,
+): Int32Array | null {
+  const goalX = (goal % MAP_WIDTH) + MAP_LEFT
+  const goalY = Math.floor(goal / MAP_WIDTH) + MAP_TOP
+  const index = (x: number, y: number) => (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
   const cost = new Float64Array(MAP_WIDTH * MAP_HEIGHT).fill(Infinity)
   const cameFrom = new Int32Array(MAP_WIDTH * MAP_HEIGHT).fill(-1)
   const closed = new Uint8Array(MAP_WIDTH * MAP_HEIGHT)
@@ -471,10 +585,8 @@ export function findWay(terrain: Uint8Array, from: TilePoint, to: TilePoint, bri
     return top.node
   }
 
-  const start = index(startX, startY)
-  const goal = index(goalX, goalY)
   cost[start] = 0
-  push(start, heuristic(startX, startY))
+  push(start, heuristic((start % MAP_WIDTH) + MAP_LEFT, Math.floor(start / MAP_WIDTH) + MAP_TOP))
   while (open.length > 0 && !closed[goal]) {
     const node = pop()
     if (closed[node]) continue
@@ -486,7 +598,7 @@ export function findWay(terrain: Uint8Array, from: TilePoint, to: TilePoint, bri
         if ((dx === 0 && dy === 0) || !walkable(x + dx, y + dy)) continue
         if (dx !== 0 && dy !== 0 && (!walkable(x + dx, y) || !walkable(x, y + dy))) continue
         const next = index(x + dx, y + dy)
-        const nextCost = cost[node] + (dx !== 0 && dy !== 0 ? Math.SQRT2 : 1)
+        const nextCost = cost[node] + (dx !== 0 && dy !== 0 ? Math.SQRT2 : 1) * stepCost(x + dx, y + dy)
         if (closed[next] || nextCost >= cost[next]) continue
         cost[next] = nextCost
         cameFrom[next] = node
@@ -494,27 +606,11 @@ export function findWay(terrain: Uint8Array, from: TilePoint, to: TilePoint, bri
       }
     }
   }
-  if (!closed[goal]) return 'river'
-
-  const centres: TilePoint[] = []
-  for (let node = cameFrom[goal]; node !== start && node !== -1; node = cameFrom[node]) {
-    centres.unshift({ x: (node % MAP_WIDTH) + MAP_LEFT + 0.5, y: Math.floor(node / MAP_WIDTH) + MAP_TOP + 0.5 })
-  }
-  const points = [from, ...centres, to]
-  // Straightens the tile steps: from each turn, head for the farthest point still in plain sight.
-  const way: TilePoint[] = []
-  let at = 0
-  while (at < points.length - 1) {
-    let next = points.length - 1
-    while (next > at + 1 && !clear(points[at], points[next])) next--
-    way.push(points[next])
-    at = next
-  }
-  return way
+  return closed[goal] ? cameFrom : null
 }
 
 /** Natural places a click can send a citizen to; `spot` is the centre of the clicked tile. */
-export type NatureKind = 'tree' | 'bush' | 'stone' | 'reeds' | 'water' | 'vein'
+export type NatureKind = 'tree' | 'bush' | 'stone' | 'reeds' | 'water' | 'vein' | 'thicket' | 'rockfall' | 'cave'
 
 /** Something on the map a citizen can be sent to work at. `area` is outlined while the choice is open. */
 export type WorldTarget = { area: TileArea | null } & (
@@ -582,6 +678,14 @@ function valueNoise(seed: number, scale: number) {
 
 const inCore = (x: number, y: number) => x >= 0 && x < CORE_WIDTH && y >= 0 && y < CORE_HEIGHT
 
+const MOUNTAIN_RIDGES = 4
+/** Tiles around the camp area kept free of mountains. */
+const MOUNTAIN_CLEARANCE = 6
+/** Tiles of ridge on each side of a rockfall pass. */
+const PASS_ARM = 7
+/** Share of the ponds with marsh around them. */
+const MARSH_PONDS = 0.5
+
 /** Centre column of the river in a row: straight through the camp area, meandering beyond it. */
 function riverCenter(y: number, seed: number) {
   const straight = (RIVER_LEFT + RIVER_RIGHT) / 2
@@ -594,10 +698,11 @@ function riverCenter(y: number, seed: number) {
 
 /**
  * The land around the first campfire. The camp area keeps the features the server's workplaces expect
- * (forest west, stones north, berries south-west, reeds by the river); the rest is generated from `seed`,
- * so every village has its own land and every viewer of a village sees the same one.
+ * (forest west, stones north, berries south-west, reeds by the river); the ravine, the cave, the lookout, the passes
+ * and the thickets come from the server's `wilds`; the rest is generated from `seed`, so every village has its own land
+ * and every viewer of a village sees the same one.
  */
-export function buildLayout(seed: number): MapLayout {
+export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
   const next = random(seed)
   const forestNoise = valueNoise(seed + 1, 9)
   const detailNoise = valueNoise(seed + 2, 3)
@@ -607,6 +712,7 @@ export function buildLayout(seed: number): MapLayout {
   const bushes: MapLayout['bushes'] = []
   const reeds: MapLayout['reeds'] = []
   const ponds: MapLayout['ponds'] = []
+  const mountains: MapLayout['mountains'] = []
   const terrain = new Uint8Array(MAP_WIDTH * MAP_HEIGHT)
   const index = (x: number, y: number) => (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
   const inside = (x: number, y: number) => x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM
@@ -633,6 +739,58 @@ export function buildLayout(seed: number): MapLayout {
     ground.push(row)
   }
 
+  // The server's wild land. Ridges wall in the cave and the lookout and run out from both sides of each pass; their
+  // tiles are kept now and raised with the other mountains.
+  const nearCamp = (x: number, y: number) =>
+    x >= -MOUNTAIN_CLEARANCE && y >= -MOUNTAIN_CLEARANCE && x < CORE_WIDTH + MOUNTAIN_CLEARANCE && y < CORE_HEIGHT + MOUNTAIN_CLEARANCE
+  const featureRidges: Array<{ x: number; y: number }> = []
+  const ridgeAt = (x: number, y: number) => {
+    if (!inside(x, y) || nearCamp(x, y) || occupied.has(index(x, y))) return
+    featureRidges.push({ x, y })
+    mark(x, y)
+  }
+  const trail: MapLayout['trail'] = []
+  if (wilds) {
+    for (const span of wilds.ravine) {
+      mark(span.x, span.top - 1)
+      mark(span.x, span.top, 1, span.height, Terrain.Ravine)
+      mark(span.x, span.top + span.height)
+    }
+    for (const obstacle of wilds.obstacles) {
+      mark(obstacle.x, obstacle.y, 1, 1, obstacle.kind === 'Thicket' ? Terrain.Thicket : Terrain.Rockfall)
+    }
+    const { caveX, caveY, lookoutX, lookoutY } = wilds
+    mark(caveX, caveY, 1, 1, Terrain.Cave)
+    mark(caveX - 1, caveY + 1, 3, 1)
+    mark(lookoutX, lookoutY, 1, 1, Terrain.Lookout)
+    mark(lookoutX, lookoutY + 1, 1, 1, Terrain.Trail)
+    trail.push({ x: lookoutX, y: lookoutY + 1 })
+    mark(lookoutX - 1, lookoutY + 2, 3, 1)
+    for (let dx = -3; dx <= 3; dx++) ridgeAt(caveX + dx, caveY - 1)
+    for (let dx = -2; dx <= 2; dx++) ridgeAt(caveX + dx, caveY - 2)
+    ridgeAt(caveX - 1, caveY)
+    ridgeAt(caveX + 1, caveY)
+    for (let dy = -2; dy <= 1; dy++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        if (Math.abs(dx) === 2 && dy !== -1 && dy !== 0) continue
+        ridgeAt(lookoutX + dx, lookoutY + dy)
+      }
+    }
+    for (const pass of wilds.passes) {
+      for (let arm = 1; arm <= PASS_ARM; arm++) {
+        for (let side = 0; side < 2; side++) {
+          if (pass.horizontal) {
+            ridgeAt(pass.x - arm, pass.y + side)
+            ridgeAt(pass.x + 1 + arm, pass.y + side)
+          } else {
+            ridgeAt(pass.x + side, pass.y - arm)
+            ridgeAt(pass.x + side, pass.y + 1 + arm)
+          }
+        }
+      }
+    }
+  }
+
   // The river runs the whole height of the map.
   for (let y = MAP_TOP; y < MAP_BOTTOM; y++) {
     const left = Math.round(riverCenter(y, seed) - 1.5)
@@ -642,7 +800,7 @@ export function buildLayout(seed: number): MapLayout {
     setGround(left + 3, y, battle(38))
     mark(left, y, 4, 1, Terrain.Water)
     // Reeds grow on the west bank wherever the land is low.
-    if (!inCore(left, y) && detailNoise(left, y) > 0.55) {
+    if (!inCore(left, y) && detailNoise(left, y) > 0.55 && !occupied.has(index(left - 1, y))) {
       reeds.push({ x: left - 0.6, y: y + 0.5 })
       mark(left - 1, y, 1, 1, Terrain.Reeds)
     }
@@ -677,6 +835,23 @@ export function buildLayout(seed: number): MapLayout {
           reeds.push({ x: rx, y: ry })
           mark(Math.floor(rx), Math.floor(ry), 1, 1, Terrain.Reeds)
         }
+      }
+    }
+  }
+
+  // Marsh spreads around some of the ponds where the ground is low.
+  const marsh: MapLayout['marsh'] = []
+  for (const pond of ponds) {
+    if (next() >= MARSH_PONDS) continue
+    const reachX = pond.radiusX + 2.5
+    const reachY = pond.radiusY + 2.5
+    for (let row = Math.floor(pond.y - reachY); row <= pond.y + reachY; row++) {
+      for (let column = Math.floor(pond.x - reachX); column <= pond.x + reachX; column++) {
+        if (!inside(column, row) || inCore(column, row) || occupied.has(index(column, row))) continue
+        if (((column + 0.5 - pond.x) / reachX) ** 2 + ((row + 0.5 - pond.y) / reachY) ** 2 > 1) continue
+        if (detailNoise(column, row) < 0.4) continue
+        marsh.push({ x: column, y: row })
+        mark(column, row, 1, 1, Terrain.Marsh)
       }
     }
   }
@@ -725,6 +900,77 @@ export function buildLayout(seed: number): MapLayout {
     }
   }
 
+  // Mountain ridges out in the wild, beyond what the camp first sees: the server's features first, then a few more.
+  // Long ridges keep a pass through them, so a ridge never walls off the land behind it.
+  const raiseMountain = (x: number, y: number) => {
+    mark(x, y, 1, 1, Terrain.Mountain)
+    const looks = next() < 0.3 ? MOSSY_PEAKS : MOUNTAIN_PEAKS
+    mountains.push({ x, y, peak: looks[Math.floor(next() * looks.length)] })
+  }
+  for (const ridge of featureRidges) raiseMountain(ridge.x, ridge.y)
+  for (let attempt = 0, ridges = 0; attempt < 40 && ridges < MOUNTAIN_RIDGES; attempt++) {
+    let x = MAP_LEFT + 4 + next() * (MAP_WIDTH - 8)
+    let y = MAP_TOP + 4 + next() * (MAP_HEIGHT - 8)
+    if (nearCamp(Math.floor(x), Math.floor(y))) continue
+    let heading = next() * Math.PI * 2
+    const length = 10 + Math.floor(next() * 20)
+    const pass = length >= 16 ? Math.floor(length * (0.3 + next() * 0.4)) : -Infinity
+    const ridge = new Map<number, { x: number; y: number }>()
+    for (let step = 0; step < length; step++) {
+      heading += (next() - 0.5) * 0.8
+      x += Math.cos(heading)
+      y += Math.sin(heading)
+      if (Math.abs(step - pass) <= 2) continue
+      const radius = 0.9 + next() * 0.8
+      for (let row = Math.floor(y - radius); row <= y + radius; row++) {
+        for (let column = Math.floor(x - radius); column <= x + radius; column++) {
+          if (Math.hypot(column + 0.5 - x, row + 0.5 - y) > radius) continue
+          if (!inside(column, row) || nearCamp(column, row) || occupied.has(index(column, row))) continue
+          ridge.set(index(column, row), { x: column, y: row })
+        }
+      }
+    }
+    if (ridge.size < 8) continue
+    ridges++
+    for (const peak of ridge.values()) raiseMountain(peak.x, peak.y)
+  }
+  // Land the ridges close in, with water or with each other, becomes part of the mountain, so every open tile that
+  // could be walked to without the mountains still can be once the bridges stand and the obstacles are cleared. The
+  // server's features stay as they are.
+  const reach = (climbing: boolean) => {
+    const reached = new Uint8Array(MAP_WIDTH * MAP_HEIGHT)
+    const queue = [index(Math.floor(CAMPFIRE.x), Math.floor(CAMPFIRE.y))]
+    reached[queue[0]] = 1
+    while (queue.length > 0) {
+      const node = queue.pop()!
+      const x = (node % MAP_WIDTH) + MAP_LEFT
+      const y = Math.floor(node / MAP_WIDTH) + MAP_TOP
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx
+        const ny = y + dy
+        if (!inside(nx, ny)) continue
+        const neighbour = index(nx, ny)
+        if (reached[neighbour] || (!climbing && terrain[neighbour] === Terrain.Mountain)) continue
+        const onDeck = nx >= BRIDGE_DECK.x && nx < BRIDGE_DECK.x + BRIDGE_DECK.width && ny >= BRIDGE_DECK.y && ny < BRIDGE_DECK.y + BRIDGE_DECK.height
+        if (terrain[neighbour] === Terrain.Water && !onDeck) continue
+        reached[neighbour] = 1
+        queue.push(neighbour)
+      }
+    }
+    return reached
+  }
+  const walkable = reach(false)
+  const climbable = reach(true)
+  const kept: number[] = [Terrain.Mountain, Terrain.Ravine, Terrain.Thicket, Terrain.Rockfall, Terrain.Cave, Terrain.Lookout, Terrain.Trail]
+  for (let node = 0; node < terrain.length; node++) {
+    if (walkable[node] || !climbable[node] || kept.includes(terrain[node])) continue
+    raiseMountain((node % MAP_WIDTH) + MAP_LEFT, Math.floor(node / MAP_WIDTH) + MAP_TOP)
+  }
+  const onMountain = (point: { x: number; y: number }) => terrain[index(Math.floor(point.x), Math.floor(point.y))] === Terrain.Mountain
+  reeds.splice(0, reeds.length, ...reeds.filter((reed) => !onMountain(reed)))
+  bushes.splice(0, bushes.length, ...bushes.filter((bush) => !onMountain(bush)))
+  marsh.splice(0, marsh.length, ...marsh.filter((wet) => !onMountain(wet)))
+
   const plantTree = (x: number, y: number) => {
     const look = TREE_TILES[Math.floor(next() * TREE_TILES.length)]
     // Trees of the forest area come from the server; the roll and the mark still happen so the wild keeps its look.
@@ -768,7 +1014,7 @@ export function buildLayout(seed: number): MapLayout {
     }
   }
 
-  return { ground, decor, bushes, reeds, ponds, terrain }
+  return { ground, decor, bushes, reeds, ponds, mountains, marsh, trail, terrain }
 }
 
 /** Villager sprites from Tiny Dungeon (the hooded monk, 111, is reserved for the elder). */
@@ -801,6 +1047,12 @@ export const RESOURCE_ICONS: Record<string, TileRef> = {
   Flax: farm(80),
   Grain: farm(68),
   VigorDrink: dungeon(116),
+  Spear: dungeon(130),
+  Bow: town(119),
+  Arrows: EXTRAS.feather,
+  Sword: dungeon(104),
+  Shield: dungeon(101),
+  LeatherArmor: dungeon(66),
 }
 
 export const TASK_ICONS: Record<string, TileRef> = {
@@ -831,6 +1083,9 @@ export const TASK_ICONS: Record<string, TileRef> = {
   fish: town(131),
   'measure-river': POST,
   'dig-gold': RESOURCE_ICONS.Gold,
+  'clear-thicket': town(127),
+  'break-rockfall': PICKAXE,
+  'dig-cave': PICKAXE,
   'deliver-iron': RESOURCE_ICONS.IronIngot,
   build: HAMMER,
   expedition: town(119),
@@ -860,6 +1115,15 @@ export const TASK_ICONS: Record<string, TileRef> = {
   'lead-crew': factory(120),
   negotiate: battle(196),
   command: battle(70),
+  'keep-watch': dungeon(101),
+  repair: HAMMER,
+  'make-poultice': RESOURCE_ICONS.Remedy,
+  'make-spears': RESOURCE_ICONS.Spear,
+  'sew-armor': RESOURCE_ICONS.LeatherArmor,
+  'make-bows': RESOURCE_ICONS.Bow,
+  'make-arrows': RESOURCE_ICONS.Arrows,
+  'forge-sword': RESOURCE_ICONS.Sword,
+  'make-shields': RESOURCE_ICONS.Shield,
   'bring-sticks': STICK,
   'bring-logs': RESOURCE_ICONS.Wood,
   'bring-stones': RESOURCE_ICONS.Stone,
@@ -886,6 +1150,8 @@ export const TASK_ICONS: Record<string, TileRef> = {
   'build-forge': dungeon(74),
   'build-oven': farm(125),
   'lay-floor': RESOURCE_ICONS.Planks,
+  'stretch-ropes': REEDS,
+  'lay-deck': RESOURCE_ICONS.Planks,
   'lend-a-hand': HAMMER,
 }
 

@@ -1,0 +1,62 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-woodyard-1-ground",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-woodyard-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the attached finished woodyard into construction stage 1: cleared earth with corner stakes only. Show all completed construction so far. Remove all stored supplies, tools, workbenches and decorative props. Keep original camera, footprint and ground anchor positions. Canvas aspect 64:48, same scale and framing as reference. Leave transparent space above low stages; do not enlarge or recenter. Crisp chunky pixel art on 64x48 logical grid, square pixels enlarged. Simple Kenney-style earthy palette, at most 3 flat shades per material. No gradients, glow, soft edges, text, labels, scenery, panels. Real transparency around and between structure elements."
+    },
+    {
+      "name": "construction-woodyard-2-foundation",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-woodyard-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the attached finished woodyard into construction stage 2: stone pads for four posts on cleared earth. Show all completed construction so far. Remove all stored supplies, tools, workbenches and decorative props. Keep original camera, footprint and ground anchor positions. Canvas aspect 64:48, same scale and framing as reference. Leave transparent space above low stages; do not enlarge or recenter. Crisp chunky pixel art on 64x48 logical grid, square pixels enlarged. Simple Kenney-style earthy palette, at most 3 flat shades per material. No gradients, glow, soft edges, text, labels, scenery, panels. Real transparency around and between structure elements."
+    },
+    {
+      "name": "construction-woodyard-3-frame",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-woodyard-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the attached finished woodyard into construction stage 3: four posts and connecting beams on the four stone pads; no roof. Show all completed construction so far. Remove all stored supplies, tools, workbenches and decorative props. Keep original camera, footprint and ground anchor positions. Canvas aspect 64:48, same scale and framing as reference. Leave transparent space above low stages; do not enlarge or recenter. Crisp chunky pixel art on 64x48 logical grid, square pixels enlarged. Simple Kenney-style earthy palette, at most 3 flat shades per material. No gradients, glow, soft edges, text, labels, scenery, panels. Real transparency around and between structure elements."
+    },
+    {
+      "name": "construction-woodyard-4-roof",
+      "width": 64,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-woodyard-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the attached finished woodyard into construction stage 4: four posts and beams on stone pads with roof rafters exactly half shingled, other half exposed. Show all completed construction so far. Remove all stored supplies, tools, workbenches and decorative props. Keep original camera, footprint and ground anchor positions. Canvas aspect 64:48, same scale and framing as reference. Leave transparent space above low stages; do not enlarge or recenter. Crisp chunky pixel art on 64x48 logical grid, square pixels enlarged. Simple Kenney-style earthy palette, at most 3 flat shades per material. No gradients, glow, soft edges, text, labels, scenery, panels. Real transparency around and between structure elements."
+    },
+    {
+      "name": "construction-stone-yard-1-ground",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-stone-yard-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the attached finished stone-yard into construction stage 1: cleared earth with corner stakes only. Show all completed construction so far. Remove all stored supplies, tools, workbenches and decorative props. Keep original camera, footprint and ground anchor positions. Canvas aspect 64:64, same scale and framing as reference. Leave transparent space above low stages; do not enlarge or recenter. Crisp chunky pixel art on 64x64 logical grid, square pixels enlarged. Simple Kenney-style earthy palette, at most 3 flat shades per material. No gradients, glow, soft edges, text, labels, scenery, panels. Real transparency around and between structure elements."
+    },
+    {
+      "name": "construction-stone-yard-2-walls",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-stone-yard-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the attached finished stone-yard into construction stage 2: knee-high stone perimeter walls on the earth, open front gateway. Show all completed construction so far. Remove all stored supplies, tools, workbenches and decorative props. Keep original camera, footprint and ground anchor positions. Canvas aspect 64:64, same scale and framing as reference. Leave transparent space above low stages; do not enlarge or recenter. Crisp chunky pixel art on 64x64 logical grid, square pixels enlarged. Simple Kenney-style earthy palette, at most 3 flat shades per material. No gradients, glow, soft edges, text, labels, scenery, panels. Real transparency around and between structure elements."
+    },
+    {
+      "name": "construction-stone-yard-3-frame",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-stone-yard-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the attached finished stone-yard into construction stage 3: knee-high perimeter stone walls with open front gateway and posts and beams for the back roof. Show all completed construction so far. Remove all stored supplies, tools, workbenches and decorative props. Keep original camera, footprint and ground anchor positions. Canvas aspect 64:64, same scale and framing as reference. Leave transparent space above low stages; do not enlarge or recenter. Crisp chunky pixel art on 64x64 logical grid, square pixels enlarged. Simple Kenney-style earthy palette, at most 3 flat shades per material. No gradients, glow, soft edges, text, labels, scenery, panels. Real transparency around and between structure elements."
+    },
+    {
+      "name": "construction-stone-yard-4-roof",
+      "width": 64,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-stone-yard-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the attached finished stone-yard into construction stage 4: knee-high perimeter stone walls with open front gateway, back roof posts and rafters half covered with thatch. Show all completed construction so far. Remove all stored supplies, tools, workbenches and decorative props. Keep original camera, footprint and ground anchor positions. Canvas aspect 64:64, same scale and framing as reference. Leave transparent space above low stages; do not enlarge or recenter. Crisp chunky pixel art on 64x64 logical grid, square pixels enlarged. Simple Kenney-style earthy palette, at most 3 flat shades per material. No gradients, glow, soft edges, text, labels, scenery, panels. Real transparency around and between structure elements."
+    }
+  ]
+}

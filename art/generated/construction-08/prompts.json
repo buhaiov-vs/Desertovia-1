@@ -1,0 +1,27 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-mine-1-ground",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-mine-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the mine reference to construction stage 1: Solid grey rocky slope with a small pale chalk arch marking where the entrance will be dug. Rock face is unbroken: no hole, no timber. Remove all carts, rails, tools, lanterns and stored goods. Keep exact rock outline, canvas, camera, base anchors and footprint from reference; no zoom or recenter. Simple chunky Kenney-like 48x48 logical pixel sprite enlarged with square solid pixels. Three flat shades per material maximum, grey rock and warm brown wood. No gradients, antialiasing, halo, glow, labels, lettering or scenery. Transparent outside rock, dark opaque interior when hole is present. Show all prior construction but none of later stages."
+    },
+    {
+      "name": "construction-mine-2-shaft",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-mine-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the mine reference to construction stage 2: Same rocky slope with a rough dark hole dug into the marked rock and a little rubble at the foot. No timber supports yet. Remove all carts, rails, tools, lanterns and stored goods. Keep exact rock outline, canvas, camera, base anchors and footprint from reference; no zoom or recenter. Simple chunky Kenney-like 48x48 logical pixel sprite enlarged with square solid pixels. Three flat shades per material maximum, grey rock and warm brown wood. No gradients, antialiasing, halo, glow, labels, lettering or scenery. Transparent outside rock, dark opaque interior when hole is present. Show all prior construction but none of later stages."
+    },
+    {
+      "name": "construction-mine-3-frame",
+      "width": 48,
+      "height": 48,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-mine-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit the mine reference to construction stage 3: Same rocky slope, dark excavated hole and rubble, now with the first two rough wooden upright supports and a crossbeam at the entrance. Remove all carts, rails, tools, lanterns and stored goods. Keep exact rock outline, canvas, camera, base anchors and footprint from reference; no zoom or recenter. Simple chunky Kenney-like 48x48 logical pixel sprite enlarged with square solid pixels. Three flat shades per material maximum, grey rock and warm brown wood. No gradients, antialiasing, halo, glow, labels, lettering or scenery. Transparent outside rock, dark opaque interior when hole is present. Show all prior construction but none of later stages."
+    }
+  ]
+}

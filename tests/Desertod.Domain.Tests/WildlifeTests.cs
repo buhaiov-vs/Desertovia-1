@@ -1,5 +1,6 @@
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Rules;
+using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
 using Desertod.Domain.World;
 using static Desertod.Domain.Tests.TestWorld;
@@ -53,7 +54,7 @@ public class WildlifeTests
     public void HuntingBirds_BringsFeathers()
     {
         var village = NewVillage();
-        var citizen = NewCitizen(village, (Stat.Dexterity, 3));
+        var citizen = NewCitizen(village, (Stat.Dexterity, 3)).WithSkill(Skill.Hunting, 3);
 
         CycleEngine.Start(citizen, Task("hunt-birds"), WorkContext.For(village), Now);
         Finish(citizen, WorkContext.For(village));
@@ -65,17 +66,17 @@ public class WildlifeTests
     [InlineData("hunt", 0)]
     [InlineData("track-game", 2)]
     [InlineData("hunt-birds", 3)]
-    public void EachPrey_NeedsItsDexterityLevel(string taskId, int dexterity)
+    public void EachPrey_NeedsItsHuntingLevel(string taskId, int hunting)
     {
         var task = Task(taskId);
         var village = NewVillage();
-        var skilled = NewCitizen(village, (Stat.Dexterity, dexterity));
+        var skilled = NewCitizen(village).WithSkill(Skill.Hunting, hunting);
 
-        if (dexterity > 0)
+        if (hunting > 0)
         {
-            var novice = NewCitizen(village, (Stat.Dexterity, dexterity - 1));
+            var novice = NewCitizen(village).WithSkill(Skill.Hunting, hunting - 1);
             var error = Assert.Throws<GameRuleException>(() => CycleEngine.Start(novice, task, WorkContext.For(village), Now));
-            Assert.Equal("hunt.skillRequired", error.Code);
+            Assert.Equal("task.skillRequired", error.Code);
         }
 
         CycleEngine.Start(skilled, task, WorkContext.For(village), Now);
@@ -91,7 +92,7 @@ public class WildlifeTests
         foreach (var taskId in new[] { "hunt", "track-game", "hunt-birds" })
         {
             var village = NewVillage();
-            var citizen = NewCitizen(village, (Stat.Dexterity, 3));
+            var citizen = NewCitizen(village, (Stat.Dexterity, 3)).WithSkill(Skill.Hunting, 3);
             CycleEngine.Start(citizen, Task(taskId), WorkContext.For(village), Now);
             experience[taskId] = Finish(citizen, WorkContext.For(village)).PrimaryExperience;
         }

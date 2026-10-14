@@ -4,7 +4,7 @@ import { useI18n } from '../i18n'
 import { BUILDING_SIGNS, taskIcon } from '../game/worldMap'
 import { TileIcon } from './TileIcon'
 
-/** The Governor ticks the available discoveries citizens will choose from. */
+/** The Tsar or a Governor ticks the available discoveries citizens will choose from. */
 export function PollSetup({
   catalog,
   village,
@@ -79,13 +79,13 @@ export function PollSetup({
 
 /**
  * Pops up on every screen while a vote is open, and once more with the results when it closes. Citizens vote here;
- * the Governor and viewers watch.
+ * the Tsar and viewers watch. The rulers may cancel it.
  */
 export function PollPanel({
   poll,
   catalog,
   citizen,
-  governor,
+  ruler,
   pending,
   error,
   onVote,
@@ -94,9 +94,10 @@ export function PollPanel({
 }: {
   poll: TechnologyPoll
   catalog: Catalog
-  /** Null for the Governor and viewers: they cannot vote. */
+  /** Null for the Tsar and viewers: they cannot vote. */
   citizen: Citizen | null | undefined
-  governor: boolean
+  /** The Tsar, or a citizen the Tsar appointed Governor: may cancel the vote. */
+  ruler: boolean
   pending: boolean
   error: string | null
   onVote: (technologyId: string) => void
@@ -123,7 +124,7 @@ export function PollPanel({
           {open ? (
             <>
               <p className="small">
-                {citizen ? (mine ? t('poll.change') : t('poll.choose')) : governor ? t('poll.governorWatch') : t('poll.watch')}
+                {citizen ? (mine ? t('poll.change') : t('poll.choose')) : ruler ? t('poll.tsarWatch') : t('poll.watch')}
               </p>
               <p className="small muted">
                 {t('poll.progress', { voted, electorate: poll.electorate, needed: poll.votesNeeded })}
@@ -178,7 +179,7 @@ export function PollPanel({
         <div className="done-actions">
           {open ? (
             <>
-              {governor && (
+              {ruler && (
                 <button disabled={pending} onClick={onCancel}>
                   {t('poll.cancel')}
                 </button>

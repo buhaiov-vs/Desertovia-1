@@ -1,9 +1,12 @@
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
-import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Governor, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type VillageState } from '../api'
+import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type Tsar, type VillageState, type Wilds } from '../api'
 import { WildlifeLayer } from './animals'
+import { EnemyLayer } from './enemies'
 import { CharacterPainter, appearanceKey } from './appearance'
-import { TILE, TileSet, battle, dungeon, town, type TileRef } from './sheets'
+import { darknessAt } from './daylight'
+import { Fog, type Viewer } from './fog'
+import { TILE, TileSet, battle, dungeon, tileKey, town, type TileRef } from './sheets'
 import {
   BUILDING_TILES,
   CAMPFIRE,
@@ -32,9 +35,12 @@ import {
   VEIN_OUTCROP,
   PROJECT_AREAS,
   PROJECT_YARDS,
+  ROPE_BRIDGE,
   Terrain,
+  bridgeCrossings,
   buildLayout,
   buildingFootprints,
+  canBridgeAt,
   canBuildAt,
   cropTile,
   findWay,
@@ -56,6 +62,9 @@ const WORLD_HEIGHT = MAP_HEIGHT * TILE
 const WALK_SPEED = 26
 /** Hunters run after their prey; near the end of the chase they go faster if they must to reach it in time. */
 const RUN_SPEED = 44
+const LONG_PRESS_MS = 500
+const INJURED_ICON = 'injured'
+const INJURED_TINT = 0xffa898
 const HUNTER_HOLD_DISTANCE = TILE * 0.9
 const HUNTER_POUNCE_SECONDS = 2
 const BUBBLE_SECONDS = 5
@@ -82,6 +91,13 @@ const MINIMUM_DEFAULT_TILE_PIXELS = 28
 const ANIMAL_REACH = TILE * 0.8
 /** How close to the fire, in tiles, a click picks the campfire. */
 const CAMPFIRE_REACH = 1.2
+/** Seconds between two updates of what walkers see through the fog of war. */
+const FOG_SECONDS = 0.1
+/** Tiles seen around a building or a construction site, from the middle of its plot. */
+const BUILDING_SIGHT = 4
+/** Until the catalog arrives; the server sends the real radius with the rules. */
+const DEFAULT_SIGHT = 6
+const PEAK_SCALE = 2
 
 const NATURE: Partial<Record<number, NatureKind>> = {
   [Terrain.Tree]: 'tree',
@@ -89,13 +105,16 @@ const NATURE: Partial<Record<number, NatureKind>> = {
   [Terrain.Stone]: 'stone',
   [Terrain.Reeds]: 'reeds',
   [Terrain.Water]: 'water',
+  [Terrain.Thicket]: 'thicket',
+  [Terrain.Rockfall]: 'rockfall',
+  [Terrain.Cave]: 'cave',
 }
 
 export const PRIEST_ID = 'priest'
-export const GOVERNOR_ID = 'governor'
-/** Where the Governor stands until they first walk somewhere: just in front of the fire. */
-const GOVERNOR_HOME = { x: CAMPFIRE.x, y: CAMPFIRE.y + 1.2 }
-const GOVERNOR_LABEL = 0xffd27a
+export const TSAR_ID = 'tsar'
+/** Where the Tsar stands until they first walk somewhere: just in front of the fire. */
+const TSAR_HOME = { x: CAMPFIRE.x, y: CAMPFIRE.y + 1.2 }
+const TSAR_LABEL = 0xffd27a
 const RAIN_DROPS = 180
 /** Screen heights a raindrop falls per second. */
 const RAIN_FALL = 1.3
@@ -126,6 +145,10 @@ interface Walker {
   sleepsAt: number | null
   /** Turns around water towards a spot the player sent the walker to, in world pixels; the last one is the target. */
   way: Array<{ x: number; y: number }>
+  /** On watch: runs out to meet an attack on its way. */
+  guard: boolean
+  /** Wounded until then (wall clock, milliseconds): keeps still, tinted, with a red cross over the head. */
+  injuredUntil: number
 }
 
 interface Bubble {
@@ -147,6 +170,25 @@ function pseudo(seed: number, salt: number): number {
   return (hash(`${seed}:${salt}`) % 10000) / 10000
 }
 
+/** Largest shift, in pixels, of a plant away from the middle of its tile, sideways and up or down. */
+const SCATTER_X = 5
+const SCATTER_Y = 4
+
+/**
+ * Whole-pixel shift of the plant growing on the tile, so woods and meadows do not look like a grid. It depends only on
+ * the tile, so a tree, its stump and the tree growing back all stand on the same spot.
+ */
+function scatter(x: number, y: number): { dx: number; dy: number } {
+  const value = hash(`scatter:${Math.floor(x)},${Math.floor(y)}`)
+  return {
+    dx: Math.round(((value & 0xffff) / 0xffff - 0.5) * 2 * SCATTER_X),
+    dy: Math.round(((value >>> 16) / 0xffff - 0.5) * 2 * SCATTER_Y),
+  }
+}
+
+/** Depth of a building drawn on the plot whose top row is `y`: a rope bridge lies flat, so walkers cross on top of it. */
+const groundLevel = (kind: string, y: number) => (kind === ROPE_BRIDGE ? y * TILE : (y + 3) * TILE)
+
 export class VillageWorld {
   private readonly app: Application
   private readonly tiles: TileSet
@@ -155,10 +197,15 @@ export class VillageWorld {
   private readonly world = new Container()
   private readonly objects = new Container()
   private readonly wildlife = new WildlifeLayer(this.objects)
+  private readonly enemies = new EnemyLayer(this.objects)
+  /** Guards ran out to meet an attack and must be sent back to their posts once it is over. */
+  private guardsOut = false
   private readonly projectLayer = new Container()
   private readonly night = new Graphics()
   private readonly lights = new Graphics()
   private readonly flames = new Graphics()
+  private readonly fog = new Fog()
+  private fogUpdatedAt = Number.NEGATIVE_INFINITY
   private readonly screen = new Container()
   private readonly walkers = new Map<string, Walker>()
   private readonly bubbles: Bubble[] = []
@@ -169,9 +216,11 @@ export class VillageWorld {
    */
   private cullDirty = true
   private highlightId: string | null = null
+  private tsarTitle = ''
   private governorTitle = ''
   private nightAmount = 0
-  private nightTarget = 0
+  /** Development only: forces daylight (false) or night (true) instead of following the village sky. */
+  private nightOverride: boolean | null = null
   /** Drawn in screen space, so the rain looks the same at every zoom. */
   private readonly rain = new Graphics()
   private rainAmount = 0
@@ -212,6 +261,10 @@ export class VillageWorld {
   private scenery: Array<{ view: Container; x: number; y: number }> = []
   /** Standing trees of the forest area by "x,y"; they come and go with the village state. */
   private readonly trees = new Map<string, Container>()
+  /** Standing thickets and rockfalls, by tile. */
+  private readonly obstacles = new Map<string, Container>()
+  /** Kind of the building being placed: a rope bridge goes over the ravine, everything else on the camp land. */
+  private placingKind = ''
   /** What covers each tile, shared with the minimap and the wildlife; trees of the forest area change it. */
   private terrain: Uint8Array | null = null
   private readonly placementLayer = new Container()
@@ -242,8 +295,9 @@ export class VillageWorld {
     this.placementLayer.addChild(this.ghost)
     this.placementLayer.visible = false
     this.selection.visible = false
-    this.world.addChild(this.groundLayer, this.objects, this.placementLayer, this.selection, this.night, this.lights)
+    this.world.addChild(this.groundLayer, this.objects, this.placementLayer, this.selection, this.night, this.lights, this.fog.sprite)
     app.stage.addChild(this.world, this.rain, this.screen)
+    this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
     this.addWalker(PRIEST_ID, '', this.tiles.get(dungeon(PRIEST_SPRITE)), PRIEST_SPOT.x * TILE, PRIEST_SPOT.y * TILE)
 
@@ -252,6 +306,7 @@ export class VillageWorld {
         this.cameraMoved = true
         this.centerOn(x, y)
       })
+      this.minimap.setFog(this.fog.canvas)
     }
     this.layoutCamera()
     app.renderer.on('resize', () => {
@@ -283,12 +338,13 @@ export class VillageWorld {
     this.minimap?.destroy()
     this.app.canvas.remove()
     this.app.destroy(true, { children: true })
+    this.fog.destroy()
     for (const texture of this.lookTextures.values()) texture.destroy(true)
   }
 
   /** The land is generated from the village id, so it is built once the village is known. */
-  private buildTerrain(seed: number) {
-    const layout = buildLayout(seed)
+  private buildTerrain(seed: number, wilds: Wilds | null) {
+    const layout = buildLayout(seed, wilds)
     const ground = new Container()
     layout.ground.forEach((row, y) =>
       row.forEach((tile, x) => {
@@ -306,6 +362,52 @@ export class VillageWorld {
         .fill({ color: 0x5ac8f0 })
         .ellipse(pond.x * TILE - pond.radiusX * 3, pond.y * TILE - pond.radiusY * 3, pond.radiusX * 4, pond.radiusY * 2)
         .fill({ color: 0x8adcf8, alpha: 0.6 })
+    }
+    // Bare rock under the mountain peaks.
+    for (const mountain of layout.mountains) {
+      water
+        .rect(mountain.x * TILE - 1, mountain.y * TILE - 1, TILE + 2, TILE + 2)
+        .fill({ color: 0x8d857b })
+        .rect(mountain.x * TILE + 3, mountain.y * TILE + 4, 4, 3)
+        .fill({ color: 0x7a7268 })
+    }
+    // Wet ground with puddles and sedge.
+    for (const wet of layout.marsh) {
+      const x = wet.x * TILE
+      const y = wet.y * TILE
+      water
+        .rect(x - 0.5, y - 0.5, TILE + 1, TILE + 1)
+        .fill({ color: 0x5f7a45, alpha: 0.85 })
+        .ellipse(x + 5 + pseudo(wet.x, wet.y) * 6, y + 9, 4, 2.2)
+        .fill({ color: 0x4f8fa0, alpha: 0.75 })
+      for (const dx of [3, 11]) {
+        water
+          .moveTo(x + dx, y + 7)
+          .lineTo(x + dx - 1, y + 2)
+          .moveTo(x + dx, y + 7)
+          .lineTo(x + dx + 1.5, y + 3)
+          .stroke({ color: 0x8aa04a, width: 1 })
+      }
+    }
+    for (const step of layout.trail) {
+      water.rect(step.x * TILE + 5, step.y * TILE, 6, TILE).fill({ color: 0x9c7f5a })
+    }
+    // The ravine: a dark cleft with its north wall showing and pale lips on both rims.
+    for (const span of wilds?.ravine ?? []) {
+      const x = span.x * TILE
+      const top = span.top * TILE
+      const bottom = (span.top + span.height) * TILE
+      water
+        .rect(x - 0.5, top - 3, TILE + 1, 3)
+        .fill({ color: 0xa8865a })
+        .rect(x - 0.5, top, TILE + 1, bottom - top)
+        .fill({ color: 0x2b2018 })
+        .rect(x - 0.5, top, TILE + 1, 6)
+        .fill({ color: 0x5e4630 })
+        .rect(x + 3 + pseudo(span.x, span.top) * 8, top + 12, 3, 2)
+        .fill({ color: 0x46342a })
+        .rect(x - 0.5, bottom - 2, TILE + 1, 2)
+        .fill({ color: 0x7a5c3e })
     }
     // Trampled earth around the campfire.
     water
@@ -325,8 +427,13 @@ export class VillageWorld {
       this.objects.addChild(cull(view))
       this.scenery.push({ view, x: Math.floor(x), y: Math.floor(y) })
     }
-    for (const placed of layout.decor) addScenery(this.decorView(placed), placed.x, placed.y)
-    for (const bush of layout.bushes) addScenery(this.bushView(bush.x, bush.y), bush.x, bush.y)
+    for (const placed of layout.decor) addScenery(this.scattered(this.decorView(placed), placed.x, placed.y), placed.x, placed.y)
+    for (const mountain of layout.mountains) addScenery(this.peakView(mountain.peak, mountain.x, mountain.y), mountain.x, mountain.y)
+    if (wilds) {
+      addScenery(this.caveView(wilds.caveX, wilds.caveY), wilds.caveX, wilds.caveY)
+      addScenery(this.lookoutView(wilds.lookoutX, wilds.lookoutY), wilds.lookoutX, wilds.lookoutY)
+    }
+    for (const bush of layout.bushes) addScenery(this.scattered(this.bushView(bush.x, bush.y), bush.x, bush.y), bush.x, bush.y)
     for (const reed of layout.reeds) this.objects.addChild(cull(this.reedView(reed.x, reed.y)))
     const church = MONASTERY.church
     this.objects.addChild(this.buildingView(church.tiles, church.x, church.y, 'blue'))
@@ -334,6 +441,7 @@ export class VillageWorld {
     this.terrain = layout.terrain
     this.minimap?.setTerrain(layout.terrain)
     this.wildlife.setTerrain(layout.terrain)
+    this.enemies.setTerrain(layout.terrain)
     this.cullDirty = true
   }
 
@@ -355,7 +463,7 @@ export class VillageWorld {
     for (const tree of trees) {
       const key = `${tree.x},${tree.y}`
       if (this.trees.has(key)) continue
-      const view = this.decorView(treeAt(tree.x, tree.y))
+      const view = this.scattered(this.decorView(treeAt(tree.x, tree.y)), tree.x, tree.y)
       view.cullable = true
       this.objects.addChild(view)
       this.trees.set(key, view)
@@ -366,38 +474,75 @@ export class VillageWorld {
     if (changed) this.minimap?.setTerrain(terrain)
   }
 
+  /** Draws the standing thickets and rockfalls; cleared ones turn to grass and let walkers through. */
+  private drawObstacles(wilds: Wilds | null) {
+    const terrain = this.terrain
+    if (!terrain || !wilds) return
+    let changed = false
+    for (const obstacle of wilds.obstacles) {
+      const key = `${obstacle.x},${obstacle.y}`
+      const kind = obstacle.kind === 'Thicket' ? Terrain.Thicket : Terrain.Rockfall
+      const tile = (obstacle.y - MAP_TOP) * MAP_WIDTH + (obstacle.x - MAP_LEFT)
+      const view = this.obstacles.get(key)
+      if (obstacle.cleared) {
+        view?.destroy({ children: true })
+        this.obstacles.delete(key)
+        if (terrain[tile] === kind) {
+          terrain[tile] = Terrain.Grass
+          changed = true
+        }
+        continue
+      }
+      if (view) continue
+      const created = kind === Terrain.Thicket ? this.thicketView(obstacle.x, obstacle.y) : this.rockfallView(obstacle.x, obstacle.y)
+      created.cullable = true
+      this.objects.addChild(created)
+      this.obstacles.set(key, created)
+      this.cullDirty = true
+    }
+    if (changed) this.minimap?.setTerrain(terrain)
+  }
+
   setPriestName(name: string) {
     const priest = this.walkers.get(PRIEST_ID)
     if (priest) priest.label.text = name
   }
 
-  /** Shown under the Governor's name, in the player's language. */
-  setGovernorTitle(title: string) {
-    this.governorTitle = title
-    const governor = this.walkers.get(GOVERNOR_ID)
-    if (!governor) return
-    governor.subtitle.text = title
-    governor.subtitle.visible = title !== ''
+  /** Shown under the names of the Tsar and of the Governors, in the player's language. */
+  setTitles(tsarTitle: string, governorTitle: string) {
+    this.tsarTitle = tsarTitle
+    this.governorTitle = governorTitle
+    this.setCitizens(this.citizens, this.highlightId)
+    const tsar = this.walkers.get(TSAR_ID)
+    if (!tsar) return
+    tsar.subtitle.text = tsarTitle
+    tsar.subtitle.visible = tsarTitle !== ''
   }
 
-  /** The Governor stands where they last walked to, or by the campfire; a new spot makes them walk there. */
-  private setGovernor(governor: Governor) {
-    const spot = governor.spot ?? GOVERNOR_HOME
-    const texture = this.lookTexture(GOVERNOR_ID, governor.appearance)
-    let walker = this.walkers.get(GOVERNOR_ID)
+  /** The Tsar stands where they last walked to, or by the campfire; a new spot makes them walk there. */
+  private setTsar(tsar: Tsar) {
+    const spot = tsar.spot ?? TSAR_HOME
+    const texture = this.lookTexture(TSAR_ID, tsar.appearance)
+    let walker = this.walkers.get(TSAR_ID)
     if (!walker) {
-      walker = this.addWalker(GOVERNOR_ID, governor.name, texture, spot.x * TILE, spot.y * TILE)
-      walker.label.style.fill = GOVERNOR_LABEL
-      this.setGovernorTitle(this.governorTitle)
+      walker = this.addWalker(TSAR_ID, tsar.name, texture, spot.x * TILE, spot.y * TILE)
+      walker.label.style.fill = TSAR_LABEL
+      walker.subtitle.text = this.tsarTitle
+      walker.subtitle.visible = this.tsarTitle !== ''
     }
     walker.sprite.texture = texture
-    walker.label.text = governor.name
+    walker.label.text = tsar.name
     walker.staying = true
     this.walkTo(walker, spot)
   }
 
   private bridgeDone() {
     return this.village?.completedProjects.includes('tsar-bridge') ?? false
+  }
+
+  private way(walker: Walker, spot: TilePoint) {
+    const crossings = this.village ? bridgeCrossings(this.village) : []
+    return findWay(this.terrain!, { x: walker.x / TILE, y: walker.y / TILE }, spot, this.bridgeDone(), crossings)
   }
 
   /** Sends a walker to a spot, in tiles, around water. A spot the map cannot reach is jumped to rather than waded to. */
@@ -409,7 +554,7 @@ export class VillageWorld {
     walker.targetY = y
     walker.way = []
     if (!this.terrain) return
-    const way = findWay(this.terrain, { x: walker.x / TILE, y: walker.y / TILE }, spot, this.bridgeDone())
+    const way = this.way(walker, spot)
     if (typeof way === 'string') {
       walker.x = x
       walker.y = y
@@ -422,7 +567,7 @@ export class VillageWorld {
   wayBlock(walkerId: string, spot: TilePoint): WalkBlock | null {
     const walker = this.walkers.get(walkerId)
     if (!walker || !this.terrain) return null
-    const way = findWay(this.terrain, { x: walker.x / TILE, y: walker.y / TILE }, spot, this.bridgeDone())
+    const way = this.way(walker, spot)
     return typeof way === 'string' ? way : null
   }
 
@@ -433,8 +578,9 @@ export class VillageWorld {
     this.drawBuildings()
   }
 
-  setNight(isNight: boolean) {
-    this.nightTarget = isNight ? 1 : 0
+  /** Null follows the village's day and night. */
+  setNightOverride(night: boolean | null) {
+    this.nightOverride = night
   }
 
   setCatalog(catalog: Catalog | null) {
@@ -453,10 +599,12 @@ export class VillageWorld {
 
   /**
    * Starts placing a building anywhere on free land: an outline follows the pointer, and a click (not a drag)
-   * on free land calls `onPick` with the top-left tile. Null ends placement.
+   * on free land calls `onPick` with the top-left tile. A rope bridge (`kind`) is placed across the ravine instead.
+   * Null ends placement.
    */
-  setPlacement(onPick: ((x: number, y: number) => void) | null) {
+  setPlacement(onPick: ((x: number, y: number) => void) | null, kind = '') {
     this.onPick = onPick
+    this.placingKind = kind
     this.app.canvas.style.cursor = ''
     this.ghost.clear()
     this.placementLayer.visible = false
@@ -473,7 +621,7 @@ export class VillageWorld {
     const padding = 4
     let found: Walker | null = null
     for (const walker of this.walkers.values()) {
-      if (walker.id === PRIEST_ID || walker.id === GOVERNOR_ID) continue
+      if (walker.id === PRIEST_ID || walker.id === TSAR_ID) continue
       const hit = [walker.sprite, walker.label, walker.subtitle].some((view) => {
         if (!view.visible) return false
         const bounds = view.getBounds()
@@ -527,6 +675,8 @@ export class VillageWorld {
 
     const prey = this.wildlife.animalAt(worldX, worldY, ANIMAL_REACH)
     if (prey) return { kind: 'animal', prey, area: null }
+    // Nobody knows what lies in the dark; a click there only sends the walker to look.
+    if (!this.fog.isExplored(x, y)) return null
 
     for (const site of village.sites) {
       const plot = this.plot(site.plotId)
@@ -571,7 +721,11 @@ export class VillageWorld {
   private placementAt(worldX: number, worldY: number) {
     const x = Math.floor(worldX / TILE) - Math.floor(PLOT_WIDTH / 2)
     const y = Math.floor(worldY / TILE) - 1
-    const free = this.catalog !== null && this.village !== null && canBuildAt(this.catalog, this.village, x, y)
+    const free =
+      this.catalog !== null &&
+      this.village !== null &&
+      (this.placingKind === ROPE_BRIDGE ? canBridgeAt(this.village, x, y) : canBuildAt(this.catalog, this.village, x, y)) &&
+      this.fog.isAreaExplored(footprint(x, y))
     return { x, y, free }
   }
 
@@ -594,7 +748,7 @@ export class VillageWorld {
   setCitizens(citizens: CitizenSummary[], highlightId: string | null) {
     this.citizens = citizens
     this.highlightId = highlightId
-    const seen = new Set<string>([PRIEST_ID, GOVERNOR_ID])
+    const seen = new Set<string>([PRIEST_ID, TSAR_ID])
     for (const citizen of citizens) {
       seen.add(citizen.id)
       let walker = this.walkers.get(citizen.id)
@@ -613,8 +767,9 @@ export class VillageWorld {
       walker.sprite.texture = texture
       walker.label.text = citizen.name
       walker.label.style.fill = citizen.id === highlightId ? 0xffe066 : 0xffffff
-      walker.subtitle.text = citizen.subtitle ?? ''
-      walker.subtitle.visible = citizen.subtitle !== null
+      const subtitle = [citizen.isGovernor ? this.governorTitle : '', citizen.subtitle ?? ''].filter(Boolean).join(' · ')
+      walker.subtitle.text = subtitle
+      walker.subtitle.visible = subtitle !== ''
 
       const working = citizen.state === 'Working' && (citizen.workplace !== null || citizen.siteId !== null)
       const carried = citizen.carrying?.[0]
@@ -630,8 +785,14 @@ export class VillageWorld {
       const hunt = this.huntOf(citizen)
       if (!hunt && walker.hunt) this.wildlife.endHunt(walker.id)
       walker.hunt = hunt
+      walker.guard = working && this.catalog?.tasks.find((task) => task.id === citizen.taskId)?.effect === 'Guard'
+      walker.injuredUntil = citizen.injuredUntil ? Date.parse(citizen.injuredUntil) : 0
+      const injured = !working && walker.injuredUntil > Date.now()
+      if (injured) walker.staying = true
       let icon: { key: string; tile: TileRef | null } | null = null
-      if (hunt && citizen.taskId) {
+      if (injured) {
+        icon = { key: INJURED_ICON, tile: null }
+      } else if (hunt && citizen.taskId) {
         icon = { key: `task:${citizen.taskId}`, tile: taskIcon(citizen.taskId) }
       } else if (roaming && citizen.taskId) {
         icon = { key: `task:${citizen.taskId}`, tile: taskIcon(citizen.taskId) }
@@ -651,7 +812,7 @@ export class VillageWorld {
       } else if (stayAt) {
         this.walkTo(walker, stayAt)
       } else if (waitAt && carried) {
-        // Waiting at a full storage building with the load in hands: the crowd is the Governor's only hint.
+        // Waiting at a full storage building with the load in hands: the crowd is the Tsar's only hint.
         walker.targetX = (waitAt.x + (pseudo(walker.seed, 5) - 0.5) * waitAt.spread * 2) * TILE
         walker.targetY = (waitAt.y + (pseudo(walker.seed, 6) - 0.5) * 0.6) * TILE
         const tile = RESOURCE_ICONS[carried]
@@ -679,7 +840,18 @@ export class VillageWorld {
     if (walker.iconKey === key) return
     walker.iconKey = key
     walker.icon.removeChildren().forEach((child) => child.destroy())
-    if (tile) walker.icon.addChild(...this.iconBubble(tile))
+    if (key === INJURED_ICON) walker.icon.addChild(this.injuredBubble())
+    else if (tile) walker.icon.addChild(...this.iconBubble(tile))
+  }
+
+  private injuredBubble(): Graphics {
+    return new Graphics()
+      .roundRect(-6, -6, 12, 12, 3)
+      .fill({ color: 0xfff5dc })
+      .stroke({ color: 0x3a2a1a, width: 1 })
+      .rect(-1.5, -4, 3, 8)
+      .rect(-4, -1.5, 8, 3)
+      .fill({ color: 0xd8342a })
   }
 
   /**
@@ -739,10 +911,13 @@ export class VillageWorld {
     if (!village) return
     const key = JSON.stringify([
       this.buildingDefinitions.size,
-      village.storages.map((s) => [s.kind, s.plotId, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
-      village.structures.map((s) => [s.kind, s.plotId]),
+      village.storages.map((s) => [s.kind, s.plotId, s.damage, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
+      village.structures.map((s) => [s.kind, s.plotId, s.damage]),
       village.sites.map((s) => [s.kind, s.plotId, s.stage, Math.floor(s.progress * 24)]),
-      village.fields.map((bed) => [bed.plotId, bed.crop, cropTile(bed.crop ?? '', bed.growth, isRipe(bed))?.index, this.isWet(bed)]),
+      village.fields.map((bed) => {
+        const plant = cropTile(bed.crop ?? '', bed.growth, isRipe(bed))
+        return [bed.plotId, bed.crop, plant && tileKey(plant), this.isWet(bed)]
+      }),
     ])
     if (key === this.lastBuildingKey) return
     this.lastBuildingKey = key
@@ -777,6 +952,7 @@ export class VillageWorld {
       const plot = this.plot(structure.plotId)
       if (!plot) continue
       add(this.finishedView(structure.kind, plot.x, plot.y))
+      if (structure.damage > 0) add(this.damageView(structure.plotId, structure.damage, plot.x, plot.y))
       name(structure.kind, false, plot)
       const beds = village.fields.filter((bed) => bed.plotId === structure.plotId)
       if (beds.length > 0) add(this.bedsView(beds, plot.x, plot.y))
@@ -787,6 +963,7 @@ export class VillageWorld {
       const definition = this.storageDefinitions.get(storage.kind)
       if (!plot || !definition) continue
       add(this.finishedView(storage.kind, plot.x, plot.y))
+      if (storage.damage > 0) add(this.damageView(storage.plotId, storage.damage, plot.x, plot.y))
       name(storage.kind, true, plot)
       add(this.goodsYard(storage, definition, plot.x, plot.y))
     }
@@ -807,13 +984,36 @@ export class VillageWorld {
     for (const item of this.scenery) item.view.visible = !covered.has(`${item.x},${item.y}`)
   }
 
+  /** Cracks, soot and broken planks over a building raiders damaged: one mark per fifth of the maximum damage. */
+  private damageView(plotId: string, damage: number, x: number, y: number): Container {
+    const maximum = this.catalog?.rules.maximumDamage ?? 100
+    const marks = Math.min(5, Math.ceil((damage / maximum) * 5))
+    const seed = hash(plotId)
+    const view = new Graphics()
+    for (let mark = 0; mark < marks; mark++) {
+      const markX = (x + 0.3 + pseudo(seed, 20 + mark) * (PLOT_WIDTH - 0.6)) * TILE
+      const markY = (y + 0.6 + pseudo(seed, 30 + mark) * (PLOT_HEIGHT - 1)) * TILE
+      view.ellipse(markX, markY, 4, 2.5).fill({ color: 0x1b1206, alpha: 0.45 })
+      view
+        .moveTo(markX - 3, markY - 3)
+        .lineTo(markX, markY)
+        .lineTo(markX - 1, markY + 3)
+        .moveTo(markX, markY)
+        .lineTo(markX + 3, markY - 1)
+        .stroke({ color: 0x2b1d0e, width: 1 })
+      if (mark % 2 === 1) view.rect(markX + 2, markY + 1, 5, 1.5).fill({ color: 0x8a5a2a })
+    }
+    view.zIndex = (y + PLOT_HEIGHT) * TILE + 1
+    return view
+  }
+
   /** A finished building in the 3×3 area of a plot. Storage kinds share names with their building kinds. */
   private finishedView(kind: string, x: number, y: number): Container {
     const tiles = BUILDING_TILES[kind]
     if (tiles) return this.buildingView(tiles, x, y)
     const view = this.wildView(kind)
     view.position.set(x * TILE, y * TILE)
-    view.zIndex = (y + 3) * TILE
+    view.zIndex = groundLevel(kind, y)
     return view
   }
 
@@ -887,6 +1087,16 @@ export class VillageWorld {
           g.rect(hx * T - 3, 1.15 * T, 6, 0.7 * T).fill({ color })
         }
         break
+      case 'RopeBridge':
+        // Posts on both rims, a plank deck over the ravine rows, and a hand rope on each side.
+        for (let plank = 0; plank < 7; plank++) {
+          g.rect(0.55 * T, (0.75 + plank * 0.36) * T, 1.9 * T, 0.28 * T).fill({ color: plank % 2 ? 0x8f5f33 : 0xa06c3c })
+        }
+        for (const px of [0.45, 2.55]) {
+          g.moveTo(px * T, 0.55 * T).quadraticCurveTo(px * T, 2.1 * T, px * T, 3.45 * T).stroke({ color: 0xc9a46a, width: 1.5 })
+          for (const py of [0.75, 3.45]) g.rect(px * T - 1.5, py * T - 8, 3, 9).fill({ color: pole })
+        }
+        break
       default:
         view.addChild(this.localSprite(town(83), 1, 1.8))
     }
@@ -904,7 +1114,7 @@ export class VillageWorld {
   private siteView(site: Site, x: number, y: number): Container {
     const view = new Container()
     view.position.set(x * TILE, y * TILE)
-    view.zIndex = (y + 3) * TILE
+    view.zIndex = groundLevel(site.kind, y)
 
     view.addChild(new Graphics().rect(0, 0, PLOT_WIDTH * TILE, 3 * TILE).fill({ color: 0x7a5a32, alpha: 0.35 }))
     const ghost = this.finishedView(site.kind, 0, 0)
@@ -985,16 +1195,19 @@ export class VillageWorld {
     this.rainTarget = state.weather.raining ? 1 : 0
     if (this.terrainSeed === null) {
       this.terrainSeed = seedFrom(state.id)
-      this.buildTerrain(this.terrainSeed)
+      this.buildTerrain(this.terrainSeed, state.wilds)
       this.showCamp()
     }
     this.village = state
+    this.fog.setExplored(state.explored)
     this.drawTrees(state.trees)
+    this.drawObstacles(state.wilds)
     this.drawBuildings()
     this.wildlife.setHerds(state.wildlife)
+    this.enemies.setRaids(state.raids)
     this.activeProjectId = state.project?.definitionId ?? null
     this.setCitizens(this.citizens, this.highlightId)
-    this.setGovernor(state.governor)
+    this.setTsar(state.tsar)
 
     const project = state.project
     const key = JSON.stringify([
@@ -1157,7 +1370,7 @@ export class VillageWorld {
   }
 
   /** Shows a speech bubble above a citizen (or the elder). */
-  say(ownerId: string, text: string) {
+  say(ownerId: string, text: string, seconds = BUBBLE_SECONDS) {
     const owner = this.walkers.get(ownerId)
     if (!owner) return
     for (const bubble of this.bubbles.filter((b) => b.ownerId === ownerId)) {
@@ -1180,7 +1393,7 @@ export class VillageWorld {
     const view = new Container()
     view.addChild(background, label)
     this.screen.addChild(view)
-    this.bubbles.push({ ownerId, view, expiresAt: this.elapsed + BUBBLE_SECONDS })
+    this.bubbles.push({ ownerId, view, expiresAt: this.elapsed + seconds })
   }
 
   /** Figures without a created character keep a sprite picked from their id. */
@@ -1248,6 +1461,8 @@ export class VillageWorld {
       hunt: null,
       sleepsAt: null,
       way: [],
+      guard: false,
+      injuredUntil: 0,
     }
     this.walkers.set(id, walker)
     return walker
@@ -1260,6 +1475,14 @@ export class VillageWorld {
     return sprite
   }
 
+  /** A plant standing on its tile, shifted off the middle by the tile's own `scatter`. */
+  private scattered<T extends Container>(view: T, x: number, y: number): T {
+    const { dx, dy } = scatter(x, y)
+    view.position.set(view.x + dx, view.y + dy)
+    view.zIndex += dy
+    return view
+  }
+
   private decorView(placed: PlacedTile): Container {
     const sprite = this.tileSprite(placed.tile, placed.x, placed.y)
     if (!placed.top) return sprite
@@ -1267,6 +1490,72 @@ export class VillageWorld {
     view.zIndex = sprite.zIndex
     view.addChild(this.tileSprite(placed.top, placed.x, placed.y - 1), sprite)
     return view
+  }
+
+  /** A mountain peak twice the size of a tile, standing on its tile and reaching into the one above. */
+  private peakView(tile: TileRef, x: number, y: number): Sprite {
+    const sprite = new Sprite(this.tiles.get(tile))
+    sprite.anchor.set(0.5, 1)
+    sprite.scale.set(PEAK_SCALE)
+    sprite.position.set((x + 0.5) * TILE, (y + 1) * TILE)
+    sprite.zIndex = (y + 1) * TILE
+    return sprite
+  }
+
+  /** Dense brambles filling a tile, thorny twigs sticking out. */
+  private thicketView(x: number, y: number): Graphics {
+    const g = new Graphics()
+    for (const [bx, by, radius] of [[4, 11, 5], [12, 11, 5], [8, 7, 6], [3, 5, 3.5], [13, 5, 3.5]]) {
+      g.circle(bx, by, radius).fill({ color: 0x24501f })
+    }
+    for (const [bx, by] of [[6, 6], [10, 9], [4, 10], [12, 4]]) g.circle(bx, by, 2.2).fill({ color: 0x356b2b })
+    for (const [fromX, fromY, toX, toY] of [[1, 9, -2, 6], [15, 9, 18, 6], [8, 2, 9, -2], [3, 14, 0, 16], [13, 14, 16, 16]]) {
+      g.moveTo(fromX, fromY).lineTo(toX, toY).stroke({ color: 0x5a3a1e, width: 1 })
+    }
+    g.position.set(x * TILE, y * TILE)
+    g.zIndex = (y + 1) * TILE
+    return g
+  }
+
+  /** Boulders piled in a mountain pass. */
+  private rockfallView(x: number, y: number): Graphics {
+    const g = new Graphics().rect(-0.5, -0.5, TILE + 1, TILE + 1).fill({ color: 0x8d857b })
+    const tilt = pseudo(x, y) * 3
+    for (const [bx, by, radiusX, radiusY] of [[5, 10, 5, 4], [11.5 - tilt, 11, 4.5, 3.5], [8, 5.5 + tilt, 4.5, 4], [13, 5, 3, 2.5]]) {
+      g.ellipse(bx, by, radiusX, radiusY).fill({ color: 0x6f6860 }).ellipse(bx - 1, by - 1, radiusX * 0.6, radiusY * 0.5).fill({ color: 0xa8a097 })
+    }
+    g.position.set(x * TILE, y * TILE)
+    g.zIndex = (y + 1) * TILE
+    return g
+  }
+
+  /** A dark mouth in the south face of a ridge. */
+  private caveView(x: number, y: number): Graphics {
+    const g = new Graphics()
+      .rect(-0.5, -0.5, TILE + 1, TILE + 1)
+      .fill({ color: 0x8d857b })
+      .moveTo(1, TILE)
+      .lineTo(1, 7)
+      .quadraticCurveTo(TILE / 2, -3, TILE - 1, 7)
+      .lineTo(TILE - 1, TILE)
+      .fill({ color: 0x1c1712 })
+      .rect(1, TILE - 2, TILE - 2, 2)
+      .fill({ color: 0x5e5248 })
+    g.position.set(x * TILE, y * TILE)
+    g.zIndex = (y + 1) * TILE - 1
+    return g
+  }
+
+  /** The bare top of the lookout peak with a cairn of stones on it. */
+  private lookoutView(x: number, y: number): Graphics {
+    const g = new Graphics().rect(-0.5, -0.5, TILE + 1, TILE + 1).fill({ color: 0xa39a8e })
+    for (const [bx, by, radiusX] of [[8, 12, 5], [8, 8.5, 4], [8, 5.5, 3], [8, 3, 2]]) {
+      g.ellipse(bx, by, radiusX, radiusX * 0.6).fill({ color: 0x6f6860 })
+    }
+    g.moveTo(11, 4).lineTo(11, -6).stroke({ color: 0x6b4423, width: 1.5 }).rect(11, -6, 5, 3).fill({ color: 0xc04040 })
+    g.position.set(x * TILE, y * TILE)
+    g.zIndex = (y + 1) * TILE - 1
+    return g
   }
 
   private bushView(x: number, y: number): Graphics {
@@ -1433,6 +1722,15 @@ export class VillageWorld {
     this.placeAt(tileX * TILE, tileY * TILE, width / 2, height / 2)
   }
 
+  /** Centres the view on a walker; false when there is no such walker. */
+  locate(walkerId: string): boolean {
+    const walker = this.walkers.get(walkerId)
+    if (!walker) return false
+    this.cameraMoved = true
+    this.centerOn(walker.x / TILE, walker.y / TILE)
+    return true
+  }
+
   /** Visible part of the map in tiles. */
   private visibleArea() {
     const topLeft = this.world.toLocal({ x: 0, y: 0 })
@@ -1455,6 +1753,8 @@ export class VillageWorld {
   private bindPointer() {
     const canvas = this.app.canvas
     canvas.style.touchAction = 'none'
+    canvas.style.userSelect = 'none'
+    canvas.style.setProperty('-webkit-touch-callout', 'none')
     const pointers = new Map<number, { x: number; y: number }>()
     let pinchDistance = 0
     const local = (event: PointerEvent) => {
@@ -1470,16 +1770,35 @@ export class VillageWorld {
       }
     }
 
+    /** Walks to the point, even onto a tree or a building. */
+    const walkTo = (screen: { x: number; y: number }) => {
+      if (this.onPick) return
+      const point = this.world.toLocal(screen)
+      this.onWorldPick?.(null, screen, { x: point.x / TILE, y: point.y / TILE })
+    }
+    let longPress = 0
+
     canvas.addEventListener('pointerdown', (event) => {
       pointers.set(event.pointerId, local(event))
       canvas.setPointerCapture(event.pointerId)
+      window.clearTimeout(longPress)
       if (pointers.size === 2) {
         // Two fingers: pinch zoom takes over, and the gesture never counts as a click on a plot.
         pinchDistance = pinch().distance
         if (this.dragging) this.dragging.moved = true
         return
       }
-      this.dragging = { x: event.clientX, y: event.clientY, panX: this.panX, panY: this.panY, moved: false }
+      const press = { x: event.clientX, y: event.clientY, panX: this.panX, panY: this.panY, moved: false }
+      this.dragging = press
+      if (event.pointerType === 'mouse') return
+      // Touch has no right click: holding a finger still walks there instead.
+      const screen = local(event)
+      longPress = window.setTimeout(() => {
+        if (this.dragging !== press || press.moved || pointers.size !== 1) return
+        press.moved = true
+        navigator.vibrate?.(30)
+        walkTo(screen)
+      }, LONG_PRESS_MS)
     })
     canvas.addEventListener('pointermove', (event) => {
       if (!pointers.has(event.pointerId)) return
@@ -1490,6 +1809,7 @@ export class VillageWorld {
       pinchDistance = current.distance
     })
     const release = (event: PointerEvent) => {
+      window.clearTimeout(longPress)
       pointers.delete(event.pointerId)
       pinchDistance = 0
       if (pointers.size === 1 && this.dragging) {
@@ -1508,6 +1828,10 @@ export class VillageWorld {
     }
     canvas.addEventListener('pointerup', (event) => {
       if (!this.dragging || this.dragging.moved) return
+      if (event.button === 2) {
+        walkTo(local(event))
+        return
+      }
       if (!this.onPick) {
         const screen = local(event)
         const citizenId = this.onCitizenPick ? this.citizenAt(screen) : null
@@ -1559,6 +1883,7 @@ export class VillageWorld {
     }
     canvas.addEventListener('pointerup', stop)
     canvas.addEventListener('pointercancel', stop)
+    canvas.addEventListener('contextmenu', (event) => event.preventDefault())
     canvas.addEventListener(
       'wheel',
       (event) => {
@@ -1601,21 +1926,36 @@ export class VillageWorld {
 
     this.drawFlames()
     this.placementLayer.alpha = 0.65 + Math.sin(this.elapsed * 4) * 0.35
-    this.nightAmount += (this.nightTarget - this.nightAmount) * Math.min(1, seconds * 2)
+    const now = Date.now()
+    const nightTarget =
+      this.nightOverride !== null ? Number(this.nightOverride) : this.village ? darknessAt(this.village.weather, now) : 0
+    this.nightAmount += (nightTarget - this.nightAmount) * Math.min(1, seconds * 2)
     this.night.alpha = this.nightAmount * 0.55
     this.lights.alpha = this.nightAmount * (0.9 + Math.sin(this.elapsed * 9) * 0.1)
     this.rainAmount += (this.rainTarget - this.rainAmount) * Math.min(1, seconds)
     this.drawRain(seconds)
 
-    const now = Date.now()
     const hunters = new Set<string>()
     const sortDepth = this.elapsed - this.depthSortedAt >= DEPTH_SORT_SECONDS
     if (sortDepth) this.depthSortedAt = this.elapsed
+    const front = this.enemies.front(now)
     for (const walker of this.walkers.values()) {
       let speed = WALK_SPEED
       walker.icon.visible = true
+      const hurt = walker.injuredUntil > now
+      walker.sprite.tint = hurt ? INJURED_TINT : 0xffffff
+      if (!hurt && walker.iconKey === INJURED_ICON) {
+        this.setIcon(walker, '', null)
+        walker.staying = false
+        walker.wanderAt = 0
+      }
       if (walker.sleepsAt !== null && now >= walker.sleepsAt) walker.staying = true
-      if (walker.hunt) {
+      if (walker.guard && front) {
+        walker.targetX = front.x + (pseudo(walker.seed, 9) - 0.5) * 2.5 * TILE
+        walker.targetY = front.y + (pseudo(walker.seed, 10) - 0.5) * 1.5 * TILE
+        speed = RUN_SPEED
+        this.guardsOut = true
+      } else if (walker.hunt) {
         hunters.add(walker.id)
         const secondsLeft = (walker.hunt.catchAt - now) / 1000
         const chase = this.wildlife.chase(walker.id, walker.hunt.prey, walker.x, walker.y, secondsLeft)
@@ -1673,10 +2013,20 @@ export class VillageWorld {
       const subtitleHeight = walker.subtitle.visible ? walker.subtitle.height - 2 : 0
       walker.subtitle.position.set(Math.round(head.x), Math.round(head.y))
       walker.label.position.set(Math.round(head.x), Math.round(head.y - subtitleHeight))
-      walker.label.alpha = walker.id === this.highlightId || walker.id === PRIEST_ID || walker.id === GOVERNOR_ID ? 1 : 0.9
+      walker.label.alpha = walker.id === this.highlightId || walker.id === PRIEST_ID || walker.id === TSAR_ID ? 1 : 0.9
       walker.subtitle.alpha = walker.label.alpha
     }
+    if (this.elapsed - this.fogUpdatedAt >= FOG_SECONDS) {
+      this.fogUpdatedAt = this.elapsed
+      this.fog.update(this.viewers(), this.nightAmount)
+    }
     this.wildlife.update(seconds, this.elapsed, [...this.walkers.values()], hunters, sortDepth)
+    this.enemies.update(seconds, now, sortDepth)
+    // The attack is over: guards go back to their posts.
+    if (this.guardsOut && !front) {
+      this.guardsOut = false
+      this.setCitizens(this.citizens, this.highlightId)
+    }
 
     for (const label of this.buildingLabels) {
       const top = this.world.toGlobal({ x: label.x, y: label.y })
@@ -1707,6 +2057,19 @@ export class VillageWorld {
     }
   }
 
+  /** Who sees the land now: every figure on the map, the campfire, and the buildings and sites of the village. */
+  private viewers(): Viewer[] {
+    const sight = this.catalog?.rules.sightRadius ?? DEFAULT_SIGHT
+    const viewers: Viewer[] = [{ x: CAMPFIRE.x, y: CAMPFIRE.y, radius: sight }]
+    for (const walker of this.walkers.values()) viewers.push({ x: walker.x / TILE, y: walker.y / TILE, radius: sight })
+    if (this.village) {
+      for (const area of buildingFootprints(this.village)) {
+        viewers.push({ x: area.x + area.width / 2, y: area.y + area.height / 2, radius: BUILDING_SIGHT })
+      }
+    }
+    return viewers
+  }
+
   private minimapMarkers(): MinimapMarkers {
     const church = MONASTERY.church
     const buildings: MinimapMarkers['buildings'] = [
@@ -1724,7 +2087,7 @@ export class VillageWorld {
       }
     }
     const citizens = [...this.walkers.values()]
-      .filter((walker) => walker.id !== PRIEST_ID && walker.id !== GOVERNOR_ID)
+      .filter((walker) => walker.id !== PRIEST_ID && walker.id !== TSAR_ID)
       .map((walker) => ({ x: walker.x / TILE, y: walker.y / TILE, highlighted: walker.id === this.highlightId }))
     return { buildings, citizens, camp: CAMPFIRE }
   }

@@ -4,17 +4,20 @@ This document extends [streamer-mode.md](streamer-mode.md). It replaces the inst
 
 ## 1. Principles
 
-1. **Nothing happens without a player.** The Governor only *plans*. Every log, stone, beam and roof tile on the map was moved by a citizen during one of their 90-second cycles. No timers, no automatic workers, no "the building finishes itself".
+1. **Nothing happens without a player.** The Tsar and the Governors only *plan*. Every log, stone, beam and roof tile on the map was moved by a citizen during one of their tasks of a few minutes. No timers, no automatic workers, no "the building finishes itself".
 2. **Work is split as finely as possible.** A building is not one "Build" task. It is many small jobs: bring stone, bring wood, lay the foundation, raise posts, tie the frame, weave walls, thatch the roof. Different jobs suit different people.
 3. **A building needs a crew, not a hero.** One very active player must not be able to finish a building alone. Every stage needs several *different* citizens.
 4. **Everyone starts with nothing.** The tribe begins as wild people at a campfire: no buildings, no tools, all skills at 0. Everything else is built up over many streams.
 5. **The goal is endless growth.** More storage, more workshops, more walls, bigger houses, then monuments. There is always a next building.
 
-## 2. The Governor plans, citizens build
+## 2. The Tsar and the Governors plan, citizens build
 
-- The Governor places a **blueprint** on the map (a free tile area, later road-connected). This costs nothing and moves nothing: it is a plan drawn on the ground.
-- A blueprint becomes a **construction site** with stages (section 3). Citizens see its jobs in their task list; the Governor sees only the site visually changing: pegs → stone base → posts → walls → roof.
-- The Governor may withdraw a blueprint nobody has worked on yet. (Proposed, not built: reordering site priority, and cancelling a started site with its materials left as a pile for citizens to carry back.)
+- The village owner (the streamer) is the **Tsar**. The Tsar never works: they plan, call votes, invite, call undead events and walk the map.
+- The Tsar appoints **Governors** among the citizens: click a citizen on the map and tick "Governor"; untick to dismiss. A Governor stays a citizen who works and votes, and can also place and withdraw blueprints and call and cancel votes. "Governor" shows under their name on the map and as a badge in their top bar. Only the Tsar appoints, calls undead events and changes subtitles and the invite code.
+- The Tsar or a Governor places a **blueprint** on the map (a free tile area, later road-connected). This costs nothing and moves nothing: it is a plan drawn on the ground.
+- A blueprint becomes a **construction site** with stages (section 3). Citizens see its jobs in their task list; the Tsar sees the site visually changing: pegs → stone base → posts → walls → roof.
+- The Tsar or a Governor may withdraw a blueprint nobody has worked on yet.
+- (Proposed, not built: a blueprint placed by a Governor becomes a **work order** sent to the Tsar, who approves or rejects it. How approval should play is still open, so for now Governor blueprints take effect at once.) (Proposed, not built: reordering site priority, and cancelling a started site with its materials left as a pile for citizens to carry back.)
 - Limits: at most 3 open construction sites plus 1 monument.
 
 ## 3. Construction: stages and jobs
@@ -51,7 +54,7 @@ Rules:
 
 - **Heavy jobs** (Raise posts, Thatch the roof, Lift the bell) only progress when at least 2 citizens work on that job in overlapping cycles. Alone, the cycle gives experience but no progress, and the citizen is told "You need someone to lift with you."
 - **Personal share cap:** one citizen may contribute at most 40% of any stage's labor (the existing monument rule was 20%; small buildings get a looser cap).
-- Materials delivered to a site are drawn as piles next to it, so the Governor can see a site waiting for stone.
+- Materials delivered to a site are drawn as piles next to it, so the Tsar can see a site waiting for stone.
 
 ## 4. The wild start
 
@@ -72,11 +75,11 @@ Rules:
 
   | Shelter | Energy regeneration |
   |---|---|
-  | Under the trees | × 0.5 |
-  | Lean-to | × 0.75 |
+  | Under the trees | × 0.8 |
+  | Lean-to | × 0.9 |
   | Hut and better | × 1.0 |
 
-- **Eating** (decision 3): each finished cycle eats 0.2 food, from the citizen's hands first, then from storage. With no food the cycle still gives yield but experience × 0.5 and energy regeneration × 0.5 ("You are hungry"). The Governor sees thin, slow citizens, not a number.
+- **Eating** (decision 3): each finished cycle eats 0.2 food, from the citizen's hands first, then from storage. With no food the cycle still gives yield but experience × 0.5 and energy regeneration × 0.5 ("You are hungry"). The Tsar sees thin, slow citizens, not a number.
 
 ## 5. Discoveries (technologies), eras and the endless building list
 
@@ -84,8 +87,8 @@ Every building unlocks new jobs, new buildings, or both. Later buildings, crafts
 
 **How a discovery is made (as built):**
 
-- The Governor **calls a vote**: ticks two or more available discoveries (every discovery they build on is known; one is enough when only one is available). The vote pops up on every screen. Each citizen has one vote and can change it while the vote is open. The vote closes once more than half of the active citizens have voted, and the results pop up for everyone. The most voted discovery becomes the current research until it is discovered; ties go to the one with more progress, then catalog order. The Governor can cancel an open vote; the previous choice stays.
-- Every discovery is **researched at a building**, like an upgrade in Warcraft. The Governor sees which building the chosen discovery needs and plans it.
+- The Tsar or a Governor **calls a vote**: ticks two or more available discoveries (every discovery they build on is known; one is enough when only one is available). The vote pops up on every screen. Each citizen has one vote and can change it while the vote is open. The vote closes once more than half of the present citizens have voted (away citizens, see game design 4.4, are not counted), and the results pop up for everyone. The most voted discovery becomes the current research until it is discovered; ties go to the one with more progress, then catalog order. The Tsar or a Governor can cancel an open vote; the previous choice stays.
+- Every discovery is **researched at a building**, like an upgrade in Warcraft. The Tsar and the Governors see which building the chosen discovery needs and plan it.
 - Only citizens with the **required skills** may research (for example Intelligence 5, or Strength 4). A research cycle takes the cycle length plus the walk from the camp to the building; the researcher stands at that building on the map.
 - Research work per cycle uses the same stat factor as a task (primary and secondary stat of the discovery). A discovery is found when its work is done **and** `min(crew, citizens active in the last 2 hours)` different citizens studied it, like a building stage.
 - Early tasks build the skills research needs: **Tell stories by the fire** (Intelligence, Charisma, morale), **Study plants** (Intelligence, Dexterity, some berries), **Explore the land** (Intelligence, Endurance, a roam).
@@ -109,13 +112,13 @@ Every building unlocks new jobs, new buildings, or both. Later buildings, crafts
 | Town | Alchemy | Library | Writing, Herb lore | Intelligence 6 | Alchemist |
 | Town | Forging | Smithy | Smelting | Strength 6, Dexterity 4 | Master smith, Smelt iron ×1.25 |
 
-Camp and Village discoveries ask for stats 2–4 because laborer tasks give full experience up to stat 4; Town discoveries need journeyman work (stats 5–6).
+Camp and Village discoveries ask for stats 2–4, reachable in the first one or two days of play; Town discoveries ask for stats 5–6. Researching a discovery is gated by these stats, not by a skill level; the challenge rule compares the researcher's primary stat with the highest one.
 
 **Not built yet:** a Stronghold era (stone walls, towers, church, Treasury, Market, Barracks) and monuments behind discoveries.
 
 - Each building type can be built many times. Repeats cost a little more each time (`cost × 1.15^count`), so expansion keeps going without becoming free.
 - Walls are built **per segment**, which gives an endless, very cooperative job list for big streams.
-- Existing roles (Miner, Smith, Carpenter, …) stay but are unlocked by their discovery, not just by stats.
+- Professions (Miner, Smith, Carpenter, …) are unlocked by their discovery; their work needs a skill level, and skill levels need stats.
 
 ## 6. What changes in the current build
 
@@ -149,12 +152,13 @@ Suggested order of implementation:
 
 | Action | Duration |
 |---|---|
-| Gathering task | 90 s + walk from the workplace to the storage that takes the good |
-| Expedition | 90 s + walk from the gate to the camp |
-| Roam the land | 90 s; the walk is the task. 6 glances, each finds 2 wood, 1.5 stone, 1.5 food or 2 reeds (× yield factor) with 25% + 2.5% per Dexterity. Needs empty hands |
+| Gathering task | 3 min + walk from the workplace to the storage that takes the good |
+| Crafting, camp and project task | 5 min (+ walk to storage for crafted goods) |
+| Expedition | 3 min + walk from the gate to the camp |
+| Roam the land | 3 min; the walk is the task. 6 glances, each finds 2 wood, 1.5 stone, 1.5 food or 2 reeds (× yield factor) with 25% + 2.5% per Dexterity. Needs empty hands |
 | Carry to storage | 15 s + walk from the camp to the storage |
-| Haul job | 45 s + walk from where the good is picked up to the site yard |
-| Labor job | 90 s + walk from the camp to the site |
+| Haul job | 3 min + walk from where the good is picked up to the site yard |
+| Labor job, research | 5 min + walk from the camp to the site |
 
 **Blueprints.** Free to place anywhere on the camp land west of the river (snapped to whole tiles), as long as the 3×4 footprint stays off other buildings, the campfire and the project sites; at most 3 open sites, requirements checked (for example a Hut needs a Lean-to). A repeat needs `1.15^count` times the haul amounts. Only a site nobody has worked on can be withdrawn; materials are never refunded.
 
@@ -168,37 +172,37 @@ Suggested order of implementation:
 
 **Crew.** A stage finishes when its jobs are done **and** `min(stage crew, citizens active in the last 2 hours)` different citizens worked on it. When the jobs are done but hands are missing, a "Lend a hand" job opens for citizens who have not yet worked on that stage.
 
-**Finished buildings.** Storage kinds join the storage list (the Heap, Wood pile, Stone pile, Drying rack, Woodyard, Stone yard, Granary). Others become structures. Shelters assign beds, oldest citizens first: under the trees ×0.5 regeneration, Lean-to (2 beds) ×0.75, Hut (4 beds) ×1.
+**Finished buildings.** Storage kinds join the storage list (the Heap, Wood pile, Stone pile, Drying rack, Woodyard, Stone yard, Granary). Others become structures. Shelters assign beds, oldest citizens first: under the trees ×0.8 regeneration, Lean-to (2 beds) ×0.9, Hut (4 beds) ×1.
 
 **Wild start.** New villages get a campfire and no storage: gathered goods stay in hands (half experience, and the Storage quest opens) until the tribe builds its first storage, usually a Heap, from what it holds. Stats start at 0 and level 0 → 1 needs 100 experience. Creation is name only. First tasks: Gather wood, Gather stones, Forage berries, Cut reeds, Hunt rabbits (food and hides), Hunt birds (food and feathers), Tend the fire, Carry to storage. Tasks of later buildings (fields, mines, smithy, library, …) are locked with "Needs: building".
 
-**Hunger.** Every settled cycle except carrying eats 0.2 food, from the citizen's hands first (a hunter whose catch did not fit in storage eats it), then from storage. A hungry citizen gets half experience and half energy regeneration. The Governor sees no hunger hints.
+**Hunger.** Every settled cycle except carrying eats 0.2 food, from the citizen's hands first (a hunter whose catch did not fit in storage eats it), then from storage. A hungry citizen gets half experience and half energy regeneration. The Tsar sees no hunger hints.
 
 **Taking and dropping.** Storage is shared by the whole tribe; there is no handing goods from one citizen to another. An idle citizen can take a good out of one storage building into their hands, instantly, until they hold 10 of it, for example to carry it into a better building or to a site. "Drop the load" throws away only the goods storage has no room for, so goods taken out of storage cannot be destroyed.
 
 **Wildlife.** Every village has three herds stored on the server. Hunting takes animals out; a herd grows back toward its capacity on its own (half of the missing animals return every half-life).
 
-Hunting is one "Hunt" card where the citizen picks the prey. Dexterity is the hunting skill: each prey needs a Dexterity level, and the role is Laborer for all of them. Experience follows the hunting time (hunting time ÷ 90 s), so every prey gives the same experience per minute; the choice is about materials.
+Hunting is one "Hunt" card where the citizen picks the prey. Each prey needs a level of the Hunting skill (which itself rests on Dexterity and Endurance, see [game-design.md](game-design.md), section 3.1), and the profession is Laborer for all of them. Experience follows the hunting time (hunting time ÷ 3 min), so every prey gives the same experience per minute; the choice is about materials.
 
-| Herd | Capacity | Half-life | Hunting ground | Task | Dexterity | Hunting time | Experience | Animals per cycle (× yield factor) | Full catch |
+| Herd | Capacity | Half-life | Hunting ground | Task | Hunting | Hunting time | Experience | Animals per cycle (× yield factor) | Full catch |
 |---|---|---|---|---|---|---|---|---|---|
-| Rabbits | 60 | 45 min | Hunting grounds | Hunt rabbits (Dexterity / Endurance) | 0 | 90 s | ×1 | 2.5 | 5 food, 1 leather |
-| Deer | 20 | 90 min | Deer woods | Hunt deer (Dexterity / Endurance) | 2 | 180 s | ×2 | 0.5 | 12 food, 4 leather |
-| Birds | 60 | 30 min | Bird grove | Hunt birds (Dexterity / Intelligence) | 3 | 45 s | ×0.5 | 3 | 1 food, 4 feathers |
+| Rabbits | 60 | 45 min | Hunting grounds | Hunt rabbits (Dexterity / Endurance) | 0 | 3 min | ×1 | 2.5 | 5 food, 1 leather |
+| Deer | 20 | 90 min | Deer woods | Hunt deer (Dexterity / Endurance) | 2 | 6 min | ×2 | 0.5 | 12 food, 4 leather |
+| Birds | 60 | 30 min | Bird grove | Hunt birds (Dexterity / Intelligence) | 3 | 90 s | ×0.5 | 3 | 1 food, 4 feathers |
 
-The walk from the hunting ground to storage is added to the hunting time. The Hunter role (Dexterity 4) stays as a title.
+The walk from the hunting ground to storage is added to the hunting time. Hunting 3 earns the Hunter title.
 
 - Abundance = animals ÷ (half of capacity), at most 1. Animals caught = animals per cycle × yield factor × abundance, never more than are left. The outputs scale by animals caught ÷ animals per cycle.
 - A hunt cannot start when less than 1 animal is left. A cycle that catches nothing counts as overflow (half experience).
 - Villages created before wildlife get full herds once.
-- The Governor sees the animals on the map (fewer when hunted out) and the herd size when clicking an animal. Citizens see the count on the task card.
+- The Tsar sees the animals on the map (fewer when hunted out) and the herd size when clicking an animal. Citizens see the count on the task card.
 - On the map, animals live all over the wild land (not in the camp, the monastery or water); deer keep to the woods, rabbits to the meadows. The hunting grounds in the table only set the walking time.
 - A hunter on duty chases one animal of the kind for the prey's hunting time and always reaches it at the end, then carries it home for the rest of the cycle. Animals run from hunters on duty from 4 tiles away (from other citizens only at 1.5 tiles), circle back toward their home spot, and tire in the last 20 seconds of a chase. This is drawing only; the catch is decided by the server.
 - Feathers go to the Storehouse. Nothing uses them yet (arrows are a later step).
 
-**Farming.** Every built Farm has 3 beds stored on the server. A bed holds one crop that grows in real time; citizens sow, water and harvest it. Endurance is the farming skill: better seeds need more Endurance. The role is Laborer for all farm tasks; the Farmer role (Endurance 4) is a title. Sowing is one "Sow" card where the citizen picks the seeds, like the Hunt card.
+**Farming.** Every built Farm has 3 beds stored on the server. A bed holds one crop that grows in real time; citizens sow, water and harvest it. Better seeds need a higher Farming skill (which rests on Endurance and Dexterity). The profession is Laborer for all farm tasks; Farming 3 earns the Farmer title. Sowing is one "Sow" card where the citizen picks the seeds, like the Hunt card.
 
-| Seeds | Task | Endurance | Grow time (watered) | Harvest |
+| Seeds | Task | Farming | Grow time (watered) | Harvest |
 |---|---|---|---|---|
 | Turnips | Sow turnips | 0 | 1 h | 15 food |
 | Carrots | Sow carrots | 2 | 1.5 h | 24 food |
@@ -212,7 +216,7 @@ The walk from the hunting ground to storage is added to the hunting time. The Hu
 - A wet bed grows at full speed, a dry bed at a quarter of it. Growth is computed from the time of the last change, like herds.
 - When another citizen took the bed (or the water, or the ripe crop) first, the cycle counts as overflow (half experience).
 - Flax goes to the Drying rack or Storehouse, grain to the Granary or Great Granary. Nothing uses flax yet.
-- Bakers (Dexterity 4, Endurance 2, Intelligence 2; needs the Baking discovery) bake bread at the Bakery: 2 grain from storage become 8 food per cycle (Dexterity / Endurance). Bread is food: it goes to the food storages and feeds hungry citizens like any other food.
+- Anyone can bake once the village has the Baking discovery (Baking 3 earns the Baker title): they bake bread at the Bakery: 2 grain from storage become 8 food per cycle (Dexterity / Endurance). Bread is food: it goes to the food storages and feeds hungry citizens like any other food.
 - On the map each bed is one row of the farm: darker soil while wet, and the plant grows through sprout, young and ripe pictures. The Farm popup lists each bed with its crop, growth and wetness.
 
 **Not built yet:** job places, heavy jobs, personal share cap, group hunting, ages, walls and segments, priority ordering, refunds on cancel.
@@ -221,7 +225,7 @@ The walk from the hunting ground to storage is added to the hunting time. The Hu
 
 A **need** opens by itself when the village has a problem and closes when the problem is solved. Both roles see it, split by what each one does:
 
-| Need | Opens when | Governor | Citizens | Reward |
+| Need | Opens when | Tsar or Governor | Citizens | Reward |
 |---|---|---|---|---|
 | The tribe is hungry | a cycle found no food in storage | Plan food storage (Drying rack or Granary) | Build it; store food: 3 per citizen, 10 to 40 | 15 Renown, morale +3% |
 | The tribe sleeps in the cold | fewer beds than active citizens | Plan shelter (Lean-to or Hut) | Build beds for everyone | 20 Renown, morale +3% |
@@ -229,7 +233,7 @@ A **need** opens by itself when the village has a problem and closes when the pr
 
 - At most one open need per kind (and per good for storage). Needs are stored; Renown is split between the citizens who did useful cycles while the need was open (one share per cycle).
 - Useful cycles: hunger — food that went into storage, or work on a food storage site; cold — work on a shelter site; storage — carrying that good to storage or to a site, or work on a site of storage that takes it.
-- The Governor sees the citizens' objectives too, worded as the citizens' work with the progress numbers after them ("Citizens fill it with food (12 / 30)").
-- Citizens get a "Tell the Governor" chat line while the Governor's part is not done.
+- The Tsar sees the citizens' objectives too, worded as the citizens' work with the progress numbers after them ("Citizens fill it with food (12 / 30)").
+- Citizens get a "Tell the Tsar" chat line while the planning part is not done. Governors see the planning objectives worded as their own work and a Plan button instead.
 
-**First steps guide.** A short step-by-step card per role, detected from play and remembered in the browser: citizens — join, first task, renew in time, look at the needs, help build; Governor — first blueprint, copy the invite link, look at the needs. It can be skipped.
+**First steps guide.** A short step-by-step card per role, detected from play and remembered in the browser: citizens — join, first task, renew in time, look at the needs, help build; Tsar — first blueprint, copy the invite link, look at the needs. It can be skipped.

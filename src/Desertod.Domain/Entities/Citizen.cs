@@ -29,8 +29,11 @@ public sealed class Citizen
     public Guid AccountId { get; set; }
     public required string Name { get; set; }
 
-    /// <summary>A short line the Governor writes under the citizen's name on the map.</summary>
+    /// <summary>A short line the Tsar writes under the citizen's name on the map.</summary>
     public string? Subtitle { get; set; }
+
+    /// <summary>Appointed by the Tsar: still a citizen who works and votes, who may also plan buildings and call votes.</summary>
+    public bool IsGovernor { get; set; }
 
     /// <summary>Null for citizens created before character creation; they get a sprite picked from their id.</summary>
     public Appearance? Appearance { get; set; }
@@ -49,6 +52,17 @@ public sealed class Citizen
 
     /// <summary>Last vigor drink; the next one waits for <see cref="GameRules.VigorDrinkCooldown"/>.</summary>
     public DateTimeOffset? LastDrinkAt { get; set; }
+
+    /// <summary>Hurt in a fight: no work until then, unless a remedy heals the wound sooner.</summary>
+    public DateTimeOffset? InjuredUntil { get; set; }
+
+    /// <summary>Taken from the village armory for the current task and put back when it ends.</summary>
+    public ResourceKind? Weapon { get; set; }
+
+    public ResourceKind? Armor { get; set; }
+
+    /// <summary>Arrows in the quiver; a bow is no use without them.</summary>
+    public int Arrows { get; set; }
 
     public string? CurrentTaskId { get; set; }
     public DateTimeOffset? CycleStartedAt { get; set; }
@@ -91,6 +105,12 @@ public sealed class Citizen
             IdleSpotY = value?.Y;
         }
     }
+
+    /// <summary>The last walk out to a spot or a place on the map; the land along it is seen as the citizen gets there.</summary>
+    public Trip? Trip { get; set; }
+
+    /// <summary>The dungeon run the citizen answered; no tasks and no walks until they are back from it.</summary>
+    public Guid? DungeonRunId { get; set; }
 
     /// <summary>Technology the current cycle researches; <see cref="CurrentSiteId"/> is then the plot of its building.</summary>
     public string? CurrentTechnologyId { get; set; }
@@ -161,12 +181,20 @@ public sealed class Citizen
         Subtitle = string.IsNullOrEmpty(subtitle) ? null : subtitle;
     }
 
-    /// <summary>"Come here": an idle citizen walks to a spot on the land and stays there until the next task.</summary>
-    public void GoTo(TilePoint spot, DateTimeOffset now)
+    /// <summary>
+    /// "Come here": an idle citizen walks to a spot on the land and stays there until the next task.
+    /// The land on the way is seen as they get there.
+    /// </summary>
+    public void GoTo(TilePoint spot, Village village, DateTimeOffset now)
     {
         if (WorkState(now) == Entities.WorkState.Working)
         {
             throw new GameRuleException("goto.working", "Finish the current task first.");
+        }
+
+        if (DungeonRunId is not null)
+        {
+            throw new GameRuleException("dungeon.busy", "You are away in the dungeon.");
         }
 
         if (!WorldMap.Land.Contains(spot.ToTile()))
@@ -174,8 +202,13 @@ public sealed class Citizen
             throw new GameRuleException("spot.outsideLand", "This spot is beyond the land.");
         }
 
+        SetOut(spot, village, now);
         IdleSpot = spot;
     }
+
+    /// <summary>Starts a walk from where the citizen stands: their idle spot, or the camp.</summary>
+    public void SetOut(TilePoint to, Village village, DateTimeOffset now) =>
+        Trip = Exploration.SetOut(village.Explored, Trip, IdleSpot ?? WorldMap.Places[WorldMap.Camp], to, now, village.Wilds?.Lookout);
 
     public void DropLoad()
     {
@@ -194,6 +227,11 @@ public sealed class Citizen
 
     public double CurrentEnergy(DateTimeOffset now, Village village)
     {
+        if (GameRules.IsFreeEnergy(now))
+        {
+            return MaximumEnergy;
+        }
+
         var hours = Math.Max(0, (now - EnergyUpdatedAt).TotalHours);
         if (SleepsUnderTrees)
         {

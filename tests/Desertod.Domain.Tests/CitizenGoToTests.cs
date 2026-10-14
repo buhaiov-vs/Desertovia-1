@@ -13,7 +13,7 @@ public class CitizenGoToTests
         var village = NewVillage();
         var citizen = NewCitizen(village);
 
-        citizen.GoTo(new TilePoint(3.5, 4.25), Now);
+        citizen.GoTo(new TilePoint(3.5, 4.25), village, Now);
         Assert.Equal(new TilePoint(3.5, 4.25), citizen.IdleSpot);
 
         CycleEngine.Start(citizen, Task("chop-wood"), WorkContext.For(village), Now);
@@ -27,19 +27,20 @@ public class CitizenGoToTests
         var citizen = NewCitizen(village);
         CycleEngine.Start(citizen, Task("chop-wood"), WorkContext.For(village), Now);
 
-        var error = Assert.Throws<GameRuleException>(() => citizen.GoTo(new TilePoint(3, 4), Now.AddSeconds(10)));
+        var error = Assert.Throws<GameRuleException>(() => citizen.GoTo(new TilePoint(3, 4), village, Now.AddSeconds(10)));
 
         Assert.Equal("goto.working", error.Code);
-        citizen.GoTo(new TilePoint(3, 4), citizen.CycleEndsAt!.Value);
+        citizen.GoTo(new TilePoint(3, 4), village, citizen.CycleEndsAt!.Value);
     }
 
     [Fact]
     public void SpotBeyondTheLand_IsRejected()
     {
-        var citizen = NewCitizen(NewVillage());
+        var village = NewVillage();
+        var citizen = NewCitizen(village);
         var land = WorldMap.Land;
 
-        var error = Assert.Throws<GameRuleException>(() => citizen.GoTo(new TilePoint(land.X + land.Width + 1, land.Y), Now));
+        var error = Assert.Throws<GameRuleException>(() => citizen.GoTo(new TilePoint(land.X + land.Width + 1, land.Y), village, Now));
 
         Assert.Equal("spot.outsideLand", error.Code);
         Assert.Null(citizen.IdleSpot);

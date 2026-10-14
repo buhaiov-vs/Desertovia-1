@@ -1,4 +1,5 @@
 using Desertod.Domain.Catalog;
+using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
 using Desertod.Domain.Storage;
@@ -29,6 +30,7 @@ public enum BuildingKind
     Market,
     Barracks,
     Bakery,
+    RopeBridge,
 }
 
 public enum JobKind
@@ -88,7 +90,7 @@ public static class BuildingCatalog
     /// <summary>Each repeat of a building needs this much more material than the previous one.</summary>
     public const double RepeatCostGrowth = 1.15;
 
-    public static readonly TimeSpan HaulBaseTime = TimeSpan.FromSeconds(45);
+    public static readonly TimeSpan HaulBaseTime = GameRules.CycleLength;
 
     private static JobDefinition Haul(string id, string name, ResourceKind resource, int perCycle, Stat primary, Stat secondary) =>
         new(id, name, JobKind.Haul, resource, perCycle, primary, secondary, Skill.Hauling);
@@ -127,6 +129,8 @@ public static class BuildingCatalog
         Labor("build-forge", "Build the forge", Stat.Strength, Stat.Dexterity),
         Labor("build-oven", "Build the oven", Stat.Dexterity, Stat.Strength),
         Labor("lay-floor", "Lay the floor", Stat.Dexterity, Stat.Strength),
+        Labor("stretch-ropes", "Stretch the ropes", Stat.Dexterity, Stat.Strength),
+        Labor("lay-deck", "Lay the deck", Stat.Strength, Stat.Dexterity),
         Labor(LendAHand, "Lend a hand", Stat.Endurance, Stat.Charisma, needsMaterial: false),
     ];
 
@@ -144,7 +148,7 @@ public static class BuildingCatalog
                 Stage("frame", "Frame", 2, Job("clear-ground", 1), Job("bring-sticks", 8), Job("lean-poles", 2)),
                 Stage("cover", "Cover", 2, Job("bring-reeds", 10), Job("lay-cover", 2)),
             ],
-            Shelter: 2, ShelterQuality: 0.75),
+            Shelter: 2, ShelterQuality: 0.9),
         new(BuildingKind.WoodPile, "Wood pile", "Stacked wood stays dry and does not crowd the heap.", [],
             [Stage("pile", "Pile", 2, Job("clear-ground", 1), Job("bring-sticks", 6), Job("stack-pile", 2))],
             Storage: StorageKind.WoodPile),
@@ -271,7 +275,20 @@ public static class BuildingCatalog
             ],
             Technology: TechnologyCatalog.Music),
         new(BuildingKind.Market, "Market", "Trade with other villages. Needs a later age.", [], []),
-        new(BuildingKind.Barracks, "Barracks", "Guards and patrols. Needs a later age.", [], []),
+        new(BuildingKind.Barracks, "Barracks", "Guards patrol and captains command from here. Makes the camp's defense stronger.", [],
+            [
+                Stage("ground", "Ground", 2, Job("clear-ground", 2), Job("mark-outline", 1)),
+                Stage("foundation", "Foundation", 3, Job("bring-stones", 24), Job("lay-stones", 4)),
+                Stage("frame", "Frame", 4, Job("bring-logs", 24), Job("hew-beams", 3), Job("raise-posts", 3), Job("tie-frame", 2)),
+                Stage("roof", "Roof", 3, Job("bring-planks", 12), Job("lay-floor", 2), Job("bring-reeds", 12), Job("thatch-roof", 3)),
+            ],
+            Technology: TechnologyCatalog.Warfare),
+        new(BuildingKind.RopeBridge, "Rope bridge", "Posts on both rims, ropes and a plank deck across the ravine.", [],
+            [
+                Stage("posts", "Posts", 2, Job("bring-logs", 12), Job("raise-posts", 2)),
+                Stage("ropes", "Ropes", 2, Job("bring-reeds", 16), Job("stretch-ropes", 3)),
+                Stage("deck", "Deck", 3, Job("bring-logs", 16), Job("lay-deck", 3)),
+            ]),
     ];
 
     private static readonly Dictionary<BuildingKind, BuildingDefinition> ByKind = Buildings.ToDictionary(b => b.Kind);

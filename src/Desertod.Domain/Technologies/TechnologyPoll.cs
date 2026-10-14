@@ -1,14 +1,14 @@
 namespace Desertod.Domain.Technologies;
 
 /// <summary>
-/// A vote the Governor calls on the next discovery. Citizens pick one of the options; it closes once more than half of the
+/// A vote the Tsar or a Governor calls on the next discovery. Citizens pick one of the options; it closes once more than half of the
 /// active citizens voted. The last poll is kept after closing so everyone can see the results.
 /// </summary>
 public sealed class TechnologyPoll
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
 
-    /// <summary>Technologies the Governor put to the vote.</summary>
+    /// <summary>Technologies put to the vote.</summary>
     public List<string> Options { get; set; } = [];
 
     public List<PollBallot> Ballots { get; set; } = [];
@@ -20,7 +20,7 @@ public sealed class TechnologyPoll
     /// <summary>Active citizens when the poll closed; more than half of them had to vote.</summary>
     public int Electorate { get; set; }
 
-    /// <summary>The chosen technology; null while open, or when the Governor cancelled the poll.</summary>
+    /// <summary>The chosen technology; null while open, or when the poll was cancelled.</summary>
     public string? Winner { get; set; }
 
     public bool IsOpen => ClosedAt is null;

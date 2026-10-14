@@ -1,0 +1,26 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-pier-pole",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 world prop for medieval Slavic village game. Two thick wet wooden poles sticking out of water, small blue ripple rings at their bases, transparent everywhere else. Centered with one pixel margin. Strict 16x16 logical pixel grid enlarged to square canvas, each logical pixel a large solid square. Extremely simple chunky Kenney Tiny Town style, three flat shades per material maximum, warm brown wood, top-left light. South-facing top-down three-quarter view, not isometric. No background scenery, text, gradients, antialiasing, haze, neon fringes, fine texture, black outline or extra panels."
+    },
+    {
+      "name": "prop-pier-deck",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney sheets are STYLE references only. Single 16x16 world prop for medieval Slavic village game. Section of plank deck running left to right, exactly three boards with simple nail dots, pole tops under front edge. Seamless left and right: boards reach both horizontal canvas edges at matching heights, no end caps. Transparent above and below the structure. Strict 16x16 logical pixel grid enlarged to square canvas, each logical pixel a large solid square. Extremely simple chunky Kenney Tiny Town style, three flat shades per material maximum, warm brown wood, top-left light. South-facing top-down three-quarter view, not isometric. No background scenery, text, gradients, antialiasing, haze, neon fringes, fine texture, black outline or extra panels."
+    }
+  ]
+}

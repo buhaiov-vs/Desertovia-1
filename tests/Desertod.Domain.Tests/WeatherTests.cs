@@ -27,18 +27,18 @@ public class WeatherTests
         return village;
     }
 
-    private static Citizen Synoptic(Village village) => NewCitizen(village, (Stat.Intelligence, 4), (Stat.Endurance, 2));
+    private static Citizen Synoptic(Village village) => NewCitizen(village).WithSkill(Skill.Weatherlore, GameCatalog.JourneymanSkill);
 
     [Fact]
-    public void Sky_RainsOnFiveToTenPercentOfDays()
+    public void Sky_RainsOnFiveToTenPercentOfPeriods()
     {
         var village = Village.Create("v", "V", Guid.NewGuid(), Now);
-        const int days = 20000;
+        const int periods = 20000;
 
-        var rainy = Enumerable.Range(0, days).Count(day => WeatherRules.IsRaining(village, day));
+        var rainy = Enumerable.Range(0, periods).Count(period => WeatherRules.IsRaining(village, period));
 
-        Assert.InRange((double)rainy / days, 0.06, 0.09);
-        Assert.All(Enumerable.Range(0, 100), day => Assert.InRange(WeatherRules.RainChance(village, day), 0.05, 0.10));
+        Assert.InRange((double)rainy / periods, 0.06, 0.09);
+        Assert.All(Enumerable.Range(0, 100), period => Assert.InRange(WeatherRules.RainChance(village, period), 0.05, 0.10));
     }
 
     [Fact]
@@ -46,8 +46,68 @@ public class WeatherTests
     {
         var village = Village.Create("v", "V", Guid.NewGuid(), Now);
 
-        Assert.All(Enumerable.Range(0, 200), day => Assert.Equal(WeatherRules.SkyRains(village, day), WeatherRules.SkyRains(village, day)));
+        Assert.All(Enumerable.Range(0, 200), period => Assert.Equal(WeatherRules.SkyDraws(village, period), WeatherRules.SkyDraws(village, period)));
     }
+
+    [Fact]
+    public void Sky_DrawsOnlyKindsWithAChance()
+    {
+        var village = Village.Create("v", "V", Guid.NewGuid(), Now);
+
+        var drawn = Enumerable.Range(0, 5000).Select(period => WeatherRules.SkyDraws(village, period)).ToHashSet();
+
+        Assert.Equal([WeatherKind.Clear, WeatherKind.Rain], drawn.Order());
+    }
+
+    [Theory]
+    [InlineData(WeatherKind.Clear, false)]
+    [InlineData(WeatherKind.Rain, true)]
+    [InlineData(WeatherKind.Wind, false)]
+    [InlineData(WeatherKind.Thunderstorm, true)]
+    public void Thunderstorms_AreWet_WindIsNot(WeatherKind kind, bool wet) => Assert.Equal(wet, WeatherRules.IsWet(kind));
+
+    [Fact]
+    public void Day_IsFollowedByNight_EachHalfOfTheDayLength()
+    {
+        var dayStart = DateTimeOffset.UnixEpoch + DayCycle.DayLength * 1000;
+
+        Assert.Equal(DayCycle.DefaultDayLength, DayCycle.DayLength);
+        Assert.False(DayCycle.IsNight(dayStart));
+        Assert.False(DayCycle.IsNight(dayStart + DayCycle.PeriodLength - TimeSpan.FromTicks(1)));
+        Assert.True(DayCycle.IsNight(dayStart + DayCycle.PeriodLength));
+        Assert.True(DayCycle.IsNight(dayStart + DayCycle.DayLength - TimeSpan.FromTicks(1)));
+        Assert.False(DayCycle.IsNight(dayStart + DayCycle.DayLength));
+        Assert.Equal(dayStart + DayCycle.PeriodLength, DayCycle.PeriodStart(DayCycle.PeriodOf(dayStart) + 1));
+    }
+
+    [Fact]
+    public void Weather_ChangesWhenDayOrNightBegins()
+    {
+        var village = NewVillage();
+        var period = DayCycle.PeriodOf(Now);
+        village.Forecasts.Clear();
+        village.Forecasts.Add(new WeatherForecast { Day = period + 1, Rain = true, MadeAt = Now });
+        var nextStart = DayCycle.PeriodStart(period + 1);
+
+        Assert.Equal(WeatherRules.SkyRains(village, period), WeatherRules.IsRaining(village, nextStart - TimeSpan.FromTicks(1)));
+        Assert.True(WeatherRules.IsRaining(village, nextStart));
+        Assert.True(WeatherRules.IsRaining(village, nextStart + DayCycle.PeriodLength - TimeSpan.FromTicks(1)));
+    }
+
+    [Fact]
+    public void DryForecast_KeepsADryDraw()
+    {
+        var village = NewVillage();
+        var period = Enumerable.Range(0, 1000).Select(p => (long)p).First(p => !WeatherRules.SkyRains(village, p));
+        village.Forecasts.Clear();
+        village.Forecasts.Add(new WeatherForecast { Day = period, Rain = false, MadeAt = Now });
+
+        Assert.Equal(WeatherRules.SkyDraws(village, period), WeatherRules.WeatherOf(village, period));
+    }
+
+    [Fact]
+    public void DayLength_HasAMinimum() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() => DayCycle.Configure(DayCycle.MinimumDayLength - TimeSpan.FromSeconds(1)));
 
     [Theory]
     [InlineData(true, false)]
@@ -59,9 +119,9 @@ public class WeatherTests
 
         var forecast = WeatherRules.Forecast(village, synoptic, saysRain, new FixedRandom(0), Now);
 
-        Assert.Equal(WeatherRules.DayOf(Now) + 1, forecast.Day);
+        Assert.Equal(DayCycle.PeriodOf(Now) + 1, forecast.Day);
         Assert.Equal(rains, WeatherRules.IsRaining(village, forecast.Day));
-        Assert.Equal(rains, WeatherRules.IsRaining(village, WeatherRules.DayStart(forecast.Day)));
+        Assert.Equal(rains, WeatherRules.IsRaining(village, DayCycle.PeriodStart(forecast.Day)));
     }
 
     [Fact]
@@ -69,11 +129,11 @@ public class WeatherTests
     {
         var village = SynopticVillage();
         var synoptic = Synoptic(village);
-        var day = WeatherRules.DayOf(Now) + 1;
+        var period = DayCycle.PeriodOf(Now) + 1;
 
         WeatherRules.Forecast(village, synoptic, true, new FixedRandom(0.99), Now);
 
-        Assert.Equal(WeatherRules.SkyRains(village, day), WeatherRules.IsRaining(village, day));
+        Assert.Equal(WeatherRules.SkyRains(village, period), WeatherRules.IsRaining(village, period));
     }
 
     [Fact]
@@ -135,7 +195,7 @@ public class WeatherTests
 
         Assert.Equal(RoleTier.Journeyman, role.Tier);
         Assert.Equal(TechnologyCatalog.WeatherLore, role.Technology);
-        Assert.False(WeatherRules.IsSynoptic(NewVillage(), NewCitizen(NewVillage(), (Stat.Intelligence, 4), (Stat.Endurance, 2))));
+        Assert.False(WeatherRules.IsSynoptic(NewVillage(), Synoptic(NewVillage())));
         var village = SynopticVillage();
         Assert.True(WeatherRules.IsSynoptic(village, Synoptic(village)));
     }

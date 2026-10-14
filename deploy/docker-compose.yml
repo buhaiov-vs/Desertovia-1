@@ -58,6 +58,8 @@ services:
       ConnectionStrings__Desertod: Host=postgres;Database=desertod;Username=desertod;Password=${POSTGRES_PASSWORD};GSS Encryption Mode=Disable
       DataProtection__Key: ${DATA_PROTECTION_KEY:?Set DATA_PROTECTION_KEY in deploy/.env}
       LogLevelsFile: /config/logging.json
+      Game__DayLength: ${DAY_LENGTH:-04:00:00}
+      Game__PeacefulTime: ${PEACEFUL_TIME:-1.00:00:00}
       Authentication__Twitch__ClientId: ${TWITCH_CLIENT_ID:-}
       Authentication__Twitch__ClientSecret: ${TWITCH_CLIENT_SECRET:-}
       Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID:-}

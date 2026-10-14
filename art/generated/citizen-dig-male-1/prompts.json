@@ -1,0 +1,27 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-citizen-male-1-dig-frame-1",
+      "width": 16,
+      "height": 16,
+      "prompt": "Exactly ONE young Slavic peasant character in ONE digging pose with ONE iron pickaxe. NOT a sprite sheet, not multiple poses. Same character as first reference: short brown hair, belted pale blue-grey kosovorotka, trousers, bast shoes. Other references define tiny Kenney pixel style. Single transparent 16x16 logical pixel canvas enlarged with nearest-neighbor. Very simple blocky pixel clusters, no tiny detail. South-facing with slight overhead view. Body centered, feet at bottom row; whole tool inside canvas. Skin exact #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c, brown handle, grey curved pointed iron pick head. Flat colors only, no gradients, texture, antialiasing, glow, shadow, scenery, rock, text or additional characters. Pickaxe raised above screen-right shoulder, both hands gripping handle, ready to swing.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-1-dig-frame-2",
+      "width": 16,
+      "height": 16,
+      "prompt": "Exactly ONE young Slavic peasant character in ONE digging pose with ONE iron pickaxe. NOT a sprite sheet, not multiple poses. Same character as first reference: short brown hair, belted pale blue-grey kosovorotka, trousers, bast shoes. Other references define tiny Kenney pixel style. Single transparent 16x16 logical pixel canvas enlarged with nearest-neighbor. Very simple blocky pixel clusters, no tiny detail. South-facing with slight overhead view. Body centered, feet at bottom row; whole tool inside canvas. Skin exact #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c, brown handle, grey curved pointed iron pick head. Flat colors only, no gradients, texture, antialiasing, glow, shadow, scenery, rock, text or additional characters. Pickaxe swung down to screen-left, head near ground, arms extended downwards, knees slightly bent.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "generator": "Built-in image_gen",
+  "samples": [
+    {
+      "name": "icon-building-heap",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: tiny untidy pile of a log, a stone and a sack between two short posts."
+    },
+    {
+      "name": "icon-building-lean-to",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: small triangular reed-covered lean-to seen from the front."
+    },
+    {
+      "name": "icon-building-wood-pile",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: stack of log ends between two upright stakes."
+    },
+    {
+      "name": "icon-building-stone-pile",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: ring of grey boulders around a small heap of stones."
+    },
+    {
+      "name": "icon-building-drying-rack",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: wooden frame with two strips of red meat hanging from the crossbar."
+    },
+    {
+      "name": "icon-building-hut",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: tiny whitewashed hut with a thick golden thatched roof and a dark door."
+    },
+    {
+      "name": "icon-building-town-hall",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: log hall with a steep roof and a small red banner on top."
+    },
+    {
+      "name": "icon-building-woodyard",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: open shed roof on two posts over a stack of logs."
+    },
+    {
+      "name": "icon-building-stone-yard",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: low grey stone wall with a gateway and stones behind it."
+    },
+    {
+      "name": "icon-building-granary",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: small log barn on stilts with a grain sack in front."
+    },
+    {
+      "name": "icon-building-storehouse",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: two stacked wooden crates and a barrel."
+    },
+    {
+      "name": "icon-building-treasury",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: open iron-bound wooden chest overflowing with gold."
+    },
+    {
+      "name": "icon-building-farm",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: three green crop rows on brown soil behind a tiny fence."
+    },
+    {
+      "name": "icon-building-mine",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: dark arched mine entrance with timber frame and a tiny ore cart."
+    },
+    {
+      "name": "icon-building-smithy",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: black anvil with a hammer and three orange sparks."
+    },
+    {
+      "name": "icon-building-workshop",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: hand saw lying across two planks."
+    },
+    {
+      "name": "icon-building-library",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: thick leather-bound chronicle book standing upright with a brass clasp."
+    },
+    {
+      "name": "icon-building-tavern",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: foaming wooden mug in front of a small barrel."
+    },
+    {
+      "name": "icon-building-bakery",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: domed clay oven with a round golden loaf at its mouth."
+    },
+    {
+      "name": "icon-building-stage",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: small wing-shaped gusli (Russian zither) on a plank platform with a pennant."
+    },
+    {
+      "name": "icon-building-market",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: tiny market stall with a red-and-white striped awning."
+    },
+    {
+      "name": "icon-building-barracks",
+      "width": 16,
+      "height": 16,
+      "prompt": "Use case: stylized-concept. Generate one tiny pixel-art UI icon for the medieval Slavic village game Desertod. Attached Tiny Town and Tiny Farm are style references. This must be an extremely simple 16x16 pixel icon enlarged to 1024x1024, using only 16 logical pixels along either axis. Make every pixel a solid uniform square. Use at most 8 flat colors, NO shading gradients, NO surface texture, NO tiny details, NO soft edges, NO lighting effects, NO glow or halo, NO surrounding scenery, NO cast shadow. Clear chunky silhouette, warm earthy palette, top-left highlight, darker local-color edge. Top-down three-quarter view matching the reference sheets; not isometric. Entire subject centered within 14x14 logical pixels, 1 pixel transparent margin. Completely transparent alpha-zero empty background. No text, labels, border, watermark. Exact subject: 16×16 icon: round red wooden shield with a spear crossed behind it."
+    }
+  ]
+}

@@ -2,6 +2,7 @@ using Desertod.Domain.Catalog;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Projects;
 using Desertod.Domain.Rules;
+using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
 using Desertod.Domain.Storage;
 
@@ -131,7 +132,7 @@ public class ProjectTests
     {
         var (village, project) = Setup();
         var laborer = NewCitizen(village, intelligence: 1);
-        var engineer = NewCitizen(village, intelligence: 4, strength: 2);
+        var engineer = NewCitizen(village, intelligence: 4, strength: 2).WithSkill(Skill.Building, GameCatalog.JourneymanSkill);
         var context = new WorkContext { Village = village, Project = project };
 
         Assert.Throws<GameRuleException>(() => CycleEngine.Start(laborer, Task("survey"), context, Now));
@@ -225,7 +226,7 @@ public class ProjectTests
     public void Expedition_ProducesLoot_AndRareFindsArePossible()
     {
         var village = TestWorld.NewVillage();
-        var citizen = NewCitizen(village);
+        var citizen = NewCitizen(village).WithSkill(Skill.Exploring, Task("expedition").SkillLevel);
         var context = new WorkContext { Village = village, Random = new Random(42) };
         var now = Now;
         var rareFinds = 0;

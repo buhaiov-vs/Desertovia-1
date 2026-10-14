@@ -1,5 +1,6 @@
 import type { Catalog, Citizen, VillageState } from '../api'
 import { useI18n } from '../i18n'
+import { citizenTitle } from './citizenTitle'
 import { HandsCard } from './HandsCard'
 import { StorageCard } from './StorageCard'
 import { ResourceIcon } from './TileIcon'
@@ -46,7 +47,7 @@ export function InventoryPanel({
           {citizen && (
             <section className="card">
               <h3>
-                {citizen.name} <span className="muted">— {i18n.role(citizen.titleRoleId)}</span>
+                {citizen.name} <span className="muted">— {citizenTitle(citizen, i18n)}</span>
               </h3>
               <div className="character-summary">
                 <div>

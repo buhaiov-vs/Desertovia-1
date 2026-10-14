@@ -1,0 +1,27 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "character-citizen-male-1-sow-frame-1",
+      "width": 16,
+      "height": 16,
+      "prompt": "Exactly ONE young Slavic peasant in ONE seed-sowing pose. NOT a sprite sheet. Same character as first reference: short brown hair, belted kosovorotka, trousers, bast shoes. Other refs define simple Kenney Tiny pixel art. Transparent 16x16 logical pixel canvas enlarged nearest-neighbor, body centered, south-facing slight overhead view, feet bottom row, about 14 pixels tall. Strict chunky solid pixel clusters, no gradients, texture, antialiasing, glow, shadow, ground, text, extra people. Exact skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c. A tiny tan seed pouch at waist supported by screen-left hand. Preparation: screen-right hand reaching into pouch at waist to gather seeds; elbows bent close to torso.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "character-citizen-male-1-sow-frame-2",
+      "width": 16,
+      "height": 16,
+      "prompt": "Exactly ONE young Slavic peasant in ONE seed-sowing pose. NOT a sprite sheet. Same character as first reference: short brown hair, belted kosovorotka, trousers, bast shoes. Other refs define simple Kenney Tiny pixel art. Transparent 16x16 logical pixel canvas enlarged nearest-neighbor, body centered, south-facing slight overhead view, feet bottom row, about 14 pixels tall. Strict chunky solid pixel clusters, no gradients, texture, antialiasing, glow, shadow, ground, text, extra people. Exact skin #f7c282/#e19a65, hair #bd6c4a/#763b36, clothes #c0cbdc/#8b9bb4/#52607c. A tiny tan seed pouch at waist supported by screen-left hand. Scattering: screen-right arm extended diagonally out to the right, open hand releasing three distinct golden seed pixels in a short downward arc. Left hand supports pouch at waist. Same head/body size and foot placement as reference.",
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/generated/samples/character-citizen-male-1-source.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

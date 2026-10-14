@@ -1,0 +1,7 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "edit",
+  "target": "terrain-pond-shore-0110-source.png",
+  "output": "terrain-pond-shore-0110-v2-source.png",
+  "prompt": "Edit target image 1: correct ONLY the shoreline geometry. This tile must have uninterrupted pond water along the ENTIRE RIGHT EDGE, grass along ENTIRE LEFT EDGE. Replace the erroneous horizontal sand/shallow band crossing the lower-right water with plain pond water. Make the shore a simple gently stepped VERTICAL line running from TOP CENTER to BOTTOM CENTER. Grass to its left, narrow sand rim then pale shallow strip then pond to its right. No horizontal shore, no pocket, no other objects. Keep existing palette and simple pixel style. 16x16 logical pixel tile enlarged, full bleed opaque square."
+}

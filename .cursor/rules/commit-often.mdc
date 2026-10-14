@@ -1,0 +1,41 @@
+---
+description: Commit after every finished step and at the end of every task, so no work exists only in the working tree
+alwaysApply: true
+---
+
+# Commit Often
+
+Uncommitted work can be lost by a single bad command. Keep the working tree close to the last commit.
+
+## When to commit
+
+- At the end of every task, always.
+- After every finished step of a multi-step task (a backend change, a migration, a frontend panel, a docs update).
+- Before any risky operation: bulk find-and-replace, scripted edits, file moves, `git` commands that touch the working tree.
+
+## How
+
+PowerShell, `;` between commands:
+
+```powershell
+git add -A; git commit -q -m "Tsar appoints Governors: API endpoint and tests"
+```
+
+- Short message describing what the step did, not how.
+- A step may be committed even if the build is not yet green; say "(work in progress)" in the message.
+- Before `git add -A`, check `git status --short` for files that look unrelated or still being generated (for example sprite folders) and mention them to the user instead of committing them silently.
+- Do not push unless the user asks.
+
+## Never discard uncommitted work
+
+```powershell
+# ❌ BAD: wipes every uncommitted change in the file, not only your own
+git checkout -- web/src/game/VillageWorld.ts
+
+# ✅ GOOD: commit first, then undo your own mistake from the commit history
+git add -A; git commit -q -m "Before fixing broken edit"
+git diff HEAD~1 -- web/src/game/VillageWorld.ts
+```
+
+- Never run `git checkout -- <file>`, `git restore`, `git reset --hard`, `git clean` or `git stash drop` on files with uncommitted changes without asking the user first.
+- If an edit went wrong, fix it with targeted edits, or ask the user to undo in the editor.

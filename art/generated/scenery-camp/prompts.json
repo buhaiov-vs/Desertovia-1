@@ -1,0 +1,26 @@
+{
+  "generator": "built-in image_gen",
+  "mode": "generate with references",
+  "samples": [
+    {
+      "name": "prop-reeds",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Generate ONE transparent RPG prop. Clump of exactly four tall thin green reeds of different heights with brown cattail heads. Four distinct stalks, simple pointed green leaves at base, no water or soil tile. Style references: Tiny Town and Tiny Farm. Match their simple chunky flat pixel art and muted palette. Intended 16x16 logical pixels, enlarged square canvas. Full object centered, broad flat color clusters, few colors, no gradients, soft texture, glow outside objects, colored fringe, text or backdrop. Readable at 16x16."
+    },
+    {
+      "name": "prop-campfire-stones-and-logs",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Generate ONE transparent RPG prop. Oval ring of grey stones around exactly two crossed burnt logs and glowing red-orange embers. NO flames and NO smoke: flames are a separate effect. Slight overhead view, entire ring visible. Style references: Tiny Town and Tiny Farm. Match their simple chunky flat pixel art and muted palette. Intended 16x16 logical pixels, enlarged square canvas. Full object centered, broad flat color clusters, few colors, no gradients, soft texture, glow outside objects, colored fringe, text or backdrop. Readable at 16x16."
+    }
+  ]
+}

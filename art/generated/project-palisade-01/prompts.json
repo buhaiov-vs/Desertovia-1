@@ -1,0 +1,36 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "generate with style references",
+  "samples": [
+    {
+      "name": "prop-palisade-stake-vertical",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney tile sheets are STYLE references only. Single 16x16 world prop for medieval Slavic village game. Palisade section running top to bottom in map space, seen from the side: sharpened log tips point up, wall continues seamlessly at top and bottom canvas edges. Narrow north-south wall footprint, not a horizontal row. Strict 16x16 logical pixel grid enlarged to square canvas, every art pixel a large flat square. Match Kenney Tiny Town simplicity, three flat warm wood shades, plain beige rope, top-left light. Top-down three-quarter south-facing view, not isometric. Fully transparent outside wall, no ground or shadow. No gradients, antialiasing, haze, neon fringes, fine bark texture, text, labels or multiple panels. Keep geometry readable at actual 16x16 resolution."
+    },
+    {
+      "name": "prop-palisade-rail-horizontal",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney tile sheets are STYLE references only. Single 16x16 world prop for medieval Slavic village game. Palisade section running left to right: three upright sharpened logs bound by one horizontal rope, seamlessly continuing at left and right canvas edges. Strict 16x16 logical pixel grid enlarged to square canvas, every art pixel a large flat square. Match Kenney Tiny Town simplicity, three flat warm wood shades, plain beige rope, top-left light. Top-down three-quarter south-facing view, not isometric. Fully transparent outside wall, no ground or shadow. No gradients, antialiasing, haze, neon fringes, fine bark texture, text, labels or multiple panels. Keep geometry readable at actual 16x16 resolution."
+    },
+    {
+      "name": "prop-palisade-corner-north-west",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ],
+      "prompt": "Use case: stylized-concept. Supplied Kenney tile sheets are STYLE references only. Single 16x16 world prop for medieval Slavic village game. Palisade corner joining a wall going RIGHT and a wall going DOWN, with a thicker corner log at the bend. Clear L-shaped footprint, open interior to lower right. Strict 16x16 logical pixel grid enlarged to square canvas, every art pixel a large flat square. Match Kenney Tiny Town simplicity, three flat warm wood shades, plain beige rope, top-left light. Top-down three-quarter south-facing view, not isometric. Fully transparent outside wall, no ground or shadow. No gradients, antialiasing, haze, neon fringes, fine bark texture, text, labels or multiple panels. Keep geometry readable at actual 16x16 resolution."
+    }
+  ]
+}

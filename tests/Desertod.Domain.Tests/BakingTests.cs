@@ -2,6 +2,7 @@ using Desertod.Domain.Buildings;
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
+using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
 using Desertod.Domain.Technologies;
 using static Desertod.Domain.Tests.TestWorld;
@@ -70,13 +71,15 @@ public class BakingTests
     }
 
     [Fact]
-    public void BakingBread_NeedsTheBakerRole()
+    public void BakingBread_IsOpenToNovices_AndBaking3MakesABaker()
     {
         var village = BakeryVillage();
         village.Store(ResourceKind.Grain, 2);
-        var novice = NewCitizen(village, (Stat.Dexterity, 4));
+        var novice = NewCitizen(village);
 
-        Assert.Throws<GameRuleException>(() => CycleEngine.Start(novice, Task("bake-bread"), WorkContext.For(village), Now));
-        Assert.Equal("baker", GameCatalog.TitleFor(Baker(village).Stats).Id);
+        CycleEngine.Start(novice, Task("bake-bread"), WorkContext.For(village), Now);
+
+        Assert.Equal("laborer", GameCatalog.TitleFor(novice).Id);
+        Assert.Equal("baker", GameCatalog.TitleFor(novice.WithSkill(Skill.Baking, GameCatalog.JourneymanSkill)).Id);
     }
 }

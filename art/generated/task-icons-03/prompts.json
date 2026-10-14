@@ -1,0 +1,35 @@
+{
+  "mode": "built-in image_gen",
+  "samples": [
+    {
+      "name": "icon-task-hunt-birds",
+      "prompt": "ONE tiny task icon for cozy medieval Slavic village game. Match supplied Kenney Tiny Town/Tiny Farm minimal chunky pixel-art style. Strict 16x16 logical pixel grid enlarged nearest-neighbor, each logical pixel solid square. Flat earthy colors, maximum two shades per material. Transparent background, centered with one logical pixel margin. Clear simple silhouette at native size. No gradients, texture, antialiasing, glow, shadow, text, border or scenery. Leather sling holding a grey stone, beside a small falling brown feather. Thick enough leather cords to read as pixels, simple feather with one shaft.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "icon-task-tend-fire",
+      "prompt": "ONE tiny task icon for cozy medieval Slavic village game. Match supplied Kenney Tiny Town/Tiny Farm minimal chunky pixel-art style. Strict 16x16 logical pixel grid enlarged nearest-neighbor, each logical pixel solid square. Flat earthy colors, maximum two shades per material. Transparent background, centered with one logical pixel margin. Clear simple silhouette at native size. No gradients, texture, antialiasing, glow, shadow, text, border or scenery. A small hand laying one short brown log onto small orange flames. Clear hand, log and two or three flame tips, compact composition.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    },
+    {
+      "name": "icon-task-fish",
+      "prompt": "ONE tiny task icon for cozy medieval Slavic village game. Match supplied Kenney Tiny Town/Tiny Farm minimal chunky pixel-art style. Strict 16x16 logical pixel grid enlarged nearest-neighbor, each logical pixel solid square. Flat earthy colors, maximum two shades per material. Transparent background, centered with one logical pixel margin. Clear simple silhouette at native size. No gradients, texture, antialiasing, glow, shadow, text, border or scenery. Bent wooden fishing rod with one silver fish hanging from the line. Short solid pixel-thick line, distinct fish silhouette with tail, no water or fisherman.",
+      "width": 16,
+      "height": 16,
+      "reference": [
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-town.png",
+        "W:/Pet-projects/Desertod/web/public/assets/kenney/tiny-farm.png"
+      ]
+    }
+  ]
+}

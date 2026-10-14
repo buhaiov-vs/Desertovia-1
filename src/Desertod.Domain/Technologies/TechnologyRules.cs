@@ -32,7 +32,7 @@ public static class TechnologyRules
             : null;
 
     /// <summary>
-    /// The Governor puts some available technologies to the vote. A poll needs two options, or one when only one is
+    /// The Tsar or a Governor puts some available technologies to the vote. A poll needs two options, or one when only one is
     /// available. The village keeps researching the previous choice until the new vote closes.
     /// </summary>
     public static TechnologyPoll OpenPoll(Village village, IReadOnlyCollection<string> technologyIds, int activeCitizens, DateTimeOffset now)
@@ -73,7 +73,7 @@ public static class TechnologyRules
         return village.Poll;
     }
 
-    /// <summary>The Governor withdraws an open vote; the previous choice stays.</summary>
+    /// <summary>The Tsar or a Governor withdraws an open vote; the previous choice stays.</summary>
     public static void CancelPoll(Village village, DateTimeOffset now)
     {
         if (village.Poll is not { IsOpen: true } poll)
@@ -155,11 +155,11 @@ public static class TechnologyRules
     public static (TechnologyDefinition Technology, string PlotId) CheckResearch(Village village, Citizen citizen)
     {
         var technology = Current(village)
-                         ?? throw new GameRuleException("research.none", "No discovery is chosen. Ask the Governor to call a vote.");
+                         ?? throw new GameRuleException("research.none", "No discovery is chosen. Ask the Tsar or a Governor to call a vote.");
 
         var plotId = PlotOf(village, technology.ResearchedAt)
                      ?? throw new GameRuleException("research.needsBuilding",
-                         $"{technology.Name} is researched at a {BuildingCatalog.Get(technology.ResearchedAt).Name}. Ask the Governor to plan one.",
+                         $"{technology.Name} is researched at a {BuildingCatalog.Get(technology.ResearchedAt).Name}. Ask the Tsar or a Governor to plan one.",
                          new Dictionary<string, object> { ["technology"] = technology.Id, ["building"] = technology.ResearchedAt.ToString() });
 
         var lacking = technology.Researcher.FirstOrDefault(r => citizen.Stats.Get(r.Stat) < r.Minimum);

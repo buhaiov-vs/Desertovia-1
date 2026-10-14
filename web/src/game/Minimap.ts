@@ -7,6 +7,14 @@ const TERRAIN_COLORS: Record<Terrain, [number, number, number]> = {
   [Terrain.Bush]: [140, 70, 60],
   [Terrain.Reeds]: [156, 138, 58],
   [Terrain.Clearing]: [176, 150, 100],
+  [Terrain.Mountain]: [104, 96, 92],
+  [Terrain.Ravine]: [52, 38, 28],
+  [Terrain.Thicket]: [36, 80, 31],
+  [Terrain.Rockfall]: [130, 122, 114],
+  [Terrain.Marsh]: [95, 122, 69],
+  [Terrain.Cave]: [28, 23, 18],
+  [Terrain.Lookout]: [200, 190, 175],
+  [Terrain.Trail]: [156, 127, 90],
 }
 
 export interface MinimapMarkers {
@@ -32,6 +40,8 @@ export class Minimap {
   private readonly overlay = document.createElement('canvas')
   private view: Rectangle = { x: 0, y: 0, width: 0, height: 0 }
   private markers: MinimapMarkers | null = null
+  /** Fog of war, one pixel per tile, drawn over the land. */
+  private fog: HTMLCanvasElement | null = null
 
   constructor(host: HTMLElement, onPick: (tileX: number, tileY: number) => void) {
     this.root.className = 'minimap'
@@ -74,6 +84,12 @@ export class Minimap {
     context.putImageData(image, 0, 0)
   }
 
+  /** The canvas is read again on every redraw, so changes to it show up with the next markers. */
+  setFog(fog: HTMLCanvasElement) {
+    this.fog = fog
+    this.draw()
+  }
+
   setView(view: Rectangle) {
     this.view = view
     this.draw()
@@ -91,6 +107,10 @@ export class Minimap {
     const x = (tile: number) => (tile - MAP_LEFT) * unit
     const y = (tile: number) => (tile - MAP_TOP) * unit
     context.clearRect(0, 0, this.overlay.width, this.overlay.height)
+    if (this.fog) {
+      context.imageSmoothingEnabled = true
+      context.drawImage(this.fog, 0, 0, this.overlay.width, this.overlay.height)
+    }
 
     const markers = this.markers
     if (markers) {

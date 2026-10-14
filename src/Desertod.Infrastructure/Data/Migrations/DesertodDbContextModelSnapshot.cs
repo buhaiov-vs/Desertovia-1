@@ -22,6 +22,106 @@ namespace Desertod.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Desertod.Domain.Chat.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AuthorName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("CitizenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("CitizenId");
+
+                    b.HasIndex("VillageId", "SentAt");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Dungeons.DungeonRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DungeonId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Foes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("GatheringEndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("MarchEndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("OpenedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("Seed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Slain")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VillageId", "Phase");
+
+                    b.ToTable("DungeonRuns");
+                });
+
             modelBuilder.Entity("Desertod.Domain.Entities.Account", b =>
                 {
                     b.Property<Guid>("Id")
@@ -49,6 +149,13 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Armor")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("Arrows")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -83,6 +190,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<int>("CyclesSinceMeal")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("DungeonRunId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("EnergyUpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -92,7 +202,13 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<double?>("IdleSpotY")
                         .HasColumnType("double precision");
 
+                    b.Property<DateTimeOffset?>("InjuredUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsCarrying")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsGovernor")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsHungry")
@@ -141,6 +257,10 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Property<Guid>("VillageId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Weapon")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
                     b.HasKey("Id");
 
@@ -231,14 +351,12 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .HasMaxLength(280)
                         .HasColumnType("character varying(280)");
 
+                    b.Property<byte[]>("Explored")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
                     b.Property<int>("GoldVeinMined")
                         .HasColumnType("integer");
-
-                    b.Property<double?>("GovernorSpotX")
-                        .HasColumnType("double precision");
-
-                    b.Property<double?>("GovernorSpotY")
-                        .HasColumnType("double precision");
 
                     b.Property<string>("InviteCode")
                         .HasMaxLength(8)
@@ -261,13 +379,25 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<DateTimeOffset?>("NextRaidAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("OwnerAccountId")
                         .HasColumnType("uuid");
+
+                    b.Property<long>("RaidsPlannedPeriod")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(48)
                         .HasColumnType("character varying(48)");
+
+                    b.Property<double?>("TsarSpotX")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("TsarSpotY")
+                        .HasColumnType("double precision");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -278,6 +408,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IsPrivate");
+
+                    b.HasIndex("NextRaidAt");
 
                     b.HasIndex("OwnerAccountId");
 
@@ -440,6 +572,108 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.ToTable("VillageQuests");
                 });
 
+            modelBuilder.Entity("Desertod.Domain.Chat.ChatMessage", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Desertod.Domain.Entities.Citizen", null)
+                        .WithMany()
+                        .HasForeignKey("CitizenId");
+
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Dungeons.DungeonRun", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("Desertod.Domain.Dungeons.DungeonHero", "Heroes", b1 =>
+                        {
+                            b1.Property<Guid>("DungeonRunId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<Guid>("AccountId");
+
+                            b1.Property<DateTimeOffset?>("ArrivesAt");
+
+                            b1.Property<int>("Arrows");
+
+                            b1.PrimitiveCollection<string>("Broken")
+                                .IsRequired();
+
+                            b1.Property<Guid?>("CitizenId");
+
+                            b1.Property<string>("Class")
+                                .IsRequired();
+
+                            b1.Property<int>("Experience");
+
+                            b1.Property<string>("Killer");
+
+                            b1.Property<int>("Kills");
+
+                            b1.Property<bool>("KnockedOut");
+
+                            b1.Property<string>("Name")
+                                .IsRequired();
+
+                            b1.Property<int>("Remedies");
+
+                            b1.Property<bool>("Settled");
+
+                            b1.HasKey("DungeonRunId", "__synthesizedOrdinal");
+
+                            b1.ToTable("DungeonRuns");
+
+                            b1
+                                .ToJson("Heroes")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DungeonRunId");
+
+                            b1.OwnsMany("Desertod.Domain.Dungeons.DungeonGood", "Loot", b2 =>
+                                {
+                                    b2.Property<Guid>("DungeonHeroDungeonRunId");
+
+                                    b2.Property<int>("DungeonHero__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("Amount");
+
+                                    b2.Property<string>("Kind")
+                                        .IsRequired();
+
+                                    b2.HasKey("DungeonHeroDungeonRunId", "DungeonHero__synthesizedOrdinal", "__synthesizedOrdinal");
+
+                                    b2.ToTable("DungeonRuns");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("DungeonHeroDungeonRunId", "DungeonHero__synthesizedOrdinal");
+                                });
+
+                            b1.Navigation("Loot");
+                        });
+
+                    b.Navigation("Heroes");
+                });
+
             modelBuilder.Entity("Desertod.Domain.Entities.Account", b =>
                 {
                     b.OwnsOne("Desertod.Domain.Entities.Character", "Character", b1 =>
@@ -555,6 +789,32 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .HasForeignKey("CitizenId");
                         });
 
+                    b.OwnsOne("Desertod.Domain.World.Trip", "Trip", b1 =>
+                        {
+                            b1.Property<Guid>("CitizenId");
+
+                            b1.Property<double>("FromX");
+
+                            b1.Property<double>("FromY");
+
+                            b1.Property<DateTimeOffset>("SetOutAt");
+
+                            b1.Property<double>("ToX");
+
+                            b1.Property<double>("ToY");
+
+                            b1.HasKey("CitizenId");
+
+                            b1.ToTable("Citizens");
+
+                            b1
+                                .ToJson("Trip")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CitizenId");
+                        });
+
                     b.OwnsMany("Desertod.Domain.Skills.SkillProgress", "Skills", b1 =>
                         {
                             b1.Property<Guid>("CitizenId");
@@ -632,6 +892,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Navigation("Stats")
                         .IsRequired();
+
+                    b.Navigation("Trip");
                 });
 
             modelBuilder.Entity("Desertod.Domain.Entities.ExternalLogin", b =>
@@ -751,6 +1013,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<DateTimeOffset>("BuiltAt");
 
+                            b1.Property<int>("Damage");
+
                             b1.Property<string>("Kind")
                                 .IsRequired();
 
@@ -763,6 +1027,130 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1
                                 .ToJson("Structures")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VillageId");
+                        });
+
+                    b.OwnsMany("Desertod.Domain.Combat.Raid", "Raids", b1 =>
+                        {
+                            b1.Property<Guid>("VillageId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<DateTimeOffset>("AnnouncedAt");
+
+                            b1.Property<int>("Count");
+
+                            b1.Property<int>("DamagedBuildings");
+
+                            b1.Property<int>("Defenders");
+
+                            b1.Property<string>("Enemy")
+                                .IsRequired();
+
+                            b1.Property<Guid>("Id");
+
+                            b1.Property<int>("Injured");
+
+                            b1.Property<int>("Killed");
+
+                            b1.Property<string>("Outcome")
+                                .IsRequired();
+
+                            b1.Property<DateTimeOffset?>("ResolvedAt");
+
+                            b1.Property<string>("Source")
+                                .IsRequired();
+
+                            b1.Property<DateTimeOffset>("StrikesAt");
+
+                            b1.Property<int>("Wave");
+
+                            b1.Property<int>("Waves");
+
+                            b1.HasKey("VillageId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Villages");
+
+                            b1
+                                .ToJson("Raids")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VillageId");
+
+                            b1.OwnsMany("Desertod.Domain.Combat.RaidGood", "Loot", b2 =>
+                                {
+                                    b2.Property<Guid>("RaidVillageId");
+
+                                    b2.Property<int>("Raid__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("Amount");
+
+                                    b2.Property<string>("Kind")
+                                        .IsRequired();
+
+                                    b2.HasKey("RaidVillageId", "Raid__synthesizedOrdinal", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("RaidVillageId", "Raid__synthesizedOrdinal");
+                                });
+
+                            b1.OwnsMany("Desertod.Domain.Combat.RaidGood", "Stolen", b2 =>
+                                {
+                                    b2.Property<Guid>("RaidVillageId");
+
+                                    b2.Property<int>("Raid__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("Amount");
+
+                                    b2.Property<string>("Kind")
+                                        .IsRequired();
+
+                                    b2.HasKey("RaidVillageId", "Raid__synthesizedOrdinal", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("RaidVillageId", "Raid__synthesizedOrdinal");
+                                });
+
+                            b1.Navigation("Loot");
+
+                            b1.Navigation("Stolen");
+                        });
+
+                    b.OwnsOne("Desertod.Domain.World.Trip", "TsarTrip", b1 =>
+                        {
+                            b1.Property<Guid>("VillageId");
+
+                            b1.Property<double>("FromX");
+
+                            b1.Property<double>("FromY");
+
+                            b1.Property<DateTimeOffset>("SetOutAt");
+
+                            b1.Property<double>("ToX");
+
+                            b1.Property<double>("ToY");
+
+                            b1.HasKey("VillageId");
+
+                            b1.ToTable("Villages");
+
+                            b1
+                                .ToJson("TsarTrip")
                                 .HasColumnType("jsonb");
 
                             b1.WithOwner()
@@ -809,6 +1197,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .ValueGeneratedOnAdd();
 
                             b1.Property<DateTimeOffset>("BuiltAt");
+
+                            b1.Property<int>("Damage");
 
                             b1.Property<string>("Kind")
                                 .IsRequired();
@@ -1032,11 +1422,111 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .HasForeignKey("VillageId");
                         });
 
+                    b.OwnsOne("Desertod.Domain.World.Wilds", "Wilds", b1 =>
+                        {
+                            b1.Property<Guid>("VillageId");
+
+                            b1.Property<int>("CaveX");
+
+                            b1.Property<int>("CaveY");
+
+                            b1.Property<int>("LookoutX");
+
+                            b1.Property<int>("LookoutY");
+
+                            b1.HasKey("VillageId");
+
+                            b1.ToTable("Villages");
+
+                            b1
+                                .ToJson("Wilds")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VillageId");
+
+                            b1.OwnsMany("Desertod.Domain.World.MountainPass", "Passes", b2 =>
+                                {
+                                    b2.Property<Guid>("WildsVillageId");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<bool>("Horizontal");
+
+                                    b2.Property<int>("X");
+
+                                    b2.Property<int>("Y");
+
+                                    b2.HasKey("WildsVillageId", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WildsVillageId");
+                                });
+
+                            b1.OwnsMany("Desertod.Domain.World.Obstacle", "Obstacles", b2 =>
+                                {
+                                    b2.Property<Guid>("WildsVillageId");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<DateTimeOffset?>("ClearedAt");
+
+                                    b2.Property<string>("Kind")
+                                        .IsRequired();
+
+                                    b2.Property<int>("Work");
+
+                                    b2.Property<int>("X");
+
+                                    b2.Property<int>("Y");
+
+                                    b2.HasKey("WildsVillageId", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WildsVillageId");
+                                });
+
+                            b1.OwnsMany("Desertod.Domain.World.RavineSpan", "Ravine", b2 =>
+                                {
+                                    b2.Property<Guid>("WildsVillageId");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("Height");
+
+                                    b2.Property<int>("Top");
+
+                                    b2.Property<int>("X");
+
+                                    b2.HasKey("WildsVillageId", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WildsVillageId");
+                                });
+
+                            b1.Navigation("Obstacles");
+
+                            b1.Navigation("Passes");
+
+                            b1.Navigation("Ravine");
+                        });
+
                     b.Navigation("Fields");
 
                     b.Navigation("Forecasts");
 
                     b.Navigation("Poll");
+
+                    b.Navigation("Raids");
 
                     b.Navigation("Research");
 
@@ -1048,7 +1538,11 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Navigation("Trees");
 
+                    b.Navigation("TsarTrip");
+
                     b.Navigation("Wildlife");
+
+                    b.Navigation("Wilds");
                 });
 
             modelBuilder.Entity("Desertod.Domain.Projects.ProjectContribution", b =>

@@ -1,0 +1,34 @@
+{
+  "generator": "Built-in image_gen",
+  "mode": "edit",
+  "samples": [
+    {
+      "name": "construction-smithy-1-ground",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-smithy-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference smithy into construction stage 1: Only four short stakes joined by string marking ground footprint. Remove every stone, forge, chimney, timber frame and roof. Remove anvil, tools, barrels, fire, smoke and props. Preserve original 3:4 canvas, camera, footprint and base anchors. No zoom, shifting or recentering. Early stages retain empty transparent space above. Show previous construction only, no later components. Crisp 48x64 logical pixel art enlarged with solid square pixels, simple Kenney-like flat earthy colors with max three shades per material. No gradients, halos, glow, antialiasing, text, labels or scenery. Transparent outside structure and between open posts."
+    },
+    {
+      "name": "construction-smithy-2-foundation",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-smithy-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference smithy into construction stage 2: Only a low grey stone foundation base. No forge, chimney, upright posts, walls or roof. Remove anvil, tools, barrels, fire, smoke and props. Preserve original 3:4 canvas, camera, footprint and base anchors. No zoom, shifting or recentering. Early stages retain empty transparent space above. Show previous construction only, no later components. Crisp 48x64 logical pixel art enlarged with solid square pixels, simple Kenney-like flat earthy colors with max three shades per material. No gradients, halos, glow, antialiasing, text, labels or scenery. Transparent outside structure and between open posts."
+    },
+    {
+      "name": "construction-smithy-3-forge",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-smithy-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference smithy into construction stage 3: Low grey stone base with a cold stone forge and short unfinished chimney stub at the right. Dark unlit firebox. No wooden posts or roof yet. Remove anvil, tools, barrels, fire, smoke and props. Preserve original 3:4 canvas, camera, footprint and base anchors. No zoom, shifting or recentering. Early stages retain empty transparent space above. Show previous construction only, no later components. Crisp 48x64 logical pixel art enlarged with solid square pixels, simple Kenney-like flat earthy colors with max three shades per material. No gradients, halos, glow, antialiasing, text, labels or scenery. Transparent outside structure and between open posts."
+    },
+    {
+      "name": "construction-smithy-4-roof",
+      "width": 48,
+      "height": 64,
+      "reference": "W:/Pet-projects/Desertod/web/public/assets/generated/buildings-02/building-smithy-preview.png",
+      "prompt": "Use case: precise-object-edit. Edit reference smithy into construction stage 4: Low grey stone base, cold stone forge and chimney stub at right; add upright timber posts and roof rafters with exactly half of the grey roof covering laid and half exposed. No walls. Remove anvil, tools, barrels, fire, smoke and props. Preserve original 3:4 canvas, camera, footprint and base anchors. No zoom, shifting or recentering. Early stages retain empty transparent space above. Show previous construction only, no later components. Crisp 48x64 logical pixel art enlarged with solid square pixels, simple Kenney-like flat earthy colors with max three shades per material. No gradients, halos, glow, antialiasing, text, labels or scenery. Transparent outside structure and between open posts."
+    }
+  ]
+}

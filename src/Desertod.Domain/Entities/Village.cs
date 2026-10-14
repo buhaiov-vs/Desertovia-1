@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Desertod.Domain.Buildings;
 using Desertod.Domain.Catalog;
+using Desertod.Domain.Combat;
 using Desertod.Domain.Farming;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Storage;
@@ -72,20 +73,38 @@ public sealed class Village
     /// <summary>Synoptics' forecasts of the last days and the next one; other days have the weather the sky draws.</summary>
     public List<WeatherForecast> Forecasts { get; set; } = [];
 
-    /// <summary>Where the Governor walked to on the map; null while they stand at the campfire.</summary>
-    public double? GovernorSpotX { get; set; }
+    /// <summary>Where the Tsar walked to on the map; null while they stand at the campfire.</summary>
+    public double? TsarSpotX { get; set; }
 
-    public double? GovernorSpotY { get; set; }
+    public double? TsarSpotY { get; set; }
 
-    public TilePoint? GovernorSpot
+    public TilePoint? TsarSpot
     {
-        get => GovernorSpotX is { } x && GovernorSpotY is { } y ? new TilePoint(x, y) : null;
+        get => TsarSpotX is { } x && TsarSpotY is { } y ? new TilePoint(x, y) : null;
         set
         {
-            GovernorSpotX = value?.X;
-            GovernorSpotY = value?.Y;
+            TsarSpotX = value?.X;
+            TsarSpotY = value?.Y;
         }
     }
+
+    /// <summary>The Tsar's last walk; the land along it is seen as they get there.</summary>
+    public Trip? TsarTrip { get; set; }
+
+    /// <summary>Land the tribe has seen, shared by all its players; see <see cref="Exploration"/>.</summary>
+    public byte[] Explored { get; set; } = [];
+
+    /// <summary>The ravine, mountain features and obstacles of the wild land; see <see cref="Wilderness"/>.</summary>
+    public Wilds? Wilds { get; set; }
+
+    /// <summary>Attacks on the way and the last fought ones; see <see cref="RaidRules"/>.</summary>
+    public List<Raid> Raids { get; set; } = [];
+
+    /// <summary>The last night (a <see cref="DayCycle"/> period) the beasts decided whether to attack.</summary>
+    public long RaidsPlannedPeriod { get; set; }
+
+    /// <summary>When the next attack on the way strikes; null with none. Lets the server find due raids with a simple query.</summary>
+    public DateTimeOffset? NextRaidAt { get; set; }
 
     /// <summary>A new tribe has a campfire, woods and wild animals around. Everything else, storage too, is built by hand.</summary>
     public static Village Create(string slug, string name, Guid ownerAccountId, DateTimeOffset now)
@@ -172,19 +191,59 @@ public sealed class Village
             added = true;
         }
 
+        if (Wilds is null)
+        {
+            Wilds = Wilderness.Generate(Id);
+            added = true;
+        }
+
+        if (Explored.Length != Exploration.Size)
+        {
+            Explored = Exploration.Camp();
+            var plots = Storages.Select(s => s.PlotId).Concat(Structures.Select(s => s.PlotId)).Concat(Sites.Select(s => s.PlotId));
+            foreach (var plotId in plots)
+            {
+                Exploration.Reveal(Explored, WorldMap.Yard(plotId), Exploration.BuildingSightRadius);
+            }
+
+            if (TsarSpot is { } spot)
+            {
+                Exploration.Reveal(Explored, spot, Exploration.SightRadius);
+            }
+
+            added = true;
+        }
+
         return FarmRules.EnsureBeds(this) || added;
     }
 
-    /// <summary>The Governor walks to a spot on the land and stays there.</summary>
-    public void GovernorGoTo(TilePoint spot)
+    /// <summary>The Tsar walks to a spot on the land and stays there. The land on the way is seen as they get there.</summary>
+    public void TsarGoTo(TilePoint spot, DateTimeOffset now)
     {
         if (!WorldMap.Land.Contains(spot.ToTile()))
         {
             throw new GameRuleException("spot.outsideLand", "This spot is beyond the land.");
         }
 
-        GovernorSpot = spot;
+        TsarTrip = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, Wilds?.Lookout);
+        TsarSpot = spot;
     }
+
+    /// <summary>Writes the walked parts of these trips into the seen land.</summary>
+    public void Explore(IEnumerable<Trip> trips, DateTimeOffset now)
+    {
+        if (Explored.Length != Exploration.Size)
+        {
+            return;
+        }
+
+        foreach (var trip in TsarTrip is null ? trips : trips.Append(TsarTrip))
+        {
+            Exploration.Reveal(Explored, trip, now, Wilds?.Lookout);
+        }
+    }
+
+    public bool IsExplored(TileArea area) => Exploration.IsExplored(Explored, area);
 
     public Herd HerdOf(AnimalKind kind) => Wildlife.Single(h => h.Kind == kind);
 

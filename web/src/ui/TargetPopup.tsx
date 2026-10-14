@@ -27,10 +27,16 @@ const NATURE_WORKPLACES: Record<NatureKind, string[]> = {
   reeds: ['reeds', 'ford', 'pier'],
   water: ['pier', 'ford', 'reeds'],
   vein: ['gold-vein'],
+  thicket: ['thicket'],
+  rockfall: ['rockfall'],
+  cave: ['cave'],
 }
 
 /** A picked spot is only kept where the citizen really gathers what the place offers. */
 const SPOT_KINDS: readonly NatureKind[] = ['tree', 'bush', 'stone', 'reeds']
+
+/** Places in the wild the server knows: the picked tile tells it which thicket or rockfall to clear. */
+const WILD_KINDS: readonly NatureKind[] = ['thicket', 'rockfall', 'cave']
 
 const NATURE_TITLES: Record<NatureKind, UiKey> = {
   tree: 'target.tree',
@@ -39,6 +45,17 @@ const NATURE_TITLES: Record<NatureKind, UiKey> = {
   reeds: 'target.reeds',
   water: 'target.water',
   vein: 'target.vein',
+  thicket: 'target.thicket',
+  rockfall: 'target.rockfall',
+  cave: 'target.cave',
+}
+
+function damageOf(village: VillageState, plotId: string) {
+  return (
+    village.structures.find((structure) => structure.plotId === plotId)?.damage ??
+    village.storages.find((storage) => storage.plotId === plotId)?.damage ??
+    0
+  )
 }
 
 function tasksFor(target: WorldTarget, catalog: Catalog, village: VillageState): Task[] {
@@ -51,10 +68,15 @@ function tasksFor(target: WorldTarget, catalog: Catalog, village: VillageState):
       return catalog.tasks.filter((task) => task.workplace === 'camp' && task.effect === 'Morale')
     case 'project':
       return catalog.tasks.filter((task) => isProjectTask(task) && projectWants(village.project, task))
-    case 'building':
+    case 'building': {
+      const damaged = damageOf(village, target.plotId) > 0
       return catalog.tasks.filter(
-        (task) => task.requiredBuilding === target.building || (target.storage && task.id === CARRY_TO_STORAGE),
+        (task) =>
+          task.requiredBuilding === target.building ||
+          (target.storage && task.id === CARRY_TO_STORAGE) ||
+          (damaged && task.effect === 'Repair'),
       )
+    }
     default: {
       const workplaces = NATURE_WORKPLACES[target.kind]
       return catalog.tasks.filter((task) => workplaces.includes(task.workplace) && projectWants(village.project, task))
@@ -73,9 +95,9 @@ function titleOf(target: WorldTarget, catalog: Catalog, citizen: Citizen, i18n: 
       return i18n.t('target.campfire')
     case 'animal': {
       // Prey the citizen is not skilled enough for stays a mystery, as in the task list.
-      const needed = catalog.tasks.find((task) => task.hunt?.prey === target.prey)?.hunt?.dexterity ?? 0
-      const dexterity = citizen.stats.find((stat) => stat.stat === 'Dexterity')?.level ?? 0
-      return dexterity >= needed ? i18n.animal(target.prey) : i18n.t('task.preyUnknown')
+      const needed = catalog.tasks.find((task) => task.hunt?.prey === target.prey)?.skillLevel ?? 0
+      const hunting = citizen.skills.find((skill) => skill.skill === 'Hunting')?.level ?? 0
+      return hunting >= needed ? i18n.animal(target.prey) : i18n.t('task.preyUnknown')
     }
     default:
       return i18n.t(NATURE_TITLES[target.kind])
@@ -84,7 +106,9 @@ function titleOf(target: WorldTarget, catalog: Catalog, citizen: Citizen, i18n: 
 
 /** Spot sent with a gathering task, so the citizen works right at the clicked tree, bush or stone. */
 function spotFor(target: WorldTarget, task: Task): TilePoint | null {
-  if (!('spot' in target) || !SPOT_KINDS.includes(target.kind as NatureKind) || !takesSpot(task)) return null
+  if (!('spot' in target)) return null
+  if (WILD_KINDS.includes(target.kind) && task.workplace === target.kind) return target.spot
+  if (!SPOT_KINDS.includes(target.kind) || !takesSpot(task)) return null
   return target.spot
 }
 
@@ -145,6 +169,7 @@ export function TargetPopup({
   const built = new Set<string>([...builtKinds(village, catalog), ...village.completedProjects])
   const wildWood =
     target.kind === 'tree' && !inForestArea(Math.floor(target.spot.x), Math.floor(target.spot.y))
+  const damage = target.kind === 'building' ? damageOf(village, target.plotId) : 0
 
   return (
     <div className={`target-popup ${phone ? 'sheet' : ''}`} style={popupStyle(screen, phone)} role="dialog" aria-label={titleOf(target, catalog, citizen, i18n)}>
@@ -158,6 +183,11 @@ export function TargetPopup({
         {working && <p className="small muted">{t('target.busy')}</p>}
         {error && <p className="error">{error}</p>}
         {wildWood && <p className="small muted">{t('target.wildWood')}</p>}
+        {damage > 0 && (
+          <p className="small warning">
+            {t('building.damaged', { percent: Math.round((damage / catalog.rules.maximumDamage) * 100) })}
+          </p>
+        )}
         {site && (
           <SiteCard site={site} catalog={catalog} village={village} citizen={citizen} disabled={disabled} onStartJob={onStartJob} />
         )}
@@ -179,6 +209,7 @@ export function TargetPopup({
             wildlife={village.wildlife}
             goldVein={village.goldVeinRemaining}
             fields={village.fields}
+            resources={village.resources}
             disabled={disabled}
             onStart={(task) => onStart(task, spotFor(target, task))}
           />

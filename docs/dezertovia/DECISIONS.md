@@ -172,3 +172,12 @@ alpha cutoff192. В BuildingLighting26 подготовленных зданий
 двух состояний смешиваются после формирования, чтобы не было скачков/прозрачности
 при переходе. Свечение отдельно. PNG helper читает тот же профиль и сохраняет
 в отдельную папку; масштаб исходника задаётся явно. Только ветка/GitHub, LIVE не меняется.
+
+D-023 subsequent instruction: bake all52 registered building images, don't compute
+outlines during rendering. The ready PNGs and two atlases use one2px/world grid,
+opaque #2b1d2b external square stroke2px (1 world pixel at native scale).
+Day/night are aligned before baking; image boundaries/ground anchors include
+transparent contour margins. Standard rendered body dimensions round to the nearest
+half world pixel (maximum adjustment0.25px), retaining caller footprint and ground
+anchor. Original sources remain intact. Idempotent build, generated validation report,
+GPU lighting/crossfade checks. Still NO server deployment or version bump.

@@ -28,8 +28,15 @@ def outline(image, width, color, threshold=STYLE["alphaThreshold"], mask=None, p
         expanded.paste(silhouette, (padding, padding))
         silhouette = expanded
 
+    edge = outer_edge(silhouette, width)
+    background = Image.new("RGBA", image.size, (*color, 255))
+    # Exact ink, including over semi-transparent halo pixels at the contour.
+    return Image.composite(background, image, edge)
+
+
+def outer_edge(silhouette, width):
     # Flood only background connected to the border: don't outline windows/holes.
-    w, h = image.size
+    w, h = silhouette.size
     solid = silhouette.tobytes()
     outside = bytearray(w * h)
     queue = deque()
@@ -54,10 +61,8 @@ def outline(image, width, color, threshold=STYLE["alphaThreshold"], mask=None, p
         if y + 1 < h: visit(index + w)
 
     expanded = silhouette.filter(ImageFilter.MaxFilter(width * 2 + 1))
-    edge = ImageChops.multiply(expanded, Image.frombytes("L", image.size, bytes(outside)))
-    background = Image.new("RGBA", image.size, color)
-    background.putalpha(edge)
-    return Image.alpha_composite(background, image)
+    edge = ImageChops.multiply(expanded, Image.frombytes("L", silhouette.size, bytes(outside)))
+    return edge
 
 
 def main():

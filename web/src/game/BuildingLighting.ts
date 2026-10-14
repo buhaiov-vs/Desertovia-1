@@ -1,8 +1,6 @@
 import { Container, Graphics, Mesh, MeshGeometry, Shader, type Texture } from 'pixi.js'
 import registrations from '../assets/night/registration.json'
-import dayAtlas from '../assets/sprites.json'
-import outlineStyle from '../../../art/style/building-outline.json'
-import { TILE, art, type ArtName, type TileSet } from './sheets'
+import { TILE, type TileSet } from './sheets'
 
 type Bounds = readonly number[]
 export const hasPreparedBuilding = (kind: string) => Object.hasOwn(registrations, kind)
@@ -43,12 +41,6 @@ vec4 nightPixel(vec2 uv) {
   if (any(lessThan(uv, uNightFrame.xy)) || any(greaterThan(uv, uNightFrame.zw))) return vec4(0.0);
   return texture(uNightTexture, uv);
 }
-// A shared world-space contour: PNG resolution and registered scaling cannot change its thickness.
-vec2 bodyAt(vec2 position) {
-  float day = dayPixel(position * uDayMap.xy + uDayMap.zw).a;
-  float night = nightPixel(position * uNightMap.xy + uNightMap.zw).a;
-  return vec2(step(${outlineStyle.alphaThreshold / 255}, day), step(${outlineStyle.alphaThreshold / 255}, night));
-}
 void main() {
   vec4 day = dayPixel(vPosition * uDayMap.xy + uDayMap.zw);
   vec4 night = nightPixel(vPosition * uNightMap.xy + uNightMap.zw);
@@ -62,20 +54,7 @@ void main() {
   float shade = uNight * 0.55;
   night.rgb = clamp((night.rgb - night.a * vec3(11.0,22.0,64.0)/255.0 * shade)/(1.0-shade), vec3(0.0), vec3(night.a));
   // One premultiplied interpolation: unlike two fading sprites, opaque walls never become transparent at dusk.
-  vec2 body = vec2(step(${outlineStyle.alphaThreshold / 255}, day.a), step(${outlineStyle.alphaThreshold / 255}, night.a));
-  if (mix(body.x, body.y, uNight) >= 1.0) { finalColor = mix(day, night, uNight) * uColor; return; }
-  vec2 nearby = vec2(0.0);
-  for (int x = -1; x <= 1; x++) {
-    for (int y = -1; y <= 1; y++) {
-      if (x == 0 && y == 0) continue;
-      nearby = max(nearby, bodyAt(vPosition + vec2(float(x), float(y)) * ${outlineStyle.worldWidth.toFixed(1)}));
-    }
-  }
-  vec2 edge = nearby * (vec2(1.0) - body);
-  // The glow-only pass returned above: light halos don't acquire a dark contour.
-  vec3 ink = vec3(${[1, 3, 5].map(offset => (parseInt(outlineStyle.color.slice(offset, offset + 2), 16) / 255).toFixed(6)).join(', ')});
-  // Outline each endpoint before crossfading: overlapping opaque walls/ink stay opaque at dusk.
-  finalColor = mix(mix(day, vec4(ink, 1.0), edge.x), mix(night, vec4(ink, 1.0), edge.y), uNight) * uColor;
+  finalColor = mix(day, night, uNight) * uColor;
 }`
 
 function sampling(texture: Texture, p: ReturnType<typeof registeredPlacement>) {
@@ -99,15 +78,13 @@ export class BuildingLighting extends Container {
     super()
     this.emitsLight = emitsLight
     const pair = registrations[kind as keyof typeof registrations]
-    const [left, top, right, bottom] = pair.dayBounds
-    const scale = Math.min(0.5, plotWidth*TILE/(right-left),plotHeight*TILE/(bottom-top))
-    const width = (right-left)*scale, height = (bottom-top)*scale
-    const dayTexture = tiles.get(art(pair.day as ArtName)), nightTexture = tiles.nightBuilding(pair.night)
-    const day = sampling(dayTexture,registeredPlacement(pair.dayBounds.map(value=>value/dayAtlas.meta.scale),width,height))
+    const scale = Math.min(1, plotWidth*TILE/pair.worldSize[0],plotHeight*TILE/pair.worldSize[1])
+    const width = pair.worldSize[0]*scale, height = pair.worldSize[1]*scale
+    const dayTexture = tiles.nightBuilding(pair.day), nightTexture = tiles.nightBuilding(pair.night)
+    const day = sampling(dayTexture,registeredPlacement(pair.dayBounds,width,height))
     const night = sampling(nightTexture,registeredPlacement(pair.nightBounds,width,height))
-    const border = outlineStyle.worldWidth
-    const x0=Math.min(day.bounds[0],night.bounds[0])-border,y0=Math.min(day.bounds[1],night.bounds[1])-border
-    const x1=Math.max(day.bounds[2],night.bounds[2])+border,y1=Math.max(day.bounds[3],night.bounds[3])+border
+    const x0=Math.min(day.bounds[0],night.bounds[0]),y0=Math.min(day.bounds[1],night.bounds[1])
+    const x1=Math.max(day.bounds[2],night.bounds[2]),y1=Math.max(day.bounds[3],night.bounds[3])
     const geometry = new MeshGeometry({ positions: new Float32Array([x0,y0,x1,y0,x1,y1,x0,y1]),
       uvs:new Float32Array([0,0,1,0,1,1,0,1]),indices:new Uint32Array([0,1,2,0,2,3]) })
     geometry.batchMode='no-batch'

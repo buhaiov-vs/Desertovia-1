@@ -63,7 +63,7 @@ test('all 26 buildings emit warm light at night and none in full daylight',async
 })
 
 
-test('all 26 buildings share the same opaque outline ink in daylight and at night',async({page})=>{
+test('all 26 buildings load the same baked opaque outline ink in both atlas frames',async({page})=>{
  const counts=await page.evaluate(()=> (window as unknown as {lightingTest:{outlineCheck():number[][]}}).lightingTest.outlineCheck())
  expect(counts).toHaveLength(26)
  for(const [day,night] of counts){expect(day).toBeGreaterThan(10);expect(night).toBeGreaterThan(10)}

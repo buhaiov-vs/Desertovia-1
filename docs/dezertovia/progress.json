@@ -224,7 +224,8 @@
     "D-016",
     "D-017",
     "D-018",
-    "D-019"
+    "D-019",
+    "D-020"
   ],
   "launch_checks": {
     "miniapp_unit_and_flow": 13,
@@ -304,5 +305,21 @@
     "local_health": true,
     "shared_bot_and_housing_active": true,
     "stronger_campfire_style_lighting": true
+  },
+  "construction_visual_plan": {
+    "state": "planned_documentation_only",
+    "decision": "D-020",
+    "document": "CONSTRUCTION_VISUAL_PLAN.md",
+    "pilot": "Hut",
+    "live_changed": false,
+    "preserve_server_rules": true,
+    "checks_needed": [
+      "stage_mapping",
+      "registration",
+      "delivery_refresh",
+      "nested_world_lighting",
+      "completion_cleanup",
+      "phone_desktop_day_night"
+    ]
   }
 }

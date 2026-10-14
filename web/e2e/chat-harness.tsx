@@ -16,7 +16,7 @@ function Stand(){
   <div className="hud-top"><strong>Дезертовия</strong></div>
   <ChatPanel interrupted={interrupted} feed={[]} messages={messages} incoming={incoming} member tsar={false} ownCitizenId="me" serverOffsetMs={0} phone={matchMedia('(max-width:720px)').matches} onSend={async text=>{setSent(text);add(true)}}/>
   <div className="hud-bottom"><div className="hud-status"><button>Строить</button><button>Персонаж</button></div></div>
- </div>{interrupted&&<div className="modal-backdrop"><section className="modal poll"><h2>Голосование</h2><button onClick={()=>setInterrupted(false)}>Закрыть голосование</button></section></div>}</div><div style={{position:'fixed',top:80,right:10,zIndex:1002}}>
+ </div>{interrupted&&<div className="modal-backdrop"><section className="modal poll"><h2>Голосование</h2><footer style={{marginTop:"auto"}}><button onClick={()=>setInterrupted(false)}>Закрыть голосование</button></footer></section></div>}</div><div style={{position:'fixed',top:80,right:10,zIndex:1002}}>
   <button id="overlay" onClick={()=>setInterrupted(true)}>Open vote</button><button id="arrive" onClick={()=>add()}>Incoming</button><button id="own" onClick={()=>add(true)}>Own</button>
   <button id="history" onClick={()=>setMessages(previous=>[...previous,msg('late-history','Догруженная история')])}>History</button><output id="sent">{sent}</output>
  </div></I18nProvider>

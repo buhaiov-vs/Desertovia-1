@@ -377,7 +377,12 @@
   "chat_launcher_fix": {
     "decision": "D-022",
     "target_version": "0.5.1",
-    "state": "implemented_pending_verification",
-    "checks": []
+    "state": "locally_verified_pending_ci_and_deployment",
+    "checks": [
+      "production frontend build",
+      "lint completed with existing warnings",
+      "12 focused chat regressions passed on desktop and phone",
+      "real GamePage chat/Village/settings checks passed on desktop and phone"
+    ]
   }
 }

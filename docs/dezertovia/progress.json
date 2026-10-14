@@ -267,5 +267,15 @@
       "phone_buttons_on_screen": true,
       "ci_run": 38532263883
     }
+  },
+  "night_building_assets": {
+    "state": "prepared_not_integrated",
+    "decision": "D-018",
+    "count": 26,
+    "branch": "art/night-buildings",
+    "gallery": "art/night-buildings/day-night-comparison.png",
+    "validation": "art/night-buildings/validation.json",
+    "live_changed": false,
+    "alignment_required_before_crossfade": true
   }
 }

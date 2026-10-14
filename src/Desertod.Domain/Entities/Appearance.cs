@@ -16,7 +16,7 @@ public sealed class Appearance
     public const int FemaleStyles = 2;
     public const int SkinTones = 6;
     public const int HairColors = 8;
-    public const int OutfitColors = 8;
+    public const int OutfitColors = 9;
 
     public Gender Gender { get; set; }
     public int Style { get; set; }

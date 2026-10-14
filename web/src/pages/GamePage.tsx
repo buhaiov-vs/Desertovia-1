@@ -1,3 +1,4 @@
+import { SramoslavPanel } from '../ui/SramoslavPanel'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import {
@@ -104,6 +105,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const [picked, setPicked] = useState<{ target: WorldTarget; screen: { x: number; y: number } } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
+  const [chaplainOpen, setChaplainOpen] = useState(false)
   const [panel, setPanel] = useState<Panel>('none')
   const [tab, setTab] = useState<MenuTab>('village')
   const [report, setReport] = useState<CycleReport | null>(null)
@@ -631,7 +633,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     villageRef.current = live.state
   })
   const citizens = useMemo(() => [...live.citizens.values()], [live.citizens])
-  const pickCitizen = useMemo(() => (tsar ? (id: string) => setSubtitleFor(id) : null), [tsar])
+  const pickCitizen = useMemo(() => (id: string) => { if (id === PRIEST_ID) setChaplainOpen(true); else if (tsar) setSubtitleFor(id) }, [tsar])
   // Only a citizen can be sent to work; the Tsar watches and walks around, players without a character just look.
   const canWork = !tsar && !!citizen
   const working = citizen?.state === 'Working'
@@ -922,6 +924,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         </ServerClock>
       </div>
 
+      {chaplainOpen && <SramoslavPanel slug={slug} onClose={() => setChaplainOpen(false)} onReply={text => canvas.current?.say(PRIEST_ID, text, 12)} />}
       {panel === 'menu' && (
         <ServerClock offsetMs={serverOffset}>
           {(now) => (

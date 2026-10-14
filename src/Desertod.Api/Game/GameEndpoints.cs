@@ -9,16 +9,28 @@ public static class GameEndpoints
     {
         var player = app.MapGroup("/api").RequireAuthorization();
 
+        player.MapPost("/villages/{slug}/sramoslav", (string slug, SramoslavQuestion request, ClaimsPrincipal user,
+            SramoslavService service, CancellationToken cancellationToken) =>
+            service.AskAsync(slug, user.RequireAccountId(), request.Text, cancellationToken)).RequireRateLimiting(ChatService.RateLimit);
+
         player.MapGet("/catalog", (CatalogDto catalog) => catalog);
 
-        player.MapGet("/villages/public", (GameService game, CancellationToken cancellationToken) =>
-            game.ListPublicVillagesAsync(cancellationToken));
+        player.MapGet("/villages/public", async (GameService game, IConfiguration config, CancellationToken cancellationToken) =>
+        {
+            var villages = await game.ListPublicVillagesAsync(cancellationToken);
+            var primary = config["Hosting:PrimaryVillage"];
+            return villages.Where(v => string.IsNullOrEmpty(primary) || v.Slug == primary).ToArray();
+        });
 
         player.MapGet("/villages/{slug}", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.GetVillageAsync(slug, user.RequireAccountId(), cancellationToken));
 
-        player.MapGet("/villages", (ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
-            game.ListVillagesAsync(user.RequireAccountId(), cancellationToken));
+        player.MapGet("/villages", async (ClaimsPrincipal user, GameService game, IConfiguration config, CancellationToken cancellationToken) =>
+        {
+            var villages = await game.ListVillagesAsync(user.RequireAccountId(), cancellationToken);
+            var primary = config["Hosting:PrimaryVillage"];
+            return villages.Where(v => string.IsNullOrEmpty(primary) || v.Slug == primary).ToArray();
+        });
 
         player.MapPost("/villages", (CreateVillageRequest request, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.CreateVillageAsync(user.RequireAccountId(), request, cancellationToken));

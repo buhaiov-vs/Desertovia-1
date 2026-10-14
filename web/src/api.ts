@@ -1184,6 +1184,7 @@ export interface LoginProviders {
   telegramBotUsername: string | null
   /** Email and password, without any outside service. */
   password: boolean
+  primaryVillage?: string | null
   telegramBrowserLogin: boolean
   developmentLogin: boolean
 }
@@ -1268,6 +1269,7 @@ export function loadVillage(slug: string) {
 }
 
 export const api = {
+  sramoslav: (slug: string, text: string) => request<{text: string; ai: boolean}>('POST', `/api/villages/${slug}/sramoslav`, { text }),
   telegramMiniApp: (initData: string) => request<void>('POST', '/auth/telegram/miniapp', { initData }),
   telegramBrowserStart: () => request<{url: string; pin: string}>('POST', '/auth/telegram/browser/start'),
   telegramBrowserPoll: () => request<{pending: boolean}>('POST', '/auth/telegram/browser/poll'),

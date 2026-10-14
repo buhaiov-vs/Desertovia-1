@@ -64,6 +64,8 @@ builder.Services.AddSingleton<VillageStateChanges>();
 builder.Services.AddSingleton<CitizenPresence>();
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddSingleton<ChatService>();
+builder.Services.AddSingleton<SramoslavService>();
+builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<DungeonRuntime>();
 builder.Services.AddHostedService<CycleSettlementWorker>();
 builder.Services.AddHostedService<RaidWorker>();
@@ -95,6 +97,19 @@ app.Use((context,next) =>
     return next(context);
 });
 app.UseRouting();
+app.Use(async (context, next) =>
+{
+    var primary = builder.Configuration["Hosting:PrimaryVillage"];
+    if (!string.IsNullOrEmpty(primary))
+    {
+        var path = context.Request.Path.Value ?? "";
+        var other = System.Text.RegularExpressions.Regex.Match(path, "^/api/villages/([^/]+)");
+        if ((path == "/api/villages" && HttpMethods.IsPost(context.Request.Method)) ||
+            (other.Success && other.Groups[1].Value != primary && other.Groups[1].Value != "public"))
+        { context.Response.StatusCode = 403; return; }
+    }
+    await next();
+});
 app.UseResponseCompression();
 app.UseExceptionHandler();
 app.UseAuthentication();

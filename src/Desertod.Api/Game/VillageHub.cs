@@ -10,7 +10,7 @@ namespace Desertod.Api.Game;
 
 /// <summary>Read-only feed of a village for signed-in players.</summary>
 [Authorize]
-public sealed class VillageHub(ChatService chat, GameService game, ILogger<VillageHub> logger) : Hub
+public sealed class VillageHub(ChatService chat, GameService game, ILogger<VillageHub> logger, IConfiguration configuration) : Hub
 {
     public static string GroupName(string slug) => $"village:{slug.ToLowerInvariant()}";
 
@@ -33,6 +33,7 @@ public sealed class VillageHub(ChatService chat, GameService game, ILogger<Villa
     /// <summary>A citizen watching their own village is present while connected; see <see cref="CitizenPresence"/>.</summary>
     public async Task JoinVillage(string slug)
     {
+        RequireWorld(slug);
         logger.HubJoined(Context.ConnectionId, slug);
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(slug));
         if (Context.User?.GetAccountId() is { } accountId)
@@ -44,6 +45,7 @@ public sealed class VillageHub(ChatService chat, GameService game, ILogger<Villa
     /// <summary>False when the player neither rules nor lives in the village; they get no chat lines.</summary>
     public async Task<bool> JoinChat(string slug)
     {
+        RequireWorld(slug);
         if (Context.User?.GetAccountId() is not { } accountId
             || !await chat.IsMemberAsync(slug, accountId, Context.ConnectionAborted))
         {
@@ -53,6 +55,12 @@ public sealed class VillageHub(ChatService chat, GameService game, ILogger<Villa
         logger.HubJoinedChat(Context.ConnectionId, slug);
         await Groups.AddToGroupAsync(Context.ConnectionId, ChatGroupName(slug));
         return true;
+    }
+
+    private void RequireWorld(string slug)
+    {
+        var primary = configuration["Hosting:PrimaryVillage"];
+        if (!string.IsNullOrEmpty(primary) && !string.Equals(primary, slug, StringComparison.OrdinalIgnoreCase)) throw new HubException("This world is temporarily unavailable.");
     }
 
     public async Task LeaveVillage(string slug)

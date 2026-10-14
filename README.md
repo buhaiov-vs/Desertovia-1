@@ -2,14 +2,20 @@
 
 Audience village game for streamers. Game rules: [docs/game-design.md](docs/game-design.md). Progress and plans: [docs/roadmap.md](docs/roadmap.md). How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md).
 
-[![CI](https://github.com/buhaiov-vs/Desertovia/actions/workflows/ci.yml/badge.svg)](https://github.com/buhaiov-vs/Desertovia/actions/workflows/ci.yml)
+[![CI](https://github.com/desertod666/Desertovia/actions/workflows/ci.yml/badge.svg)](https://github.com/desertod666/Desertovia/actions/workflows/ci.yml)
 
 ## Дезертовия: технический план адаптации
 
 Инженерия этого проекта сохраняется как основа нашей версии. Карта правил,
 сопоставление модулей, решения владельца, предложения зрителей и план переноса:
 [docs/dezertovia/README.md](docs/dezertovia/README.md).
-Сейчас подготовлены документы; игровой код не изменён.
+Текущая выпущенная версия — **Дезертовия0.5**. Изменения игры уже находятся в
+`main`: Telegram-вход, один игровой мир, Срамослав, ночные здания, пилот
+стройплощадки хижины, режимы чата и уведомления, жители/онлайн и версия в настройках.
+Проверенный выпуск и его точный исходник: [описание0.5](docs/dezertovia/CHAT_MODES.md).
+Полный текущий план и оставшиеся задачи — в технической памяти выше; не все
+пункты планов уже реализованы. Исходная инженерная основа автора:
+[buhaiov-vs/Desertovia](https://github.com/buhaiov-vs/Desertovia).
 
 ## Structure
 

@@ -9,6 +9,8 @@ test.beforeEach(async({page},info)=>{
 
 test('hidden chat notifies only new foreign arrivals, caps bursts and opens compact chat',async({page})=>{
  await expect(page.locator('.chat-toast')).toHaveCount(0)
+ await expect(page.locator('.chat-population').first()).toHaveText('10 жителей · 3 онлайн')
+ await page.locator('#presence').click();await expect(page.locator('.chat-population').first()).toHaveText('10 жителей · 1 онлайн')
  await page.locator('#history').click();await page.locator('#own').click();await expect(page.locator('.chat-toast')).toHaveCount(0)
  for(let i=0;i<4;i++)await page.locator('#arrive').click()
  await expect(page.locator('.chat-toast')).toHaveCount(2)
@@ -61,7 +63,7 @@ test('toast expires, sending works, and full chat makes underlying HUD inert',as
 
 
 test('real game chat buttons and panels fit the phone and desktop map',async({page})=>{
- test.setTimeout(120000) // Software WebGL renders both full-map screenshots on the CPU.
+ test.setTimeout(180000) // Software WebGL renders both full-map screenshots on the CPU.
  await page.evaluate(()=>localStorage.setItem('desertod.language','en'))
  await page.goto(`/v/${DEMO_SLUG}`);await developmentLogin(page,uniqueName('chat-ui'));await expectVillageView(page)
  const panel=page.locator('.chat-panel')
@@ -75,4 +77,8 @@ test('real game chat buttons and panels fit the phone and desktop map',async({pa
  await expect(page.locator('.ui-toggle')).toBeHidden()
  await page.screenshot({path:test.info().outputPath('chat-full-map.png')})
  await panel.getByRole('button',{name:'Hide chat'}).click();await expect(panel).toHaveAttribute('data-mode','hidden')
+ await page.locator('.hud-buttons button').first().click()
+ const menu=page.getByRole('dialog',{name:'Menu'})
+ await menu.locator('nav.tabs button').filter({hasText:'Settings'}).click()
+ await expect(menu.locator('.settings-version')).toContainText('0.5')
 })

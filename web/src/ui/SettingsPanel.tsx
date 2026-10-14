@@ -1,3 +1,4 @@
+import { GAME_VERSION } from '../version'
 import { useState } from 'react'
 import { api, type Me, type VillageState } from '../api'
 import { LanguageSwitcher, useI18n } from '../i18n'
@@ -21,6 +22,10 @@ export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCod
 
   return (
     <>
+      <section className="card settings-version">
+        <h3>{t('settings.version')}</h3>
+        <strong>{t('brand')} {GAME_VERSION}</strong>
+      </section>
       <section className="card">
         <h3>{t('settings.language')}</h3>
         <LanguageSwitcher />

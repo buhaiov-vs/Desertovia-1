@@ -356,6 +356,9 @@
     ],
     "toast_seconds": 4.2,
     "max_toasts": 2,
-    "preserves_author_chat": true
-  }
+    "preserves_author_chat": true,
+    "population_counter": "residents_and_existing_presence",
+    "release_version": "0.5"
+  },
+  "release_version": "0.5"
 }

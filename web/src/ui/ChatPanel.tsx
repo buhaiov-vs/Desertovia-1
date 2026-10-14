@@ -27,7 +27,9 @@ export function ChatPanel({
   incoming = EMPTY_INCOMING,
   onModeChange,
   interrupted = false,
+  population,
 }: {
+  population?: { total: number; online: number }
   incoming?: ChatMessage[]
   onModeChange?: (mode: ChatMode) => void
   interrupted?: boolean
@@ -189,9 +191,9 @@ export function ChatPanel({
         </button>)}
       </div>}
       {collapsed ? <button ref={launch} className="chat-launch" aria-label={t('chat.open')} aria-expanded={false} onClick={()=>changeMode('quarter')}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z"/></svg> {t('chat.title')}{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z"/></svg> <span className="chat-heading">{t('chat.title')}{population&&<span className="chat-population" title={t('chat.populationHelp')}>{t('chat.population',population)}</span>}</span>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
       </button> : <div className="chat-head">
-        <strong>{t('chat.title')}</strong>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
+        <div className="chat-heading"><strong>{t('chat.title')}</strong>{population&&<span className="chat-population" title={t('chat.populationHelp')}>{t('chat.population',population)}</span>}</div>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
         <button className={`chip${showActivities?' active':''}`} aria-pressed={showActivities} title={t('chat.activitiesTitle')} onClick={toggleActivities}>{t('chat.activities')}</button>
         <button className="chat-control" aria-label={t(mode==='full'?'chat.quarter':'chat.full')} title={t(mode==='full'?'chat.quarter':'chat.full')} onClick={()=>changeMode(mode==='full'?'quarter':'full')}>
           {mode==='full'?'¼':<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6M15 3h6v6M3 15v6h6M21 15v6h-6"/></svg>}

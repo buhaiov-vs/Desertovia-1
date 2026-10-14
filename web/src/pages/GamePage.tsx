@@ -847,6 +847,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         </div>
         <ChatPanel
           key={slug}
+          population={{total:citizens.length,online:citizens.filter(c=>!live.away.has(c.id)).length}}
           incoming={live.chatArrivals}
           interrupted={panel !== 'none' || chaplainOpen || pollSetup || subtitleFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}

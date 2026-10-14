@@ -9,7 +9,7 @@ Runtime atlas is an unchanged lossless copy, `web/src/assets/construction/hut.pn
 Ground anchors and foundation width in source pixels (not canvas width):
 foundation center328/base568/width412; frame300/568/424;
 walls329/518/430; roof303/518/424. They are registered to a40px base,
-center24, ground48 inside the author's3×3 plot. Roof can overhang the base.
+center24, ground48 inside the author's3×3 building area and3×4 plot. Roof can overhang the base.
 Generated door/window positions inherit the existing hut; final stage uses the
 original day/night hut exactly. Work masks reveal each new stage above its
 previous stage using completed labor jobs, independently of delivered goods.

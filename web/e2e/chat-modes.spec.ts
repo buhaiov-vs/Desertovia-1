@@ -61,6 +61,7 @@ test('toast expires, sending works, and full chat makes underlying HUD inert',as
 
 
 test('real game chat buttons and panels fit the phone and desktop map',async({page})=>{
+ test.setTimeout(120000) // Software WebGL renders both full-map screenshots on the CPU.
  await page.evaluate(()=>localStorage.setItem('desertod.language','en'))
  await page.goto(`/v/${DEMO_SLUG}`);await developmentLogin(page,uniqueName('chat-ui'));await expectVillageView(page)
  const panel=page.locator('.chat-panel')

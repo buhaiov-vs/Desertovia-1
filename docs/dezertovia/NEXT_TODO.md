@@ -88,3 +88,10 @@
 - Проверенные источники: `web/src/game/{VillageWorld,worldMap}.ts`,
   `web/src/index.css`, `Domain/{Catalog/GameCatalog,Rules/Energy,Rules/VigorDrinks,
   Rules/CycleEngine,Rules/GameRules}.cs`, старый бот `sramoslav/{duel,prihod}.py`.
+
+## Уточнение D-026 к больнице
+
+Уровень здания и личный навык пациента дают небольшое ограниченное сокращение
+срока. Вариант баланса/одноразовый серверный расчёт и общий срок с ботом описаны
+в HOSPITAL_PLAN.md. Платное лечение остаётся по тем же тарифам; бонус не повторять
+при перезапуске/смене здания. Новое пожелание ещё не реализовано.

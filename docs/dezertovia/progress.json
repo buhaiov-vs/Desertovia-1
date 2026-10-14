@@ -437,6 +437,25 @@
       "saved generated source + exact2 frame crops, alpha/bounds/SHA manifest",
       "docs links/JSON and AGENTS/CLAUDE synchronization"
     ],
-    "next_stage": "external status synchronization and existing treatment link, before embedded payment"
+    "next_stage": "external status synchronization and existing treatment link, before embedded payment",
+    "recovery_bonuses": {
+      "decision": "D-026",
+      "state": "planned_not_implemented",
+      "hospital_level_bonus": true,
+      "patient_skill_bonus": true,
+      "recommended_hospital_percent": [
+        2,
+        4,
+        6
+      ],
+      "recommended_skill_percent_per_level": 1,
+      "recommended_skill_percent_cap": 5,
+      "recommended_combined_percent_cap": 10,
+      "numeric_balance_approved": false,
+      "recommended_skill_name": "Восстановление",
+      "apply_once_per_admission": true,
+      "bot_and_game_share_expiry": true,
+      "payment_tariffs_unchanged": true
+    }
   }
 }

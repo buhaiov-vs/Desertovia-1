@@ -16,7 +16,7 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   // Every page renders the village with PixiJS; headless browsers do that on the processor, so many at once crawl.
-  workers: 4,
+  workers: 1,
   timeout: 60_000,
   expect: { timeout: 15_000 },
   forbidOnly: !!process.env.CI,

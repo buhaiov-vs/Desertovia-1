@@ -49,11 +49,11 @@ export async function expectVillageView(page: Page) {
   await expect(page.locator('.hud-resources')).toBeVisible()
   await expect(page.locator('.hud-buttons')).toBeVisible()
   if ((page.viewportSize()?.width ?? 1000) <= 720) {
-    const contained = await page.locator('.hud-buttons').evaluate(element =>
+    const contained = await page.locator('.hud-buttons').evaluate((element, viewport) =>
       [...element.querySelectorAll('button')].every(button => {
         const rect = button.getBoundingClientRect()
-        return rect.left >= 0 && rect.right <= window.innerWidth && rect.bottom <= window.innerHeight
-      }))
+        return rect.left >= 0 && rect.right <= viewport.width && rect.bottom <= viewport.height
+      }), page.viewportSize()!)
     expect(contained, 'Every phone navigation button stays on screen').toBe(true)
   }
 }

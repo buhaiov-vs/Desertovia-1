@@ -31,6 +31,11 @@ Object.assign(window,{lightingTest:{
   root.addChild(view.light);parent.destroy()
   return {day:day.pixels.reduce((sum,value,i)=>sum+(i%4===3?value:0),0),night:night.pixels.reduce((sum,value,i)=>sum+(i%4===3?value:0),0)}
  }),
+ outlineCheck:()=>views.map(view=>[0,1].map(level=>{
+  view.setNight(level);const image=app.renderer.extract.pixels({target:view,resolution:2});let ink=0
+  for(let i=0;i<image.pixels.length;i+=4){const p=image.pixels;if(p[i+3]===255&&Math.abs(p[i]-43)<=1&&Math.abs(p[i+1]-29)<=1&&Math.abs(p[i+2]-43)<=1)ink++}
+  return ink
+ })),
  alphaCheck:()=>views.map(view=>{
   const samples=[0,0.5,1].map(level=>{view.setNight(level);return app.renderer.extract.pixels({target:view,resolution:3})})
   const [day,middle,night]=samples;let common=0,transparent=0

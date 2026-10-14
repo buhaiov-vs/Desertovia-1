@@ -140,3 +140,7 @@ RULES_AND_SOURCES.md, а в реализации — читать указанн
 D-022 /0.5.1: компактная ChatPanel.launch, население GameMenu.village,
 interrupted для всех окон + modal-backdrop stacking. Регрессии размера,
 голосования, unread и настоящего GameMenu проверяются в chat-modes.spec.ts.
+
+D-022 RELEASED/VERIFIED14.10.2026:0.5.1, SHA ad88be344908a7fb42bc434ce89aad94c92d1665,
+CI38571676265 (474 backend/55 browser passed/1 skipped), deploy38573019933,
+check38573303603; публичные release header и bundle проверены.

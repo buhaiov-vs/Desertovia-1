@@ -9,3 +9,7 @@ TestResults/
 tests/Desertod.LoadTests/reports/
 deploy/.env
 deploy/backups/
+
+# Offline asset tools
+__pycache__/
+*.py[cod]

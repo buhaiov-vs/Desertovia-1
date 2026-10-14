@@ -25,8 +25,8 @@
   "documentation": "completed",
   "game_code_changed": true,
   "runtime_tests_on_new_base": true,
-  "deployed": false,
-  "live_checked_on_recorded_date": false,
+  "deployed": true,
+  "live_checked_on_recorded_date": true,
   "features": [
     {
       "id": "DZ-01",
@@ -35,8 +35,13 @@
     },
     {
       "id": "DZ-02",
-      "state": "not_started",
-      "checks": []
+      "state": "auth_launch_released_full_access_policy_adaptation_pending",
+      "checks": [
+        "signed MiniApp/widget shared account",
+        "browser bot confirmation",
+        "mounted cookie",
+        "public pending and forged proof rejection"
+      ]
     },
     {
       "id": "DZ-03",
@@ -214,14 +219,25 @@
   ],
   "latest_decisions": [
     "D-013",
-    "D-014"
+    "D-014",
+    "D-015"
   ],
   "launch_checks": {
     "miniapp_unit_and_flow": 13,
     "legacy_proxy_tests": 83,
     "web_build": true,
     "backend_build": true,
-    "final_suite": "pending",
-    "public_switch": false
-  }
+    "final_suite": 465,
+    "public_switch": true,
+    "domain_tests": 305,
+    "api_tests": 160,
+    "oracle_health": true,
+    "production_browser_pc_phone": true,
+    "browser_confirmation_isolated": true,
+    "public_login_pending": true,
+    "real_user_confirmation": "requires_user_telegram_action",
+    "upstream_e2e": "updating_stale_character_and_hud_expectations"
+  },
+  "deployed_sha": "6c8587e95ab7d4d2d401363fb4d152bbb4efcf8b",
+  "launch_document": "TELEGRAM_LAUNCH.md"
 }

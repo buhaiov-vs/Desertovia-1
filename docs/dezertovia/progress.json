@@ -225,7 +225,8 @@
     "D-017",
     "D-018",
     "D-019",
-    "D-020"
+    "D-020",
+    "D-021"
   ],
   "launch_checks": {
     "miniapp_unit_and_flow": 13,
@@ -342,5 +343,19 @@
     },
     "fresh_database_backup": true,
     "public_release_header_verified": true
+  },
+  "chat_modes_release": {
+    "state": "implemented_local_checks_ci_pending",
+    "branch": "feat/chat-modes-toasts",
+    "document": "CHAT_MODES.md",
+    "live_changed": false,
+    "modes": [
+      "hidden",
+      "quarter",
+      "full"
+    ],
+    "toast_seconds": 4.2,
+    "max_toasts": 2,
+    "preserves_author_chat": true
   }
 }

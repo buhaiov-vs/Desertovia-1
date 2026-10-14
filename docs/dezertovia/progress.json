@@ -456,6 +456,26 @@
       "apply_once_per_admission": true,
       "bot_and_game_share_expiry": true,
       "payment_tariffs_unchanged": true
-    }
+    },
+    "postponed_by_owner_during_incident": true
+  },
+  "routing_incident": {
+    "date": "2026-10-14",
+    "state": "resolved_verified",
+    "decision": "D-027",
+    "game_sha": "ad88be344908a7fb42bc434ce89aad94c92d1665",
+    "version": "0.5.1",
+    "failed_check": 38601724673,
+    "recovery": 38601966038,
+    "recovery_check": 38602064917,
+    "bot_guard_sha": "c240b2768aa4dcb7dddac20405b59a6b387ff075",
+    "bot_ci": 38602556794,
+    "python_tests_passed": 770,
+    "guard_deploy": 38603201121,
+    "final_check": 38603465467,
+    "public_verified": true,
+    "data_reset": false,
+    "game_code_changed": false,
+    "new_game_release": false
   }
 }

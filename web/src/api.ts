@@ -1,3 +1,4 @@
+import { appPath, appBase } from './paths'
 export type Stat = 'Strength' | 'Dexterity' | 'Intelligence' | 'Charisma' | 'Endurance'
 
 export const STATS: Stat[] = ['Strength', 'Dexterity', 'Intelligence', 'Charisma', 'Endurance']
@@ -1183,6 +1184,7 @@ export interface LoginProviders {
   telegramBotUsername: string | null
   /** Email and password, without any outside service. */
   password: boolean
+  telegramBrowserLogin: boolean
   developmentLogin: boolean
 }
 
@@ -1206,7 +1208,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(appPath(url), {
     method,
     credentials: 'same-origin',
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -1246,7 +1248,7 @@ let prefetchedVillage: { slug: string; promise: Promise<Village> } | null = null
 
 /** Starts loading the village of a `/v/:slug` address while the map page's code is still downloading. */
 export function prefetchVillage(path: string) {
-  const match = /^\/v\/([^/]+)/.exec(path)
+  const match = /^\/v\/([^/]+)/.exec(path.slice(appBase.length))
   if (!match) return
   const slug = decodeURIComponent(match[1])
   const promise = api.village(slug)
@@ -1266,6 +1268,9 @@ export function loadVillage(slug: string) {
 }
 
 export const api = {
+  telegramMiniApp: (initData: string) => request<void>('POST', '/auth/telegram/miniapp', { initData }),
+  telegramBrowserStart: () => request<{url: string; pin: string}>('POST', '/auth/telegram/browser/start'),
+  telegramBrowserPoll: () => request<{pending: boolean}>('POST', '/auth/telegram/browser/poll'),
   providers: () => request<LoginProviders>('GET', '/auth/providers'),
   me: () => orNull(request<Me>('GET', '/api/me')),
   developmentLogin: (name: string) => request<void>('POST', '/auth/dev-login', { name }),

@@ -1,3 +1,4 @@
+import { appBase } from './paths'
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { useI18n } from './i18n'
@@ -16,7 +17,7 @@ function Loading() {
 
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={appBase || "/"}>
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<HomePage />} />

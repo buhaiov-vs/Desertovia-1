@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // End-to-end tests run their own backend next to the development one.
+const base = (process.env.VITE_APP_BASE ?? '/').replace(/\/?$/, '/')
 const backend = process.env.DESERTOD_BACKEND ?? 'http://localhost:5080'
 
 // changeOrigin stays false so the backend sees the Vite host; OAuth redirect URLs and cookies then use port 5190.
@@ -14,6 +15,7 @@ export default defineConfig(({ command }) => {
   if (command === 'build') process.env.NODE_ENV = 'production'
 
   return {
+    base,
     plugins: [
       react(),
       VitePWA({
@@ -24,8 +26,8 @@ export default defineConfig(({ command }) => {
           name: 'Desertovia',
           short_name: 'Desertovia',
           lang: 'en',
-          start_url: '/',
-          scope: '/',
+          start_url: base,
+          scope: base,
           display: 'standalone',
           background_color: '#2a3a20',
           theme_color: '#2a3a20',
@@ -39,9 +41,9 @@ export default defineConfig(({ command }) => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-          navigateFallback: '/index.html',
+          navigateFallback: base + 'index.html',
           // These paths are answered by the server: login redirects, OAuth callbacks, the API, SignalR and the probe.
-          navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/signin-/, /^\/hubs\//, /^\/healthz/],
+          navigateFallbackDenylist: [/\/api\//, /\/auth\//, /\/signin-/, /\/hubs\//, /\/healthz/],
         },
       }),
     ],

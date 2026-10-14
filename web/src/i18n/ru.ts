@@ -459,6 +459,10 @@ export const ru: Dictionary = {
     'priest.progress': '{project}: {percent}%. Поднажмём!',
     'priest.completed': 'Слава! {project} построен!',
 
+    'login.telegram': 'Войти через Telegram',
+    'login.telegramConfirm': 'Подтвердить у батюшки',
+    'login.telegramExpired': 'Запрос входа устарел. Начни заново.',
+    'login.telegramWidget': 'Виджет Telegram',
     'login.title': 'Войдите, чтобы играть',
     'login.titleHome': 'Войдите, чтобы начать',
     'login.twitch': 'Войти через Twitch',

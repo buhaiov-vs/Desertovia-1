@@ -1,3 +1,5 @@
+import { appPath } from '../paths'
+import { miniAppData } from '../telegram'
 import { useEffect, useRef, useState } from 'react'
 import {
   api,
@@ -24,7 +26,7 @@ function TelegramLoginButton({ botUsername, returnUrl, language }: { botUsername
     script.setAttribute('data-lang', language)
     script.setAttribute(
       'data-auth-url',
-      `${window.location.origin}/auth/telegram/callback?returnUrl=${encodeURIComponent(returnUrl)}`,
+      `${window.location.origin}${appPath("/auth/telegram/callback")}?returnUrl=${encodeURIComponent(returnUrl)}`,
     )
     element.appendChild(script)
     return () => {
@@ -133,6 +135,37 @@ export function LoginPanel({ onLoggedIn, title = 'login.title' }: { onLoggedIn: 
   const [developmentName, setDevelopmentName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const returnUrl = window.location.pathname + window.location.search
+  const [browserLogin, setBrowserLogin] = useState<{url: string; pin: string; expires: number} | null>(null)
+  const [telegramPending, setTelegramPending] = useState(false)
+  const loggedIn = useRef(onLoggedIn)
+  loggedIn.current = onLoggedIn
+  useEffect(() => {
+    let active = true
+    void miniAppData().then(async data => {
+      if (!active || !data) return
+      setTelegramPending(true)
+      try { await api.telegramMiniApp(data); if (active) loggedIn.current() }
+      catch (exception: unknown) { if (active) setError(i18n.error(exception)) }
+      finally { if (active) setTelegramPending(false) }
+    })
+    return () => { active = false }
+  }, [i18n])
+  useEffect(() => {
+    if (!browserLogin) return
+    let active = true
+    let pending = false
+    const poll = async () => {
+      if (!active || pending) return
+      if (Date.now() > browserLogin.expires) { setError(i18n.t('login.telegramExpired')); setBrowserLogin(null); return }
+      pending = true
+      try { const result = await api.telegramBrowserPoll(); if (active && !result.pending) { setBrowserLogin(null); loggedIn.current() } }
+      catch (exception: unknown) { if (active) { setError(i18n.error(exception)); setBrowserLogin(null) } }
+      finally { pending = false }
+    }
+    const timer = setInterval(() => { void poll() }, 2000)
+    return () => { active = false; clearInterval(timer) }
+  }, [browserLogin, i18n])
+
 
   useEffect(() => {
     api.providers().then(setProviders, (exception: unknown) => setError(i18n.error(exception)))
@@ -140,7 +173,7 @@ export function LoginPanel({ onLoggedIn, title = 'login.title' }: { onLoggedIn: 
 
   if (!providers) return <section className="card">{error ?? t('loading')}</section>
 
-  const loginUrl = (provider: string) => `/auth/login/${provider}?returnUrl=${encodeURIComponent(returnUrl)}`
+  const loginUrl = (provider: string) => `${appPath(`/auth/login/${provider}`)}?returnUrl=${encodeURIComponent(returnUrl)}`
   const nothingConfigured =
     !providers.twitch &&
     !providers.google &&
@@ -152,6 +185,17 @@ export function LoginPanel({ onLoggedIn, title = 'login.title' }: { onLoggedIn: 
     <section className="card login">
       <h3>{t(title)}</h3>
       <div className="login-buttons">
+        {providers.telegramBrowserLogin && (
+          <div>
+            <button className="primary" disabled={telegramPending} onClick={async () => {
+              setTelegramPending(true); setError(null)
+              try { setBrowserLogin({ ...(await api.telegramBrowserStart()), expires: Date.now() + 300000 }) }
+              catch (exception: unknown) { setError(i18n.error(exception)) }
+              finally { setTelegramPending(false) }
+            }}>{t('login.telegram')}</button>
+            {browserLogin && <p><strong>{browserLogin.pin}</strong> · <a className="button" href={browserLogin.url} target="_blank" rel="noopener noreferrer">{t('login.telegramConfirm')}</a></p>}
+          </div>
+        )}
         {providers.twitch && (
           <a className="button twitch" href={loginUrl('twitch')}>
             {t('login.twitch')}
@@ -163,7 +207,7 @@ export function LoginPanel({ onLoggedIn, title = 'login.title' }: { onLoggedIn: 
           </a>
         )}
         {providers.telegramBotUsername && (
-          <TelegramLoginButton botUsername={providers.telegramBotUsername} returnUrl={returnUrl} language={i18n.language} />
+          <details><summary>{t('login.telegramWidget')}</summary><TelegramLoginButton botUsername={providers.telegramBotUsername} returnUrl={returnUrl} language={i18n.language} /></details>
         )}
       </div>
 

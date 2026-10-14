@@ -57,6 +57,8 @@ builder.Services.AddExceptionHandler<GameExceptionHandler>();
 builder.Services.AddHealthChecks().AddDbContextCheck<DesertodDbContext>();
 
 builder.Services.AddSingleton<TelegramLoginVerifier>();
+builder.Services.AddSingleton<TelegramMiniAppVerifier>();
+builder.Services.AddHttpClient<TelegramBrowserBridge>(client => client.Timeout = TimeSpan.FromSeconds(15));
 builder.Services.AddSingleton<VillageNotifier>();
 builder.Services.AddSingleton<VillageStateChanges>();
 builder.Services.AddSingleton<CitizenPresence>();
@@ -82,6 +84,17 @@ await using (var scope = app.Services.CreateAsyncScope())
     }
 }
 
+await LaunchVillageSetup.EnsureAsync(app.Services, builder.Configuration);
+
+var pathBase = builder.Configuration["Hosting:PathBase"];
+if (!string.IsNullOrEmpty(pathBase)) app.UsePathBase(pathBase);
+app.Use((context,next) =>
+{
+    var release=builder.Configuration["Hosting:ReleaseSha"];
+    if (!string.IsNullOrEmpty(release)) context.Response.Headers["X-Desertovia-Release"]=release;
+    return next(context);
+});
+app.UseRouting();
 app.UseResponseCompression();
 app.UseExceptionHandler();
 app.UseAuthentication();

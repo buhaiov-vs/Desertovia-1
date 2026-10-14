@@ -1,3 +1,4 @@
+import { appPath } from '../paths'
 import type { CSSProperties } from 'react'
 import { Assets, Rectangle, Spritesheet, Texture, type TextureSource } from 'pixi.js'
 import atlas from '../assets/sprites.json'
@@ -8,13 +9,13 @@ export const TILE = 16
 export type SheetName = 'town' | 'dungeon' | 'battle' | 'farm' | 'factory' | 'rogue' | 'extras'
 
 const SHEETS: Record<SheetName, { url: string; columns: number; rows: number }> = {
-  town: { url: '/assets/kenney/tiny-town.png', columns: 12, rows: 11 },
-  dungeon: { url: '/assets/kenney/tiny-dungeon.png', columns: 12, rows: 11 },
-  battle: { url: '/assets/kenney/tiny-battle.png', columns: 18, rows: 11 },
-  farm: { url: '/assets/kenney/tiny-farm.png', columns: 12, rows: 11 },
-  factory: { url: '/assets/kenney/tiny-factory.png', columns: 12, rows: 11 },
-  rogue: { url: '/assets/kenney/roguelike-rpg.png', columns: 57, rows: 31 },
-  extras: { url: '/assets/extras.png', columns: 3, rows: 1 },
+  town: { url: appPath('/assets/kenney/tiny-town.png'), columns: 12, rows: 11 },
+  dungeon: { url: appPath('/assets/kenney/tiny-dungeon.png'), columns: 12, rows: 11 },
+  battle: { url: appPath('/assets/kenney/tiny-battle.png'), columns: 18, rows: 11 },
+  farm: { url: appPath('/assets/kenney/tiny-farm.png'), columns: 12, rows: 11 },
+  factory: { url: appPath('/assets/kenney/tiny-factory.png'), columns: 12, rows: 11 },
+  rogue: { url: appPath('/assets/kenney/roguelike-rpg.png'), columns: 57, rows: 31 },
+  extras: { url: appPath('/assets/extras.png'), columns: 3, rows: 1 },
 }
 
 /** A frame of the game's own art, packed by `npm run sprites` from art/generated. */

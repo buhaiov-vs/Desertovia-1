@@ -458,6 +458,10 @@ export const en = {
     'priest.progress': '{project}: {percent}%. Push on!',
     'priest.completed': 'Glory! {project} is built!',
 
+    'login.telegram': 'Sign in with Telegram',
+    'login.telegramConfirm': 'Confirm with the bot',
+    'login.telegramExpired': 'The login request expired. Start again.',
+    'login.telegramWidget': 'Telegram widget',
     'login.title': 'Sign in to play',
     'login.titleHome': 'Sign in to start',
     'login.twitch': 'Sign in with Twitch',

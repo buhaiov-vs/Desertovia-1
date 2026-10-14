@@ -6,6 +6,8 @@ COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY web/ ./
 # Vite writes the bundle to ../src/Desertod.Api/wwwroot (see vite.config.ts).
+ARG VITE_APP_BASE=/
+ENV VITE_APP_BASE=$VITE_APP_BASE
 RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build

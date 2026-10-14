@@ -1,7 +1,8 @@
+import { appPath } from './paths'
 import { useCallback, useEffect, useState } from 'react'
 
 const STORAGE_KEY = 'desertod.notifications'
-const ICON = '/favicon.svg'
+const ICON = appPath('/favicon.svg')
 
 export const notificationsSupported = () => typeof window !== 'undefined' && 'Notification' in window
 

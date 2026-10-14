@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-14",
-  "phase": "documentation",
+  "phase": "telegram_launch",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -23,8 +23,8 @@
     "raw_records_stored": false
   },
   "documentation": "completed",
-  "game_code_changed": false,
-  "runtime_tests_on_new_base": false,
+  "game_code_changed": true,
+  "runtime_tests_on_new_base": true,
   "deployed": false,
   "live_checked_on_recorded_date": false,
   "features": [
@@ -204,7 +204,7 @@
       "checks": []
     }
   ],
-  "latest_upstream_merged": false,
+  "latest_upstream_merged": true,
   "current_adaptation_list": "CURRENT_ADAPTATION_LIST.md",
   "preserve_all_upstream_features": true,
   "chat_modes": [
@@ -215,5 +215,13 @@
   "latest_decisions": [
     "D-013",
     "D-014"
-  ]
+  ],
+  "launch_checks": {
+    "miniapp_unit_and_flow": 13,
+    "legacy_proxy_tests": 83,
+    "web_build": true,
+    "backend_build": true,
+    "final_suite": "pending",
+    "public_switch": false
+  }
 }

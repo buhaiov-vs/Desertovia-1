@@ -1,3 +1,4 @@
+import { appPath } from './paths'
 import { HubConnectionBuilder, LogLevel, type HubConnection } from '@microsoft/signalr'
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import {
@@ -101,7 +102,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
       setFeed((previous) => [{ ...entry, key: feedKey++, at: Date.now() } as FeedEntry, ...previous].slice(0, FEED_LENGTH))
 
     const connection = new HubConnectionBuilder()
-      .withUrl('/hubs/village')
+      .withUrl(appPath('/hubs/village'))
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Warning)
       .build()
@@ -251,7 +252,7 @@ export function useDungeonRun(runId: string) {
     let refetching = false
     let phase: string | null = null
     const connection = new HubConnectionBuilder()
-      .withUrl('/hubs/dungeon')
+      .withUrl(appPath('/hubs/dungeon'))
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Warning)
       .build()

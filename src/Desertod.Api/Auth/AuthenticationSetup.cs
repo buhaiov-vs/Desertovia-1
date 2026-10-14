@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Desertod.Api.Auth;
 
-public sealed record LoginProviders(bool Twitch, bool Google, string? TelegramBotUsername, bool Password, bool DevelopmentLogin);
+public sealed record LoginProviders(bool Twitch, bool Google, string? TelegramBotUsername, bool Password, bool DevelopmentLogin, bool TelegramBrowserLogin = false);
 
 public static class AuthenticationSetup
 {
@@ -43,7 +43,8 @@ public static class AuthenticationSetup
             googleConfigured,
             telegramOptions.IsConfigured ? telegramOptions.BotUsername : null,
             passwordOptions.Enabled,
-            environment.IsDevelopment()));
+            environment.IsDevelopment(),
+            telegramOptions.IsConfigured && Uri.TryCreate(telegramOptions.BrowserBridgeUrl, UriKind.Absolute, out var bridge) && bridge.IsLoopback && bridge.Scheme == "http"));
 
         services.AddRateLimiter(options =>
         {
@@ -90,6 +91,7 @@ public static class AuthenticationSetup
             .AddCookie(options =>
             {
                 options.Cookie.Name = "desertod";
+                options.Cookie.Path = configuration["Hosting:PathBase"] ?? "/";
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.ExpireTimeSpan = TimeSpan.FromDays(30);

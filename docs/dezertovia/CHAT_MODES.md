@@ -49,7 +49,7 @@ SignalR и речевые облака на карте сохраняются.
 приход истории без popup, live popup/expiry/burst, own/NPC, scrollback,
 обновление/reconnect, клавиатура и переключение Событий/отправка/ошибки.
 Полный CI; обычный backup/deploy; проверенные SHA и результаты записать здесь.
-Статус: реализация в отдельной ветке, ещё не выпущена.
+Статус: версия0.5 выпущена и проверена14.10.2026.
 
 
 Уточнение владельца: добавить количество игроков онлайн. Во всех режимах
@@ -64,3 +64,23 @@ CitizenPresence не входят, поэтому подпись честная:
 и номер из web/package.json (0.5.0 в semver,0.5 на экране). Следующий номер
 менять в package.json/lock вместе с release record; не держать отдельные
 несогласованные константы в UI.
+
+
+## Проверенный выпуск0.5
+
+Исходник `f0c48ad909a7e05a1d65505d8c2cce4069333ce0`, PR13. CI38566382511:
+306 Domain+168 API=474 passed;51 browser passed,1 keyboard-case skipped.
+Frontend lint/build и Docker прошли. Desktop/phone проверки включают реальные
+панели на карте, настройки0.5, presence update, draft/modes, history/own/live,
+burst/expiry, scrollback/jump, sending и fullscreen inert/viewport. Клавиатура
+проверена через изменение viewport; физические телефоны в этом прогоне не использовались.
+
+Выкладка38568277828 успешна, свежий private PostgreSQL backup до обновления.
+Проверка38568576954: local health200, public providers200, Telegram/browser
+bridge настроены, development login=false, общий бот и bolig-agent active.
+Публичный release-header совпадает с SHA, опубликованный GamePage bundle
+содержит0.5.0 и новые режимы чата. Нет сброса, смены экономики или реальных свечей.
+
+Проверка после переподключения опирается на прежний SignalR/backfill путь с
+дедупликацией history IDs; live-arrivals отделены от истории. Локальные стенды
+и screenshot cases используют demo realm/фиктивные сообщения, не live переписку.

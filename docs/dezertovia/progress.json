@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-14",
-  "phase": "hut_construction_pilot",
+  "phase": "release_0_5_chat_modes",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -251,7 +251,7 @@
     "shared_bot_and_housing_active": true,
     "legacy_backup_exists": true
   },
-  "deployed_sha": "99a5a4a77dc4fcbf113d90c7302450f2ac21be7e",
+  "deployed_sha": "f0c48ad909a7e05a1d65505d8c2cce4069333ce0",
   "launch_document": "TELEGRAM_LAUNCH.md",
   "current_change": {
     "single_world": "released",
@@ -345,10 +345,10 @@
     "public_release_header_verified": true
   },
   "chat_modes_release": {
-    "state": "implemented_local_checks_ci_pending",
+    "state": "released_verified",
     "branch": "feat/chat-modes-toasts",
     "document": "CHAT_MODES.md",
-    "live_changed": false,
+    "live_changed": true,
     "modes": [
       "hidden",
       "quarter",
@@ -358,7 +358,20 @@
     "max_toasts": 2,
     "preserves_author_chat": true,
     "population_counter": "residents_and_existing_presence",
-    "release_version": "0.5"
+    "release_version": "0.5",
+    "deployed_sha": "f0c48ad909a7e05a1d65505d8c2cce4069333ce0",
+    "ci_run": 38566382511,
+    "backend_tests": 474,
+    "browser_tests": {
+      "passed": 51,
+      "skipped": 1
+    },
+    "deployment_run": 38568277828,
+    "server_check_run": 38568576954,
+    "fresh_database_backup": true,
+    "public_providers_verified": true,
+    "public_release_header_verified": true,
+    "public_bundle_version_verified": true
   },
   "release_version": "0.5"
 }

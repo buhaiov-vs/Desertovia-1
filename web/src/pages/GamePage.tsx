@@ -847,9 +847,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         </div>
         <ChatPanel
           key={slug}
-          population={{total:citizens.length,online:citizens.filter(c=>!live.away.has(c.id)).length}}
           incoming={live.chatArrivals}
-          interrupted={panel !== 'none' || chaplainOpen || pollSetup || subtitleFor !== null}
+          interrupted={panel !== 'none' || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}
@@ -940,6 +939,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               onTab={setTab}
               onClose={() => setPanel('none')}
               village={village}
+              population={{total:citizens.length,online:citizens.filter(c=>!live.away.has(c.id)).length}}
               tsar={tsar}
               ruler={ruler}
               inviteCode={live.inviteCode}

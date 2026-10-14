@@ -373,5 +373,11 @@
     "public_release_header_verified": true,
     "public_bundle_version_verified": true
   },
-  "release_version": "0.5"
+  "release_version": "0.5",
+  "chat_launcher_fix": {
+    "decision": "D-022",
+    "target_version": "0.5.1",
+    "state": "implemented_pending_verification",
+    "checks": []
+  }
 }

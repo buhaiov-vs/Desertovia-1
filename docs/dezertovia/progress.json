@@ -477,5 +477,24 @@
     "data_reset": false,
     "game_code_changed": false,
     "new_game_release": false
+  },
+  "hide_destructive_city_actions": {
+    "decision": "D-030",
+    "state": "verified_in_repository_not_deployed",
+    "ui": [
+      "Remove Leave village for citizens",
+      "Remove Delete village for Tsar",
+      "Remove GamePage destructive-action callbacks"
+    ],
+    "preserved": [
+      "Main menu navigation",
+      "Existing backend lifecycle and API"
+    ],
+    "checks": [
+      "npm run lint: passed with 12 existing warnings",
+      "npm run build: passed (TypeScript and production build)"
+    ],
+    "deployed": false,
+    "version_changed": false
   }
 }

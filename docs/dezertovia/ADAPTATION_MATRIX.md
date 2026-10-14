@@ -125,10 +125,14 @@ RULES_AND_SOURCES.md, а в реализации — читать указанн
 Полная спецификация: [CONSTRUCTION_VISUAL_PLAN.md](CONSTRUCTION_VISUAL_PLAN.md). Пилот Hut и общие исправления выпущены; изображения остальных типов пока PLAN.
 
 
-### D-021 — чат0/¼/full, реализация
+### D-021 — чат0/¼/full, выпущено0.5
 
 | Требование | Адаптация | Проверка |
 | --- | --- | --- |
 | Режимы и удобные кнопки | ChatPanel, HUD CSS, GamePage obscured | Телефон/ПК, реальные границы, draft/preference/scroll |
 | Уведомления и непрочитанные | useLiveVillage chatArrivals, ChatPanel bounded toasts | History/own исключены, live/burst/expiry, jump |
 | Клавиатура и сохранение функций | VisualViewport, fullscreen inert/Tab/Escape, события/членство/SignalR без смены API | Resize, отправка/ошибки, прежний browser suite |
+
+Счётчик: жители/citizen presence,5мин grace; не NPC/не видимые working offline.
+Версия: web/package.json0.5.0→SettingsPanel0.5, источник единственный.
+Выпуск и проверки D-021: [CHAT_MODES.md](CHAT_MODES.md).

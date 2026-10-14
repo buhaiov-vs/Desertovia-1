@@ -65,6 +65,7 @@ public sealed class SimulatedHero
     public HashSet<int> FoesHit { get; } = [];
     public bool Healed { get; set; }
     public EnemyKind? Killer { get; set; }
+    public bool ExternallyWithdrawn { get; set; }
 
     internal double Cooldown { get; set; }
     internal PathFollower Path { get; } = new();
@@ -197,6 +198,16 @@ public sealed class DungeonSimulation
         return true;
     }
 
+    public void WithdrawToHospital(Guid heroId)
+    {
+        if (Hero(heroId) is not { State: HeroState.Fighting } hero) return;
+        hero.ExternallyWithdrawn = true;
+        hero.State = HeroState.Left;
+        hero.Destination = null;
+        hero.TargetFoe = null;
+        hero.HealTarget = null;
+    }
+
     /// <summary>Advances the fight; returns what happened, for the clients to show.</summary>
     public IReadOnlyList<DungeonEvent> Tick(double seconds, Random random)
     {
@@ -253,7 +264,7 @@ public sealed class DungeonSimulation
             hero.FoesHit.Count,
             hero.Arrows ?? 0,
             hero.Healed,
-            hero.State != HeroState.Fighting,
+            !hero.ExternallyWithdrawn && hero.State != HeroState.Fighting,
             hero.Killer);
 
     private SimulatedHero? Fighting(Guid heroId) => heroes.FirstOrDefault(h => h.Id == heroId && h.State == HeroState.Fighting);

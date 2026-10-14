@@ -340,6 +340,7 @@ export const BUILDING_SIGNS: Record<string, TileRef> = {
   Library: dungeon(63),
   Tavern: dungeon(82),
   Bakery: farm(125),
+  Hospital: town(84),
   Stage: battle(70),
   Market: farm(74),
   Barracks: dungeon(104),

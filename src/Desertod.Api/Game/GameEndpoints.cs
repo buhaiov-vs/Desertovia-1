@@ -9,6 +9,12 @@ public static class GameEndpoints
     {
         var player = app.MapGroup("/api").RequireAuthorization();
 
+        player.MapGet("/villages/{slug}/hospital", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.GetHospitalAsync(slug, user.RequireAccountId(), ct));
+        player.MapPost("/villages/{slug}/hospital/heal", (string slug, HospitalHealRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.TreatAsync(slug, user.RequireAccountId(), request, ct));
+        player.MapPost("/villages/{slug}/hospital/{plotId}/upgrade", (string slug, string plotId, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.UpgradeHospitalAsync(slug, user.RequireAccountId(), plotId, ct));
         player.MapPost("/villages/{slug}/sramoslav", (string slug, SramoslavQuestion request, ClaimsPrincipal user,
             SramoslavService service, CancellationToken cancellationToken) =>
             service.AskAsync(slug, user.RequireAccountId(), request.Text, cancellationToken)).RequireRateLimiting(ChatService.RateLimit);

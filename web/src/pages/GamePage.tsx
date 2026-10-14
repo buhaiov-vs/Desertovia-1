@@ -1,3 +1,4 @@
+import { HospitalPanel } from '../ui/HospitalPanel'
 import { SramoslavPanel } from '../ui/SramoslavPanel'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -105,6 +106,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const [picked, setPicked] = useState<{ target: WorldTarget; screen: { x: number; y: number } } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
+  const [hospitalOpen, setHospitalOpen] = useState(false)
   const [chaplainOpen, setChaplainOpen] = useState(false)
   const [chatFull, setChatFull] = useState(false)
   const [panel, setPanel] = useState<Panel>('none')
@@ -636,7 +638,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const pickCitizen = useMemo(() => (id: string) => { if (id === PRIEST_ID) setChaplainOpen(true); else if (tsar) setSubtitleFor(id) }, [tsar])
   // Only a citizen can be sent to work; the Tsar watches and walks around, players without a character just look.
   const canWork = !tsar && !!citizen
-  const working = citizen?.state === 'Working'
+  const working = citizen?.state === 'Working' || citizen?.state === 'Paused'
   const ownId = citizen?.id
   /** Away citizens stay on the map only while a task they started is still running. */
   const shownCitizens = useMemo(
@@ -654,6 +656,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     }
     if (tsar) {
       return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => {
+        if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
         const watched = target !== null && villageRef.current !== null && watchable(target, villageRef.current)
         setPicked(watched ? { target, screen } : null)
         if (watched || blocked(TSAR_ID, point)) return
@@ -665,6 +668,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     }
     if (!canWork || !ownId) return null
     return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => {
+      if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
       setError(null)
       setPicked(target ? { target, screen } : null)
       // Empty ground: "come here". A citizen busy with a task stays at work.
@@ -676,7 +680,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     }
   }, [tsar, canWork, working, ownId, slug, applyCitizen, setVillageState, i18n])
   const worldPickable = useMemo(
-    () => (tsar ? (target: WorldTarget) => villageRef.current !== null && watchable(target, villageRef.current) : null),
+    () => (tsar ? (target: WorldTarget) => target.kind === 'building' && target.building === 'Hospital' || villageRef.current !== null && watchable(target, villageRef.current) : null),
     [tsar],
   )
   const showPicked = picked !== null && canWork && panel === 'none'
@@ -726,7 +730,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         citizens={shownCitizens}
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
-        obscured={chatFull || panel !== 'none' || chaplainOpen || pollSetup || subtitleFor !== null}
+        obscured={chatFull || panel !== 'none' || hospitalOpen || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
         onCitizenPick={pickCitizen}
@@ -848,7 +852,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         <ChatPanel
           key={slug}
           incoming={live.chatArrivals}
-          interrupted={panel !== 'none' || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
+          interrupted={panel !== 'none' || hospitalOpen || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}
@@ -929,6 +933,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         </ServerClock>
       </div>
 
+      {hospitalOpen && <HospitalPanel slug={slug} actorId={me.id} citizenId={citizen?.id} tsar={tsar} village={village}
+        onVillage={setVillageState} serverOffsetMs={serverOffset} onClose={() => setHospitalOpen(false)} onUpdated={() => { void loadCitizen() }} />}
       {chaplainOpen && <SramoslavPanel slug={slug} onClose={() => setChaplainOpen(false)} onReply={text => canvas.current?.say(PRIEST_ID, text, 12)} />}
       {panel === 'menu' && (
         <ServerClock offsetMs={serverOffset}>
@@ -937,6 +943,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               slug={slug}
               tab={tab}
               onTab={setTab}
+              onHospital={() => { setPanel('none'); setHospitalOpen(true) }}
               onClose={() => setPanel('none')}
               village={village}
               population={{total:citizens.length,online:citizens.filter(c=>!live.away.has(c.id)).length}}

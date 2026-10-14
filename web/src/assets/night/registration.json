@@ -414,5 +414,22 @@
       301,
       227
     ]
+  },
+  "Hospital": {
+    "day": "building-hospital-day",
+    "preparedDay": "building-hospital-day",
+    "night": "building-hospital-night",
+    "dayBounds": [
+      4,
+      3,
+      96,
+      97
+    ],
+    "nightBounds": [
+      4,
+      3,
+      96,
+      97
+    ]
   }
 }

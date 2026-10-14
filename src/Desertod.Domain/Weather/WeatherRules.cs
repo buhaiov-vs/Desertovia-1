@@ -63,7 +63,8 @@ public static class WeatherRules
 
     private static readonly HashSet<BuildingKind> IndoorBuildings =
     [
-        BuildingKind.Library, BuildingKind.Tavern, BuildingKind.Smithy, BuildingKind.Workshop, BuildingKind.Bakery,
+        BuildingKind.Library,
+        BuildingKind.Hospital, BuildingKind.Tavern, BuildingKind.Smithy, BuildingKind.Workshop, BuildingKind.Bakery,
         BuildingKind.Mine, BuildingKind.Barracks,
     ];
 

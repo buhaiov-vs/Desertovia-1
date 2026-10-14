@@ -26,7 +26,7 @@ public sealed record StorageSlotDto(ResourceKind Kind, double Fill);
 public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots, int Damage);
 
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
-public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage);
+public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1);
 
 /// <summary>An attack on the way, or a fought one kept for the record.</summary>
 /// <param name="AnnouncedAt">Players see an attack on the way from then on; clients hide it before.</param>
@@ -55,7 +55,7 @@ public sealed record SiteJobDto(string JobId, int Done, int Required, int Room);
 /// <param name="Hands">Different citizens who already worked on the stage.</param>
 public sealed record SiteStageDto(string Id, int CrewNeeded, int Hands, IReadOnlyList<SiteJobDto> Jobs);
 
-public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages);
+public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages, int TargetLevel = 1);
 
 /// <param name="Count">Animals now; the map shows a share of them, the Tsar never sees the number.</param>
 public sealed record HerdDto(AnimalKind Kind, int Count, int Capacity, string Habitat);
@@ -224,7 +224,8 @@ public sealed record CitizenSummaryDto(
     DateTimeOffset? CycleEndsAt,
     IReadOnlyList<ResourceKind> Carrying,
     DateTimeOffset? InjuredUntil,
-    ResourceKind? Weapon);
+    ResourceKind? Weapon,
+    ExternalRecovery? Recovery = null);
 
 /// <param name="InviteCode">Only sent to the owner of a private village.</param>
 /// <param name="AwayCitizenIds">Citizens who are away, see <see cref="CitizenPresence"/>: hidden from the map while idle.</param>
@@ -303,7 +304,8 @@ public sealed record CitizenDto(
     ResourceKind? Weapon,
     ResourceKind? Armor,
     int Arrows,
-    double Power);
+    double Power,
+    ExternalRecovery? Recovery = null);
 
 public sealed record RulesDto(
     int CycleSeconds,
@@ -430,7 +432,7 @@ public static class DtoMapper
                 s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList(),
                 s.Damage))
             .ToList(),
-        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage)).ToList(),
+        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level)).ToList(),
         village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount)).ToList(),
         context.Project is { } project ? project.ToDto(context) : null,
         completedProjects,
@@ -552,7 +554,7 @@ public static class DtoMapper
                             ? site.LaborRoom(index, job.JobId)
                             : site.Remaining(index, job.JobId)))
                     .ToList()))
-            .ToList());
+            .ToList(), site.TargetLevel);
 
     public static ProjectDto ToDto(this VillageProject project, WorkContext context)
     {
@@ -600,7 +602,7 @@ public static class DtoMapper
             citizen.CycleEndsAt,
             citizen.Load.Select(g => g.Kind).ToList(),
             CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
-            citizen.Weapon);
+            citizen.Weapon, citizen.Recovery);
     }
 
     public static CitizenDto ToDto(this Citizen citizen, Village village, DateTimeOffset now) => new(
@@ -658,7 +660,7 @@ public static class DtoMapper
         citizen.Weapon,
         citizen.Armor,
         citizen.Arrows,
-        Math.Round(CombatRules.Power(citizen), 1));
+        Math.Round(CombatRules.Power(citizen), 1), citizen.Recovery);
 
     public static CatalogDto Catalog(GameOptions options) => new(
         GameCatalog.Roles,

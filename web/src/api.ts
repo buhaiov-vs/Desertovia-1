@@ -25,7 +25,7 @@ export type Skill =
   | 'Weatherlore'
   | 'Weaponcraft'
 
-export type WorkState = 'Idle' | 'Working' | 'AwaitingRenewal'
+export type WorkState = 'Idle' | 'Working' | 'AwaitingRenewal' | 'Paused'
 
 export type RoleTier = 'Basic' | 'Journeyman' | 'Master'
 
@@ -375,6 +375,7 @@ export interface FightReport {
   enemy: EnemyKind
   won: boolean
   injured: boolean
+  recovery?: ExternalRecovery | null
   injuredUntil: string | null
   power: number
   enemyPower: number
@@ -734,6 +735,7 @@ export interface SiteStage {
 }
 
 export interface Site {
+  targetLevel?: number
   kind: BuildingKind
   plotId: string
   stage: number
@@ -743,6 +745,7 @@ export interface Site {
 }
 
 export interface Structure {
+  level?: number
   kind: BuildingKind
   plotId: string
   /** Harm done by raiders, 0 to `rules.maximumDamage`. */
@@ -954,6 +957,23 @@ export interface Appearance {
 
 export const CITIZEN_SUBTITLE_MAXIMUM = 24
 
+export interface ExternalRecovery {
+  episodeId: string | null
+  admittedAt: string | null
+  until: string | null
+  checkedAt: string
+  available: boolean
+  hospitalPercent: number
+  skillPercent: number
+}
+export interface HospitalTier { code: string; title: string; minHours: number; maxHours: number; price: number; blocked: string }
+export interface HospitalStatus {
+  available: boolean; level: number; balance: number | null; recovery: ExternalRecovery | null
+  tiers: HospitalTier[]; patients: { id: string; name: string; recovery: ExternalRecovery }[]
+}
+export interface HospitalPayment { patientId: string; code: string; requestId: string; expectedPrice: number; episodeId: string }
+export interface HospitalReceipt { state: string; error: string | null; until: number | null; price: number | null; cutSeconds: number | null }
+
 export interface CitizenSummary {
   id: string
   name: string
@@ -978,6 +998,7 @@ export interface CitizenSummary {
   /** Goods the citizen holds because storage had no room. */
   carrying: string[]
   /** Wounded until then; null when not wounded. */
+  recovery?: ExternalRecovery | null
   injuredUntil: string | null
   /** Weapon taken from the armory for the current task. */
   weapon: string | null
@@ -1089,6 +1110,7 @@ export interface Citizen {
   /** When the next vigor drink may be drunk; null if never drunk. */
   drinkReadyAt: string | null
   /** Wounded until then; null when not wounded. */
+  recovery?: ExternalRecovery | null
   injuredUntil: string | null
   weapon: string | null
   armor: string | null
@@ -1305,6 +1327,9 @@ export const api = {
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/job`, { plotId, stage, jobId }),
   dropLoad: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drop`),
   drink: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drink`),
+  hospital: (slug: string) => request<HospitalStatus>('GET', `/api/villages/${encodeURIComponent(slug)}/hospital`),
+  hospitalHeal: (slug: string, payment: HospitalPayment) => request<HospitalReceipt>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/heal`, payment),
+  hospitalUpgrade: (slug: string, plot: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/${encodeURIComponent(plot)}/upgrade`),
   heal: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/heal`),
   callUndead: (slug: string, enemy: EnemyKind, size: RaidSize) =>
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/undead`, { enemy, size }),

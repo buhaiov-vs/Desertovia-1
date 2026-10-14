@@ -1,3 +1,6 @@
+Текущий репозиторный этап D-028: [реализация больницы](HOSPITAL_IMPLEMENTATION.md),
+без deployment. LIVE остаётся0.5.1. Проверки/ссылки: [progress.json](progress.json).
+
 > Следующая выбранная задача D-025: [план больницы](HOSPITAL_PLAN.md) и [набросок day/night](../../art/hospital-proposal/README.md). Пока PLAN/ART PROPOSAL, не механика LIVE.
 
 > Последний TODO владельца: [сверка с кодом и порядок работ](NEXT_TODO.md), D-024. Изменения запланированы, не выпущены.

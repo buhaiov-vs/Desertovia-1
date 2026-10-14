@@ -2,6 +2,39 @@ import type { Dictionary } from './en'
 
 export const ru: Dictionary = {
   ui: {
+    'hospital.title': 'Больница',
+    'hospital.open': 'Лечение',
+    'hospital.level': 'Больница · уровень {level}/3',
+    'hospital.notBuilt': 'Лечение доступно и до постройки больницы.',
+    'hospital.available': 'Можно возвращаться к работе.',
+    'hospital.until': 'До выписки: {time}',
+    'hospital.duel': 'Ранен после дуэли',
+    'hospital.native': 'Рана в Дезертовии: лечится обычным лекарством отдельно.',
+    'hospital.unavailable': 'Связь с больницей недоступна. Известное ранение сохраняется.',
+    'hospital.balance': 'Свечи у батюшки: {count}',
+    'hospital.pause': 'Работа на паузе. Вещи и прогресс сохранены.',
+    'hospital.tiers': 'Лечение · свечи аккаунта',
+    'hospital.effect': '−{min}–{max} реальных часов',
+    'hospital.confirm': 'Заплатить {price} свечей?',
+    'hospital.buy': 'Оплатить · {price} свечей',
+    'hospital.cancel': 'Отмена',
+    'hospital.wait': 'Проверяем лечение…',
+    'hospital.retry': 'Проверить эту оплату',
+    'hospital.completed': 'Лечение проведено. Срок выписки обновлён.',
+    'hospital.refunded': 'Лечение не удалось. Свечи возвращены.',
+    'hospital.error': 'Лечение недоступно. Обновите предложение.',
+    'hospital.patients': 'Пациенты ({count})',
+    'hospital.self': 'Я',
+    'hospital.bonus': 'Больница −{hospital}% · Восстановление −{skill}%',
+    'hospital.upgrade': 'Подготовить стройку · уровень {level}',
+    'hospital.help': 'Помочь пациенту',
+    'hospital.empty': 'Пациентов нет',
+    'hospital.pending': 'Оплата ещё проверяется. Повторная проверка использует ту же квитанцию.',
+    'hospital.price_changed': 'Цена изменилась. Проверьте новое предложение.',
+    'hospital.insufficient_candles': 'Не хватает свечей аккаунта.',
+    'hospital.episode_changed': 'Пациент уже выписан или получил новое ранение.',
+    'hospital.request_conflict': 'Эта квитанция относится к другому предложению.',
+    'hospital.treatment_pending': 'Другое лечение ещё проверяется.',
     brand: 'Дезертовия',
     loading: 'Загрузка…',
     close: 'Закрыть',
@@ -751,6 +784,7 @@ export const ru: Dictionary = {
   },
 
   skills: {
+    Recovery: 'Восстановление',
     Woodcutting: 'Рубка леса',
     Quarrying: 'Добыча камня',
     Gathering: 'Собирательство',
@@ -892,6 +926,7 @@ export const ru: Dictionary = {
   },
 
   buildings: {
+    Hospital: { name: 'Больница', description: 'Лечение после дуэлей и обучение первой помощи.' },
     Heap: { name: 'Склад', description: 'Огороженный клочок земли для любого добра. Мала и неопрятна.' },
     LeanTo: { name: 'Шалаш', description: 'Жерди и камыш от ветра. Двоим здесь спится лучше, чем под деревом.' },
     WoodPile: { name: 'Склад дерева', description: 'Сложенное дерево не мокнет и не теснит кучу.' },
@@ -975,6 +1010,8 @@ export const ru: Dictionary = {
   },
 
   tasks: {
+    'learn-first-aid': 'Изучать первую помощь',
+    'practice-first-aid': 'Практиковать первую помощь',
     'chop-wood': 'Собирать дерево',
     'quarry-stone': 'Собирать камни',
     forage: 'Собирать ягоды',
@@ -1171,6 +1208,8 @@ export const ru: Dictionary = {
     'take.amount': 'Возьмите хотя бы одну штуку.',
     'drop.roomInStorage': 'На складе есть место для груза. Отнесите его туда.',
     'hands.noRoom': 'На складе нет места для вашей ноши. Попросите царя или посадника замыслить новое хранилище.',
+    'hospital.admitted': 'Ты ранен после дуэли. Открой лечение или дождись выписки.',
+    'hospital.unavailable': 'Связь с больницей недоступна. Попробуй немного позже.',
     'building.notAvailable': '{building} пока нельзя построить.',
     'building.requires': '{building}: сначала нужно — {requires}.',
     'building.needsTechnology': '{building}: нужна технология — {technology}. Сначала её должны изучить жители.',

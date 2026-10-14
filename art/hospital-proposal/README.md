@@ -1,3 +1,9 @@
+## Подготовленные кадры D-028
+
+Готовые PNG/регистрация в `prepared/`; runtime atlas — `web/src/assets/night/hospital.*`.
+Пересборка: `python scripts/prepare_hospital.py` (Pillow). Исходники ниже сохранены.
+Общий canvas/anchor, запечённый#2b1d2b/1-world-pixel контур. В репозитории, не LIVE.
+
 # Hospital art proposal — day/night
 
 No dedicated hospital was found in the current building catalog/asset set. A new

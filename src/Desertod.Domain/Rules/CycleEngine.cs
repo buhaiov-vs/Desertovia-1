@@ -196,6 +196,7 @@ public static class CycleEngine
     /// <param name="village">Takes back the weapons the citizen took for the task; without it they keep them until the next task ends.</param>
     public static void Cancel(Citizen citizen, DateTimeOffset now, Village? village = null)
     {
+        HospitalRules.RequireReady(citizen, now);
         if (citizen.WorkState(now) != WorkState.Working)
         {
             throw new GameRuleException("task.notRunning", "There is no task running.");
@@ -229,7 +230,8 @@ public static class CycleEngine
     /// <summary>Banks the result of a completed cycle. Returns null if there is nothing to settle.</summary>
     public static CycleReport? Settle(Citizen citizen, WorkContext context, DateTimeOffset now)
     {
-        if (citizen.CycleSettled || citizen.CurrentTaskId is null || citizen.CycleEndsAt is null
+        if (citizen.RecoveryPausedAt is not null || HospitalRules.IsAdmitted(citizen, now)
+            || citizen.CycleSettled || citizen.CurrentTaskId is null || citizen.CycleEndsAt is null
             || now < citizen.CycleEndsAt)
         {
             return null;
@@ -730,6 +732,7 @@ public static class CycleEngine
             throw new GameRuleException("citizen.dormant", "Dormant citizens cannot work.");
         }
 
+        HospitalRules.RequireReady(citizen, now);
         if (CombatRules.IsInjured(citizen, now))
         {
             throw new GameRuleException("citizen.injured", "You are wounded and cannot work until the wound heals. A remedy heals it at once.",

@@ -420,27 +420,29 @@
     ]
   },
   "hospital_plan": {
-    "decision": "D-025",
+    "decision": "D-028",
     "document": "HOSPITAL_PLAN.md",
-    "state": "plan_and_art_proposal_prepared",
-    "branch": "docs/hospital-plan",
-    "game_code_changed": false,
+    "state": "implemented_local_checks_in_progress_not_deployed",
+    "branch": "feat/hospital",
+    "game_code_changed": true,
     "live_changed": false,
     "payment_operations_executed": false,
-    "art": "art/hospital-proposal",
+    "art": "art/hospital-proposal/prepared",
     "draft_frames": 2,
     "dedicated_hospital_asset_found": false,
     "existing_native_injuries_found": true,
     "existing_bot_hospital_found": true,
     "checks": [
-      "source code comparison: native Remedy and external duel hospital",
-      "saved generated source + exact2 frame crops, alpha/bounds/SHA manifest",
-      "docs links/JSON and AGENTS/CLAUDE synchronization"
+      "311 domain tests passed",
+      "171 API tests passed, including 3 cross-service hospital cases with fake bridge",
+      "22 focused bot/proxy/identity tests passed",
+      "frontend build and lint passed (existing warning policy)",
+      "asset deterministic rebuild and common pixel/outline registration passed"
     ],
-    "next_stage": "external status synchronization and existing treatment link, before embedded payment",
+    "next_stage": "finish repository CI and retain without deploying",
     "recovery_bonuses": {
       "decision": "D-026",
-      "state": "planned_not_implemented",
+      "state": "implemented_candidate_balance_not_live",
       "hospital_level_bonus": true,
       "patient_skill_bonus": true,
       "recommended_hospital_percent": [
@@ -455,9 +457,30 @@
       "recommended_skill_name": "Восстановление",
       "apply_once_per_admission": true,
       "bot_and_game_share_expiry": true,
-      "payment_tariffs_unchanged": true
+      "payment_tariffs_unchanged": true,
+      "training_tasks": [
+        "learn-first-aid",
+        "practice-first-aid"
+      ]
     },
-    "postponed_by_owner_during_incident": true
+    "postponed_by_owner_during_incident": false,
+    "payment_tests": "temporary SQLite and fake Telegram only",
+    "implementation": {
+      "document": "HOSPITAL_IMPLEMENTATION.md",
+      "bot_branch": "feat/desertovia-hospital",
+      "bot_commit": "7db4193",
+      "bot_pr": "https://github.com/desertod666/TG-bots/pull/32",
+      "game_pr": null,
+      "feature_flag": "Game__HospitalEnabled",
+      "feature_flag_default": false,
+      "game_migration": "AddExternalRecovery",
+      "native_wounds_separate": true,
+      "durable_payment_receipts": true,
+      "current_work_pauses_without_restart": true,
+      "hospital_levels": 3,
+      "deployed": false,
+      "release_version_changed": false
+    }
   },
   "routing_incident": {
     "date": "2026-10-14",

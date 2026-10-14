@@ -1,6 +1,39 @@
 /** English is the primary language; every other dictionary must provide the same keys. */
 export const en = {
   ui: {
+    'hospital.title': 'Hospital',
+    'hospital.open': 'Treatment',
+    'hospital.level': 'Hospital level {level}/3',
+    'hospital.notBuilt': 'Treatment is available before the hospital is built.',
+    'hospital.available': 'You are ready to return to work.',
+    'hospital.until': 'Discharge in {time}',
+    'hospital.duel': 'Wounded after a duel',
+    'hospital.native': 'Village battle wound: use a remedy separately.',
+    'hospital.unavailable': 'Hospital connection unavailable. Known wounds remain active.',
+    'hospital.balance': 'Candles at the chaplain: {count}',
+    'hospital.pause': 'Work is paused. Your goods and progress are safe.',
+    'hospital.tiers': 'Treatment · real account candles',
+    'hospital.effect': '−{min}–{max} real hours',
+    'hospital.confirm': 'Pay {price} candles?',
+    'hospital.buy': 'Pay {price} candles',
+    'hospital.cancel': 'Cancel',
+    'hospital.wait': 'Checking treatment…',
+    'hospital.retry': 'Check this payment',
+    'hospital.completed': 'Treatment completed. The discharge time is updated.',
+    'hospital.refunded': 'Treatment failed. Candles refunded.',
+    'hospital.error': 'Treatment unavailable. Refresh the offer.',
+    'hospital.patients': 'Patients ({count})',
+    'hospital.self': 'Me',
+    'hospital.bonus': 'Hospital −{hospital}% · Recovery −{skill}%',
+    'hospital.upgrade': 'Prepare level {level} construction',
+    'hospital.help': 'Help a patient',
+    'hospital.empty': 'No patients',
+    'hospital.pending': 'Payment is being reconciled. Check it using the same operation.',
+    'hospital.price_changed': 'The price changed. Review the new offer.',
+    'hospital.insufficient_candles': 'Not enough account candles.',
+    'hospital.episode_changed': 'This patient has already been discharged or has a new wound.',
+    'hospital.request_conflict': 'This payment belongs to a different offer.',
+    'hospital.treatment_pending': 'Another treatment is still being checked.',
     brand: 'Desertovia',
     loading: 'Loading…',
     close: 'Close',
@@ -751,6 +784,7 @@ export const en = {
   },
 
   skills: {
+    Recovery: 'Recovery',
     Woodcutting: 'Woodcutting',
     Quarrying: 'Quarrying',
     Gathering: 'Gathering',
@@ -894,6 +928,7 @@ export const en = {
   } as Record<string, string>,
 
   buildings: {
+    Hospital: { name: 'Hospital', description: 'Duel recovery and first-aid training.' },
     Heap: { name: 'Heap', description: 'A fenced patch of ground for any goods. Small and messy.' },
     LeanTo: { name: 'Lean-to', description: 'Poles and reeds against the wind. Two people sleep better here than under a tree.' },
     WoodPile: { name: 'Wood pile', description: 'Stacked wood stays dry and does not crowd the heap.' },
@@ -977,6 +1012,8 @@ export const en = {
   } as Record<string, string>,
 
   tasks: {
+    'learn-first-aid': 'Study first aid',
+    'practice-first-aid': 'Practice first aid',
     'chop-wood': 'Gather wood',
     'quarry-stone': 'Gather stones',
     forage: 'Forage berries',
@@ -1174,6 +1211,8 @@ export const en = {
     'take.amount': 'Take at least one.',
     'drop.roomInStorage': 'Storage has room for what you carry. Carry it there instead.',
     'hands.noRoom': 'Storage has no room for what you carry. Ask the Tsar or a Governor to plan more storage.',
+    'hospital.admitted': 'You are recovering after a duel. Open treatment or wait for discharge.',
+    'hospital.unavailable': 'Hospital status is temporarily unavailable. Try again shortly.',
     'building.notAvailable': '{building} cannot be built yet.',
     'building.requires': '{building} needs: {requires}.',
     'building.needsTechnology': '{building} needs the tech {technology}. Citizens must research it first.',

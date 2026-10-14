@@ -8,6 +8,8 @@ public sealed class ConstructionSite
     /// <summary>Unique within a village; identifies the site.</summary>
     public required string PlotId { get; set; }
 
+    public int TargetLevel { get; set; } = 1;
+
     public DateTimeOffset PlacedAt { get; set; }
 
     /// <summary>Material multiplier for repeats of the same building.</summary>
@@ -153,6 +155,7 @@ public sealed class Structure
 {
     public BuildingKind Kind { get; set; }
     public required string PlotId { get; set; }
+    public int Level { get; set; } = 1;
     public DateTimeOffset BuiltAt { get; set; }
 
     /// <summary>Harm done by raiders, 0 to <see cref="Combat.CombatRules.MaximumDamage"/>; repaired by citizens.</summary>

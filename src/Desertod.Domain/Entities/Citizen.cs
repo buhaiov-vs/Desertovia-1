@@ -18,6 +18,7 @@ public enum WorkState
     Idle,
     Working,
     AwaitingRenewal,
+    Paused,
 }
 
 public sealed class Citizen
@@ -57,6 +58,10 @@ public sealed class Citizen
     public DateTimeOffset? InjuredUntil { get; set; }
 
     /// <summary>Taken from the village armory for the current task and put back when it ends.</summary>
+    /// <summary>External duel recovery; independent from native battle injuries.</summary>
+    public ExternalRecovery? Recovery { get; set; }
+    public DateTimeOffset? RecoveryPausedAt { get; set; }
+
     public ResourceKind? Weapon { get; set; }
 
     public ResourceKind? Armor { get; set; }
@@ -187,6 +192,7 @@ public sealed class Citizen
     /// </summary>
     public void GoTo(TilePoint spot, Village village, DateTimeOffset now)
     {
+        HospitalRules.RequireReady(this, now);
         if (WorkState(now) == Entities.WorkState.Working)
         {
             throw new GameRuleException("goto.working", "Finish the current task first.");
@@ -254,6 +260,8 @@ public sealed class Citizen
 
     public WorkState WorkState(DateTimeOffset now)
     {
+        if (RecoveryPausedAt is not null) return Entities.WorkState.Paused;
+
         if (CurrentTaskId is null || CycleEndsAt is null)
         {
             return Entities.WorkState.Idle;

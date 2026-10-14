@@ -246,6 +246,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<DateTimeOffset?>("RecoveryPausedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Renown")
                         .HasColumnType("integer");
 
@@ -848,6 +851,36 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .HasForeignKey("CitizenId");
                         });
 
+                    b.OwnsOne("Desertod.Domain.Entities.ExternalRecovery", "Recovery", b1 =>
+                        {
+                            b1.Property<Guid>("CitizenId");
+
+                            b1.Property<DateTimeOffset?>("AdmittedAt");
+
+                            b1.Property<bool>("Available");
+
+                            b1.Property<DateTimeOffset>("CheckedAt");
+
+                            b1.Property<string>("EpisodeId");
+
+                            b1.Property<int>("HospitalPercent");
+
+                            b1.Property<int>("SkillPercent");
+
+                            b1.Property<DateTimeOffset?>("Until");
+
+                            b1.HasKey("CitizenId");
+
+                            b1.ToTable("Citizens");
+
+                            b1
+                                .ToJson("Recovery")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CitizenId");
+                        });
+
                     b.OwnsMany("Desertod.Domain.Skills.SkillProgress", "Skills", b1 =>
                         {
                             b1.Property<Guid>("CitizenId");
@@ -921,6 +954,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Navigation("Load");
 
+                    b.Navigation("Recovery");
+
                     b.Navigation("Skills");
 
                     b.Navigation("Stats")
@@ -973,6 +1008,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<double>("Scale");
 
                             b1.Property<int>("Stage");
+
+                            b1.Property<int>("TargetLevel");
 
                             b1.Property<int>("TreesToFell");
 
@@ -1050,6 +1087,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<string>("Kind")
                                 .IsRequired();
+
+                            b1.Property<int>("Level");
 
                             b1.Property<string>("PlotId")
                                 .IsRequired();

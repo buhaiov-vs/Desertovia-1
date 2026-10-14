@@ -1,0 +1,26 @@
+{
+  "sourceCrop": [
+    85,
+    74,
+    810,
+    815
+  ],
+  "bodyPixels": [
+    92,
+    94
+  ],
+  "canvas": [
+    100,
+    100
+  ],
+  "outline": {
+    "color": "#2b1d2b",
+    "worldWidth": 1,
+    "alphaThreshold": 192,
+    "defaultPixelsPerWorldPixel": 2
+  },
+  "sha256": {
+    "hospital-day.png": "207889ba21b841bc146373e814a1124e2f3c4b4ce25b935138d120ced39e8798",
+    "hospital-night.png": "b28b695aef3ab740c7d885aa5075a2b2b6dbd7428d8350ae11ef65d7e053f22b"
+  }
+}

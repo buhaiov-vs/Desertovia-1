@@ -1,3 +1,4 @@
+import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
 import { BuildingLighting, hasPreparedBuilding } from './BuildingLighting'
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
@@ -251,7 +252,7 @@ export class VillageWorld {
   private activeProjectId: string | null = null
   private lastBuildingKey = ''
   private buildingViews: Container[] = []
-  private readonly litBuildings = new Set<BuildingLighting | HutConstruction>()
+  private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
   private buildingLabels: Array<{ text: Text; x: number; y: number }> = []
   private buildingName: ((kind: string, storage: boolean) => string) | null = null
@@ -796,7 +797,7 @@ export class VillageWorld {
       if (!hunt && walker.hunt) this.wildlife.endHunt(walker.id)
       walker.hunt = hunt
       walker.guard = working && this.catalog?.tasks.find((task) => task.id === citizen.taskId)?.effect === 'Guard'
-      walker.injuredUntil = citizen.injuredUntil ? Date.parse(citizen.injuredUntil) : 0
+      walker.injuredUntil = Math.max(citizen.injuredUntil ? Date.parse(citizen.injuredUntil) : 0, citizen.recovery?.until ? Date.parse(citizen.recovery.until) : 0)
       const injured = !working && walker.injuredUntil > Date.now()
       if (injured) walker.staying = true
       let icon: { key: string; tile: TileRef | null } | null = null
@@ -831,6 +832,11 @@ export class VillageWorld {
         walker.wanderAt = 0
       }
 
+      if (citizen.recovery?.until && Date.parse(citizen.recovery.until) > Date.now()) {
+        const hospital = this.village?.structures.find(s => s.kind === 'Hospital')
+        const plot = hospital ? this.plot(hospital.plotId) : null
+        if (plot) { walker.targetX = (plot.x + 1.5) * TILE; walker.targetY = (plot.y + 2.6) * TILE; walker.staying = true }
+      }
       this.setIcon(walker, icon?.key ?? '', icon?.tile ?? null)
     }
 
@@ -963,7 +969,7 @@ export class VillageWorld {
       if (!plot) continue
       add(this.finishedView(structure.kind, plot.x, plot.y))
       if (structure.damage > 0) add(this.damageView(structure.plotId, structure.damage, plot.x, plot.y))
-      name(structure.kind, false, plot)
+      if (structure.kind !== 'Hospital') name(structure.kind, false, plot)
       const beds = village.fields.filter((bed) => bed.plotId === structure.plotId)
       if (beds.length > 0) add(this.bedsView(beds, plot.x, plot.y))
     }
@@ -1132,6 +1138,13 @@ export class VillageWorld {
 
   /** Construction site: a faint blueprint, the building rising from the ground, corner pegs and the delivered material. */
   private siteView(site: Site, x: number, y: number): Container {
+    if (site.kind === 'Hospital') {
+      const hospital = new HospitalConstruction(this.tiles, site, x, y)
+      hospital.setNight(this.nightAmount)
+      this.litBuildings.add(hospital)
+      hospital.once('destroyed', () => this.litBuildings.delete(hospital))
+      return hospital
+    }
     if (site.kind === 'Hut') {
       const hut = new HutConstruction(this.tiles,site,this.buildingDefinitions.get(site.kind),x,y)
       hut.setNight(this.nightAmount)

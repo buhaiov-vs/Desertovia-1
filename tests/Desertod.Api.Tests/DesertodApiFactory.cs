@@ -22,6 +22,7 @@ public sealed class DesertodApiFactory : WebApplicationFactory<Program>, IAsyncL
 
     /// <summary>The game's clock; see <see cref="TestClock"/>.</summary>
     public TestClock Clock { get; } = new();
+    public TestHospitalBridge Hospital { get; } = new();
 
     public async Task InitializeAsync() => await database.StartAsync();
 
@@ -38,6 +39,8 @@ public sealed class DesertodApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.ConfigureServices(services => services.AddTransient<IStartupFilter, TestAddressStartupFilter>());
         builder.ConfigureTestServices(services =>
         {
+            services.RemoveAll<Desertod.Api.Game.IHospitalBridge>();
+            services.AddSingleton<Desertod.Api.Game.IHospitalBridge>(Hospital);
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
         });

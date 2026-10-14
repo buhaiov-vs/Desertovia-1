@@ -112,7 +112,7 @@ export function BuildPanel({
               <button
                 key={definition.kind}
                 className="task-card"
-                disabled={full || missing.length > 0 || undiscovered !== null}
+                disabled={full || missing.length > 0 || undiscovered !== null || !tsar && definition.kind === 'Hospital'}
                 onClick={() => onPlace(definition)}
               >
                 <TileIcon tile={BUILDING_SIGNS[definition.kind] ?? taskIcon('build')} scale={2} />

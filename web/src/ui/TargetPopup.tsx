@@ -160,7 +160,7 @@ export function TargetPopup({
   const i18n = useI18n()
   const { t } = i18n
   const working = citizen.cycleEndsAt ? now < Date.parse(citizen.cycleEndsAt) : false
-  const disabled = pending || working
+  const disabled = pending || working || citizen.state === 'Paused'
   const site = target.kind === 'site' ? village.sites.find((s) => s.plotId === target.plotId) : undefined
   const tasks = tasksFor(target, catalog, village)
   const beds = target.kind === 'building' ? village.fields.filter((bed) => bed.plotId === target.plotId) : []

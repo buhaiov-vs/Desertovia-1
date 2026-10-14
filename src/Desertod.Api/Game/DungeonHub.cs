@@ -35,22 +35,23 @@ public sealed class DungeonHub(DungeonRuntime runtime, GameService game) : Hub
 
     public Task LeaveRun(Guid runId) => Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(runId));
 
-    public bool MoveTo(Guid runId, Guid heroId, double x, double y) =>
+    public Task<bool> MoveTo(Guid runId, Guid heroId, double x, double y) =>
         Act(runId, heroId, live => live.Simulation.MoveTo(heroId, x, y));
 
-    public bool Attack(Guid runId, Guid heroId, int foeId) =>
+    public Task<bool> Attack(Guid runId, Guid heroId, int foeId) =>
         Act(runId, heroId, live => live.Simulation.Attack(heroId, foeId));
 
-    public bool Heal(Guid runId, Guid heroId, Guid allyId) =>
+    public Task<bool> Heal(Guid runId, Guid heroId, Guid allyId) =>
         Act(runId, heroId, live => live.Simulation.Heal(heroId, allyId));
 
-    private bool Act(Guid runId, Guid heroId, Func<LiveDungeon, bool> intent)
+    private async Task<bool> Act(Guid runId, Guid heroId, Func<LiveDungeon, bool> intent)
     {
-        if (Context.User?.GetAccountId() is not { } accountId || runtime.Find(runId) is not { } live || !live.Owns(heroId, accountId))
+        if (Context.User?.GetAccountId() is not { } accountId || runtime.Find(runId) is not { } live || !live.Owns(heroId, accountId) || game.HasHospitalRestriction(accountId))
         {
             return false;
         }
 
+        if (!await game.CheckDungeonHospitalAsync(live.VillageId, accountId, Context.ConnectionAborted)) return false;
         lock (live.Gate)
         {
             return intent(live);

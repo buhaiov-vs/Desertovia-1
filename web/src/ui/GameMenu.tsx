@@ -49,6 +49,7 @@ export interface MenuProps {
   tab: MenuTab
   onTab: (tab: MenuTab) => void
   onClose: () => void
+  onHospital: () => void
   village: VillageState
   population: { total: number; online: number }
   /** The village owner: rules and plans, never works, sees no storage numbers. */
@@ -119,7 +120,7 @@ export function GameMenu(props: MenuProps) {
   const { t } = i18n
   const [filter, setFilter] = useState<TaskFilter>('all')
   const working = citizen?.cycleEndsAt ? now < Date.parse(citizen.cycleEndsAt) : false
-  const disabled = pending || working
+  const disabled = pending || working || citizen?.state === 'Paused'
   const built = new Set<string>([...builtKinds(village, catalog), ...village.completedProjects])
   const discovered = discoveredTechnologies(village)
   // Project tasks only show while a project runs, and only the ones it has use for.
@@ -156,6 +157,7 @@ export function GameMenu(props: MenuProps) {
 
           {tab === 'village' && (
             <>
+              <button onClick={props.onHospital}>✚ {t('hospital.title')}</button>
               <QuestPanel
                 village={village}
                 catalog={catalog}
@@ -306,7 +308,7 @@ export function GameMenu(props: MenuProps) {
           )}
 
           {tab === 'character' &&
-            (citizen ? <CharacterSheet citizen={citizen} catalog={catalog} structures={village.structures} /> : <JoinPrompt {...props} />)}
+            (citizen ? <><button className="primary" onClick={props.onHospital}>✚ {t( citizen.state === 'Paused' ? 'hospital.duel' : 'hospital.open')}</button><CharacterSheet citizen={citizen} catalog={catalog} structures={village.structures} /></> : <JoinPrompt {...props} />)}
 
           {tab === 'tasks' &&
             (citizen ? (

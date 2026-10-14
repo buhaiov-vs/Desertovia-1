@@ -78,12 +78,12 @@ export class BuildingLighting extends Container {
   constructor(tiles: TileSet, kind: string, x: number, y: number, plotWidth = 3, plotHeight = 3, emitsLight = true) {
     super()
     this.emitsLight = emitsLight
-    const pair = registrations[kind as keyof typeof registrations]
+    const pair = registrations[kind as keyof typeof registrations] as { day:string; night:string; dayBounds:number[]; nightBounds:number[]; preparedDay?:string }
     const [left, top, right, bottom] = pair.dayBounds
     const scale = Math.min(0.5, plotWidth*TILE/(right-left),plotHeight*TILE/(bottom-top))
     const width = (right-left)*scale, height = (bottom-top)*scale
-    const dayTexture = tiles.get(art(pair.day as ArtName)), nightTexture = tiles.nightBuilding(pair.night)
-    const day = sampling(dayTexture,registeredPlacement(pair.dayBounds.map(value=>value/dayAtlas.meta.scale),width,height))
+    const dayTexture = pair.preparedDay ? tiles.nightBuilding(pair.preparedDay) : tiles.get(art(pair.day as ArtName)), nightTexture = tiles.nightBuilding(pair.night)
+    const day = sampling(dayTexture,registeredPlacement(pair.dayBounds.map(value=>value/(pair.preparedDay ? 1 : dayAtlas.meta.scale)),width,height))
     const night = sampling(nightTexture,registeredPlacement(pair.nightBounds,width,height))
     const x0=Math.min(day.bounds[0],night.bounds[0]),y0=Math.min(day.bounds[1],night.bounds[1])
     const x1=Math.max(day.bounds[2],night.bounds[2]),y1=Math.max(day.bounds[3],night.bounds[3])

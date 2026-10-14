@@ -31,6 +31,7 @@ public enum BuildingKind
     Barracks,
     Bakery,
     RopeBridge,
+    Hospital,
 }
 
 public enum JobKind
@@ -258,6 +259,14 @@ public static class BuildingCatalog
                 Stage("roof", "Roof", 3, Job("bring-reeds", 16), Job("bundle-thatch", 3), Job("thatch-roof", 4)),
             ],
             Technology: TechnologyCatalog.Writing),
+        new(BuildingKind.Hospital, "Hospital", "Duel recovery and first-aid training.", [],
+            [
+                Stage("ground", "Ground", 2, Job("clear-ground", 4), Job("mark-outline", 2)),
+                Stage("foundation", "Foundation", 3, Job("bring-stones", 48), Job("lay-stones", 12)),
+                Stage("frame", "Frame", 3, Job("bring-logs", 64), Job("hew-beams", 10), Job("raise-posts", 8)),
+                Stage("walls", "Walls", 3, Job("bring-sticks", 24), Job("mix-clay", 8), Job("weave-walls", 12)),
+                Stage("roof", "Roof", 3, Job("bring-reeds", 32), Job("bundle-thatch", 8), Job("thatch-roof", 10)),
+            ]),
         new(BuildingKind.Tavern, "Tavern", "Talk and rest.", [],
             [
                 Stage("ground", "Ground", 2, Job("clear-ground", 2), Job("mark-outline", 1)),

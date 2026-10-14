@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-14",
-  "phase": "night_buildings_shared_chaplain_chat",
+  "phase": "hut_construction_pilot",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -250,7 +250,7 @@
     "shared_bot_and_housing_active": true,
     "legacy_backup_exists": true
   },
-  "deployed_sha": "daf47f4272a6ab92983fc6d7379928129a837991",
+  "deployed_sha": "99a5a4a77dc4fcbf113d90c7302450f2ac21be7e",
   "launch_document": "TELEGRAM_LAUNCH.md",
   "current_change": {
     "single_world": "released",
@@ -307,11 +307,11 @@
     "stronger_campfire_style_lighting": true
   },
   "construction_visual_plan": {
-    "state": "hut_pilot_implemented_local_desktop_passed_ci_pending",
+    "state": "hut_pilot_released_verified_other_types_planned",
     "decision": "D-020",
     "document": "CONSTRUCTION_VISUAL_PLAN.md",
     "pilot": "Hut",
-    "live_changed": false,
+    "live_changed": true,
     "preserve_server_rules": true,
     "checks_needed": [
       "stage_mapping",
@@ -330,6 +330,17 @@
       "build": true,
       "lint": true,
       "desktop_browser": 1
-    }
+    },
+    "ci_run": 38558850189,
+    "deployment_run": 38560446657,
+    "server_check_run": 38560655919,
+    "deployed_sha": "99a5a4a77dc4fcbf113d90c7302450f2ac21be7e",
+    "backend_tests": 474,
+    "browser_tests": {
+      "passed": 41,
+      "skipped": 1
+    },
+    "fresh_database_backup": true,
+    "public_release_header_verified": true
   }
 }

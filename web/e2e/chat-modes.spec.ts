@@ -72,6 +72,7 @@ test('real game chat buttons and panels fit the phone and desktop map',async({pa
  await page.screenshot({path:test.info().outputPath('chat-quarter-map.png')})
  await panel.getByRole('button',{name:'Full screen'}).click();await expect(panel).toHaveAttribute('data-mode','full')
  const full=await panel.boundingBox();expect(full!.width).toBeCloseTo(viewport.width,0);expect(full!.height).toBeCloseTo(viewport.height,0)
+ await expect(page.locator('.ui-toggle')).toBeHidden()
  await page.screenshot({path:test.info().outputPath('chat-full-map.png')})
  await panel.getByRole('button',{name:'Hide chat'}).click();await expect(panel).toHaveAttribute('data-mode','hidden')
 })

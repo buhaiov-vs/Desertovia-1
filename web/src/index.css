@@ -2412,3 +2412,5 @@ textarea {
 @media (prefers-reduced-motion: reduce) { .chat-toast { animation: none; } }
 
 .hud.chat-full > :not(.chat-panel) { visibility: hidden; }
+
+.game-root.chat-full-active > .ui-toggle { display: none; }

@@ -719,7 +719,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     : null
 
   return (
-    <div className={uiHidden ? 'game-root ui-hidden' : 'game-root'}>
+    <div className={`game-root${uiHidden ? ' ui-hidden' : ''}${chatFull ? ' chat-full-active' : ''}`}>
       <GameCanvas
         ref={canvas}
         village={live.state}

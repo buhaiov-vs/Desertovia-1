@@ -54,3 +54,10 @@ test('the real completed village renders finished projects and all building type
  await expectVillageView(page)
  await expect(page.locator('.game-root')).toBeVisible()
 })
+
+
+test('all 26 buildings emit warm light at night and none in full daylight',async({page})=>{
+ const samples=await page.evaluate(()=> (window as unknown as {lightingTest:{emissionCheck():{day:number;night:number}[]}}).lightingTest.emissionCheck())
+ expect(samples).toHaveLength(26)
+ for(const sample of samples){expect(sample.day).toBe(0);expect(sample.night).toBeGreaterThan(100)}
+})

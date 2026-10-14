@@ -725,6 +725,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         citizens={shownCitizens}
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
+        obscured={panel !== 'none' || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
         onCitizenPick={pickCitizen}

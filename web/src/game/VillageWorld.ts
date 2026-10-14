@@ -203,6 +203,7 @@ export class VillageWorld {
   private readonly projectLayer = new Container()
   private readonly night = new Graphics()
   private readonly lights = new Graphics()
+  private readonly buildingLights = new Container()
   private readonly flames = new Graphics()
   private readonly fog = new Fog()
   private fogUpdatedAt = Number.NEGATIVE_INFINITY
@@ -296,7 +297,7 @@ export class VillageWorld {
     this.placementLayer.addChild(this.ghost)
     this.placementLayer.visible = false
     this.selection.visible = false
-    this.world.addChild(this.groundLayer, this.objects, this.placementLayer, this.selection, this.night, this.lights, this.fog.sprite)
+    this.world.addChild(this.groundLayer, this.objects, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite)
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
@@ -582,6 +583,11 @@ export class VillageWorld {
   }
 
   /** Null follows the village's day and night. */
+  /** A dimmed map behind a modal needs fewer frames, leaving the phone responsive to controls. */
+  setObscured(obscured: boolean) {
+    this.app.ticker.maxFPS = obscured ? 8 : window.matchMedia('(pointer: coarse)').matches ? 30 : 60
+  }
+
   setNightOverride(night: boolean | null) {
     this.nightOverride = night
   }
@@ -1015,6 +1021,7 @@ export class VillageWorld {
     const view = new BuildingLighting(this.tiles, kind, x, y, width, height)
     view.setNight(this.nightAmount)
     this.litBuildings.add(view)
+    this.buildingLights.addChild(view.light)
     view.once('destroyed', () => this.litBuildings.delete(view))
     return view
   }
@@ -1947,6 +1954,7 @@ export class VillageWorld {
     this.night.alpha = this.nightAmount * 0.55
     for (const building of this.litBuildings) building.setNight(this.nightAmount)
     this.lights.alpha = this.nightAmount * (0.9 + Math.sin(this.elapsed * 9) * 0.1)
+    this.buildingLights.alpha = 0.96 + Math.sin(this.elapsed * 3) * 0.04
     this.rainAmount += (this.rainTarget - this.rainAmount) * Math.min(1, seconds)
     this.drawRain(seconds)
 

@@ -16,11 +16,16 @@ const app=new Application(); await app.init({width:650,height:700,backgroundAlph
 document.getElementById('lighting')!.appendChild(app.canvas)
 const tiles=await TileSet.load(); const root=new Container();app.stage.addChild(root)
 const views=Object.keys(registrations).map((kind,i)=>{
- const view=new BuildingLighting(tiles,kind,(i%4)*7,Math.floor(i/4)*6);root.addChild(view);return view
+ const view=new BuildingLighting(tiles,kind,(i%4)*7,Math.floor(i/4)*6);root.addChild(view,view.light);return view
 })
 Object.assign(window,{lightingTest:{
  measure:()=>views.map(v=>{const b=v.getLocalBounds();return {x:v.x,y:v.y,bounds:[b.minX,b.minY,b.maxX,b.maxY]}}),
  render:(amount:number)=>{views.forEach(v=>v.setNight(amount));app.renderer.render(app.stage)},
+ emissionCheck:()=>views.map(view=>{
+  view.setNight(0);const day=app.renderer.extract.pixels({target:view.light,resolution:2})
+  view.setNight(1);const night=app.renderer.extract.pixels({target:view.light,resolution:2})
+  return {day:day.pixels.reduce((sum,value,i)=>sum+(i%4===3?value:0),0),night:night.pixels.reduce((sum,value,i)=>sum+(i%4===3?value:0),0)}
+ }),
  alphaCheck:()=>views.map(view=>{
   const samples=[0,0.5,1].map(level=>{view.setNight(level);return app.renderer.extract.pixels({target:view,resolution:3})})
   const [day,middle,night]=samples;let common=0,transparent=0

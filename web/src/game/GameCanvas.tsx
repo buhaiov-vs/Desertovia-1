@@ -27,6 +27,7 @@ interface Props {
   highlightId: string | null
   /** Development only: forces daylight (false) or night (true); null follows the village sky. */
   nightOverride?: boolean | null
+  obscured?: boolean
   catalog: Catalog | null
   placement?: Placement | null
   minimap?: boolean
@@ -46,6 +47,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     citizens,
     highlightId,
     nightOverride = null,
+    obscured = false,
     catalog,
     placement = null,
     minimap = true,
@@ -89,6 +91,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setVillage(village), [world, village])
   useEffect(() => world?.setCitizens(citizens, highlightId), [world, citizens, highlightId])
   useEffect(() => world?.setNightOverride(nightOverride), [world, nightOverride])
+  useEffect(() => world?.setObscured(obscured), [world, obscured])
   useEffect(() => world?.setPriestName(priestName), [world, priestName])
   useEffect(() => world?.setTitles(tsarTitle, governorTitle), [world, tsarTitle, governorTitle])
   useEffect(

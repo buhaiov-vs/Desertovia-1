@@ -12,11 +12,15 @@ Status: implemented and locally checked; deployment pending.
 positions, depth sorting and camera. Original atlas scale2 is accounted for;
 night atlas scale1. The night atlas is split into two textures no larger than1536px,
 compatible with older2048px GPU limits. Touch rendering is capped30FPS; desktop60FPS,
-without changing elapsed animation time or game timers. Registration aligns visible roof/wall bounds and their ground
+with8FPS behind open modals to keep touch controls responsive. Server action and
+cycle timers are unchanged. Registration aligns visible roof/wall bounds and their ground
 anchor for each pair, excluding new side lanterns for wood/stone piles. One mesh
 interpolates premultiplied RGBA; overlapping opaque walls remain opaque at dusk.
 The completed project ID `granary` maps to `great-granary` art; unknown future
-project types keep the original tiled renderer instead of failing. Night art includes warm glow; the shader compensates the existing blue overlay
+project types keep the original tiled renderer instead of failing. Owner subsequently requested stronger building light like the campfire: warm-only
+window/lantern emission and layered warm ground pools are rendered additively
+above darkness and below fog. Light opacity follows the same continuous night
+amount, with a slight slow flicker. Night art includes warm glow; the shader compensates the existing blue overlay
 so lit windows are not darkened twice. Textures load together before creating the
 world, and views rebuilt by server updates inherit the current night amount.
 `darknessAt` already gives a continuous twilight curve across server day changes.

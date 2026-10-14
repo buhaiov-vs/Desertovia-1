@@ -4,7 +4,8 @@ Owner authorization 2026-10-14: connect the 26 prepared building pairs, make the
 transition continuous, and restore the first Desertovia's short village chat
 conversation. Later screenshots added the narrow bottom-panel text and stock
 quantity field bugs. Implementation branch `feat/night-buildings-chaplain-chat`.
-Status: implemented and locally checked; deployment pending.
+Status: released and verified 2026-10-14. Live source SHA
+`daf47f4272a6ab92983fc6d7379928129a837991`, merged through PR8.
 
 ## Rendering
 
@@ -66,3 +67,22 @@ Additive migration only: existing accounts, player progress and chat are preserv
 Rolling back the API does not require deleting NPC rows or reverting this table;
 the previous API ignores it. Keep the normal database backup before deployment.
 No game reset and no economy, candles or authentication changes in this release.
+
+
+## Release record — 2026-10-14
+
+CI38551953782: all four jobs passed; 474 backend tests, frontend lint/build,
+Docker image and 37 browser checks passed, one phone-keyboard check skipped.
+Browser coverage includes the actual completed-project map and all26 night lights.
+Deployment38554195083 succeeded using the exact tested source SHA above.
+The operator made a fresh private PostgreSQL backup before rebuilding/migrating;
+existing player progress was preserved. Server check38554378802 reports local
+health200, public auth providers200, Telegram/browser bridge configured,
+development login disabled, shared bot and housing services active.
+Public HTTPS release headers match the tested SHA; no private configuration or
+backup contents are stored in these documents. `/dezertovia/healthz` through the
+public frontend returns HTML, so backend health is verified by the private operator
+rather than treating that public fallback as a health response.
+
+Players may close and reopen the Telegram game to load the new assets. No account
+candles, game reset or manual messages to live players were used for verification.

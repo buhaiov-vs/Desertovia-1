@@ -22,8 +22,11 @@ Object.assign(window,{lightingTest:{
  measure:()=>views.map(v=>{const b=v.getLocalBounds();return {x:v.x,y:v.y,bounds:[b.minX,b.minY,b.maxX,b.maxY]}}),
  render:(amount:number)=>{views.forEach(v=>v.setNight(amount));app.renderer.render(app.stage)},
  emissionCheck:()=>views.map(view=>{
-  view.setNight(0);const day=app.renderer.extract.pixels({target:view.light,resolution:2})
-  view.setNight(1);const night=app.renderer.extract.pixels({target:view.light,resolution:2})
+  // Pixi extraction normalizes the target's own alpha. Keep the light as a child, as in the real world.
+  const parent=new Container();parent.addChild(view.light)
+  view.setNight(0);const day=app.renderer.extract.pixels({target:parent,resolution:2})
+  view.setNight(1);const night=app.renderer.extract.pixels({target:parent,resolution:2})
+  root.addChild(view.light);parent.destroy()
   return {day:day.pixels.reduce((sum,value,i)=>sum+(i%4===3?value:0),0),night:night.pixels.reduce((sum,value,i)=>sum+(i%4===3?value:0),0)}
  }),
  alphaCheck:()=>views.map(view=>{

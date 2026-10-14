@@ -10,10 +10,13 @@ Status: implemented and locally checked; deployment pending.
 
 `web/src/game/BuildingLighting.ts` uses the current Pixi renderer, its world
 positions, depth sorting and camera. Original atlas scale2 is accounted for;
-night atlas scale1. Registration aligns visible roof/wall bounds and their ground
+night atlas scale1. The night atlas is split into two textures no larger than1536px,
+compatible with older2048px GPU limits. Touch rendering is capped30FPS; desktop60FPS,
+without changing elapsed animation time or game timers. Registration aligns visible roof/wall bounds and their ground
 anchor for each pair, excluding new side lanterns for wood/stone piles. One mesh
 interpolates premultiplied RGBA; overlapping opaque walls remain opaque at dusk.
-Night art includes warm glow; the shader compensates the existing blue overlay
+The completed project ID `granary` maps to `great-granary` art; unknown future
+project types keep the original tiled renderer instead of failing. Night art includes warm glow; the shader compensates the existing blue overlay
 so lit windows are not darkened twice. Textures load together before creating the
 world, and views rebuilt by server updates inherit the current night amount.
 `darknessAt` already gives a continuous twilight curve across server day changes.

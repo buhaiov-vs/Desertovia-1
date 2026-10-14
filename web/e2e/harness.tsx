@@ -35,18 +35,19 @@ const originalCitizen=await fetch('/api/villages/demo-bridge/me').then(r=>r.json
 const citizen={...originalCitizen, load:[], state:'AwaitingRenewal', taskId:'hunt-hare',
  cycleStartedAt:new Date(Date.now()-60000).toISOString(),cycleEndsAt:new Date(Date.now()-1000).toISOString(),
  graceEndsAt:new Date(Date.now()+55000).toISOString()} as Citizen
+const uiNow=Date.now()
 function Controls(){
  const [stock,setStock]=useState(7),[taken,setTaken]=useState(0)
  return <I18nProvider>
   <div className="hud" style={{position:'relative',height:'auto'}}>
-   <BottomBar citizen={citizen} catalog={catalog} structures={result.state.structures} now={Date.now()}
+   <BottomBar citizen={citizen} catalog={catalog} structures={result.state.structures} now={uiNow}
     phone tsar={false} ruler hasResult pending={false} onMenu={()=>{}} onInventory={()=>{}} onShowResult={()=>{}}
     poll={{label:'Начать голосование',onClick:()=>{}}} onCancelTask={()=>{}} drinks={0} onDrink={()=>{}} remedies={0} onHeal={()=>{}} />
   </div>
   <StorageCard storage={{kind:'Heap',plotId:'0,0',damage:0,slots:[],goods:[{resource:'Food',amount:stock}]}} catalog={catalog}
    take={{citizen,disabled:false,onTake:(_,amount)=>setTaken(amount)}}/>
   <button id="stock-update" onClick={()=>setStock(stock+1)}>Refresh stock</button><output id="taken">{taken}</output>
-  <ChatPanel feed={[]} messages={[{id:'npc',authorName:'Отец Срамослав',citizenId:null,isTsar:false,isChaplain:true,text:'Держимся вместе, чада!',sentAt:new Date(Date.now()+1000).toISOString()}]}
+  <ChatPanel feed={[]} messages={[{id:'npc',authorName:'Отец Срамослав',citizenId:null,isTsar:false,isChaplain:true,text:'Держимся вместе, чада!',sentAt:new Date(uiNow+1000).toISOString()}]}
    member tsar ownCitizenId={null} serverOffsetMs={0} phone={false} onSend={async()=>{}} />
  </I18nProvider>
 }

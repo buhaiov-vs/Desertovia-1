@@ -3,8 +3,10 @@ import type { CSSProperties } from 'react'
 import { Assets, Rectangle, Spritesheet, Texture, type TextureSource } from 'pixi.js'
 import atlas from '../assets/sprites.json'
 import atlasUrl from '../assets/sprites.png'
-import nightAtlas from '../assets/night/buildings.json'
-import nightAtlasUrl from '../assets/night/buildings.png'
+import nightAtlasA from '../assets/night/buildings-a.json'
+import nightAtlasUrlA from '../assets/night/buildings-a.png'
+import nightAtlasB from '../assets/night/buildings-b.json'
+import nightAtlasUrlB from '../assets/night/buildings-b.png'
 
 export const TILE = 16
 
@@ -53,9 +55,9 @@ export class TileSet {
   private readonly sources: Record<SheetName, TextureSource>
   private readonly art: Spritesheet
   private readonly cache = new Map<string, Texture>()
-  private readonly night: Spritesheet
+  private readonly night: Record<string, Texture>
 
-  private constructor(sources: Record<SheetName, TextureSource>, art: Spritesheet, night: Spritesheet) {
+  private constructor(sources: Record<SheetName, TextureSource>, art: Spritesheet, night: Record<string, Texture>) {
     this.sources = sources
     this.art = art
     this.night = night
@@ -78,17 +80,21 @@ export class TileSet {
         return sheet
       })(),
       (async () => {
-        const texture = await Assets.load<Texture>(nightAtlasUrl)
-        texture.source.scaleMode = 'nearest'
-        const sheet = new Spritesheet(texture, nightAtlas)
-        await sheet.parse()
-        return sheet
+        // Both sheets fit even a 2048px texture limit on older phone GPUs.
+        const sheets = await Promise.all([[nightAtlasUrlA, nightAtlasA], [nightAtlasUrlB, nightAtlasB]].map(async ([url, data]) => {
+          const texture = await Assets.load<Texture>(url as string)
+          texture.source.scaleMode = 'nearest'
+          const sheet = new Spritesheet(texture, data as typeof nightAtlasA)
+          await sheet.parse()
+          return sheet.textures
+        }))
+        return Object.assign({}, ...sheets)
       })(),
     ])
     return new TileSet(Object.fromEntries(entries) as Record<SheetName, TextureSource>, art, night)
   }
 
-  nightBuilding(name: string): Texture { return this.night.textures[name] }
+  nightBuilding(name: string): Texture { return this.night[name] }
 
   get(tile: TileRef): Texture {
     if ('art' in tile) return this.art.textures[tile.art]

@@ -331,6 +331,8 @@ export class VillageWorld {
       autoDensity: true,
       resolution: Math.min(window.devicePixelRatio || 1, 2),
     })
+    // Keep touch devices cool; animation time and gameplay timers still use elapsed time.
+    app.ticker.maxFPS = window.matchMedia('(pointer: coarse)').matches ? 30 : 60
     host.appendChild(app.canvas)
     return new VillageWorld(app, tiles, painter, host, options.minimap ?? true)
   }
@@ -1338,7 +1340,10 @@ export class VillageWorld {
     for (const [id, site] of Object.entries(PROJECT_SITES)) {
       const tiles = PROJECT_BUILDINGS[id]
       if (completed.has(id)) {
-        add(this.preparedBuilding(id, site.x, site.y, tiles[0].length, tiles.length))
+        const spriteKind = id === 'granary' ? 'great-granary' : id
+        add(hasPreparedBuilding(spriteKind)
+          ? this.preparedBuilding(spriteKind, site.x, site.y, tiles[0].length, tiles.length)
+          : this.buildingView(tiles, site.x, site.y, id === 'bell-tower' ? 'gold' : undefined))
       } else if (project?.definitionId === id) {
         const fraction = project.phase === 'Construction' ? project.buildDone / project.buildRequired : 0
         const rows = Math.floor(fraction * tiles.length)

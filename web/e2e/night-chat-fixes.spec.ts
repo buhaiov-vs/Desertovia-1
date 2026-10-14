@@ -1,4 +1,4 @@
-import { test,expect,developmentLogin,expectVillageView,DEMO_SLUG,uniqueName } from './fixtures'
+import { test,expect,developmentLogin,expectVillageView,DEMO_SLUG,uniqueName } from './fixtures.ts'
 
 test.beforeEach(async({page})=>{
  await page.goto(`/v/${DEMO_SLUG}`)
@@ -46,4 +46,11 @@ test('chaplain lines are neither the tsar nor the own message',async({page})=>{
  if(await panel.locator('.chat-lines').count()===0) await panel.locator('.fold-head').click()
  const line=panel.locator('.chat-line.message');await expect(line).toContainText('Отец Срамослав')
  await expect(line).not.toHaveClass(/own/);await expect(line.locator('.tsar')).toHaveCount(0)
+})
+
+
+test('the real completed village renders finished projects and all building types',async({page})=>{
+ await page.goto('/v/demo-built')
+ await expectVillageView(page)
+ await expect(page.locator('.game-root')).toBeVisible()
 })

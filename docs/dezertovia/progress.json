@@ -236,7 +236,14 @@
     "browser_confirmation_isolated": true,
     "public_login_pending": true,
     "real_user_confirmation": "requires_user_telegram_action",
-    "upstream_e2e": "updating_stale_character_and_hud_expectations"
+    "upstream_e2e": {
+      "passed": 19,
+      "skipped": 1,
+      "ci_run": 38527480846,
+      "code_and_test_commit": "d76d08741ee9055e844bbb9acfdc49aa5374272b"
+    },
+    "shared_bot_and_housing_active": true,
+    "legacy_backup_exists": true
   },
   "deployed_sha": "6c8587e95ab7d4d2d401363fb4d152bbb4efcf8b",
   "launch_document": "TELEGRAM_LAUNCH.md"

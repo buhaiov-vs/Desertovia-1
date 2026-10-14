@@ -6,7 +6,8 @@
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
     "legacy_042": "21f831ae08a0dc10a8c3c11de2f4b048a326decf",
-    "legacy_043_unreleased": "6897f76c2d8fa0b6fbfb0ce7e26048d997e4a0e6"
+    "legacy_043_unreleased": "6897f76c2d8fa0b6fbfb0ce7e26048d997e4a0e6",
+    "latest_upstream_inspected": "e23bc943bac17e55d4d5a0b0805d07d53de02108"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -202,5 +203,7 @@
       "state": "paused",
       "checks": []
     }
-  ]
+  ],
+  "latest_upstream_merged": false,
+  "current_adaptation_list": "CURRENT_ADAPTATION_LIST.md"
 }

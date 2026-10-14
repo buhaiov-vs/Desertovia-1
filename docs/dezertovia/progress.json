@@ -190,12 +190,12 @@
     },
     {
       "id": "DZ-33",
-      "state": "future",
+      "state": "adapt_existing_dungeon_additional_ideas_future",
       "checks": []
     },
     {
       "id": "DZ-34",
-      "state": "excluded",
+      "state": "adapt_existing_features",
       "checks": []
     },
     {
@@ -205,5 +205,15 @@
     }
   ],
   "latest_upstream_merged": false,
-  "current_adaptation_list": "CURRENT_ADAPTATION_LIST.md"
+  "current_adaptation_list": "CURRENT_ADAPTATION_LIST.md",
+  "preserve_all_upstream_features": true,
+  "chat_modes": [
+    "hidden_with_toasts",
+    "quarter",
+    "fullscreen"
+  ],
+  "latest_decisions": [
+    "D-013",
+    "D-014"
+  ]
 }

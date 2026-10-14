@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-14",
-  "phase": "single_world_sramoslav",
+  "phase": "night_buildings_shared_chaplain_chat",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -222,7 +222,9 @@
     "D-014",
     "D-015",
     "D-016",
-    "D-017"
+    "D-017",
+    "D-018",
+    "D-019"
   ],
   "launch_checks": {
     "miniapp_unit_and_flow": 13,
@@ -247,7 +249,7 @@
     "shared_bot_and_housing_active": true,
     "legacy_backup_exists": true
   },
-  "deployed_sha": "a891b8a29b2bc96aaa0e51fa176fc2656f770596",
+  "deployed_sha": "daf47f4272a6ab92983fc6d7379928129a837991",
   "launch_document": "TELEGRAM_LAUNCH.md",
   "current_change": {
     "single_world": "released",
@@ -269,24 +271,38 @@
     }
   },
   "night_building_assets": {
-    "state": "integrated_locally_checked_deployment_pending",
+    "state": "released_verified",
     "decision": "D-019",
     "count": 26,
     "branch": "art/night-buildings",
     "gallery": "art/night-buildings/day-night-comparison.png",
     "validation": "art/night-buildings/validation.json",
-    "live_changed": false,
+    "live_changed": true,
     "alignment_required_before_crossfade": false
   },
   "night_building_chat_release": {
     "branch": "feat/night-buildings-chaplain-chat",
-    "state": "local_checks_passed_full_browser_and_ci_pending",
+    "state": "released_verified",
     "backend_tests": 474,
     "pairs": 26,
     "phone_fixes": [
       "full_width_task_text",
       "warehouse_quantity_draft"
     ],
-    "live_changed": false
+    "live_changed": true,
+    "deployed_sha": "daf47f4272a6ab92983fc6d7379928129a837991",
+    "ci_run": 38551953782,
+    "deployment_run": 38554195083,
+    "server_check_run": 38554378802,
+    "browser_tests": {
+      "passed": 37,
+      "skipped": 1
+    },
+    "fresh_database_backup": true,
+    "public_release_header_verified": true,
+    "public_auth_providers_verified": true,
+    "local_health": true,
+    "shared_bot_and_housing_active": true,
+    "stronger_campfire_style_lighting": true
   }
 }

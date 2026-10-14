@@ -1,3 +1,5 @@
+import constructionUrl from '../assets/construction/hut.png'
+import constructionFrames from '../assets/construction/hut.json'
 import { appPath } from '../paths'
 import type { CSSProperties } from 'react'
 import { Assets, Rectangle, Spritesheet, Texture, type TextureSource } from 'pixi.js'
@@ -56,15 +58,18 @@ export class TileSet {
   private readonly art: Spritesheet
   private readonly cache = new Map<string, Texture>()
   private readonly night: Record<string, Texture>
+  private readonly construction: Texture
+  private readonly constructionCache = new Map<string, Texture>()
 
-  private constructor(sources: Record<SheetName, TextureSource>, art: Spritesheet, night: Record<string, Texture>) {
+  private constructor(sources: Record<SheetName, TextureSource>, art: Spritesheet, night: Record<string, Texture>, construction: Texture) {
     this.sources = sources
     this.art = art
     this.night = night
+    this.construction = construction
   }
 
   static async load(): Promise<TileSet> {
-    const [entries, art, night] = await Promise.all([
+    const [entries, art, night, construction] = await Promise.all([
       Promise.all(
         (Object.keys(SHEETS) as SheetName[]).map(async (name) => {
           const texture = await Assets.load<Texture>(SHEETS[name].url)
@@ -90,8 +95,19 @@ export class TileSet {
         }))
         return Object.assign({}, ...sheets)
       })(),
+      Assets.load<Texture>(constructionUrl).then(texture => { texture.source.scaleMode = 'nearest'; return texture }),
     ])
-    return new TileSet(Object.fromEntries(entries) as Record<SheetName, TextureSource>, art, night)
+    return new TileSet(Object.fromEntries(entries) as Record<SheetName, TextureSource>, art, night, construction)
+  }
+
+  constructionFrame(name: keyof typeof constructionFrames): Texture {
+    let texture = this.constructionCache.get(name)
+    if (!texture) {
+      const f = constructionFrames[name].frame
+      texture = new Texture({source:this.construction.source,frame:new Rectangle(f.x,f.y,f.w,f.h)})
+      this.constructionCache.set(name,texture)
+    }
+    return texture
   }
 
   nightBuilding(name: string): Texture { return this.night[name] }

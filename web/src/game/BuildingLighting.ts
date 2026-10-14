@@ -74,8 +74,10 @@ export class BuildingLighting extends Container {
   private readonly glowShader: Shader
   /** Emission is rendered above map darkness, like the existing campfire light. */
   readonly light = new Container()
-  constructor(tiles: TileSet, kind: string, x: number, y: number, plotWidth = 3, plotHeight = 3) {
+  private readonly emitsLight: boolean
+  constructor(tiles: TileSet, kind: string, x: number, y: number, plotWidth = 3, plotHeight = 3, emitsLight = true) {
     super()
+    this.emitsLight = emitsLight
     const pair = registrations[kind as keyof typeof registrations]
     const [left, top, right, bottom] = pair.dayBounds
     const scale = Math.min(0.5, plotWidth*TILE/(right-left),plotHeight*TILE/(bottom-top))
@@ -117,7 +119,7 @@ export class BuildingLighting extends Container {
   setNight(amount: number) {
     const level = Math.max(0,Math.min(1,amount))
     this.shader.resources.lighting.uniforms.uNight=level
-    this.light.alpha=level
+    this.light.alpha=this.emitsLight ? level : 0
   }
   override destroy(options?: Parameters<Container['destroy']>[0]) {
     const geometry = this.mesh.geometry

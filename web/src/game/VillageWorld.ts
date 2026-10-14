@@ -1,3 +1,4 @@
+import { HutConstruction, siteVisualKey } from './HutConstruction'
 import { BuildingLighting, hasPreparedBuilding } from './BuildingLighting'
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
@@ -250,7 +251,7 @@ export class VillageWorld {
   private activeProjectId: string | null = null
   private lastBuildingKey = ''
   private buildingViews: Container[] = []
-  private readonly litBuildings = new Set<BuildingLighting>()
+  private readonly litBuildings = new Set<BuildingLighting | HutConstruction>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
   private buildingLabels: Array<{ text: Text; x: number; y: number }> = []
   private buildingName: ((kind: string, storage: boolean) => string) | null = null
@@ -922,7 +923,7 @@ export class VillageWorld {
       this.buildingDefinitions.size,
       village.storages.map((s) => [s.kind, s.plotId, s.damage, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
       village.structures.map((s) => [s.kind, s.plotId, s.damage]),
-      village.sites.map((s) => [s.kind, s.plotId, s.stage, Math.floor(s.progress * 24)]),
+      village.sites.map(siteVisualKey),
       village.fields.map((bed) => {
         const plant = cropTile(bed.crop ?? '', bed.growth, isRipe(bed))
         return [bed.plotId, bed.crop, plant && tileKey(plant), this.isWet(bed)]
@@ -1017,17 +1018,17 @@ export class VillageWorld {
   }
 
   /** A finished building in the 3×3 area of a plot. Storage kinds share names with their building kinds. */
-  private preparedBuilding(kind: string, x: number, y: number, width = 3, height = 3): BuildingLighting {
-    const view = new BuildingLighting(this.tiles, kind, x, y, width, height)
+  private preparedBuilding(kind: string, x: number, y: number, width = 3, height = 3, emitsLight = true): BuildingLighting {
+    const view = new BuildingLighting(this.tiles, kind, x, y, width, height, emitsLight)
     view.setNight(this.nightAmount)
     this.litBuildings.add(view)
-    this.buildingLights.addChild(view.light)
+    if (emitsLight) this.buildingLights.addChild(view.light)
     view.once('destroyed', () => this.litBuildings.delete(view))
     return view
   }
 
-  private finishedView(kind: string, x: number, y: number): Container {
-    if (hasPreparedBuilding(kind)) return this.preparedBuilding(kind, x, y)
+  private finishedView(kind: string, x: number, y: number, emitsLight = true): Container {
+    if (hasPreparedBuilding(kind)) return this.preparedBuilding(kind, x, y, 3, 3, emitsLight)
     const tiles = BUILDING_TILES[kind]
     if (tiles) return this.buildingView(tiles, x, y)
     const view = this.wildView(kind)
@@ -1131,18 +1132,26 @@ export class VillageWorld {
 
   /** Construction site: a faint blueprint, the building rising from the ground, corner pegs and the delivered material. */
   private siteView(site: Site, x: number, y: number): Container {
+    if (site.kind === 'Hut') {
+      const hut = new HutConstruction(this.tiles,site,this.buildingDefinitions.get(site.kind),x,y)
+      hut.setNight(this.nightAmount)
+      this.litBuildings.add(hut)
+      this.buildingLights.addChild(hut.light)
+      hut.once('destroyed',()=>this.litBuildings.delete(hut))
+      return hut
+    }
     const view = new Container()
     view.position.set(x * TILE, y * TILE)
     view.zIndex = groundLevel(site.kind, y)
 
     view.addChild(new Graphics().rect(0, 0, PLOT_WIDTH * TILE, 3 * TILE).fill({ color: 0x7a5a32, alpha: 0.35 }))
-    const ghost = this.finishedView(site.kind, 0, 0)
+    const ghost = this.finishedView(site.kind, 0, 0, false)
     ghost.alpha = 0.22
     view.addChild(ghost)
 
     const fraction = Math.min(1, site.progress)
     if (fraction > 0) {
-      const rising = this.finishedView(site.kind, 0, 0)
+      const rising = this.finishedView(site.kind, 0, 0, false)
       const height = 3 * TILE * fraction
       const mask = new Graphics().rect(-TILE, 3 * TILE - height, (PLOT_WIDTH + 2) * TILE, height + 2).fill({ color: 0xffffff })
       rising.mask = mask

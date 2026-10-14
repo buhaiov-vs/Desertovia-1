@@ -139,3 +139,9 @@ D-017: по новому уточнению вход по почте полно�
 с сохранением особенностей открытых объектов и общих проектов. Это поручение
 на документацию, не выполненная интеграция. Время/стоимость работ и серверные
 стадии сохраняются. Подробности и проверки: [CONSTRUCTION_VISUAL_PLAN.md](CONSTRUCTION_VISUAL_PLAN.md).
+
+
+D-020 implementation authorization: owner subsequently said «Делай». Implement
+the hut pilot first, preserving server rules and prepared final art. Shared light
+and delivery-refresh fixes apply to the construction renderer; further type-specific
+art remains the next stage of the documented rollout. Record verification before release.

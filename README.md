@@ -2,6 +2,13 @@
 
 Audience village game for streamers. Game rules: [docs/game-design.md](docs/game-design.md). Progress and plans: [docs/roadmap.md](docs/roadmap.md).
 
+## Дезертовия: технический план адаптации
+
+Инженерия этого проекта сохраняется как основа нашей версии. Карта правил,
+сопоставление модулей, решения владельца, предложения зрителей и план переноса:
+[docs/dezertovia/README.md](docs/dezertovia/README.md).
+Сейчас подготовлены документы; игровой код не изменён.
+
 ## Structure
 
 | Path | Content |

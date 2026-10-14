@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-10-14",
+  "phase": "documentation",
+  "architecture": "adapt_existing_dotnet_react_pixi",
+  "source_commits": {
+    "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
+    "legacy_042": "21f831ae08a0dc10a8c3c11de2f4b048a326decf",
+    "legacy_043_unreleased": "6897f76c2d8fa0b6fbfb0ce7e26048d997e4a0e6"
+  },
+  "source_repository": "buhaiov-vs/Desertovia",
+  "release_repository": "desertod666/Desertovia",
+  "viewer_snapshot": {
+    "checked_on": "2026-10-13",
+    "record_count": 47,
+    "duplicates": [
+      [
+        44,
+        45
+      ]
+    ],
+    "raw_records_stored": false
+  },
+  "documentation": "completed",
+  "game_code_changed": false,
+  "runtime_tests_on_new_base": false,
+  "deployed": false,
+  "live_checked_on_recorded_date": false,
+  "features": [
+    {
+      "id": "DZ-01",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-02",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-03",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-04",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-05",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-06",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-07",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-08",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-09",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-10",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-11",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-12",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-13",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-14",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-15",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-16",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-17",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-18",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-19",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-20",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-21",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-22",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-23",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-24",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-25",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-26",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-27",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-28",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-29",
+      "state": "not_started",
+      "checks": []
+    },
+    {
+      "id": "DZ-30",
+      "state": "future",
+      "checks": []
+    },
+    {
+      "id": "DZ-31",
+      "state": "future",
+      "checks": []
+    },
+    {
+      "id": "DZ-32",
+      "state": "future",
+      "checks": []
+    },
+    {
+      "id": "DZ-33",
+      "state": "future",
+      "checks": []
+    },
+    {
+      "id": "DZ-34",
+      "state": "excluded",
+      "checks": []
+    },
+    {
+      "id": "DZ-35",
+      "state": "paused",
+      "checks": []
+    }
+  ]
+}

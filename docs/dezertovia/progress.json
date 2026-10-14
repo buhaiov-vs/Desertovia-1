@@ -221,7 +221,8 @@
     "D-013",
     "D-014",
     "D-015",
-    "D-016"
+    "D-016",
+    "D-017"
   ],
   "launch_checks": {
     "miniapp_unit_and_flow": 13,
@@ -236,7 +237,7 @@
     "production_browser_pc_phone": true,
     "browser_confirmation_isolated": true,
     "public_login_pending": true,
-    "real_user_confirmation": "requires_user_telegram_action",
+    "real_user_confirmation": "confirmed_by_user_screenshots",
     "upstream_e2e": {
       "passed": 19,
       "skipped": 1,
@@ -246,7 +247,7 @@
     "shared_bot_and_housing_active": true,
     "legacy_backup_exists": true
   },
-  "deployed_sha": "94b8b97cfa349dcba9d63c34118e382286244bf8",
+  "deployed_sha": "a891b8a29b2bc96aaa0e51fa176fc2656f770596",
   "launch_document": "TELEGRAM_LAUNCH.md",
   "current_change": {
     "single_world": "released",
@@ -255,6 +256,16 @@
     "real_ai_connection_verified": true,
     "server_tests": 467,
     "proxy_tests": 5,
-    "verification_document": "SINGLE_WORLD_SRAMOSLAV.md"
+    "verification_document": "SINGLE_WORLD_SRAMOSLAV.md",
+    "email_login": "disabled_server_and_ui",
+    "phone_buttons": "released_dynamic_role_grid",
+    "password_endpoints_public_verified": true,
+    "ci_run": 38532263883,
+    "browser_tests": {
+      "passed": 25,
+      "skipped": 1,
+      "phone_buttons_on_screen": true,
+      "ci_run": 38532263883
+    }
   }
 }

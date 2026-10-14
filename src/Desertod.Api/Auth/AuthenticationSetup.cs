@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Desertod.Api.Auth;
 
-public sealed record LoginProviders(bool Twitch, bool Google, string? TelegramBotUsername, bool Password, bool DevelopmentLogin, bool TelegramBrowserLogin = false);
+public sealed record LoginProviders(bool Twitch, bool Google, string? TelegramBotUsername, bool Password, bool DevelopmentLogin, bool TelegramBrowserLogin = false, string? PrimaryVillage = null);
 
 public static class AuthenticationSetup
 {
@@ -44,7 +44,7 @@ public static class AuthenticationSetup
             telegramOptions.IsConfigured ? telegramOptions.BotUsername : null,
             passwordOptions.Enabled,
             environment.IsDevelopment(),
-            telegramOptions.IsConfigured && Uri.TryCreate(telegramOptions.BrowserBridgeUrl, UriKind.Absolute, out var bridge) && bridge.IsLoopback && bridge.Scheme == "http"));
+            telegramOptions.IsConfigured && Uri.TryCreate(telegramOptions.BrowserBridgeUrl, UriKind.Absolute, out var bridge) && bridge.IsLoopback && bridge.Scheme == "http", configuration["Hosting:PrimaryVillage"]));
 
         services.AddRateLimiter(options =>
         {

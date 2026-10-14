@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-14",
-  "phase": "telegram_launch",
+  "phase": "single_world_sramoslav",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -220,7 +220,8 @@
   "latest_decisions": [
     "D-013",
     "D-014",
-    "D-015"
+    "D-015",
+    "D-016"
   ],
   "launch_checks": {
     "miniapp_unit_and_flow": 13,
@@ -245,6 +246,15 @@
     "shared_bot_and_housing_active": true,
     "legacy_backup_exists": true
   },
-  "deployed_sha": "6c8587e95ab7d4d2d401363fb4d152bbb4efcf8b",
-  "launch_document": "TELEGRAM_LAUNCH.md"
+  "deployed_sha": "94b8b97cfa349dcba9d63c34118e382286244bf8",
+  "launch_document": "TELEGRAM_LAUNCH.md",
+  "current_change": {
+    "single_world": "released",
+    "login_cleanup": "released",
+    "sramoslav_ai": "released",
+    "real_ai_connection_verified": true,
+    "server_tests": 467,
+    "proxy_tests": 5,
+    "verification_document": "SINGLE_WORLD_SRAMOSLAV.md"
+  }
 }

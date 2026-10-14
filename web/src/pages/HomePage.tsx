@@ -18,10 +18,12 @@ export function HomePage() {
   const applyAccount = useCallback(async (account: Me | null) => {
     setMe(account)
     if (!account) return
+    const providers = await api.providers()
+    if (providers.primaryVillage) { navigate(`/v/${providers.primaryVillage}`, { replace: true }); return }
     const [mine, open] = await Promise.all([api.villages(), api.publicVillages()])
     setVillages(mine)
     setOpenVillages(open)
-  }, [])
+  }, [navigate])
   const load = useCallback(async () => applyAccount(await api.me()), [applyAccount])
 
   useEffect(() => {

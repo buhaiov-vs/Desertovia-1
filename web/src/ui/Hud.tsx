@@ -168,7 +168,7 @@ export function BottomBar({
           )}
         </div>
       </div>
-      <div className="hud-buttons">
+      <div className="hud-buttons" style={{ '--hud-button-count': tsar ? 4 : ruler ? 3 : 5 } as CSSProperties}>
         {phone ? (
           // Settings stay reachable from the tab row inside the menu, keeping the phone bar short.
           tabsFor(tsar, ruler).filter((tab) => tab !== 'settings').map((tab) => (

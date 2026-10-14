@@ -18,7 +18,6 @@ import {
   PLOT_HEIGHT,
   PLOT_WIDTH,
   PRIEST_SPOT,
-  PRIEST_SPRITE,
   PROJECT_BUILDINGS,
   PROJECT_SITES,
   RESOURCE_ICONS,
@@ -299,7 +298,7 @@ export class VillageWorld {
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
-    this.addWalker(PRIEST_ID, '', this.tiles.get(dungeon(PRIEST_SPRITE)), PRIEST_SPOT.x * TILE, PRIEST_SPOT.y * TILE)
+    this.addWalker(PRIEST_ID, '', this.lookTexture(PRIEST_ID, { gender: 'Male', style: 4, skinTone: 0, hairColor: 1, outfitColor: 8 }), PRIEST_SPOT.x * TILE, PRIEST_SPOT.y * TILE)
 
     if (minimap) {
       this.minimap = new Minimap(host, (x, y) => {
@@ -621,7 +620,7 @@ export class VillageWorld {
     const padding = 4
     let found: Walker | null = null
     for (const walker of this.walkers.values()) {
-      if (walker.id === PRIEST_ID || walker.id === TSAR_ID) continue
+      if (walker.id === TSAR_ID) continue
       const hit = [walker.sprite, walker.label, walker.subtitle].some((view) => {
         if (!view.visible) return false
         const bounds = view.getBounds()

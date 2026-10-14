@@ -94,6 +94,7 @@ export const OUTFIT_COLORS: ([string, string, string] | null)[] = [
   ['e0a070', 'bd6c4a', '763b36'],
   ['c0cbdc', '8b9bb4', '52607c'],
   ['fbe08a', 'e0b040', 'a07a2a'],
+  ['51474d', '29232a', '15121a'],
 ]
 
 export const GENDERS: Gender[] = ['Male', 'Female']

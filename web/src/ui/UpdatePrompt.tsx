@@ -1,7 +1,7 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useI18n } from '../i18n'
 
-const CHECK_INTERVAL_MS = 60 * 60 * 1000
+const CHECK_INTERVAL_MS = 60 * 1000
 
 /** Offers the new version once the service worker has downloaded it; the player picks the moment to reload. */
 export function UpdatePrompt() {
@@ -12,7 +12,10 @@ export function UpdatePrompt() {
   } = useRegisterSW({
     // An installed game can stay open for days, so it looks for a new version on its own.
     onRegisteredSW(_url, registration) {
-      if (registration) setInterval(() => void registration.update(), CHECK_INTERVAL_MS)
+      if (registration) {
+        setInterval(() => { if (!document.hidden) void registration.update() }, CHECK_INTERVAL_MS)
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) void registration.update() })
+      }
     },
   })
 

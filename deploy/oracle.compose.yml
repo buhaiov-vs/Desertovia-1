@@ -34,7 +34,9 @@ services:
       DataProtection__Key: ${DATA_PROTECTION_KEY:?required}
       Hosting__ReleaseSha: ${RELEASE_SHA}
       Hosting__PathBase: /dezertovia
+      Hosting__PrimaryVillage: dezertovia
       Hosting__InitialTelegramOwner: ${TELEGRAM_OWNER_ID:?required}
+      Authentication__Password__Enabled: "false"
       Authentication__Telegram__BotUsername: ${TELEGRAM_BOT_USERNAME:?required}
       Authentication__Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:?required}
       Authentication__Telegram__BrowserBridgeUrl: http://127.0.0.1:8686/dezertovia/auth-bridge

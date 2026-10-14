@@ -192,8 +192,8 @@ export function LoginPanel({ onLoggedIn, title = 'login.title' }: { onLoggedIn: 
               try { setBrowserLogin({ ...(await api.telegramBrowserStart()), expires: Date.now() + 300000 }) }
               catch (exception: unknown) { setError(i18n.error(exception)) }
               finally { setTelegramPending(false) }
-            }}>{t('login.telegram')}</button>
-            {browserLogin && <p><strong>{browserLogin.pin}</strong> · <a className="button" href={browserLogin.url} target="_blank" rel="noopener noreferrer">{t('login.telegramConfirm')}</a></p>}
+            }}>{t(browserLogin ? 'login.telegramRestart' : 'login.telegram')}</button>
+            {browserLogin && <div className="telegram-confirm"><p>{t('login.telegramInstructions')}</p><strong>{t('login.telegramCode')}: {browserLogin.pin}</strong><p><a className="button primary" href={browserLogin.url} target="_blank" rel="noopener noreferrer">{t('login.telegramConfirm')}</a></p><span className="muted small">{t('login.telegramReturn')}</span></div>}
           </div>
         )}
         {providers.twitch && (
@@ -206,12 +206,12 @@ export function LoginPanel({ onLoggedIn, title = 'login.title' }: { onLoggedIn: 
             {t('login.google')}
           </a>
         )}
-        {providers.telegramBotUsername && (
+        {providers.telegramBotUsername && !providers.telegramBrowserLogin && (
           <details><summary>{t('login.telegramWidget')}</summary><TelegramLoginButton botUsername={providers.telegramBotUsername} returnUrl={returnUrl} language={i18n.language} /></details>
         )}
       </div>
 
-      {providers.password && <PasswordForm onLoggedIn={onLoggedIn} />}
+      {providers.password && (providers.telegramBrowserLogin ? <details><summary>{t('login.other')}</summary><PasswordForm onLoggedIn={onLoggedIn} /></details> : <PasswordForm onLoggedIn={onLoggedIn} />)}
 
       {providers.developmentLogin && (
         <form

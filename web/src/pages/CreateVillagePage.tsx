@@ -24,8 +24,11 @@ export function CreateVillagePage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api.me().then(setMe)
-  }, [])
+    api.providers().then(providers => {
+      if (providers.primaryVillage) navigate(`/v/${providers.primaryVillage}`, { replace: true })
+      else api.me().then(setMe)
+    })
+  }, [navigate])
 
   if (me === undefined) return <div className="splash">{t('loading')}</div>
 

@@ -16,7 +16,7 @@ public sealed class TelegramBrowserBridge(HttpClient client, IOptions<TelegramOp
 
     public async Task<T> CallAsync<T>(string action, object body, CancellationToken cancellationToken)
     {
-        if (!Enabled || action is not ("start" or "poll")) throw new InvalidOperationException("Browser login is unavailable.");
+        if (!Enabled || action is not ("start" or "poll" or "speak")) throw new InvalidOperationException("Browser login is unavailable.");
         using var request = new HttpRequestMessage(HttpMethod.Post, options.Value.BrowserBridgeUrl!.TrimEnd('/') + "/" + action);
         request.Headers.Add("X-Desertovia-Bridge", Convert.ToHexStringLower(SHA256.HashData(
             Encoding.UTF8.GetBytes("desertovia-bridge:" + options.Value.BotToken))));

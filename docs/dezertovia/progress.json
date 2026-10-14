@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-14",
-  "phase": "release_0_5_chat_modes",
+  "phase": "release_0_5_1_chat_launcher_fix",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -251,7 +251,7 @@
     "shared_bot_and_housing_active": true,
     "legacy_backup_exists": true
   },
-  "deployed_sha": "f0c48ad909a7e05a1d65505d8c2cce4069333ce0",
+  "deployed_sha": "ad88be344908a7fb42bc434ce89aad94c92d1665",
   "launch_document": "TELEGRAM_LAUNCH.md",
   "current_change": {
     "single_world": "released",
@@ -373,16 +373,30 @@
     "public_release_header_verified": true,
     "public_bundle_version_verified": true
   },
-  "release_version": "0.5",
+  "release_version": "0.5.1",
   "chat_launcher_fix": {
     "decision": "D-022",
     "target_version": "0.5.1",
-    "state": "locally_verified_pending_ci_and_deployment",
+    "state": "released_verified",
     "checks": [
       "production frontend build",
       "lint completed with existing warnings",
       "12 focused chat regressions passed on desktop and phone",
       "real GamePage chat/Village/settings checks passed on desktop and phone"
-    ]
+    ],
+    "release_version": "0.5.1",
+    "deployed_sha": "ad88be344908a7fb42bc434ce89aad94c92d1665",
+    "ci_run": 38571676265,
+    "backend_tests": 474,
+    "browser_tests": {
+      "passed": 55,
+      "skipped": 1
+    },
+    "deployment_run": 38573019933,
+    "server_check_run": 38573303603,
+    "fresh_database_backup": true,
+    "public_release_header_verified": true,
+    "public_bundle_version_verified": true,
+    "public_providers_verified": true
   }
 }

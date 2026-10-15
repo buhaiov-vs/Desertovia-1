@@ -1,14 +1,15 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-15",
-  "phase": "release_0_5_3_regressions_verified",
+  "phase": "release_0_6_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
     "legacy_042": "21f831ae08a0dc10a8c3c11de2f4b048a326decf",
     "legacy_043_unreleased": "6897f76c2d8fa0b6fbfb0ce7e26048d997e4a0e6",
     "latest_upstream_inspected": "e23bc943bac17e55d4d5a0b0805d07d53de02108",
-    "release_0_5_3": "a980d8daeb2d3ff10609df7894444d57c8992c74"
+    "release_0_5_3": "a980d8daeb2d3ff10609df7894444d57c8992c74",
+    "release_0_6": "143bf9ad569d2bc01d43356c8fc21467c59e544a"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -702,15 +703,16 @@
   },
   "next_work": {
     "D-051": {
-      "state": "planned",
+      "state": "released_verified_0_6",
       "document": "ALMIGHTY_DIRECTOR_PLAN.md",
       "automatic_events_enabled": false,
       "ai_architecture": "single_director_shared_memory_multiple_responsibilities",
       "clarification": "D-054",
-      "implementation_plan": "ALMIGHTY_IMPLEMENTATION_PLAN.md"
+      "implementation_plan": "ALMIGHTY_IMPLEMENTATION_PLAN.md",
+      "deployment": "completed_by_D-061"
     },
     "D-052": {
-      "state": "verified_branch_not_deployed",
+      "state": "released_verified_0_6",
       "branch": "feat/almighty-patchnotes",
       "deployed": false,
       "versions": [
@@ -724,10 +726,11 @@
         "production TypeScript/Vite/PWA build: passed",
         "Playwright targeted history RU/EN: 2 passed;320px and1440px;light/dark;open/archive/back/focus",
         "git diff --check and AGENTS/CLAUDE parity: passed"
-      ]
+      ],
+      "deployment": "completed_by_D-061"
     },
     "D-053": {
-      "state": "verified_branch_not_deployed",
+      "state": "released_verified_0_6",
       "document": "RAID_MEDICAL_FIXES.md",
       "backend_changed": false,
       "recovery_time_scale": "real",
@@ -735,7 +738,8 @@
         "TypeScript/Vite/PWA production build passed",
         "lint exit0, existing warnings",
         "5 targeted Playwright passed: notes RU/EN, real EnemyLayer timing, recovery format,320px hospital"
-      ]
+      ],
+      "deployment": "completed_by_D-061"
     },
     "D-055": {
       "state": "plan_saved",
@@ -745,20 +749,21 @@
       "recommended_first_scope": "steps0-8 observe/propose; tactical commander and new event scenarios later"
     },
     "D-056": {
-      "state": "implementation_final_checks",
+      "state": "released_verified_0_6",
       "version": "0.6",
       "mode": "Propose",
       "enabled_requested": true,
       "owner_telegram_proposals_authorized": true,
       "record": "ALMIGHTY_0_6_IMPLEMENTATION.md",
-      "deployment": "paused_by_D-058"
+      "deployment": "completed_by_D-061"
     },
     "D-057": {
-      "state": "implemented_pending_final_checks",
-      "record": "ALMIGHTY_CATALOG_EXTENSIONS.md"
+      "state": "released_verified_0_6",
+      "record": "ALMIGHTY_CATALOG_EXTENSIONS.md",
+      "deployment": "completed_by_D-061"
     },
     "D-058": {
-      "state": "no_deployment",
+      "state": "superseded_by_D-061",
       "game_pr": 33,
       "bot_pr": 35,
       "live_unchanged": true
@@ -771,7 +776,7 @@
       "deployment": "paused_by_D-058"
     },
     "D-060": {
-      "state": "implemented_final_head_ci_required",
+      "state": "released_verified_0_6",
       "branch": "feat/kingdom-economy",
       "base_commit": "e7fbe91b28c676df400444a40cb5fee3765413f9",
       "record": "TODO_IMPLEMENTATION_0_6.md",
@@ -781,7 +786,7 @@
       "local_domain_targeted_passed": 11,
       "local_browser_passed": 9,
       "migration": "20261015164112_KingdomEconomy",
-      "deployment": "paused_by_D-058",
+      "deployment": "completed_by_D-061",
       "bot_runtime_changed": false,
       "game_pr": 34,
       "primary_package_ci": {
@@ -799,7 +804,7 @@
       "final_corrections": "market reserve included in material ledger; privacy test isolated from shared public top-50 limit"
     },
     "D-061": {
-      "state": "implementation_checked_release_preparing",
+      "state": "released_verified_0_6",
       "energy_full_regeneration_real_hours": 12,
       "post_faint_bonus": false,
       "construction_speed_changed": false,
@@ -807,7 +812,37 @@
       "supersedes": "D-058",
       "private_operator_branch": "ops/almighty-release",
       "preflight_run": 38781978374,
-      "profiles_preflight": 107
+      "profiles_preflight": 107,
+      "deployment": "completed_by_D-061"
+    },
+    "D-062": {
+      "state": "released_verified",
+      "record": "RELEASE_0_6.md"
     }
+  },
+  "live_release_0_6": {
+    "state": "released_verified",
+    "game_source": "143bf9ad569d2bc01d43356c8fc21467c59e544a",
+    "bot_source": "9a9c8c27233244a9e0e9a709e4a2ff1f12ad0374",
+    "game_ci": 38784399850,
+    "bot_ci": 38764753428,
+    "install_run": 38785792763,
+    "independent_check_run": 38786456457,
+    "domain_passed": 346,
+    "api_passed": 196,
+    "browser_passed": 91,
+    "browser_skipped": 1,
+    "profiles_before": 110,
+    "profiles_after": 110,
+    "lost_profiles_or_progress": 0,
+    "migrations": 19,
+    "director_enabled": true,
+    "director_mode": "Propose",
+    "first_review_completed": true,
+    "energy_full_regeneration_real_hours": 12,
+    "post_faint_bonus": false,
+    "real_candle_changes": false,
+    "synthetic_messages": 0,
+    "record": "RELEASE_0_6.md"
   }
 }

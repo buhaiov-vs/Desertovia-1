@@ -2485,3 +2485,8 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 .stats .stat-progress { display: table-cell; vertical-align: middle; }
 .stat-progress .bar { display: inline-block; width: 40%; min-width: 24px; vertical-align: middle; margin-right: .4rem; }
 .stat-progress > span { display: inline; white-space: normal; font-variant-numeric: tabular-nums; }
+/* Column flex must not collapse the personal energy bar to its border. */
+.character-summary .bar { flex: none; height: 10px; }
+:root[data-ui-theme="dark"] .modal-body > .next-action {
+  background: #242c29; color: #e9dfca; border-color: #745638;
+}

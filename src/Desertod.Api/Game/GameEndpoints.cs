@@ -22,6 +22,12 @@ public static class GameEndpoints
         player.MapPut("/villages/{slug}/me/defense", async (string slug, AlmightyMode request, ClaimsPrincipal user, GameService game, CancellationToken ct) => {
             await game.SetDefenseSectorAsync(slug, user.RequireAccountId(), request.Mode, ct); return Results.Ok();
         });
+        player.MapPut("/villages/{slug}/battles/{id:guid}/order", async (string slug, Guid id, BattleOrder request, ClaimsPrincipal user, GameService game, CancellationToken ct) => {
+            await game.SetBattleOrderAsync(slug,user.RequireAccountId(),id,request,ct); return Results.Ok();
+        });
+        player.MapPut("/villages/{slug}/gate", async (string slug, GateOrder request, ClaimsPrincipal user, GameService game, CancellationToken ct) => {
+            await game.SetGateAsync(slug,user.RequireAccountId(),request,ct); return Results.Ok();
+        });
         player.MapGet("/villages/{slug}/director", (string slug, ClaimsPrincipal user, GameService game, AlmightyService director, CancellationToken ct) =>
             game.GetAlmightyAsync(slug, user.RequireAccountId(), director.Enabled, ct));
         player.MapPut("/villages/{slug}/director/mode", async (string slug, AlmightyMode request, ClaimsPrincipal user, GameService game, CancellationToken ct) => {

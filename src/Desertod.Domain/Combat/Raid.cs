@@ -30,6 +30,7 @@ public enum RaidSize
 public sealed class Raid
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
+    public int EngineVersion { get; set; }
     public RaidSource Source { get; set; }
     public EnemyKind Enemy { get; set; }
     public int Count { get; set; }

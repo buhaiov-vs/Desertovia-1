@@ -744,7 +744,8 @@ public sealed partial class GameService(
             }
 
             var now = time.GetUtcNow();
-            RaidRules.CallUndead(village, request.Enemy, request.Size, await CountRecentCitizensAsync(db, village.Id, now, cancellationToken), now);
+            var announced = RaidRules.CallUndead(village, request.Enemy, request.Size, await CountRecentCitizensAsync(db, village.Id, now, cancellationToken), now);
+            foreach(var raid in announced) await PrepareBattleAsync(db,village,raid,now,cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             logger.TsarActed(slug, "callUndead", $"{request.Size} {request.Enemy}");
 
@@ -779,6 +780,7 @@ public sealed partial class GameService(
             var now = time.GetUtcNow();
             var resting = await db.AlmightyStates.AnyAsync(s => s.VillageId == villageId && s.Mode != "Off" && s.RestUntil > now, cancellationToken);
             var planned = resting ? null : RaidRules.PlanNight(village, await CountRecentCitizensAsync(db, villageId, now, cancellationToken), Random.Shared, now);
+            if(planned is not null) await PrepareBattleAsync(db,village,planned,now,cancellationToken);
             var raids = await FightDueRaidsAsync(db, village, null, now, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             if (planned is not null)
@@ -787,7 +789,7 @@ public sealed partial class GameService(
             }
 
             await BroadcastRaidsAsync(village, raids, now);
-            if (planned is not null || raids.Reports.Count > 0)
+            if (planned is not null || raids.Reports.Count > 0 || raids.Changed)
             {
                 changes.Mark(villageId);
             }
@@ -803,7 +805,7 @@ public sealed partial class GameService(
     }
 
     /// <param name="Citizens">Defenders and wounded, to send their new state.</param>
-    private sealed record RaidsFought(IReadOnlyList<RaidReport> Reports, IReadOnlyList<Citizen> Citizens);
+    private sealed record RaidsFought(IReadOnlyList<RaidReport> Reports, IReadOnlyList<Citizen> Citizens, bool Changed = false);
 
     /// <summary>
     /// Fights the raids that struck by now, before anything else changes the citizens: who was on watch at the moment of
@@ -829,11 +831,21 @@ public sealed partial class GameService(
             .Select(p => p.DefinitionId)
             .ToListAsync(cancellationToken);
         var citizens = await db.Citizens.Where(c => c.VillageId == village.Id).ToListAsync(cancellationToken);
-        var reports = due.Select(raid => RaidRules.Resolve(village, raid, citizens, completedProjects, Random.Shared, now)).ToList();
-        var affected = reports
-            .SelectMany(r => r.Defenders.Select(d => d.CitizenId).Concat(r.Victims.Select(v => v.CitizenId)))
-            .ToHashSet();
-        return new RaidsFought(reports, citizens.Where(c => affected.Contains(c.Id)).ToList());
+        var reports = new List<RaidReport>();
+        var changed = false;
+        foreach(var raid in due)
+        {
+            if(raid.EngineVersion < 2) { reports.Add(RaidRules.Resolve(village,raid,citizens,completedProjects,Random.Shared,now)); continue; }
+            var battle = await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==raid.Id,cancellationToken)
+                ?? throw new InvalidOperationException("Live raid has no persisted battle.");
+            changed |= RaidSimulation.Tick(village,raid,battle,citizens,
+                citizens.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now);
+            if(battle.FinishedAt is not null)
+                reports.Add(BattleReport(raid,battle,citizens));
+        }
+        if(changed)changes.Mark(village.Id);
+        return new RaidsFought(reports,citizens.Where(c=>reports.Any(r=>r.Defenders.Any(d=>d.CitizenId==c.Id)||r.Victims.Any(v=>v.CitizenId==c.Id))
+            || changed && (CombatRules.IsInjured(c,now)||due.Any(r=>r.EngineVersion>=2))).ToArray(),changed);
     }
 
     private async Task BroadcastRaidsAsync(Village village, RaidsFought raids, DateTimeOffset now)
@@ -1281,6 +1293,8 @@ public sealed partial class GameService(
 
         return village.ToStateDto(context.Work, context.CompletedInOrder, electorate, quests, tsar, trips, dungeon, now) with
         {
+            Battles = await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==village.Id && (b.FinishedAt==null || b.FinishedAt>=now.AddSeconds(-15))).OrderBy(b=>b.StartsAt).ToListAsync(cancellationToken),
+            Fortifications = village.Fortifications,
             KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),
             CivicOrders = village.CivicOrders,
             Housing = village.Structures.Where(s => ShelterRules.Beds(s) > 0).Select(s => new HousingDto(s.PlotId, ShelterRules.Beds(s),

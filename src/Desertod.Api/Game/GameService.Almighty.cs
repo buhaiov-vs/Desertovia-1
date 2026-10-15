@@ -229,10 +229,9 @@ public sealed partial class GameService
                         publishedSlug = village.Slug;
                         p.Result = $"Взвар: +{village.VigorEnergy} сил, перерыв {village.VigorCooldownMinutes} реальных минут.";
                     } else if (allowed?.Enemy is { } enemy) {
-                        RaidRules.CallUndead(village, enemy, RaidSize.Small,
+                        var announced = RaidRules.CallUndead(village, enemy, RaidSize.Small,
                             await CountRecentCitizensAsync(db, villageId, now, ct), now);
-                        if (approach is not null)
-                            foreach (var raid in village.Raids.Where(r => r.IsPending && r.AnnouncedAt == now)) { raid.EntrySector = approach.Sector; raid.ApproachPath = approach.Path.Select(point => new RaidWaypoint { X = point.X, Y = point.Y }).ToList(); }
+                        foreach(var raid in announced) await PrepareBattleAsync(db,village,raid,now,ct,approach?.Sector);
                         p.Result = "Нападение объявлено. Враги придут через 3 реальные минуты.";
                     } else if (p.Option == "dungeon") {
                         var definition = DungeonCatalog.Dungeons.First();

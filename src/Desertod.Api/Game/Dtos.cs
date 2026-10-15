@@ -184,6 +184,8 @@ public sealed record VillageStateDto(
     public IReadOnlyList<CivicOrder> CivicOrders { get; init; } = [];
     public IReadOnlyList<HousingDto> Housing { get; init; } = [];
     public bool BridgeOpened { get; init; }
+    public IReadOnlyList<Fortification> Fortifications { get; init; } = [];
+    public IReadOnlyList<RaidBattle> Battles { get; init; } = [];
 }
 public sealed record HousingDto(string PlotId, int Beds, int Occupied, int Level);
 
@@ -687,7 +689,7 @@ public static class DtoMapper
         citizen.CycleStartedAt,
         citizen.CycleEndsAt,
         citizen.GraceEndsAt,
-        citizen.CycleTired,
+        citizen.CycleTired && !citizen.CycleSettled,
         citizen.Load.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
         citizen.ShelterQuality,
         citizen.IsHungry,

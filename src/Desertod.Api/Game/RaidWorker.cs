@@ -5,7 +5,7 @@ namespace Desertod.Api.Game;
 /// </summary>
 public sealed class RaidWorker(GameService game, TimeProvider time, ILogger<RaidWorker> logger) : BackgroundService
 {
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(1);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

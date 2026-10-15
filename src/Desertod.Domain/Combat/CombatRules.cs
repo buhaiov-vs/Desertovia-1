@@ -249,7 +249,8 @@ public static class CombatRules
 
     /// <summary>Every finished building: plot and damage.</summary>
     public static IEnumerable<(string PlotId, int Damage)> Buildings(Village village) =>
-        village.Structures.Select(s => (s.PlotId, s.Damage)).Concat(village.Storages.Select(s => (s.PlotId, s.Damage)));
+        village.Structures.Select(s => (s.PlotId, s.Damage)).Concat(village.Storages.Select(s => (s.PlotId, s.Damage)))
+            .Concat(village.Fortifications.Select(f => (f.Id, f.Damage)));
 
     /// <summary>The building most in need of repair, or null when none is damaged.</summary>
     public static string? MostDamaged(Village village) =>
@@ -281,10 +282,12 @@ public static class CombatRules
     public static int DamageOf(Village village, string plotId) =>
         village.Structures.FirstOrDefault(s => s.PlotId == plotId)?.Damage
         ?? village.Storages.FirstOrDefault(s => s.PlotId == plotId)?.Damage
+        ?? village.Fortifications.FirstOrDefault(f => f.Id == plotId)?.Damage
         ?? 0;
 
     private static void SetDamage(Village village, string plotId, int damage)
     {
+        if (village.Fortifications.FirstOrDefault(f => f.Id == plotId) is {} wall) { wall.Damage = damage; return; }
         if (village.Structures.FirstOrDefault(s => s.PlotId == plotId) is { } structure)
         {
             structure.Damage = damage;

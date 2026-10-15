@@ -155,6 +155,7 @@ export const en = {
     'site.assigned': 'Assigned: {amount}, free: {free}',
     'site.jobBusy': 'All needed work is already assigned.',
     'character.mine': 'My character —',
+    'character.exhaustionCountdown': 'Unconscious from exhaustion. Wakes up in {time}.',
     'next.tired': '(started tired; regeneration applies to your next action)',
     'next.cancel': 'Cancel',
     'next.cancelTitle': 'Stop this task. Spent materials and energy are lost, and it gives nothing.',

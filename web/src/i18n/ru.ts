@@ -156,6 +156,7 @@ export const ru: Dictionary = {
     'site.assigned': 'В работе: {amount}, свободно: {free}',
     'site.jobBusy': 'Все нужные работы уже заняты.',
     'character.mine': 'Мой персонаж —',
+    'character.exhaustionCountdown': 'Без сознания от переутомления. Придёт в сознание через {time}.',
     'next.tired': '(начато уставшим; восстановление сил поможет следующему действию)',
     'next.cancel': 'Отменить',
     'next.cancelTitle': 'Бросить дело. Потраченные материалы и силы пропадут, а награды не будет.',

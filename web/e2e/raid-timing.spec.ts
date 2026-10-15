@@ -39,10 +39,10 @@ test('recovery uses labelled real days, hours and minutes rather than an ambiguo
     const now = 1000000
     return [format(now + 1100 * 60000, now, 'ru'), format(now + 1500 * 60000, now, 'ru'),
       format(now + 86400000, now, 'en'), format(new Date(now + 1).toISOString(), now, 'ru'),
-      format(now - 1, now, 'ru'), format('invalid', now, 'ru')]
+      format(now - 1, now, 'ru'), format('invalid', now, 'ru'), format(now + 80 * 60000, now, 'ru')]
   })
   expect(values).toEqual(['18 ч 20 мин (реальное время)', '1 д 1 ч (реальное время)',
-    '1d (real time)', '1 мин (реальное время)', '0 мин (реальное время)', 'Срок уточняется'])
+    '1d (real time)', '1 мин (реальное время)', '0 мин (реальное время)', 'Срок уточняется', '1 ч 20 мин (реальное время)'])
 })
 
 test('hospital and patient list label recovery time on a narrow screen', async ({ page }) => {

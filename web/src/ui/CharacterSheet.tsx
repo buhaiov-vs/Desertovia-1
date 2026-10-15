@@ -4,8 +4,9 @@ import { CharacterPortrait } from './CharacterPortrait'
 import { citizenTitle } from './citizenTitle'
 import { Hint } from './Hint'
 import { restHints } from './needHints'
+import { formatRecoveryTime } from './recoveryTime'
 
-export function CharacterSheet({ citizen, catalog, structures }: { citizen: Citizen; catalog: Catalog; structures: Structure[] }) {
+export function CharacterSheet({ citizen, catalog, structures, now = Date.now() }: { citizen: Citizen; catalog: Catalog; structures: Structure[]; now?: number }) {
   const i18n = useI18n()
   const { t } = i18n
   const describeNeeds = (needs: StatRequirement[]) => needs.map((r) => `${i18n.stat(r.stat)} ${r.minimum}`).join(', ')
@@ -16,7 +17,7 @@ export function CharacterSheet({ citizen, catalog, structures }: { citizen: Citi
   return (
     <section className="card">
       {citizen.recovery?.until&&Date.parse(citizen.recovery.until)>Date.now()?<p className="warning">На лечении после дуэли · до {new Date(citizen.recovery.until).toLocaleString()}</p>:citizen.injuredUntil&&Date.parse(citizen.injuredUntil)>Date.now()&&<p className="warning">Ранен после боя · до {new Date(citizen.injuredUntil).toLocaleString()}</p>}
-      {citizen.exhaustedUntil&&Date.parse(citizen.exhaustedUntil)>Date.now()&&<p className="warning">Без сознания от переутомления. Восстановление: {new Date(citizen.exhaustedUntil).toLocaleTimeString()}</p>}
+      {citizen.exhaustedUntil && Date.parse(citizen.exhaustedUntil) > now && <p className="warning">{t('character.exhaustionCountdown', { time: formatRecoveryTime(citizen.exhaustedUntil, now, i18n.language) })}</p>}
       {!!citizen.exhaustedCycles&&<p className="small warning">Работа на последнем дыхании: {citizen.exhaustedCycles}/3. Затем обморок на 12 игровых часов.</p>}
       {citizen.recovery?.effectKind&&citizen.recovery.effectUntil&&Date.parse(citizen.recovery.effectUntil)>Date.now()&&<p className="warning">{medicalReasons[citizen.recovery.effectKind]??'Больничное осложнение'} До {new Date(citizen.recovery.effectUntil).toLocaleString()}</p>}
       {citizen.homePlotId&&<p className="small">Жильё: {citizen.homePlotId}</p>}

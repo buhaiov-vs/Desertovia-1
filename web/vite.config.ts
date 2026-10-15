@@ -62,7 +62,7 @@ export default defineConfig(({ command }) => {
     build: {
       outDir: '../src/Desertod.Api/wwwroot',
       emptyOutDir: true,
-      ...(process.env.DESERTOD_E2E_HARNESS ? { rolldownOptions: { input: { main: resolve('index.html'), lighting: resolve('e2e/harness.html'), chat: resolve('e2e/chat-harness.html') } } } : {}),
+      ...(process.env.DESERTOD_E2E_HARNESS ? { rolldownOptions: { input: { main: resolve('index.html'), lighting: resolve('e2e/harness.html'), chat: resolve('e2e/chat-harness.html'), hospital: resolve('e2e/hospital-harness.html'), cooperative: resolve('e2e/cooperative-harness.html'), patients: resolve('e2e/patients-harness.html') } } } : {}),
     },
   }
 })

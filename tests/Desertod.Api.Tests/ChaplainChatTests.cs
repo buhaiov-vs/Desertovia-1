@@ -26,7 +26,7 @@ public sealed class ChaplainChatTests(DesertodApiFactory factory)
     }
 
     [Fact]
-    public async Task Shared_chat_reply_survives_reconnect_and_restart_without_becoming_a_ruler()
+    public async Task Unavailable_ai_is_silent_after_reconnect_and_obeys_durable_budget()
     {
         var players = new Players(factory);
         var village = await players.FoundVillageAsync("Chaplain Village");
@@ -44,19 +44,17 @@ public sealed class ChaplainChatTests(DesertodApiFactory factory)
         await worker.TickAsync(default);
         var history = await village.Tsar.GetFromJsonAsync<JsonElement>(path);
         var bots=history.EnumerateArray().Where(m=>m.GetProperty("isChaplain").GetBoolean()).ToList();
-        Assert.Single(bots); Assert.False(bots[0].GetProperty("isTsar").GetBoolean());
-        Assert.Equal("Отец Срамослав",bots[0].GetProperty("authorName").GetString());
-        Assert.Equal(JsonValueKind.Null,bots[0].GetProperty("citizenId").ValueKind);
+        Assert.Empty(bots);
         using var outsider=(await players.WithCharacterAsync("Outsider")).Client;
         Assert.Equal(HttpStatusCode.Forbidden,(await outsider.GetAsync(path)).StatusCode);
         (await village.Tsar.PostAsJsonAsync(path,new{text="Батюшка, ещё вопрос"})).EnsureSuccessStatusCode();
         using var restarted=NewWorker(); await restarted.TickAsync(default);
-        Assert.Single((await village.Tsar.GetFromJsonAsync<JsonElement>(path)).EnumerateArray(),m=>m.GetProperty("isChaplain").GetBoolean());
+        Assert.DoesNotContain((await village.Tsar.GetFromJsonAsync<JsonElement>(path)).EnumerateArray(),m=>m.GetProperty("isChaplain").GetBoolean());
         // A durable full hourly budget prevents even a newly started worker from writing.
         clock.Advance(TimeSpan.FromSeconds(100));
         await using var db=await contexts.CreateDbContextAsync();
         var villageId=await db.Villages.Where(v=>v.Slug==village.Slug).Select(v=>v.Id).SingleAsync();
-        db.ChaplainMessages.AddRange(Enumerable.Range(0,11).Select(i=>ChaplainMessage.Speak(villageId,"Чадо, держимся вместе.",clock.GetUtcNow().AddMinutes(-3))));
+        db.ChaplainMessages.AddRange(Enumerable.Range(0,12).Select(i=>ChaplainMessage.Speak(villageId,"Чадо, держимся вместе.",clock.GetUtcNow().AddMinutes(-3))));
         await db.SaveChangesAsync();
         using var capped=NewWorker();
         (await village.Tsar.PostAsJsonAsync(path,new{text="Батюшка, ответишь?"})).EnsureSuccessStatusCode();

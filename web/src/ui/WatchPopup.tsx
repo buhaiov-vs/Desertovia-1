@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CivicPanel } from './CivicPanel'
 import type { Catalog, CitizenSummary, Site, SiteStage, VillageState } from '../api'
 import type { WorldTarget } from '../game/worldMap'
 import { useI18n } from '../i18n'
@@ -16,7 +17,7 @@ export function watchable(target: WorldTarget, village: VillageState) {
     case 'animal':
       return village.wildlife.some((herd) => herd.kind === target.prey)
     case 'building':
-      return village.fields.some((bed) => bed.plotId === target.plotId)
+      return true
     default:
       return false
   }
@@ -68,6 +69,10 @@ export function WatchPopup({
   citizens,
   now,
   onClose,
+  actorId,
+  onVillage,
+  tsar,
+  ruler,
 }: {
   target: WorldTarget
   screen: { x: number; y: number }
@@ -76,6 +81,10 @@ export function WatchPopup({
   catalog: Catalog
   citizens: CitizenSummary[]
   now: number
+  actorId:string
+  onVillage:(state:VillageState)=>void
+  tsar:boolean
+  ruler:boolean
   onClose: () => void
 }) {
   const i18n = useI18n()
@@ -101,6 +110,7 @@ export function WatchPopup({
         </button>
       </header>
       <div className="target-popup-body">
+        {target.kind==='building'&&ruler&&<CivicPanel village={village} tsar={tsar} ruler={ruler} actorId={actorId} onVillage={onVillage} plotId={target.plotId} />}
         {target.kind === 'site' &&
           (site ? (
             <SiteProgress site={site} catalog={catalog} citizens={citizens} />

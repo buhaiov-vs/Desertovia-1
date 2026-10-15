@@ -229,7 +229,7 @@ public class WeatherTests
 
         CycleEngine.Start(citizen, Task("chop-wood"), WorkContext.For(village), Now);
 
-        Assert.Equal(GameRules.EnergyCostPerCycle * WeatherRules.OutdoorEnergyCost, before - citizen.StoredEnergy, 6);
+        Assert.Equal(GameRules.EnergyCostPerCycle * WeatherRules.OutdoorEnergyCost * 1.25, before - citizen.StoredEnergy, 6);
     }
 
     [Fact]

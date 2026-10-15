@@ -1,5 +1,5 @@
 {
-  "state": "proposal_not_runtime_asset",
+  "state": "prepared_integrated_in_branch_not_deployed",
   "source_sha256": "6d0383a95939a331450cf68533f719eb156ef5d9f95e014f8a3737b0b1a2ba49",
   "source_size": [
     1774,
@@ -38,12 +38,9 @@
     }
   },
   "existing_reference": "art/outlined-buildings/building-bakery-day.png (PR18)",
-  "needs_before_runtime": [
-    "approve hospital appearance",
-    "normalize pixel scale and outline to shared baked profile",
-    "register common visible body/ground bounds",
-    "validate transitions and pack prepared atlases"
-  ],
-  "integrated": false,
-  "deployed": false
+  "needs_before_runtime": [],
+  "integrated": true,
+  "deployed": false,
+  "prepared_directory": "prepared",
+  "rebuild": "python scripts/prepare_hospital.py"
 }

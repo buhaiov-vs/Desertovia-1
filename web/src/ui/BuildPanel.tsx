@@ -43,7 +43,7 @@ export function BuildPanel({
       storage.accepts.length === 0
         ? t('build.holdsAll')
         : t('build.holds', { goods: storage.accepts.map((r) => i18n.resource(r).toLowerCase()).join(', ') })
-    return `${holds} · ${t('build.slots', { slots: storage.slots, size: storage.slotSize })}`
+    return `${holds} · ${storage.resourceLimit ? `${storage.resourceLimit} каждого ресурса${storage.totalLimit ? ` · всего ${storage.totalLimit}` : ''}` : t('build.slots', { slots: storage.slots, size: storage.slotSize })}`
   }
 
   const describeMaterials = (definition: BuildingDefinition) => {
@@ -100,6 +100,7 @@ export function BuildPanel({
 
       <section className="card">
         <h3>{t('build.title')}</h3>
+        <p className="small">Царский мост через реку строится общим проектом, поворачивать его не нужно. Верёвочный мост ниже — только для ущелья.</p>
         <p className="small muted">{t('build.intro')}</p>
         {full && <p className="warning small">{t('build.tooMany', { maximum })}</p>}
         <div className="task-grid">
@@ -112,7 +113,7 @@ export function BuildPanel({
               <button
                 key={definition.kind}
                 className="task-card"
-                disabled={full || missing.length > 0 || undiscovered !== null}
+                disabled={full || missing.length > 0 || undiscovered !== null || !tsar && definition.kind === 'Hospital'}
                 onClick={() => onPlace(definition)}
               >
                 <TileIcon tile={BUILDING_SIGNS[definition.kind] ?? taskIcon('build')} scale={2} />

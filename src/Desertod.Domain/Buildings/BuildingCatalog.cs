@@ -31,6 +31,8 @@ public enum BuildingKind
     Barracks,
     Bakery,
     RopeBridge,
+    Hospital,
+    Longhouse,
 }
 
 public enum JobKind
@@ -101,6 +103,7 @@ public static class BuildingCatalog
 
     public static IReadOnlyList<JobDefinition> Jobs { get; } =
     [
+        Labor("dismantle", "Dismantle carefully", Stat.Strength, Stat.Endurance, false),
         Haul("bring-sticks", "Bring sticks", ResourceKind.Wood, 4, Stat.Endurance, Stat.Strength),
         Haul("bring-logs", "Bring logs", ResourceKind.Wood, 4, Stat.Strength, Stat.Endurance),
         Haul("bring-stones", "Bring stones", ResourceKind.Stone, 3, Stat.Strength, Stat.Endurance),
@@ -140,6 +143,11 @@ public static class BuildingCatalog
 
     public static IReadOnlyList<BuildingDefinition> Buildings { get; } =
     [
+        new(BuildingKind.Longhouse, "Communal house", "A shared home with room for twelve, expandable to twenty-eight.", [BuildingKind.Hut],
+            [Stage("foundation", "Foundation", 3, Job("bring-stones",60), Job("clear-ground",15)),
+             Stage("frame", "Frame", 3, Job("bring-logs",60), Job("bring-planks",12), Job("raise-posts",25)),
+             Stage("roof", "Roof", 3, Job("bring-reeds",40), Job("lay-cover",20))],
+            Shelter:12, ShelterQuality:0.9, Technology:TechnologyCatalog.Carpentry),
         new(BuildingKind.Heap, "Heap", "A fenced patch of ground for any goods. Small and messy.", [],
             [Stage("ground", "Ground", 2, Job("clear-ground", 2), Job("bring-sticks", 4))],
             Storage: StorageKind.Heap),
@@ -258,6 +266,14 @@ public static class BuildingCatalog
                 Stage("roof", "Roof", 3, Job("bring-reeds", 16), Job("bundle-thatch", 3), Job("thatch-roof", 4)),
             ],
             Technology: TechnologyCatalog.Writing),
+        new(BuildingKind.Hospital, "Hospital", "Duel recovery and first-aid training.", [],
+            [
+                Stage("ground", "Ground", 2, Job("clear-ground", 4), Job("mark-outline", 2)),
+                Stage("foundation", "Foundation", 3, Job("bring-stones", 48), Job("lay-stones", 12)),
+                Stage("frame", "Frame", 3, Job("bring-logs", 64), Job("hew-beams", 10), Job("raise-posts", 8)),
+                Stage("walls", "Walls", 3, Job("bring-sticks", 24), Job("mix-clay", 8), Job("weave-walls", 12)),
+                Stage("roof", "Roof", 3, Job("bring-reeds", 32), Job("bundle-thatch", 8), Job("thatch-roof", 10)),
+            ]),
         new(BuildingKind.Tavern, "Tavern", "Talk and rest.", [],
             [
                 Stage("ground", "Ground", 2, Job("clear-ground", 2), Job("mark-outline", 1)),

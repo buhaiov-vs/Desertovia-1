@@ -81,7 +81,8 @@ public static class SkillRules
 
     /// <summary>Applies to the work only; walking takes as long as ever.</summary>
     public static TimeSpan WorkTime(Citizen citizen, Skill skill, int required, TimeSpan work) =>
-        work * (1 - GameRules.SkillWorkTimePerLevel * Mastery(citizen.SkillLevel(skill), required));
+        skill is Skill.Building or Skill.Woodcutting or Skill.Quarrying or Skill.Mining ? work
+            : work * (1 - GameRules.SkillWorkTimePerLevel * Mastery(citizen.SkillLevel(skill), required));
 
     /// <summary>Experience multiplier: work far below the citizen's level in its craft teaches little.</summary>
     public static double Challenge(Citizen citizen, Skill skill, int required) =>

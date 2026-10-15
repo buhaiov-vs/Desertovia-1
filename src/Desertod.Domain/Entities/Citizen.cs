@@ -18,6 +18,7 @@ public enum WorkState
     Idle,
     Working,
     AwaitingRenewal,
+    Paused,
 }
 
 public sealed class Citizen
@@ -31,6 +32,18 @@ public sealed class Citizen
 
     /// <summary>A short line the Tsar writes under the citizen's name on the map.</summary>
     public string? Subtitle { get; set; }
+    public string? HomePlotId { get; set; }
+    public Guid? SpouseAccountId { get; set; }
+    public string? SpouseName { get; set; }
+    public DateTimeOffset? MarriedSince { get; set; }
+    public DateTimeOffset? MarriageCheckedAt { get; set; }
+    public DateTimeOffset? WoundedAt { get; set; }
+    public DateTimeOffset? HospitalizedAt { get; set; }
+    public Guid? RescueByCitizenId { get; set; }
+    public int? SupervisedProgress { get; set; }
+    public Guid? RescuePatientId { get; set; }
+    public int ExhaustedCycles { get; set; }
+    public DateTimeOffset? ExhaustedUntil { get; set; }
 
     /// <summary>Appointed by the Tsar: still a citizen who works and votes, who may also plan buildings and call votes.</summary>
     public bool IsGovernor { get; set; }
@@ -57,6 +70,10 @@ public sealed class Citizen
     public DateTimeOffset? InjuredUntil { get; set; }
 
     /// <summary>Taken from the village armory for the current task and put back when it ends.</summary>
+    /// <summary>External duel recovery; independent from native battle injuries.</summary>
+    public ExternalRecovery? Recovery { get; set; }
+    public DateTimeOffset? RecoveryPausedAt { get; set; }
+
     public ResourceKind? Weapon { get; set; }
 
     public ResourceKind? Armor { get; set; }
@@ -187,6 +204,8 @@ public sealed class Citizen
     /// </summary>
     public void GoTo(TilePoint spot, Village village, DateTimeOffset now)
     {
+        HospitalRules.RequireReady(this, now);
+        if (ExhaustedUntil > now) throw new GameRuleException("citizen.exhausted", "You are unconscious and recovering.");
         if (WorkState(now) == Entities.WorkState.Working)
         {
             throw new GameRuleException("goto.working", "Finish the current task first.");
@@ -207,8 +226,12 @@ public sealed class Citizen
     }
 
     /// <summary>Starts a walk from where the citizen stands: their idle spot, or the camp.</summary>
-    public void SetOut(TilePoint to, Village village, DateTimeOffset now) =>
+    public void SetOut(TilePoint to, Village village, DateTimeOffset now)
+    {
+        BankAccess.Require(village, to);
         Trip = Exploration.SetOut(village.Explored, Trip, IdleSpot ?? WorldMap.Places[WorldMap.Camp], to, now, village.Wilds?.Lookout);
+        Trip.SpeedMultiplier = MedicalWalk(now);
+    }
 
     public void DropLoad()
     {
@@ -238,7 +261,7 @@ public sealed class Citizen
             hours -= WeatherRules.RainHours(village, EnergyUpdatedAt, now) * (1 - WeatherRules.UnderTreesRegeneration);
         }
 
-        return Energy.Regenerate(StoredEnergy, hours, Stats.Endurance, RegenerationMultiplier);
+        return Math.Min(EnergyLimit(now), Energy.Regenerate(StoredEnergy, hours, Stats.Endurance, RegenerationMultiplier));
     }
 
     /// <summary>Banks regenerated energy before anything that changes the regeneration rate.</summary>
@@ -248,12 +271,17 @@ public sealed class Citizen
         EnergyUpdatedAt = now;
     }
 
+    public bool HasMedicalEffect(string kind, DateTimeOffset now) => Recovery is {EffectUntil:{} until} && until>now && Recovery.EffectKind==kind;
+    public double MedicalWalk(DateTimeOffset now) => HasMedicalEffect("breakfast",now) ? .75 : HasMedicalEffect("cast",now) ? .8 : 1;
     public double MaximumEnergy => Energy.Maximum(Stats.Endurance);
+    public double EnergyLimit(DateTimeOffset now) => MaximumEnergy * (HasMedicalEffect("breakfast",now) ? .8 : 1);
 
     public DateTimeOffset? GraceEndsAt => CycleEndsAt + GameRules.GraceWindow;
 
     public WorkState WorkState(DateTimeOffset now)
     {
+        if (RecoveryPausedAt is not null) return Entities.WorkState.Paused;
+
         if (CurrentTaskId is null || CycleEndsAt is null)
         {
             return Entities.WorkState.Idle;

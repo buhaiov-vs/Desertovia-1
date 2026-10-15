@@ -7,6 +7,8 @@ public static class StorageRules
 {
     /// <summary>Most of one good a citizen may hold, whether taken out of storage or left over from a task.</summary>
     public const int TakeLimit = 10;
+    public static int CarryLimit(Citizen citizen, DateTimeOffset now) => (int)Math.Floor(TakeLimit *
+        (citizen.HasMedicalEffect("cast",now) ? .75 : citizen.HasMedicalEffect("cups",now) ? .8 : 1));
 
     /// <summary>Puts as much of the citizen's load into storage as fits. Returns what was unloaded.</summary>
     public static IReadOnlyList<ResourceAmount> Unload(Citizen citizen, Village village)
@@ -49,7 +51,7 @@ public static class StorageRules
         var building = village.Storages.SingleOrDefault(s => s.PlotId == plotId)
                        ?? throw new GameRuleException("take.noStorage", "There is no storage building here.");
 
-        var room = TakeLimit - citizen.Carried(kind);
+        var room = CarryLimit(citizen,now) - citizen.Carried(kind);
         if (room <= 0)
         {
             throw new GameRuleException("take.handsFull", $"You cannot carry more {ResourceNames.Of(kind)}.", Resource(kind));

@@ -8,14 +8,14 @@ test.beforeEach(async({page})=>{
  await expect(page.locator('.take-amount')).toBeVisible()
 })
 
-test('all 26 buildings keep geometry and opaque walls during the day/night crossfade',async({page})=>{
+test('all 27 buildings keep geometry and opaque walls during the day/night crossfade',async({page})=>{
  const result=await page.evaluate(()=>{
   const api=(window as unknown as {lightingTest:{render(n:number):void;measure():unknown;alphaCheck():{common:number;transparent:number;dimensions:number[][]}[]}}).lightingTest
   api.render(0); const day=api.measure();api.render(0.5);const middle=api.measure();api.render(1);const night=api.measure()
   return {day,middle,night,alpha:api.alphaCheck()}
  })
  expect(result.middle).toEqual(result.day);expect(result.night).toEqual(result.day)
- expect(result.alpha).toHaveLength(26)
+ expect(result.alpha).toHaveLength(27)
  for(const item of result.alpha){expect(item.common).toBeGreaterThan(10);expect(item.transparent).toBe(0);expect(item.dimensions[1]).toEqual(item.dimensions[0]);expect(item.dimensions[2]).toEqual(item.dimensions[0])}
 })
 
@@ -56,8 +56,8 @@ test('the real completed village renders finished projects and all building type
 })
 
 
-test('all 26 buildings emit warm light at night and none in full daylight',async({page})=>{
+test('all 27 buildings emit warm light at night and none in full daylight',async({page})=>{
  const samples=await page.evaluate(()=> (window as unknown as {lightingTest:{emissionCheck():{day:number;night:number}[]}}).lightingTest.emissionCheck())
- expect(samples).toHaveLength(26)
+ expect(samples).toHaveLength(27)
  for(const sample of samples){expect(sample.day).toBe(0);expect(sample.night).toBeGreaterThan(100)}
 })

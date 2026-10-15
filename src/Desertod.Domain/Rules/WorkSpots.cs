@@ -37,6 +37,7 @@ public static class WorkSpots
                 new Dictionary<string, object> { ["taskId"] = task.Id });
         }
 
+        BankAccess.Require(village, spot);
         var tile = spot.ToTile();
         if (!WorldMap.Land.Contains(tile))
         {

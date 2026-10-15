@@ -23,10 +23,14 @@ public sealed record ResourceDto(ResourceKind Kind, int Amount, int? Capacity);
 public sealed record StorageSlotDto(ResourceKind Kind, double Fill);
 
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
-public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots, int Damage);
+public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots, int Damage)
+{
+    public int ResourceLimit => StorageLimits.PerResource(Kind);
+    public int? TotalLimit => StorageLimits.Total(Kind);
+}
 
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
-public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage);
+public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1);
 
 /// <summary>An attack on the way, or a fought one kept for the record.</summary>
 /// <param name="AnnouncedAt">Players see an attack on the way from then on; clients hide it before.</param>
@@ -55,7 +59,7 @@ public sealed record SiteJobDto(string JobId, int Done, int Required, int Room);
 /// <param name="Hands">Different citizens who already worked on the stage.</param>
 public sealed record SiteStageDto(string Id, int CrewNeeded, int Hands, IReadOnlyList<SiteJobDto> Jobs);
 
-public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages);
+public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages, int TargetLevel = 1);
 
 /// <param name="Count">Animals now; the map shows a share of them, the Tsar never sees the number.</param>
 public sealed record HerdDto(AnimalKind Kind, int Count, int Capacity, string Habitat);
@@ -171,7 +175,13 @@ public sealed record VillageStateDto(
     string Explored,
     IReadOnlyList<RaidDto> Raids,
     WildsDto? Wilds,
-    DungeonDto? Dungeon);
+    DungeonDto? Dungeon)
+{
+    public IReadOnlyList<CivicOrder> CivicOrders { get; init; } = [];
+    public IReadOnlyList<HousingDto> Housing { get; init; } = [];
+    public bool BridgeOpened { get; init; }
+}
+public sealed record HousingDto(string PlotId, int Beds, int Occupied, int Level);
 
 /// <param name="Appearance">Null until the owner creates their character.</param>
 /// <param name="Spot">Where the Tsar walked to; null while they stand at the campfire.</param>
@@ -198,7 +208,11 @@ public sealed record ProjectDto(
     int ActiveCitizens,
     int SupervisionCapacity,
     int BuildersWorking,
-    bool NeedsEngineer);
+    bool NeedsEngineer)
+{
+    public int BridgeStage { get; init; }
+    public string? StageName { get; init; }
+}
 
 /// <param name="Subtitle">Written by the Tsar, shown under the name on the map.</param>
 /// <param name="IsGovernor">Appointed by the Tsar: may plan buildings and call votes.</param>
@@ -224,7 +238,13 @@ public sealed record CitizenSummaryDto(
     DateTimeOffset? CycleEndsAt,
     IReadOnlyList<ResourceKind> Carrying,
     DateTimeOffset? InjuredUntil,
-    ResourceKind? Weapon);
+    ResourceKind? Weapon,
+    ExternalRecovery? Recovery = null)
+{
+    public DateTimeOffset? HospitalizedAt { get; init; }
+    public Guid? RescueByCitizenId { get; init; }
+    public Guid? RescuePatientId { get; init; }
+}
 
 /// <param name="InviteCode">Only sent to the owner of a private village.</param>
 /// <param name="AwayCitizenIds">Citizens who are away, see <see cref="CitizenPresence"/>: hidden from the map while idle.</param>
@@ -303,7 +323,16 @@ public sealed record CitizenDto(
     ResourceKind? Weapon,
     ResourceKind? Armor,
     int Arrows,
-    double Power);
+    double Power,
+    ExternalRecovery? Recovery = null)
+{
+    public string? HomePlotId { get; init; }
+    public Guid? SpouseAccountId { get; init; }
+    public string? SpouseName { get; init; }
+    public DateTimeOffset? MarriedSince { get; init; }
+    public DateTimeOffset? ExhaustedUntil { get; init; }
+    public int ExhaustedCycles { get; init; }
+}
 
 public sealed record RulesDto(
     int CycleSeconds,
@@ -430,7 +459,7 @@ public static class DtoMapper
                 s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList(),
                 s.Damage))
             .ToList(),
-        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage)).ToList(),
+        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level)).ToList(),
         village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount)).ToList(),
         context.Project is { } project ? project.ToDto(context) : null,
         completedProjects,
@@ -469,7 +498,7 @@ public static class DtoMapper
         tsar,
         Convert.ToBase64String(Exploration.Seen(
             village.Explored,
-            village.TsarTrip is null ? citizenTrips : citizenTrips.Append(village.TsarTrip),
+            (village.TsarTrip is null ? citizenTrips : citizenTrips.Append(village.TsarTrip)).Where(t=>BankAccess.CanReach(village,t.To)),
             now,
             village.Wilds?.Lookout)),
         village.Raids.OrderBy(r => r.StrikesAt).Select(r => r.ToDto()).ToList(),
@@ -552,7 +581,7 @@ public static class DtoMapper
                             ? site.LaborRoom(index, job.JobId)
                             : site.Remaining(index, job.JobId)))
                     .ToList()))
-            .ToList());
+            .ToList(), site.TargetLevel);
 
     public static ProjectDto ToDto(this VillageProject project, WorkContext context)
     {
@@ -600,7 +629,7 @@ public static class DtoMapper
             citizen.CycleEndsAt,
             citizen.Load.Select(g => g.Kind).ToList(),
             CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
-            citizen.Weapon);
+            citizen.Weapon, citizen.Recovery) {HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId};
     }
 
     public static CitizenDto ToDto(this Citizen citizen, Village village, DateTimeOffset now) => new(
@@ -633,7 +662,7 @@ public static class DtoMapper
             .ToList(),
         citizen.Renown,
         citizen.CurrentEnergy(now, village),
-        citizen.MaximumEnergy,
+        citizen.EnergyLimit(now),
         citizen.Streak,
         citizen.CurrentTaskId,
         citizen.CurrentTechnologyId is null ? citizen.CurrentSiteId : null,
@@ -658,7 +687,9 @@ public static class DtoMapper
         citizen.Weapon,
         citizen.Armor,
         citizen.Arrows,
-        Math.Round(CombatRules.Power(citizen), 1));
+        Math.Round(CombatRules.Power(citizen), 1), citizen.Recovery)
+        { HomePlotId=citizen.HomePlotId, SpouseAccountId=citizen.SpouseAccountId, SpouseName=citizen.SpouseName,
+            MarriedSince=citizen.MarriedSince, ExhaustedUntil=citizen.ExhaustedUntil, ExhaustedCycles=citizen.ExhaustedCycles };
 
     public static CatalogDto Catalog(GameOptions options) => new(
         GameCatalog.Roles,

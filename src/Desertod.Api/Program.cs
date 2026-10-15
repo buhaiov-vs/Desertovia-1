@@ -62,7 +62,9 @@ builder.Services.AddHttpClient<TelegramBrowserBridge>(client => client.Timeout =
 builder.Services.AddSingleton<VillageNotifier>();
 builder.Services.AddSingleton<VillageStateChanges>();
 builder.Services.AddSingleton<CitizenPresence>();
+builder.Services.AddSingleton<IHospitalBridge, HospitalBridge>();
 builder.Services.AddSingleton<GameService>();
+builder.Services.AddHostedService<HospitalWorker>();
 builder.Services.AddSingleton<ChatService>();
 builder.Services.AddSingleton<SramoslavService>();
 builder.Services.AddSingleton<ChaplainChatWorker>();

@@ -15,4 +15,7 @@ public sealed class GameOptions
 
     /// <summary>Development and local deployments: the client shows helpers such as the day-night toggle.</summary>
     public bool DevTools { get; set; }
+
+    /// <summary>Enable after the matching bot bridge is installed; never activate half of a cross-service upgrade.</summary>
+    public bool HospitalEnabled { get; set; }
 }

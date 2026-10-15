@@ -45,7 +45,7 @@ public class StorageTests
     }
 
     [Fact]
-    public void Slot_HoldsOneKindOfGood()
+    public void Heap_UsesFixedResourceBins()
     {
         var village = NewCamp();
         foreach (var kind in new[] { ResourceKind.Wood, ResourceKind.Stone, ResourceKind.Food, ResourceKind.Reeds })
@@ -53,8 +53,8 @@ public class StorageTests
             village.Store(kind, 1);
         }
 
-        Assert.Equal(0, village.FreeSpace(ResourceKind.Leather));
-        Assert.Equal(0, village.Store(ResourceKind.Leather, 1));
+        Assert.Equal(10, village.FreeSpace(ResourceKind.Leather));
+        Assert.Equal(1, village.Store(ResourceKind.Leather, 1));
         Assert.Equal(9, village.FreeSpace(ResourceKind.Wood));
     }
 
@@ -104,7 +104,7 @@ public class StorageTests
         village.Storages.Add(StorageBuilding.Create(StorageKind.WoodPile, "9,11", Now));
         Assert.Equal(WorldMap.Yard("9,11"), village.DropPoint(ResourceKind.Wood, forest));
 
-        village.Store(ResourceKind.Wood, 60);
+        village.Store(ResourceKind.Wood, 30);
         Assert.Equal(WorldMap.Yard(HeapPlot), village.DropPoint(ResourceKind.Wood, forest));
     }
 
@@ -167,7 +167,8 @@ public class StorageTests
         Assert.Equal("drop.roomInStorage",
             Assert.Throws<GameRuleException>(() => StorageRules.Drop(citizen, village)).Code);
 
-        // The last heap slot now holds some food: room for food, none for stone.
+        // Fill the stone bin, independently of the food bin.
+        village.Store(ResourceKind.Stone,10);
         village.Store(ResourceKind.Food, 5);
         citizen.Carry(ResourceKind.Stone, 3);
         StorageRules.Drop(citizen, village);

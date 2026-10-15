@@ -337,6 +337,7 @@ public class CombatTests
     {
         var village = NewVillage();
         village.Store(ResourceKind.Wood, 10);
+        village.Store(ResourceKind.Stone, 5);
         var citizen = NewCitizen(village);
         var context = WorkContext.For(village);
 
@@ -357,7 +358,7 @@ public class CombatTests
         var village = NewVillage();
         village.Structures.Add(new Structure { Kind = BuildingKind.Smithy, PlotId = "1,1", BuiltAt = Now, Damage = CombatRules.MaximumDamage });
 
-        Assert.Equal(0.5, CombatRules.BuildingMultiplier(village, Task("smelt-ingot")), 6);
+        Assert.Equal(0, CombatRules.BuildingMultiplier(village, Task("smelt-ingot")), 6);
         Assert.Equal(1, CombatRules.BuildingMultiplier(village, Task("forage")), 6);
     }
 

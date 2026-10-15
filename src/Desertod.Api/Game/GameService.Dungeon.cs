@@ -1,4 +1,5 @@
 using Desertod.Domain;
+using Desertod.Domain.Rules;
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Dungeons;
 using Desertod.Domain.Entities;
@@ -104,7 +105,9 @@ public sealed partial class GameService
         var key = await RequireCitizenAsync(slug, accountId, cancellationToken);
         return await WithVillageAsync(key.VillageId, async db =>
         {
+            await SyncHospitalAsync(db, key.VillageId, cancellationToken, true);
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var run = await RequireGatheringAsync(db, village.Id, cancellationToken);
             var now = time.GetUtcNow();
@@ -171,11 +174,19 @@ public sealed partial class GameService
     private Task<DungeonStart?> AdvanceDungeonAsync(Guid runId, Guid villageId, CancellationToken cancellationToken) =>
         WithVillageAsync(villageId, async db =>
         {
+            await SyncHospitalAsync(db, villageId, cancellationToken);
             var run = await db.DungeonRuns.SingleAsync(r => r.Id == runId, cancellationToken);
             var village = await db.Villages.SingleAsync(v => v.Id == villageId, cancellationToken);
             var citizens = await db.Citizens.Where(c => c.DungeonRunId == run.Id).ToListAsync(cancellationToken);
             var now = time.GetUtcNow();
             DungeonStart? start = null;
+            foreach (var patient in citizens.Where(c => c.RecoveryPausedAt is not null).ToList())
+            {
+                if (run.Phase == DungeonPhase.Gathering) DungeonRules.Leave(run, village, patient, now);
+                else if (run.Hero(patient.Id) is { } hero)
+                    DungeonRules.Settle(run, hero, patient, village, new DungeonHeroOutcome(0, 0, [], 0, patient.Arrows, false, false, null), Random.Shared, now);
+                citizens.Remove(patient);
+            }
             if (run.Phase == DungeonPhase.Gathering && run.GatheringEndsAt <= now)
             {
                 village.EnsureCamp(now);

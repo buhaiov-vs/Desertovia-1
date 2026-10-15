@@ -20,6 +20,7 @@ export function NextAction({
 }) {
   const i18n = useI18n()
   const { t } = i18n
+  if (citizen.state === 'Paused') return <div className={`next-action paused ${compact ? 'compact' : ''}`} role="status">✚ {t('hospital.pause')}</div>
   // Construction jobs are not catalog tasks, so the activity is just its id.
   const activity = citizen.taskId
   const endsAt = citizen.cycleEndsAt ? Date.parse(citizen.cycleEndsAt) : 0

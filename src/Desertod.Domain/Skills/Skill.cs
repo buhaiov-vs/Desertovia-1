@@ -25,6 +25,7 @@ public enum Skill
     Guarding,
     Weatherlore,
     Weaponcraft,
+    Recovery,
 }
 
 public sealed class SkillProgress

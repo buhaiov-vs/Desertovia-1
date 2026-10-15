@@ -28,6 +28,8 @@ public sealed record StorageDefinition(
     public bool AcceptsGood(ResourceKind kind) =>
         StorageCatalog.IsGood(kind) && (Accepts.Count == 0 || Accepts.Contains(kind));
 
+    public int ResourceLimit => StorageLimits.PerResource(Kind);
+    public int? TotalLimit => StorageLimits.Total(Kind);
     public bool IsGeneral => Accepts.Count == 0;
 }
 
@@ -36,13 +38,13 @@ public static class StorageCatalog
     public static IReadOnlyList<StorageDefinition> Storages { get; } =
     [
         new(StorageKind.Heap, "Heap", [], 4, 10),
-        new(StorageKind.WoodPile, "Wood pile", [ResourceKind.Wood], 2, 30),
-        new(StorageKind.StonePile, "Stone pile", [ResourceKind.Stone], 2, 30),
-        new(StorageKind.DryingRack, "Drying rack", [ResourceKind.Food, ResourceKind.Leather, ResourceKind.Flax], 2, 25),
+        new(StorageKind.WoodPile, "Wood pile", [ResourceKind.Wood, ResourceKind.Reeds], 2, 30),
+        new(StorageKind.StonePile, "Stone pile", [ResourceKind.Stone, ResourceKind.Coal], 2, 30),
+        new(StorageKind.DryingRack, "Drying rack", [ResourceKind.Food, ResourceKind.Grain, ResourceKind.Leather, ResourceKind.Flax], 4, 30),
         new(StorageKind.TownHall, "Town Hall", [], 6, 20),
         new(StorageKind.Woodyard, "Woodyard", [ResourceKind.Wood, ResourceKind.Planks, ResourceKind.Reeds], 4, 50),
         new(StorageKind.StoneYard, "Stone yard", [ResourceKind.Stone, ResourceKind.IronOre, ResourceKind.Coal], 4, 40),
-        new(StorageKind.Granary, "Granary", [ResourceKind.Food, ResourceKind.Grain], 4, 60),
+        new(StorageKind.Granary, "Granary", [ResourceKind.Food, ResourceKind.Grain, ResourceKind.Leather, ResourceKind.Flax], 4, 60),
         new(StorageKind.Storehouse, "Storehouse",
             [
                 ResourceKind.IronIngot, ResourceKind.Leather, ResourceKind.Feathers, ResourceKind.Flax, ResourceKind.Chain, ResourceKind.Mechanism,

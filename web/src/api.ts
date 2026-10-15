@@ -24,8 +24,9 @@ export type Skill =
   | 'Guarding'
   | 'Weatherlore'
   | 'Weaponcraft'
+  | 'Recovery'
 
-export type WorkState = 'Idle' | 'Working' | 'AwaitingRenewal'
+export type WorkState = 'Idle' | 'Working' | 'AwaitingRenewal' | 'Paused'
 
 export type RoleTier = 'Basic' | 'Journeyman' | 'Master'
 
@@ -375,6 +376,7 @@ export interface FightReport {
   enemy: EnemyKind
   won: boolean
   injured: boolean
+  recovery?: ExternalRecovery | null
   injuredUntil: string | null
   power: number
   enemyPower: number
@@ -627,6 +629,8 @@ export interface ProjectDefinition {
 export type StorageKind = string
 
 export interface StorageDefinition {
+  resourceLimit?: number
+  totalLimit?: number|null
   kind: StorageKind
   name: string
   /** Empty means every good. */
@@ -734,6 +738,7 @@ export interface SiteStage {
 }
 
 export interface Site {
+  targetLevel?: number
   kind: BuildingKind
   plotId: string
   stage: number
@@ -743,6 +748,7 @@ export interface Site {
 }
 
 export interface Structure {
+  level?: number
   kind: BuildingKind
   plotId: string
   /** Harm done by raiders, 0 to `rules.maximumDamage`. */
@@ -756,6 +762,8 @@ export interface StorageSlot {
 }
 
 export interface Storage {
+  resourceLimit?: number
+  totalLimit?: number | null
   kind: StorageKind
   plotId: string
   goods: ResourceAmount[]
@@ -771,6 +779,8 @@ export interface ProjectMaterial {
 }
 
 export interface Project {
+  stageName?:string|null
+  bridgeStage?:number
   id: string
   definitionId: string
   name: string
@@ -873,7 +883,12 @@ export const RAIN = {
   forestRegrowth: 2,
 }
 
+export interface CivicOrder { id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
+export interface Housing { plotId:string; beds:number; occupied:number; level:number }
 export interface VillageState {
+  civicOrders?: CivicOrder[]
+  housing?: Housing[]
+  bridgeOpened?: boolean
   id: string
   slug: string
   name: string
@@ -954,7 +969,30 @@ export interface Appearance {
 
 export const CITIZEN_SUBTITLE_MAXIMUM = 24
 
+export interface ExternalRecovery {
+  cause?:string
+  effectKind?:string|null
+  effectUntil?:string|null
+  episodeId: string | null
+  admittedAt: string | null
+  until: string | null
+  checkedAt: string
+  available: boolean
+  hospitalPercent: number
+  skillPercent: number
+}
+export interface HospitalTier { code: string; title: string; minHours: number; maxHours: number; price: number; blocked: string }
+export interface HospitalStatus {
+  available: boolean; level: number; balance: number | null; recovery: ExternalRecovery | null
+  tiers: HospitalTier[]; patients: { id: string; name: string; recovery: ExternalRecovery; appearance?: Appearance|null }[]
+}
+export interface HospitalPayment { patientId: string; code: string; requestId: string; expectedPrice: number; episodeId: string }
+export interface HospitalReceipt { state: string; error: string | null; until: number | null; price: number | null; cutSeconds: number | null }
+
 export interface CitizenSummary {
+  hospitalizedAt?:string|null
+  rescueByCitizenId?:string|null
+  rescuePatientId?:string|null
   id: string
   name: string
   /** Written by the Tsar, shown under the name on the map. */
@@ -978,6 +1016,7 @@ export interface CitizenSummary {
   /** Goods the citizen holds because storage had no room. */
   carrying: string[]
   /** Wounded until then; null when not wounded. */
+  recovery?: ExternalRecovery | null
   injuredUntil: string | null
   /** Weapon taken from the armory for the current task. */
   weapon: string | null
@@ -1044,6 +1083,11 @@ export interface SkillValue {
 }
 
 export interface Citizen {
+  homePlotId?:string|null
+  spouseAccountId?:string|null
+  spouseName?:string|null
+  exhaustedUntil?:string|null
+  exhaustedCycles?:number
   id: string
   name: string
   /** Written by the Tsar, shown under the name on the map. */
@@ -1089,6 +1133,7 @@ export interface Citizen {
   /** When the next vigor drink may be drunk; null if never drunk. */
   drinkReadyAt: string | null
   /** Wounded until then; null when not wounded. */
+  recovery?: ExternalRecovery | null
   injuredUntil: string | null
   weapon: string | null
   armor: string | null
@@ -1270,6 +1315,9 @@ export function loadVillage(slug: string) {
 }
 
 export const api = {
+  rescue: (slug:string, id:string)=>request<Citizen>('POST',`/api/villages/${encodeURIComponent(slug)}/rescue/${id}`),
+  civic: (slug:string, plotId:string, operation:string, partnerAccountId?:string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic`, {plotId,operation,partnerAccountId}),
+  civicDecision: (slug:string, id:string, approve:boolean) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic/${id}`, {approve}),
   sramoslav: (slug: string, text: string) => request<{text: string; ai: boolean}>('POST', `/api/villages/${slug}/sramoslav`, { text }),
   telegramMiniApp: (initData: string) => request<void>('POST', '/auth/telegram/miniapp', { initData }),
   telegramBrowserStart: () => request<{url: string; pin: string}>('POST', '/auth/telegram/browser/start'),
@@ -1305,6 +1353,9 @@ export const api = {
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/job`, { plotId, stage, jobId }),
   dropLoad: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drop`),
   drink: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drink`),
+  hospital: (slug: string) => request<HospitalStatus>('GET', `/api/villages/${encodeURIComponent(slug)}/hospital`),
+  hospitalHeal: (slug: string, payment: HospitalPayment) => request<HospitalReceipt>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/heal`, payment),
+  hospitalUpgrade: (slug: string, plot: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/${encodeURIComponent(plot)}/upgrade`),
   heal: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/heal`),
   callUndead: (slug: string, enemy: EnemyKind, size: RaidSize) =>
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/undead`, { enemy, size }),

@@ -12,8 +12,15 @@ export function CharacterSheet({ citizen, catalog, structures }: { citizen: Citi
   const { rules } = catalog
   const rest = restHints(citizen, catalog, structures, i18n, citizen.energy)
   const streakBonus = Math.min(citizen.streak * rules.streakPerRenewal, rules.streakMaximumBonus)
+  const medicalReasons:Record<string,string>={breakfast:'Испорченный завтрак: ходьба −25%, запас сил −20%.',cast:'Гипс не по размеру: ходьба −20%, груз −25%.',snorers:'Храпящие соседи: расход энергии +20%.',cups:'Лечение банками: груз −20%.'}
   return (
     <section className="card">
+      {citizen.recovery?.until&&Date.parse(citizen.recovery.until)>Date.now()?<p className="warning">На лечении после дуэли · до {new Date(citizen.recovery.until).toLocaleString()}</p>:citizen.injuredUntil&&Date.parse(citizen.injuredUntil)>Date.now()&&<p className="warning">Ранен после боя · до {new Date(citizen.injuredUntil).toLocaleString()}</p>}
+      {citizen.exhaustedUntil&&Date.parse(citizen.exhaustedUntil)>Date.now()&&<p className="warning">Без сознания от переутомления. Восстановление: {new Date(citizen.exhaustedUntil).toLocaleTimeString()}</p>}
+      {!!citizen.exhaustedCycles&&<p className="small warning">Работа на последнем дыхании: {citizen.exhaustedCycles}/3. Затем обморок на 12 игровых часов.</p>}
+      {citizen.recovery?.effectKind&&citizen.recovery.effectUntil&&Date.parse(citizen.recovery.effectUntil)>Date.now()&&<p className="warning">{medicalReasons[citizen.recovery.effectKind]??'Больничное осложнение'} До {new Date(citizen.recovery.effectUntil).toLocaleString()}</p>}
+      {citizen.homePlotId&&<p className="small">Жильё: {citizen.homePlotId}</p>}
+      {citizen.spouseName&&<p className="small">Супруг: {citizen.spouseName}</p>}
       <h3 className="character-title">
         {citizen.appearance && <CharacterPortrait appearance={citizen.appearance} scale={3} />}
         <span>
@@ -110,6 +117,11 @@ export function CharacterSheet({ citizen, catalog, structures }: { citizen: Citi
               <td className="stat-progress">
                 {stat.experienceToNext > 0 ? (
                   <>
+      {citizen.exhaustedUntil&&Date.parse(citizen.exhaustedUntil)>Date.now()&&<p className="warning">Без сознания от переутомления. Восстановление: {new Date(citizen.exhaustedUntil).toLocaleTimeString()}</p>}
+      {!!citizen.exhaustedCycles&&<p className="small warning">Работа на последнем дыхании: {citizen.exhaustedCycles}/3. Затем обморок на 12 игровых часов.</p>}
+      {citizen.recovery?.effectKind&&citizen.recovery.effectUntil&&Date.parse(citizen.recovery.effectUntil)>Date.now()&&<p className="warning">{medicalReasons[citizen.recovery.effectKind]??'Больничное осложнение'} До {new Date(citizen.recovery.effectUntil).toLocaleString()}</p>}
+      {citizen.homePlotId&&<p className="small">Жильё: {citizen.homePlotId}</p>}
+      {citizen.spouseName&&<p className="small">Супруг: {citizen.spouseName}</p>}
                     <div className="bar">
                       <div style={{ width: `${(stat.experience / stat.experienceToNext) * 100}%` }} />
                     </div>

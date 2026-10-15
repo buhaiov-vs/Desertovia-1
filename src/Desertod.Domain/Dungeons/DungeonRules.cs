@@ -73,6 +73,7 @@ public static class DungeonRules
             throw new GameRuleException("citizen.dormant", "Dormant citizens cannot work.");
         }
 
+        HospitalRules.RequireReady(citizen, now);
         if (CombatRules.IsInjured(citizen, now))
         {
             throw new GameRuleException("dungeon.injured", "You are wounded; a remedy heals it at once.",

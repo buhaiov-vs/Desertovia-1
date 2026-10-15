@@ -7,6 +7,8 @@ import atlas from '../assets/sprites.json'
 import atlasUrl from '../assets/sprites.png'
 import nightAtlasA from '../assets/night/buildings-a.json'
 import nightAtlasUrlA from '../assets/night/buildings-a.png'
+import hospitalAtlas from '../assets/night/hospital.json'
+import hospitalAtlasUrl from '../assets/night/hospital.png'
 import nightAtlasB from '../assets/night/buildings-b.json'
 import nightAtlasUrlB from '../assets/night/buildings-b.png'
 
@@ -86,7 +88,7 @@ export class TileSet {
       })(),
       (async () => {
         // Both sheets fit even a 2048px texture limit on older phone GPUs.
-        const sheets = await Promise.all([[nightAtlasUrlA, nightAtlasA], [nightAtlasUrlB, nightAtlasB]].map(async ([url, data]) => {
+        const sheets = await Promise.all([[nightAtlasUrlA, nightAtlasA], [nightAtlasUrlB, nightAtlasB], [hospitalAtlasUrl, hospitalAtlas]].map(async ([url, data]) => {
           const texture = await Assets.load<Texture>(url as string)
           texture.source.scaleMode = 'nearest'
           const sheet = new Spritesheet(texture, data as typeof nightAtlasA)

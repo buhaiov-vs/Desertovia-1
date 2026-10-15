@@ -9,10 +9,22 @@ public static class GameEndpoints
     {
         var player = app.MapGroup("/api").RequireAuthorization();
 
+        player.MapGet("/villages/{slug}/hospital", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.GetHospitalAsync(slug, user.RequireAccountId(), ct));
+        player.MapPost("/villages/{slug}/hospital/heal", (string slug, HospitalHealRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.TreatAsync(slug, user.RequireAccountId(), request, ct));
+        player.MapPost("/villages/{slug}/hospital/{plotId}/upgrade", (string slug, string plotId, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.UpgradeHospitalAsync(slug, user.RequireAccountId(), plotId, ct));
         player.MapPost("/villages/{slug}/sramoslav", (string slug, SramoslavQuestion request, ClaimsPrincipal user,
             SramoslavService service, CancellationToken cancellationToken) =>
             service.AskAsync(slug, user.RequireAccountId(), request.Text, cancellationToken)).RequireRateLimiting(ChatService.RateLimit);
 
+        player.MapPost("/villages/{slug}/civic", (string slug, CivicRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.CivicRequestAsync(slug, user.RequireAccountId(), request, ct));
+        player.MapPost("/villages/{slug}/civic/{id:guid}", (string slug, Guid id, CivicDecision request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.CivicDecisionAsync(slug, user.RequireAccountId(), id, request, ct));
+        player.MapPost("/villages/{slug}/rescue/{patientId:guid}", (string slug,Guid patientId,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
+            game.RescueAsync(slug,user.RequireAccountId(),patientId,ct));
         player.MapGet("/catalog", (CatalogDto catalog) => catalog);
 
         player.MapGet("/villages/public", async (GameService game, IConfiguration config, CancellationToken cancellationToken) =>

@@ -82,6 +82,8 @@ public sealed class DungeonWorker(
         lock (live.Gate)
         {
             var simulation = live.Simulation;
+            foreach (var hero in simulation.Heroes)
+                if (game.HasHospitalRestriction(hero.Fighter.AccountId)) simulation.WithdrawToHospital(hero.Id);
             var events = simulation.Tick(seconds, live.Random);
             foreach (var hero in simulation.Heroes)
             {

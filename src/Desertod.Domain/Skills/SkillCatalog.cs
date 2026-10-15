@@ -32,6 +32,7 @@ public static class SkillCatalog
 {
     public static IReadOnlyList<SkillDefinition> Skills { get; } =
     [
+        new(Skill.Recovery, Stat.Endurance, Stat.Intelligence),
         new(Skill.Woodcutting, Stat.Strength, Stat.Endurance),
         new(Skill.Quarrying, Stat.Strength, Stat.Endurance),
         new(Skill.Mining, Stat.Strength, Stat.Endurance),

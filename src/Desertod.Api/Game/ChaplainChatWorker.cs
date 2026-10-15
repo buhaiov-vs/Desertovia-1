@@ -13,7 +13,7 @@ public sealed partial class ChaplainChatWorker(IDbContextFactory<DesertodDbConte
     private readonly DateTimeOffset startedAt = time.GetUtcNow();
     private readonly SemaphoreSlim gate = new(1, 1);
     private static readonly TimeSpan Gap = TimeSpan.FromSeconds(90);
-    private static readonly TimeSpan AmbientGap = TimeSpan.FromMinutes(8);
+    private static readonly TimeSpan AmbientGap = TimeSpan.FromMinutes(20);
     private const int HourlyLimit = 12;
 
     [GeneratedRegex(@"(?i)(?<![\p{L}\p{N}_])(?:батюшк[аеиуо]|срамослав(?:а|у)?|@?sramoslav(?:_bot)?|отче)(?![\p{L}\p{N}_])")]
@@ -58,27 +58,35 @@ public sealed partial class ChaplainChatWorker(IDbContextFactory<DesertodDbConte
                 var target = recent.FirstOrDefault(m => m.SentAt >= startedAt && m.SentAt > lastBot
                     && now - m.SentAt < Gap && IsCalled(m.Text));
                 string? text = null;
+                string? topic = null;
                 if (target is not null)
                 {
                     var context = recent.Take(8).Reverse().Select(m => new { name = m.AuthorName, text = m.Text }).ToArray();
                     text = await priest.AnswerChatAsync(village.Name, target.AuthorName, target.Text, context,
                         village.Structures.Select(s => s.Kind.ToString()).ToArray(), cancellationToken);
                 }
-                else if (now - lastBot >= AmbientGap && presence.IsVillagePresent(village.Slug))
+                else if (now - lastBot >= AmbientGap && presence.IsVillagePresent(village.Slug)
+                    && recent.Count(m => now-m.SentAt < TimeSpan.FromMinutes(5)) >= 3
+                    && recent.Any(m => m.SentAt > lastBot))
                 {
-                    // No unsolicited speech in an empty village or when everyone is simply idle.
-                    var working = await db.Citizens.AnyAsync(c => c.VillageId == village.Id && c.CurrentTaskId != null && c.CycleEndsAt > now, cancellationToken);
-                    var chatting = recent.Count(m => now - m.SentAt < TimeSpan.FromMinutes(5)) >= 3;
-                    if (working || chatting)
-                    {
-                        string[] lines = ["Дезертовия растёт общими руками. Договаривайтесь, кому нужна помощь, чада!",
-                            "Устали — отдохните, чада. С пустыми силами и кадило тяжёлое.",
-                            "Каждая полезная работа двигает деревню вперёд. Держимся вместе, чада!"];
-                        text = lines[Random.Shared.Next(lines.Length)];
-                    }
+                    var history = recent.Take(8).Reverse().Select(m=>new {name=m.AuthorName,text=m.Text}).ToArray();
+                    topic=village.Sites.Count>0 ? "construction" : village.Structures.Any(b=>b.Damage>50) ? "repair" : null;
+                    if(topic is not null && await db.ChaplainMessages.AnyAsync(m=>m.VillageId==village.Id && m.SentAt>hourAgo && m.Topic==topic,cancellationToken))continue;
+                    var facts = village.Sites.Count > 0 ? $"В деревне {village.Sites.Count} незавершённых строек."
+                        : village.Structures.Any(b=>b.Damage>50) ? "В деревне есть повреждённые здания."
+                        : "";
+                    // No private clock/location enters the public prompt. The bot owns its private tone reference.
+                    if (facts.Length > 0)
+                        text = await priest.AnswerChatAsync(village.Name, "деревня",
+                            "Коротко откликнись на текущую беседу; можно промолчать. Проверенный факт: " + facts,
+                            history, village.Structures.Select(s=>s.Kind.ToString()).ToArray(),cancellationToken);
                 }
                 if (string.IsNullOrWhiteSpace(text)) continue;
+                var lastLines = await db.ChaplainMessages.AsNoTracking().Where(m=>m.VillageId==village.Id)
+                    .OrderByDescending(m=>m.SentAt).Take(10).Select(m=>m.Text).ToListAsync(cancellationToken);
+                if (lastLines.Any(old => string.Equals(ShortLine(old), ShortLine(text), StringComparison.OrdinalIgnoreCase))) continue;
                 var line = ChaplainMessage.Speak(village.Id, ShortLine(text), time.GetUtcNow());
+                line.Topic=topic;
                 db.ChaplainMessages.Add(line);
                 await db.SaveChangesAsync(cancellationToken);
                 await notifier.ChatMessageSent(village.Slug, ChatService.ToDto(line));

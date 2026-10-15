@@ -71,12 +71,15 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 storage.Property(s => s.Kind).HasConversion<string>();
                 storage.Ignore(s => s.Definition);
                 storage.OwnsMany(s => s.Goods, good => good.Property(g => g.Kind).HasConversion<string>());
+                storage.OwnsMany(s => s.Investment, good => good.Property(g => g.Kind).HasConversion<string>());
             });
             village.OwnsMany(v => v.Structures, structure =>
             {
                 structure.ToJson();
                 structure.Property(s => s.Kind).HasConversion<string>();
+                structure.OwnsMany(s => s.Investment, good => good.Property(g => g.Kind).HasConversion<string>());
             });
+            village.OwnsMany(v=>v.CivicOrders, order=>order.ToJson());
             village.OwnsMany(v => v.Sites, site =>
             {
                 site.ToJson();
@@ -167,6 +170,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 appearance.ToJson();
                 appearance.Property(a => a.Gender).HasConversion<string>();
             });
+            citizen.OwnsOne(c => c.Recovery, recovery => recovery.ToJson());
             citizen.Property(c => c.Name).HasMaxLength(32);
             citizen.Property(c => c.Subtitle).HasMaxLength(Citizen.SubtitleMaximumLength);
             citizen.Property(c => c.Status).HasConversion<string>().HasMaxLength(16);

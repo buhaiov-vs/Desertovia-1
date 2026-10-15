@@ -106,6 +106,7 @@ export function TaskCard({
   disabled: boolean
   onStart: (task: Task) => void
 }) {
+  if(built.has('tsar-bridge')&&(task.effect==='Survey'||task.effect==='Supervise'))task={...task,skillLevel:3}
   const i18n = useI18n()
   const { t } = i18n
   const role = catalog.roles.find((r) => r.id === task.roleId)!

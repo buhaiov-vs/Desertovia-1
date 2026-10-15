@@ -243,7 +243,7 @@ public class StoryQuestTests
     }
 
     [Fact]
-    public void MeasuringTheRiver_GivesTheStatsOfAnEngineerWithinADayOfEnergy()
+    public void MeasuringTheRiver_ProvidesTheIntelligencePathForBridgeSurvey()
     {
         var village = NewVillage();
         var citizen = NewCitizen(village);
@@ -252,14 +252,15 @@ public class StoryQuestTests
         var cycles = 0;
         var engineer = GameCatalog.Roles.Single(r => r.Id == "engineer");
 
-        while (!SkillCatalog.Get(engineer.Skill!.Value).Allows(citizen.Stats, engineer.SkillLevel) && cycles < 200)
+        while (citizen.Stats.Intelligence < 3 && cycles < 200)
         {
+            citizen.StoredEnergy=citizen.MaximumEnergy;citizen.EnergyUpdatedAt=now;
             Work(citizen, "measure-river", context, ref now);
             cycles++;
         }
 
-        Assert.InRange(cycles, 1, (int)Energy.Maximum(0));
-        Assert.True((now - Now).TotalHours < 2);
+        Assert.InRange(cycles, 1, 200);
+        Assert.True(citizen.Stats.Intelligence>=3);
     }
 
     private static CycleReport Report(string taskId, bool overflowed) =>

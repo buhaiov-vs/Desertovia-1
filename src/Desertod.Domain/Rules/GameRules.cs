@@ -83,10 +83,10 @@ public static class GameRules
 
     /// <summary>A vigor drink gives this much energy, at most once per cooldown, so the energy pool still limits play.</summary>
     public const double VigorDrinkEnergy = 8;
-    public static readonly TimeSpan VigorDrinkCooldown = TimeSpan.FromHours(2);
+    public static readonly TimeSpan VigorDrinkCooldown = TimeSpan.FromHours(4);
 
-    public const double TiredExperienceMultiplier = 0;
-    public const double TiredYieldMultiplier = 0.25;
+    public const double TiredExperienceMultiplier = 0.25;
+    public const double TiredYieldMultiplier = 1;
     public const double OverflowExperienceMultiplier = 0.5;
 
     public const double StatFactorBase = 0.4;

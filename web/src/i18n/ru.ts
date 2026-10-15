@@ -2,6 +2,39 @@ import type { Dictionary } from './en'
 
 export const ru: Dictionary = {
   ui: {
+    'hospital.title': 'Больница',
+    'hospital.open': 'Лечение',
+    'hospital.level': 'Больница · уровень {level}/3',
+    'hospital.notBuilt': 'Лечение доступно и до постройки больницы.',
+    'hospital.available': 'Можно возвращаться к работе.',
+    'hospital.until': 'До выписки: {time}',
+    'hospital.duel': 'Ранен после дуэли',
+    'hospital.native': 'Рана в Дезертовии: лечится обычным лекарством отдельно.',
+    'hospital.unavailable': 'Связь с больницей недоступна. Известное ранение сохраняется.',
+    'hospital.balance': 'Свечи у батюшки: {count}',
+    'hospital.pause': 'Работа на паузе. Вещи и прогресс сохранены.',
+    'hospital.tiers': 'Лечение · свечи аккаунта',
+    'hospital.effect': '−{min}–{max} реальных часов',
+    'hospital.confirm': 'Заплатить {price} свечей?',
+    'hospital.buy': 'Оплатить · {price} свечей',
+    'hospital.cancel': 'Отмена',
+    'hospital.wait': 'Проверяем лечение…',
+    'hospital.retry': 'Проверить эту оплату',
+    'hospital.completed': 'Лечение проведено. Срок выписки обновлён.',
+    'hospital.refunded': 'Лечение не удалось. Свечи возвращены.',
+    'hospital.error': 'Лечение недоступно. Обновите предложение.',
+    'hospital.patients': 'Пациенты ({count})',
+    'hospital.self': 'Я',
+    'hospital.bonus': 'Больница −{hospital}% · Восстановление −{skill}%',
+    'hospital.upgrade': 'Подготовить стройку · уровень {level}',
+    'hospital.help': 'Помочь пациенту',
+    'hospital.empty': 'Пациентов нет',
+    'hospital.pending': 'Оплата ещё проверяется. Повторная проверка использует ту же квитанцию.',
+    'hospital.price_changed': 'Цена изменилась. Проверьте новое предложение.',
+    'hospital.insufficient_candles': 'Не хватает свечей аккаунта.',
+    'hospital.episode_changed': 'Пациент уже выписан или получил новое ранение.',
+    'hospital.request_conflict': 'Эта квитанция относится к другому предложению.',
+    'hospital.treatment_pending': 'Другое лечение ещё проверяется.',
     brand: 'Дезертовия',
     loading: 'Загрузка…',
     close: 'Закрыть',
@@ -751,6 +784,7 @@ export const ru: Dictionary = {
   },
 
   skills: {
+    Recovery: 'Восстановление',
     Woodcutting: 'Рубка леса',
     Quarrying: 'Добыча камня',
     Gathering: 'Собирательство',
@@ -892,11 +926,13 @@ export const ru: Dictionary = {
   },
 
   buildings: {
+    Hospital: { name: 'Больница', description: 'Лечение после дуэлей и обучение первой помощи.' },
     Heap: { name: 'Склад', description: 'Огороженный клочок земли для любого добра. Мала и неопрятна.' },
     LeanTo: { name: 'Шалаш', description: 'Жерди и камыш от ветра. Двоим здесь спится лучше, чем под деревом.' },
     WoodPile: { name: 'Склад дерева', description: 'Сложенное дерево не мокнет и не теснит кучу.' },
     StonePile: { name: 'Склад камня', description: 'Кольцо из камней, в котором помещается больше камня.' },
     DryingRack: { name: 'Склад еды', description: 'Мясо и ягоды сохнут здесь, а не гниют в куче.' },
+    Longhouse: { name: 'Общежитие', description: 'Общий дом: 12 мест, с расширениями до 20 и 28.' },
     Hut: {
       name: 'Хижина',
       description: 'Первый настоящий дом: каменное основание, деревянный сруб, глиняные стены, соломенная крыша. Четверым здесь спится хорошо.',
@@ -923,6 +959,7 @@ export const ru: Dictionary = {
   },
 
   stages: {
+    dismantle:'Разборка', upgrade:'Улучшение склада', expand:'Расширение жилья',
     ground: 'Площадка',
     foundation: 'Основание',
     frame: 'Каркас',
@@ -941,6 +978,7 @@ export const ru: Dictionary = {
   },
 
   jobs: {
+    dismantle:'Разбирать осторожно',
     'bring-sticks': 'Носить хворост',
     'bring-logs': 'Носить брёвна',
     'bring-stones': 'Носить камни',
@@ -975,6 +1013,8 @@ export const ru: Dictionary = {
   },
 
   tasks: {
+    'learn-first-aid': 'Изучать первую помощь',
+    'practice-first-aid': 'Практиковать первую помощь',
     'chop-wood': 'Собирать дерево',
     'quarry-stone': 'Собирать камни',
     forage: 'Собирать ягоды',
@@ -1033,6 +1073,7 @@ export const ru: Dictionary = {
     negotiate: 'Вести переговоры',
     command: 'Командовать',
     'keep-watch': 'Стоять в дозоре',
+    'rescue-wounded':'Отнести раненого в больницу',
     repair: 'Чинить постройки',
     'make-poultice': 'Делать припарки',
     'make-spears': 'Делать копья',
@@ -1154,6 +1195,28 @@ export const ru: Dictionary = {
   },
 
   errors: {
+    'bridge.closed': 'Сначала постройте Царский мост.',
+    'project.intelligence': 'Нужны Ум 3 и Строительство 1.',
+    'task.brewer': 'Попроси опытного пивовара: нужны Учёность 3 и Ум 3.',
+    'building.repairFirst': 'Сначала почините здание.',
+    'citizen.exhausted': 'Ты без сознания от переутомления. Дождись восстановления.',
+    'building.emptyStorage': 'Сначала освободите склад.',
+    'building.returnSpace': 'Освободите место для материалов после разборки.',
+    'building.protected': 'Эту постройку сносить нельзя.',
+    'building.orderExists': 'Заявка уже подана.',
+    'building.orderProcessed': 'Решение по этой заявке уже принято.',
+    'building.notBuilt': 'Выберите готовое здание.',
+    'building.busy': 'Сначала завершите текущую стройку.',
+    'building.inUse': 'Сначала завершите работу в здании.',
+    'building.maxLevel': 'Дальнейшее улучшение недоступно.',
+    'housing.relocateFirst': 'Сначала предоставьте жителям другие свободные места.',
+    'housing.pending': 'Заявка на жильё уже подана.',
+    'housing.notSpouse': 'Совместное жильё доступно подтверждённым супругам.',
+    'housing.consent': 'Нужно согласие обоих супругов и подтверждённый брак.',
+    'housing.full': 'В доме недостаточно свободных мест.',
+    'housing.notFound': 'Выберите готовый жилой дом.',
+    'housing.absent': 'Житель больше не живёт в городе.',
+
     'citizen.dormant': 'Неактивные жители не работают.',
     'citizen.alreadyLives': 'Вы уже живёте в этом городе.',
     'citizen.notInVillage': 'Вы не живёте в этом городе.',
@@ -1171,6 +1234,8 @@ export const ru: Dictionary = {
     'take.amount': 'Возьмите хотя бы одну штуку.',
     'drop.roomInStorage': 'На складе есть место для груза. Отнесите его туда.',
     'hands.noRoom': 'На складе нет места для вашей ноши. Попросите царя или посадника замыслить новое хранилище.',
+    'hospital.admitted': 'Ты ранен после дуэли. Открой лечение или дождись выписки.',
+    'hospital.unavailable': 'Связь с больницей недоступна. Попробуй немного позже.',
     'building.notAvailable': '{building} пока нельзя построить.',
     'building.requires': '{building}: сначала нужно — {requires}.',
     'building.needsTechnology': '{building}: нужна технология — {technology}. Сначала её должны изучить жители.',

@@ -19,6 +19,8 @@ interface Props {
 export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCode, onAccountChanged }: Props) {
   const { t } = useI18n()
   const [copied, setCopied] = useState(false)
+  const [theme,setTheme]=useState(()=>localStorage.getItem('desertovia.uiTheme')??'auto')
+  const [labels,setLabels]=useState(()=>localStorage.getItem('desertovia.buildingLabels')==='true')
 
   return (
     <>
@@ -31,6 +33,9 @@ export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCod
         <LanguageSwitcher />
       </section>
 
+      <section className="card"><h3>Оформление</h3><div className="row">
+        {['auto','light','dark'].map((mode,i)=><button className={theme===mode?'active':''} key={mode} onClick={()=>{setTheme(mode);localStorage.setItem('desertovia.uiTheme',mode);document.documentElement.dataset.uiTheme=mode==='auto'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode}}>{['Как на устройстве','Светлый','Тёмный'][i]}</button>)}
+        </div><label><input type="checkbox" checked={labels} onChange={e=>{setLabels(e.target.checked);localStorage.setItem('desertovia.buildingLabels',String(e.target.checked))}}/> Названия зданий на карте · применится при обновлении</label></section>
       <NotificationToggle />
 
       <section className="card">

@@ -477,5 +477,143 @@
     "data_reset": false,
     "game_code_changed": false,
     "new_game_release": false
+  },
+  "batch_update_plan": {
+    "decision": "D-037",
+    "state": "implemented_in_candidate_final_verification",
+    "document": "BATCH_UPDATE_PLAN.md",
+    "proposed_blocks": 18,
+    "workflow": "complete_agreed_changes_then_validate_final_code",
+    "full_suite_after_each_small_change": false,
+    "final_required_checks_preserved": true,
+    "default_scope": "repositories_only_no_deployment"
+  },
+  "batch_balance_proposal": {
+    "decision": "D-038",
+    "state": "implemented_in_candidate_final_verification",
+    "document": "BALANCE_PROPOSAL.md",
+    "bridge_work_units": 230,
+    "communal_housing_beds": [
+      12,
+      20,
+      28
+    ],
+    "free_hospital_outcome_percent": {
+      "normal": 75,
+      "debuff": 20,
+      "extension": 5
+    },
+    "deployed": false
+  },
+  "current_master_plan": {
+    "decision": "D-041/D-042",
+    "state": "locally_verified_final_ci_in_pr",
+    "document": "CURRENT_MASTER_PLAN.md",
+    "resume_document": "SESSION_HANDOFF.md",
+    "implementation_checklist": [
+      {
+        "block": 1,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 2,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 3,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 4,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 5,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 6,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 7,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 8,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 9,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 10,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 11,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 12,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 13,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 14,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 15,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 16,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 17,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      },
+      {
+        "block": 18,
+        "state": "implemented_local_validation_final_ci_in_pr"
+      }
+    ],
+    "balance_state": "implemented_candidate_not_live_balanced",
+    "latest_request": "full_plan_with_readable_patients_and_wounded_transport_no_deploy",
+    "deployment_authorized_for_batch": false,
+    "implementation_branch": "feat/cooperative-update",
+    "hospital_rescue": "implemented_in_verification_no_deploy"
+  },
+  "undead_visual_size": {
+    "decision": "D-040",
+    "state": "integrated_candidate_not_deployed",
+    "source_branch": "fix/larger-undead",
+    "source_commit": "07d8f66",
+    "document": "ENEMY_SCALE_CHANGE.md",
+    "size_multiplier": 2,
+    "affected": [
+      "Zombie",
+      "Skeleton"
+    ],
+    "batch_block": 18,
+    "validation": "renderer_build_and_existing_combat_regression_no_stats_change",
+    "deployed": false
+  },
+  "candidate_update": {
+    "version": "0.5.2",
+    "recorded_on": "2026-10-15",
+    "branch": "feat/cooperative-update",
+    "state": "locally_verified_final_ci_in_pr",
+    "deployed": false,
+    "data_reset": false,
+    "bot_pr": 34,
+    "hospital_transport": true,
+    "patient_layout": "staggered_map_beds_and_individual_full_name_cards"
   }
 }

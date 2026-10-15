@@ -79,6 +79,20 @@ public static class ConstructionRules
         return site;
     }
 
+    public static ConstructionSite UpgradeHospital(Village village, string plotId, DateTimeOffset now)
+    {
+        var hospital = village.Structures.SingleOrDefault(s => s.Kind == BuildingKind.Hospital && s.PlotId == plotId)
+            ?? throw new GameRuleException("hospital.notBuilt", "Build the hospital first.");
+        if (hospital.Level >= 3 || village.Sites.Any(s => s.PlotId == plotId))
+            throw new GameRuleException("hospital.upgradeUnavailable", "The hospital is already upgrading or at maximum level.");
+        if (village.Sites.Count >= BuildingCatalog.MaximumOpenSites)
+            throw new GameRuleException("building.tooManySites", "Finish another construction first.");
+        var site = new ConstructionSite { Kind = BuildingKind.Hospital, PlotId = plotId,
+            TargetLevel = hospital.Level + 1, Scale = Math.Pow(2, hospital.Level), PlacedAt = now };
+        village.Sites.Add(site);
+        return site;
+    }
+
     /// <summary>Only untouched blueprints can be withdrawn; anything already carried there stays the citizens' work.</summary>
     public static void Cancel(Village village, string plotId)
     {
@@ -88,6 +102,12 @@ public static class ConstructionRules
             throw new GameRuleException("building.cannotCancel", "Citizens have already worked on this site.");
         }
 
+        if(site.Operation is not null)
+        {
+            var structure=village.Structures.SingleOrDefault(b=>b.PlotId==site.PlotId);if(structure is not null)structure.Decommissioning=false;
+            var storage=village.Storages.SingleOrDefault(b=>b.PlotId==site.PlotId);if(storage is not null)storage.Decommissioning=false;
+            var order=village.CivicOrders.SingleOrDefault(o=>o.Id==site.OrderId);if(order is not null)order.Status="cancelled";
+        }
         village.Sites.Remove(site);
     }
 
@@ -180,14 +200,27 @@ public static class ConstructionRules
             return null;
         }
 
+        if(BuildingOperations.Finish(village,site,now))return site.Kind;
         village.Sites.Remove(site);
         if (site.Definition.Storage is { } storage)
         {
-            village.Storages.Add(StorageBuilding.Create(storage, site.PlotId, now));
+            var built=StorageBuilding.Create(storage, site.PlotId, now);
+            BuildingOperations.AddInvestment(site,built.Investment);
+            village.Storages.Add(built);
         }
         else
         {
-            village.Structures.Add(new Structure { Kind = site.Kind, PlotId = site.PlotId, BuiltAt = now });
+            if (site.TargetLevel > 1)
+            {
+                var building = village.Structures.Single(s => s.PlotId == site.PlotId && s.Kind == BuildingKind.Hospital);
+                building.Level = site.TargetLevel;
+            }
+            else
+            {
+                var built=new Structure { Kind = site.Kind, PlotId = site.PlotId, BuiltAt = now };
+                BuildingOperations.AddInvestment(site,built.Investment);
+                village.Structures.Add(built);
+            }
             FarmRules.EnsureBeds(village);
         }
 

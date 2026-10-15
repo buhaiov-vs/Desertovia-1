@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
-  "recorded_on": "2026-10-14",
-  "phase": "release_0_5_1_chat_launcher_fix",
+  "recorded_on": "2026-10-15",
+  "phase": "release_0_5_3_regressions_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
     "legacy_042": "21f831ae08a0dc10a8c3c11de2f4b048a326decf",
     "legacy_043_unreleased": "6897f76c2d8fa0b6fbfb0ce7e26048d997e4a0e6",
-    "latest_upstream_inspected": "e23bc943bac17e55d4d5a0b0805d07d53de02108"
+    "latest_upstream_inspected": "e23bc943bac17e55d4d5a0b0805d07d53de02108",
+    "release_0_5_3": "a980d8daeb2d3ff10609df7894444d57c8992c74"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -628,7 +629,9 @@
       "todo": "NEXT_TODO.md#d-046--p1--карточка-персонажа-супруг-повторяется-в-характеристиках",
       "game_code_changed_for_this_request": false,
       "deployed_for_this_request": false,
-      "live_account_investigated": false
+      "live_account_investigated": false,
+      "resolved_in_release": "0.5.3",
+      "resolution": "UI and useful-work admission fixed; energy price and start-time fatigue explained"
     },
     "D-047": {
       "recorded_on": "2026-10-15",
@@ -650,7 +653,9 @@
         "ENERGY-01"
       ],
       "game_code_changed_for_this_request": false,
-      "deployed_for_this_request": false
+      "deployed_for_this_request": false,
+      "resolved_in_release": "0.5.3",
+      "resolution": "UI and useful-work admission fixed; energy price and start-time fatigue explained"
     },
     "D-048": {
       "recorded_on": "2026-10-15",
@@ -667,6 +672,32 @@
       "game_code_changed_for_this_request": false,
       "runtime_tests_run_for_this_request": false,
       "deployed_for_this_request": false
+    },
+    "D-049": {
+      "status": "released_verified",
+      "version": "0.5.3",
+      "source_commit": "a980d8daeb2d3ff10609df7894444d57c8992c74",
+      "documentation": "RELEASE_0_5_3.md"
     }
+  },
+  "current_release": {
+    "version": "0.5.3",
+    "source_commit": "a980d8daeb2d3ff10609df7894444d57c8992c74",
+    "status": "released_verified",
+    "ci_run": 38736161629,
+    "domain_passed": 329,
+    "api_passed": 180,
+    "browser_passed": 71,
+    "browser_skipped": 1,
+    "profiles_before": 100,
+    "profiles_after": 100,
+    "lost_profiles_or_progress": 0,
+    "migrations": 17,
+    "hospital_enabled": true,
+    "medical_confirmed": 100,
+    "medical_unavailable": 0,
+    "test_payments": 0,
+    "test_messages": 0,
+    "documentation": "RELEASE_0_5_3.md"
   }
 }

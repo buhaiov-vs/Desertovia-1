@@ -480,7 +480,7 @@
   },
   "chaplain_chat_quiet_and_context": {
     "decision": "D-034",
-    "state": "planned_not_implemented",
+    "state": "bot_repo_partial_game_worker_pending_not_deployed",
     "document": "CHAPLAIN_CHAT_TODO.md",
     "priority": "P1",
     "source_reviewed": [
@@ -497,6 +497,8 @@
     ],
     "player_time_zone_not_assumed": true,
     "time_zone_internal_only": true,
-    "no_geographic_references_in_speech": true
+    "no_geographic_references_in_speech": true,
+    "bot_pr": "https://github.com/desertod666/TG-bots/pull/33",
+    "bot_focused_tests_passed": 13
   }
 }

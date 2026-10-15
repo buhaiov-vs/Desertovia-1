@@ -175,3 +175,5 @@ snapshot once per admission and shared authoritative bot expiry. Recommendation
 | --- | --- | --- | --- |
 | D-051 | RaidRules/RaidWorker, ChaplainChatWorker, SramoslavService, DZ-24 | Единый директор/каталог/журнал: ALMIGHTY_DIRECTOR_PLAN.md | PLAN, без автомата |
 | D-052 | SettingsPanel, version.ts, modal scroll | PatchNotes, каталог RU/EN и раскрываемая история | BRANCH, без deployment |
+
+| D-053 | EnemyLayer, VillageWorld, HospitalPanel | Появление по strikesAt, общий formatRecoveryTime с реальной шкалой | VERIFIED BRANCH,5 целевых browser PASS, build/lint PASS; без deploy |

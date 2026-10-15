@@ -282,8 +282,8 @@ function lerp(from: { x: number; y: number }, to: { x: number; y: number }, shar
 }
 
 /**
- * Attacks on the camp drawn on the map. A pack appears when the tribe sees it coming and creeps toward the camp
- * until it strikes; once the server has fought it out, the slain fall and the rest run off. Times are on the
+ * Attacks on the camp drawn on the map. The warning is a countdown only: packs appear at strikesAt,
+ * then charge; once the server has fought it out, the slain fall and the rest run off. Times are on the
  * local clock, like the rest of the map.
  */
 export class EnemyLayer {
@@ -344,18 +344,17 @@ export class EnemyLayer {
   }
 
   private visible(raid: Raid, now: number) {
-    if (raid.outcome === 'Pending') return Date.parse(raid.announcedAt) <= now
+    // announcedAt starts the warning, not the movement. Later waves wait for their own strikesAt.
+    if (now < Date.parse(raid.strikesAt)) return false
+    if (raid.outcome === 'Pending') return Date.parse(raid.strikesAt) <= now
     return raid.resolvedAt !== null && now - Date.parse(raid.resolvedAt) < LINGER_SECONDS * 1000
   }
 
   /** Centre of the pack while it is on its way or charging. */
   private center(pack: Pack, now: number) {
     const raid = pack.raid
-    const announcedAt = Date.parse(raid.announcedAt)
     const strikesAt = Date.parse(raid.strikesAt)
-    const spawn = around(pack.angle, SPAWN_DISTANCE)
     const edge = around(pack.angle, EDGE_DISTANCE)
-    if (now < strikesAt) return lerp(spawn, edge, (now - announcedAt) / Math.max(1, strikesAt - announcedAt))
     return lerp(edge, around(pack.angle, BREAK_IN_DISTANCE), (now - strikesAt) / (CHARGE_SECONDS * 1000))
   }
 

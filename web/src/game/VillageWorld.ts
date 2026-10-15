@@ -1,3 +1,4 @@
+import { formatRecoveryTime } from '../ui/recoveryTime'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
 import { BuildingLighting, hasPreparedBuilding } from './BuildingLighting'
@@ -2051,7 +2052,7 @@ export class VillageWorld {
       walker.sprite.anchor.set(.5,hurt?.5:1)
       if(hurt){
         walker.staying=true;walker.working=false;walker.guard=false;walker.hunt=null;walker.roaming=false
-        walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}\n${walker.treatmentCause} · ${Math.max(1,Math.ceil((walker.injuredUntil-now)/60000))} мин`
+        walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}\n${walker.treatmentCause} · ${formatRecoveryTime(walker.injuredUntil, now, 'ru')}`
         walker.subtitle.visible=walker.sprite.visible
       } else if(walker.treatmentCause){walker.subtitle.text=walker.normalSubtitle;walker.subtitle.visible=!!walker.normalSubtitle;walker.treatmentCause='';walker.inHospital=false;walker.carrierId=null}
       if (!hurt && walker.iconKey === INJURED_ICON) {

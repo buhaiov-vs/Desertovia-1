@@ -722,6 +722,17 @@
         "Playwright targeted history RU/EN: 2 passed;320px and1440px;light/dark;open/archive/back/focus",
         "git diff --check and AGENTS/CLAUDE parity: passed"
       ]
+    },
+    "D-053": {
+      "state": "verified_branch_not_deployed",
+      "document": "RAID_MEDICAL_FIXES.md",
+      "backend_changed": false,
+      "recovery_time_scale": "real",
+      "checks": [
+        "TypeScript/Vite/PWA production build passed",
+        "lint exit0, existing warnings",
+        "5 targeted Playwright passed: notes RU/EN, real EnemyLayer timing, recovery format,320px hospital"
+      ]
     }
   }
 }

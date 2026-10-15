@@ -741,6 +741,7 @@ export interface SiteStage {
 }
 
 export interface Site {
+  ownerAccountId?: string|null
   targetLevel?: number
   kind: BuildingKind
   plotId: string
@@ -751,6 +752,7 @@ export interface Site {
 }
 
 export interface Structure {
+  ownerAccountId?: string|null
   level?: number
   kind: BuildingKind
   plotId: string
@@ -765,6 +767,7 @@ export interface StorageSlot {
 }
 
 export interface Storage {
+  ownerAccountId?: string|null
   resourceLimit?: number
   totalLimit?: number | null
   kind: StorageKind
@@ -889,6 +892,8 @@ export const RAIN = {
 export interface CivicOrder { id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
 export interface Housing { plotId:string; beds:number; occupied:number; level:number }
 export interface VillageState {
+  kingdomArea?: TileArea
+  castleLevel?: number
   civicOrders?: CivicOrder[]
   housing?: Housing[]
   bridgeOpened?: boolean
@@ -1088,6 +1093,9 @@ export interface SkillValue {
 }
 
 export interface Citizen {
+  accountId?: string
+  cyclePrivateOutput?: boolean
+  personalGoods?: {kind:string;amount:number;costBasis:number}[]
   actionEnergyCosts?: Record<string, number>
   homePlotId?:string|null
   spouseAccountId?:string|null
@@ -1206,6 +1214,7 @@ export const CHAT_MESSAGE_MAXIMUM = 120
 
 /** A line in the village chat; only the Tsar and the citizens read and write it. */
 export interface ChatMessage {
+  mentionCitizenIds?: string[]|null
   id: string
   authorName: string
   /** Null when the Tsar wrote it. */
@@ -1331,7 +1340,29 @@ export interface AlmightyView {
   observations: { id: string; at: string; option: string; reason: string; snapshot: string }[]
 }
 
+export function createOperationId() {
+  const bytes=crypto.getRandomValues(new Uint8Array(16)); bytes[6]=(bytes[6]!&15)|64; bytes[8]=(bytes[8]!&63)|128
+  const id=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')
+  return `${id.slice(0,8)}-${id.slice(8,12)}-${id.slice(12,16)}-${id.slice(16,20)}-${id.slice(20)}`
+}
+export interface EconomyRequest {
+  requestId: string; action: string; resource?: string; amount?: number; price?: number; target?: string; x?: number; y?: number; building?: string
+}
+export interface EconomyView {
+  stockPrices: Record<string,number>
+  privateProperty: {plotId:string;kind:string;level:number;site:boolean;hasWork:boolean}[]
+  coins: number; testCandles: number; earnedToday: number; profitToday: number; taxPreview: number; taxEnabled: boolean
+  exchangeRate: number; dailyExchangeLimit: number; exchangedToday: number; kingdomCandleRoom: number; dayResetsAt: string; treasury: number
+  inventory: {kind: string; amount: number; costBasis: number}[]
+  lots: {id: string; sellerAccountId: string; seller: string; resource: string; amount: number; price: number; status: string}[]
+  journal: {id: string; at: string; operation: string; asset: string; location: string; delta: number; actor: string|null}[]
+  nextJournalBefore: string|null; startedAt: string; workPay: number; constructionPay: number
+  residents: {accountId: string; name: string}[]
+  privateStorages: {plotId: string; kind: string; goods: {resource:string; amount:number}[]}[]
+}
 export const api = {
+  economy: (slug: string, before?: string, asset?: string) => request<EconomyView>('GET', `/api/villages/${encodeURIComponent(slug)}/economy?${new URLSearchParams({...before ? {before} : {}, ...asset ? {asset} : {}})}`),
+  economyAction: (slug: string, body: EconomyRequest) => request<EconomyView>('POST', `/api/villages/${encodeURIComponent(slug)}/economy`, body),
   defenseSector: (slug: string, sector: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/me/defense`, { mode: sector }),
   almighty: (slug: string) => request<AlmightyView>('GET', `/api/villages/${encodeURIComponent(slug)}/director`),
   almightyMode: (slug: string, mode: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/director/mode`, { mode }),
@@ -1367,8 +1398,8 @@ export const api = {
   leaveVillage: (slug: string) => request<void>('DELETE', `/api/villages/${encodeURIComponent(slug)}/me`),
   /** The Tsar deletes the village with everything in it. */
   deleteVillage: (slug: string) => request<void>('DELETE', `/api/villages/${encodeURIComponent(slug)}`),
-  startTask: (slug: string, taskId: string, spot: TilePoint | null = null) =>
-    request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/task`, { taskId, spot }),
+  startTask: (slug: string, taskId: string, spot: TilePoint | null = null, workplacePlotId?: string) =>
+    request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/task`, { taskId, spot, workplacePlotId }),
   cancelTask: (slug: string) => request<Citizen>('DELETE', `/api/villages/${encodeURIComponent(slug)}/me/task`),
   startJob: (slug: string, plotId: string, stage: number, jobId: string) =>
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/job`, { plotId, stage, jobId }),
@@ -1418,8 +1449,8 @@ export const api = {
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/dungeon`, { class: heroClass }),
   leaveDungeon: (slug: string) => request<Citizen>('DELETE', `/api/villages/${encodeURIComponent(slug)}/me/dungeon`),
   chat: (slug: string) => request<ChatMessage[]>('GET', `/api/villages/${encodeURIComponent(slug)}/chat`),
-  sendChat: (slug: string, text: string) =>
-    request<ChatMessage>('POST', `/api/villages/${encodeURIComponent(slug)}/chat`, { text }),
+  sendChat: (slug: string, text: string, mentions?: string[]) =>
+    request<ChatMessage>('POST', `/api/villages/${encodeURIComponent(slug)}/chat`, { text, mentions }),
 }
 
 export const LEND_A_HAND = 'lend-a-hand'
@@ -1443,8 +1474,8 @@ export function storageBuildingsFor(catalog: Catalog, resource: string) {
 }
 
 export function builtKinds(village: VillageState, catalog: Catalog) {
-  const kinds = new Set<BuildingKind>(village.structures.map((s) => s.kind))
-  for (const storage of village.storages) {
+  const kinds = new Set<BuildingKind>(village.structures.filter(s=>!s.ownerAccountId).map((s) => s.kind))
+  for (const storage of village.storages.filter(s=>!s.ownerAccountId)) {
     const building = catalog.buildings.find((b) => b.storage === storage.kind)
     if (building) kinds.add(building.kind)
   }
@@ -1473,9 +1504,9 @@ export function unlockedTasks(village: VillageState, catalog: Catalog) {
 export function buildingCount(village: VillageState, catalog: Catalog, kind: BuildingKind) {
   const storageKind = catalog.buildings.find((b) => b.kind === kind)?.storage
   return (
-    village.structures.filter((s) => s.kind === kind).length +
-    (storageKind ? village.storages.filter((s) => s.kind === storageKind).length : 0) +
-    village.sites.filter((s) => s.kind === kind).length
+    village.structures.filter((s) => s.kind === kind && !s.ownerAccountId).length +
+    (storageKind ? village.storages.filter((s) => s.kind === storageKind && !s.ownerAccountId).length : 0) +
+    village.sites.filter((s) => s.kind === kind && !s.ownerAccountId).length
   )
 }
 

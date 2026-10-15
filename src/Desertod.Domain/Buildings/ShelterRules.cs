@@ -15,15 +15,15 @@ public static class ShelterRules
         var occupied=homes.ToDictionary(s=>s.PlotId,_=>0);
         foreach(var person in people)
         {
-            var home=homes.SingleOrDefault(h=>h.PlotId==person.HomePlotId);
+            var home=homes.SingleOrDefault(h=>h.PlotId==person.HomePlotId && (h.OwnerAccountId == null || h.OwnerAccountId == person.AccountId));
             if(home is null||occupied[home.PlotId]>=Beds(home)) person.HomePlotId=null;
             else occupied[home.PlotId]++;
         }
         foreach(var person in people)
         {
-            if(person.HomePlotId is null&&homes.FirstOrDefault(h=>occupied[h.PlotId]<Beds(h)) is {} home)
+            if(person.HomePlotId is null&&homes.FirstOrDefault(h=>(h.OwnerAccountId == null || h.OwnerAccountId == person.AccountId) && occupied[h.PlotId]<Beds(h)) is {} home)
             {person.HomePlotId=home.PlotId;occupied[home.PlotId]++;}
-            var assigned=homes.SingleOrDefault(h=>h.PlotId==person.HomePlotId);
+            var assigned=homes.SingleOrDefault(h=>h.PlotId==person.HomePlotId && (h.OwnerAccountId == null || h.OwnerAccountId == person.AccountId));
             var quality=assigned is null?GameRules.UnderTreesRegeneration:BuildingCatalog.Get(assigned.Kind).ShelterQuality;
             if(Math.Abs(person.ShelterQuality-quality)>1e-9)
             {person.FlushEnergy(now,village);person.ShelterQuality=quality;}
@@ -34,6 +34,8 @@ public static class ShelterRules
     {
         var home=village.Structures.SingleOrDefault(s=>s.PlotId==plot&&Beds(s)>0)
             ??throw new GameRuleException("housing.notFound","Select a completed residential building.");
+        if(home.OwnerAccountId is {} owner && moving.Any(c => c.AccountId != owner))
+            throw new GameRuleException("housing.private", "This home belongs to another resident.");
         if(citizens.Count(c=>c.HomePlotId==plot&&!moving.Contains(c))+moving.Count>Beds(home))
             throw new GameRuleException("housing.full","Not enough free beds for this move.");
         foreach(var person in moving){person.FlushEnergy(now,village);person.HomePlotId=plot;person.ShelterQuality=BuildingCatalog.Get(home.Kind).ShelterQuality;}

@@ -149,6 +149,8 @@ public sealed class Citizen
 
     /// <summary>Goods that did not fit in storage. They stay in the citizen's hands until there is room.</summary>
     public List<CarriedGood> Load { get; set; } = [];
+    public List<Desertod.Domain.Economy.PersonalGood> PersonalGoods { get; set; } = [];
+    public bool CyclePrivateOutput { get; set; }
 
     /// <summary>Mirrors <c>Load.Count &gt; 0</c> so the server can find waiting carriers with a simple query.</summary>
     public bool IsCarrying { get; set; }

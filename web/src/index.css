@@ -2507,3 +2507,21 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 .almighty-panel { min-width:0; overflow-wrap:anywhere; }
 .almighty-panel .row { flex-wrap:wrap; }
 .almighty-panel button { white-space:normal; max-width:100%; }
+
+/* Kingdom economy and mentions: keep controls within the existing scrollable menus. */
+.economy-panel, .economy-panel * { box-sizing: border-box; min-width: 0; }
+.economy-panel summary { cursor: pointer; font-weight: 700; padding-block: .5rem; overflow-wrap: anywhere; }
+.economy-panel details { border-top: 1px solid #b994513d; margin-top: .65rem; }
+.economy-balances { display: flex; flex-wrap: wrap; gap: .5rem 1rem; padding-block: .75rem; }
+.economy-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem),1fr)); gap: .5rem; margin-block: .65rem; align-items: end; }
+.economy-panel label { display: flex; flex-direction: column; gap: .25rem; }
+.economy-panel input, .economy-panel select { width: 100%; max-width: 100%; }
+.economy-panel button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.economy-lot { display: flex; gap: .5rem; align-items: center; border-bottom: 1px solid #b9945140; padding-block: .65rem; }
+.economy-lot>div { display: flex; flex: 1; flex-direction: column; overflow-wrap: anywhere; }
+.economy-journal { list-style: none; padding: 0; }
+.economy-journal li { overflow-wrap: anywhere; padding-block: .4rem; border-bottom: 1px solid #b9945130; }
+.mention-picker { display: flex; flex-wrap: wrap; gap: .3rem; max-height: 7rem; overflow-y: auto; padding: .3rem; }
+.mention-picker button { overflow-wrap: anywhere; max-width: 100%; }
+.chat-form .chat-mention { flex: 0 0 auto; padding-inline: .5rem; }
+.chat-line.mentioned { border-inline-start: 3px solid #d4ab54; padding-inline-start: .4rem; }

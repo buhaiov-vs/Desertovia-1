@@ -25,12 +25,13 @@ public sealed record StorageSlotDto(ResourceKind Kind, double Fill);
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
 public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots, int Damage)
 {
+    public Guid? OwnerAccountId { get; init; }
     public int ResourceLimit => StorageLimits.PerResource(Kind);
     public int? TotalLimit => StorageLimits.Total(Kind);
 }
 
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
-public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1);
+public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1) { public Guid? OwnerAccountId { get; init; } }
 
 /// <summary>An attack on the way, or a fought one kept for the record.</summary>
 /// <param name="AnnouncedAt">Players see an attack on the way from then on; clients hide it before.</param>
@@ -60,7 +61,7 @@ public sealed record SiteJobDto(string JobId, int Done, int Required, int Room, 
 /// <param name="Hands">Different citizens who already worked on the stage.</param>
 public sealed record SiteStageDto(string Id, int CrewNeeded, int Hands, IReadOnlyList<SiteJobDto> Jobs);
 
-public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages, int TargetLevel = 1);
+public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages, int TargetLevel = 1) { public Guid? OwnerAccountId { get; init; } }
 
 /// <param name="Count">Animals now; the map shows a share of them, the Tsar never sees the number.</param>
 public sealed record HerdDto(AnimalKind Kind, int Count, int Capacity, string Habitat);
@@ -178,6 +179,8 @@ public sealed record VillageStateDto(
     WildsDto? Wilds,
     DungeonDto? Dungeon)
 {
+    public TileArea KingdomArea { get; init; } = WorldMap.BuildArea;
+    public int CastleLevel { get; init; }
     public IReadOnlyList<CivicOrder> CivicOrders { get; init; } = [];
     public IReadOnlyList<HousingDto> Housing { get; init; } = [];
     public bool BridgeOpened { get; init; }
@@ -329,6 +332,9 @@ public sealed record CitizenDto(
     double Power,
     ExternalRecovery? Recovery = null)
 {
+    public Guid AccountId { get; init; }
+    public bool CyclePrivateOutput { get; init; }
+    public IReadOnlyList<Desertod.Domain.Economy.PersonalGood> PersonalGoods { get; init; } = [];
     public IReadOnlyDictionary<string, double>? ActionEnergyCosts { get; init; }
     public string? DefenseSector { get; init; }
     public DateTimeOffset? DefenseReadyAt { get; init; }
@@ -402,7 +408,7 @@ public sealed record CreateVillageRequest(string Name, string? Description = nul
 public sealed record JoinVillageRequest(string? InviteCode = null);
 
 /// <param name="Spot">Where on the map to gather, for tasks that allow it; null works at the task's workplace.</param>
-public sealed record StartTaskRequest(string TaskId, TilePoint? Spot = null);
+public sealed record StartTaskRequest(string TaskId, TilePoint? Spot = null, string? WorkplacePlotId = null);
 
 /// <param name="Spot">Where on the land the idle citizen walks to and waits.</param>
 public sealed record GoToRequest(TilePoint Spot);
@@ -461,11 +467,11 @@ public static class DtoMapper
             .Select(s => new StorageDto(
                 s.Kind,
                 s.PlotId,
-                s.Goods.OrderBy(g => g.Kind).Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
+                (s.OwnerAccountId is null ? s.Goods : []).OrderBy(g => g.Kind).Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
                 s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList(),
-                s.Damage))
+                s.Damage) { OwnerAccountId = s.OwnerAccountId })
             .ToList(),
-        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level)).ToList(),
+        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level) { OwnerAccountId = s.OwnerAccountId }).ToList(),
         village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount, context)).ToList(),
         context.Project is { } project ? project.ToDto(context) : null,
         completedProjects,
@@ -576,7 +582,7 @@ public static class DtoMapper
         site.Definition.Stages
             .Select((stage, index) => new SiteStageDto(
                 stage.Id,
-                ConstructionSite.CrewNeeded(stage, recentCitizens),
+                site.OwnerAccountId is null ? ConstructionSite.CrewNeeded(stage, recentCitizens) : 1,
                 site.HandCount(index),
                 site.Jobs(index)
                     .Select(job => new SiteJobDto(
@@ -588,7 +594,7 @@ public static class DtoMapper
                             : site.Remaining(index, job.JobId),
                         context?.ReservedWork(site.PlotId, index, job.JobId, site.Remaining(index, job.JobId)) ?? 0))
                     .ToList()))
-            .ToList(), site.TargetLevel);
+            .ToList(), site.TargetLevel) { OwnerAccountId = site.OwnerAccountId };
 
     public static ProjectDto ToDto(this VillageProject project, WorkContext context)
     {
@@ -695,7 +701,7 @@ public static class DtoMapper
         citizen.Armor,
         citizen.Arrows,
         Math.Round(CombatRules.Power(citizen), 1), citizen.Recovery)
-        { ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
+        { AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
             .Concat(BuildingCatalog.Jobs.Select(job => new KeyValuePair<string, double>(job.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.JobCost(village, job, now), now))))
             .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value),
             DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,

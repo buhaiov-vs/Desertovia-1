@@ -26,7 +26,7 @@ export function SitesPanel({
   if (village.sites.length === 0) return <p className="muted small">{t('site.none')}</p>
   return (
     <div className="sites">
-      {village.sites.map((site) => (
+      {village.sites.filter(s=>!s.ownerAccountId||s.ownerAccountId===citizen.accountId).map((site) => (
         <SiteCard
           key={site.plotId}
           site={site}
@@ -82,6 +82,7 @@ export function SiteCard({
       citizen={citizen}
       village={village}
       disabled={disabled}
+      privateSite={!!site.ownerAccountId}
       onStart={() => onStartJob({ plotId: site.plotId, stage: stageIndex, jobId: job.jobId })}
     />
   )
@@ -129,6 +130,7 @@ function JobCard({
   village,
   disabled,
   onStart,
+  privateSite = false,
 }: {
   job: SiteJob
   definition: JobDefinition | undefined
@@ -137,6 +139,7 @@ function JobCard({
   village: VillageState
   disabled: boolean
   onStart: () => void
+  privateSite?: boolean
 }) {
   const i18n = useI18n()
   const { t } = i18n
@@ -148,8 +151,8 @@ function JobCard({
     lock = t('site.jobBusy')
   } else if (!done && definition?.kind === 'Haul' && definition.resource) {
     const resource = definition.resource
-    const inHands = citizen.load.find((good) => good.resource === resource)?.amount ?? 0
-    const inStorage = village.resources.find((r) => r.kind === resource)?.amount ?? 0
+    const inHands = privateSite ? citizen.personalGoods?.find(g=>g.kind===resource)?.amount ?? 0 : citizen.load.find((good) => good.resource === resource)?.amount ?? 0
+    const inStorage = privateSite ? 0 : village.resources.find((r) => r.kind === resource)?.amount ?? 0
     if (inHands + inStorage < Math.min(0.5, remaining)) {
       lock = t('site.noMaterial', { resource: i18n.resource(resource).toLowerCase() })
     }

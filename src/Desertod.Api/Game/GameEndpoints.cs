@@ -15,6 +15,10 @@ public static class GameEndpoints
         });
         var player = app.MapGroup("/api").RequireAuthorization();
 
+        player.MapGet("/villages/{slug}/economy", (string slug, Guid? before, string? asset, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.GetEconomyAsync(slug, user.RequireAccountId(), before, asset, ct));
+        player.MapPost("/villages/{slug}/economy", (string slug, EconomyRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.ChangeEconomyAsync(slug, user.RequireAccountId(), request, ct));
         player.MapPut("/villages/{slug}/me/defense", async (string slug, AlmightyMode request, ClaimsPrincipal user, GameService game, CancellationToken ct) => {
             await game.SetDefenseSectorAsync(slug, user.RequireAccountId(), request.Mode, ct); return Results.Ok();
         });
@@ -165,7 +169,7 @@ public static class GameEndpoints
             chat.HistoryAsync(slug, user.RequireAccountId(), cancellationToken));
 
         player.MapPost("/villages/{slug}/chat", (string slug, SendChatRequest request, ClaimsPrincipal user, ChatService chat, CancellationToken cancellationToken) =>
-                chat.SendAsync(slug, user.RequireAccountId(), request.Text, cancellationToken))
+                chat.SendAsync(slug, user.RequireAccountId(), request.Text, cancellationToken, request.Mentions))
             .RequireRateLimiting(ChatService.RateLimit);
     }
 }

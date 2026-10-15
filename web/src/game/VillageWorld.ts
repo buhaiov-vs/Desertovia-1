@@ -281,6 +281,8 @@ export class VillageWorld {
   private readonly obstacles = new Map<string, Container>()
   /** Kind of the building being placed: a rope bridge goes over the ravine, everything else on the camp land. */
   private placingKind = ''
+  private placingPrivate = false
+  private readonly kingdomBorder = new Graphics()
   /** What covers each tile, shared with the minimap and the wildlife; trees of the forest area change it. */
   private terrain: Uint8Array | null = null
   private readonly placementLayer = new Container()
@@ -309,9 +311,10 @@ export class VillageWorld {
     this.lights.circle(CAMPFIRE.x * TILE, CAMPFIRE.y * TILE, 1.6 * TILE).fill({ color: 0xffb347, alpha: 0.25 })
 
     this.placementLayer.addChild(this.ghost)
+    this.kingdomBorder.visible=false
     this.placementLayer.visible = false
     this.selection.visible = false
-    this.world.addChild(this.groundLayer, this.objects, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite)
+    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite)
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
@@ -625,12 +628,20 @@ export class VillageWorld {
    * on free land calls `onPick` with the top-left tile. A rope bridge (`kind`) is placed across the ravine instead.
    * Null ends placement.
    */
-  setPlacement(onPick: ((x: number, y: number) => void) | null, kind = '') {
+  setPlacement(onPick: ((x: number, y: number) => void) | null, kind = '', privateBuild = false) {
     this.onPick = onPick
     this.placingKind = kind
+    this.placingPrivate = privateBuild
+    this.drawKingdomBorder()
     this.app.canvas.style.cursor = ''
     this.ghost.clear()
     this.placementLayer.visible = false
+  }
+
+  private drawKingdomBorder() {
+    this.kingdomBorder.clear(); this.kingdomBorder.visible=!!this.onPick
+    const area=this.village?.kingdomArea??this.catalog?.buildArea
+    if(area)this.kingdomBorder.rect(area.x*TILE,area.y*TILE,area.width*TILE,area.height*TILE).fill({color:0xffd269,alpha:.025}).stroke({color:0xffd269,width:1.2,alpha:.85})
   }
 
   /** A click (not a drag) on a citizen calls `onPick` with their id, unless a building is being placed. Null turns it off. */
@@ -747,7 +758,7 @@ export class VillageWorld {
     const free =
       this.catalog !== null &&
       this.village !== null &&
-      (this.placingKind === ROPE_BRIDGE ? canBridgeAt(this.village, x, y) : canBuildAt(this.catalog, this.village, x, y)) &&
+      (this.placingKind === ROPE_BRIDGE ? canBridgeAt(this.village, x, y) : canBuildAt(this.catalog, this.village, x, y, this.placingPrivate)) &&
       this.fog.isAreaExplored(footprint(x, y))
     return { x, y, free }
   }
@@ -1293,6 +1304,7 @@ export class VillageWorld {
       this.showCamp()
     }
     this.village = state
+    this.drawKingdomBorder()
     this.fog.setExplored(state.explored)
     this.drawTrees(state.trees)
     this.drawObstacles(state.wilds)

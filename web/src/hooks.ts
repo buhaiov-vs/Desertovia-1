@@ -234,7 +234,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     }
   }, [hub, member, slug])
 
-  const sendChat = useCallback(async (text: string) => receive(await api.sendChat(slug, text)), [slug, receive])
+  const sendChat = useCallback(async (text: string, mentions?: string[]) => receive(await api.sendChat(slug, text, mentions)), [slug, receive])
 
   const updateCitizen = useCallback(
     (citizen: CitizenSummary) => setCitizens((previous) => new Map(previous).set(citizen.id, citizen)),

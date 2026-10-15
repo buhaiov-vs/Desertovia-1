@@ -1,3 +1,4 @@
+using Desertod.Domain.Economy;
 using Desertod.Domain.Buildings;
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Combat;
@@ -61,7 +62,7 @@ public static class CycleEngine
     /// Renewing inside the grace window keeps the streak; inputs are consumed up front.
     /// </summary>
     /// <param name="spot">Where on the map the player wants the goods gathered; see <see cref="WorkSpots"/>.</param>
-    public static void Start(Citizen citizen, TaskDefinition task, WorkContext context, DateTimeOffset now, TilePoint? spot = null)
+    public static void Start(Citizen citizen, TaskDefinition task, WorkContext context, DateTimeOffset now, TilePoint? spot = null, string? workplacePlotId = null)
     {
         var village = context.Village;
         if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge)) village.BridgeOpened=true;
@@ -78,7 +79,19 @@ public static class CycleEngine
             throw new GameRuleException("task.notAvailable", $"\"{task.Name}\" is not available yet.", new Dictionary<string, object> { ["taskId"] = task.Id });
         }
 
-        if (task.RequiredBuilding is { } building && !village.Has(building))
+        if (Wilderness.IsWild(task)) spot = Wilderness.WorkSpot(village, task, spot);
+        var selectedWorkplace = workplacePlotId is null
+            ? (citizen.CyclePrivateOutput && citizen.Spot is {} previousSpot
+                ? village.Structures.SingleOrDefault(b=>b.OwnerAccountId==citizen.AccountId && b.Kind==task.RequiredBuilding && !b.Decommissioning && WorldMap.Yard(b.PlotId)==previousSpot) : null)
+            : village.Structures.SingleOrDefault(b=>b.PlotId==workplacePlotId && b.Kind==task.RequiredBuilding && !b.Decommissioning);
+        if (workplacePlotId is not null && (selectedWorkplace is null || selectedWorkplace.OwnerAccountId is {} owner && owner != citizen.AccountId))
+            throw new GameRuleException("building.private", "Choose an available workplace belonging to you or the kingdom.");
+        var privateWorkplace = selectedWorkplace?.OwnerAccountId == citizen.AccountId || task.RequiredBuilding is {} needed && !village.Has(needed)
+            && village.Structures.Any(b => b.Kind == needed && b.OwnerAccountId == citizen.AccountId && !b.Decommissioning);
+        if (privateWorkplace && task.RequiredBuilding is {} ownKind)
+            spot = WorldMap.Yard((selectedWorkplace ?? village.Structures.First(b=>b.Kind==ownKind && b.OwnerAccountId==citizen.AccountId && !b.Decommissioning)).PlotId);
+        citizen.CyclePrivateOutput = privateWorkplace || spot is {} ownSpot && !KingdomRules.Area(village).Contains(ownSpot.ToTile());
+        if (task.RequiredBuilding is { } building && !village.Has(building) && !privateWorkplace)
         {
             throw new GameRuleException("task.needsBuilding", $"\"{task.Name}\" needs a {BuildingCatalog.Get(building).Name}.",
                 new Dictionary<string, object> { ["building"] = building.ToString() });
@@ -111,7 +124,7 @@ public static class CycleEngine
 
         if (task.Effect is TaskEffect.Sow or TaskEffect.Water or TaskEffect.Harvest)
         {
-            FarmRules.Check(village, task, now);
+            FarmRules.Check(village, task, now, citizen.CyclePrivateOutput ? citizen.AccountId : null);
         }
 
         CheckHands(citizen, village, task, now);
@@ -135,16 +148,13 @@ public static class CycleEngine
             throw new GameRuleException("task.veinEmpty", "The gold vein is empty.", new Dictionary<string, object> { ["taskId"] = task.Id });
         }
 
-        if (Wilderness.IsWild(task))
-        {
-            spot = Wilderness.WorkSpot(village, task, spot);
-        }
-
+        var privateOutput = privateWorkplace || spot is {} personalSpot && !KingdomRules.Area(village).Contains(personalSpot.ToTile());
+        citizen.CyclePrivateOutput = privateOutput;
         foreach (var input in task.Inputs)
         {
             if (Available(citizen, village, input.Resource) < input.Amount)
             {
-                throw new GameRuleException("storage.missingInput", $"Not enough {ResourceNames.Of(input.Resource)} in storage.", Resource(input.Resource));
+                throw new GameRuleException("storage.missingInput", $"Not enough {ResourceNames.Of(input.Resource)} in storage.", new Dictionary<string, object> { ["resource"] = input.Resource.ToString(), ["missing"] = input.Amount - Available(citizen, village, input.Resource) });
             }
         }
 
@@ -161,7 +171,7 @@ public static class CycleEngine
 
         var work = SkillRules.WorkTime(citizen, task.Skill, task.SkillLevel, TimeSpan.FromSeconds(task.WorkSeconds));
         if (task.Effect is TaskEffect.Build or TaskEffect.Repair or TaskEffect.Supervise && DayCycle.IsNight(now)) work *= 1.25;
-        if (task.RequiredBuilding is {} used && village.Structures.FirstOrDefault(s => s.Kind == used) is {} worn)
+        if (task.RequiredBuilding is {} used && village.Structures.FirstOrDefault(s => s.Kind == used && (citizen.CyclePrivateOutput ? s.OwnerAccountId == citizen.AccountId : s.OwnerAccountId == null)) is {} worn)
             work *= worn.Damage > 75 ? 1.25 : worn.Damage > 50 ? 1.1 : 1;
         var walk = repairYard is { } yard ? WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard) : Walk(citizen, village, task, spot, now);
         Begin(citizen, task.Id, work + walk, WorkEnergy.TaskCost(village, task, now), village, now, walk);
@@ -184,7 +194,7 @@ public static class CycleEngine
 
     public static void StartRescue(Citizen helper,Citizen patient,WorkContext context,DateTimeOffset now)
     {
-        CheckReady(helper,now);RescueRules.Check(helper,patient,now);
+        CheckReady(helper,now);RescueRules.Check(helper,patient,now);helper.CyclePrivateOutput=false;
         var spot=patient.Spot??patient.IdleSpot??patient.Trip?.To??WorldMap.Places[WorldMap.Camp];
         BankAccess.Require(context.Village,spot);
         var walk=WorldMap.Walk(WorldMap.Places[WorldMap.Camp],spot)+WorldMap.Walk(spot,RescueRules.Ward(context.Village))*2;
@@ -199,6 +209,7 @@ public static class CycleEngine
     /// <summary>Starts a job on a construction site: hauling material there, or working on the current stage.</summary>
     public static void StartJob(Citizen citizen, string plotId, int stage, string jobId, WorkContext context, DateTimeOffset now)
     {
+        citizen.CyclePrivateOutput = context.Village.Sites.SingleOrDefault(s => s.PlotId == plotId)?.OwnerAccountId is not null;
         var village = context.Village;
         if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge)) village.BridgeOpened=true;
         CheckReady(citizen, now);
@@ -206,7 +217,7 @@ public static class CycleEngine
 
         var site = ConstructionRules.FindSite(village, plotId);
         var room = jobId == BuildingCatalog.LendAHand
-            ? ConstructionSite.CrewNeeded(site.Definition.Stages[stage], context.RecentCitizenCount) - site.HandCount(stage)
+            ? site.RequiredCrew(stage, context.RecentCitizenCount) - site.HandCount(stage)
             : job.Kind == JobKind.Labor ? site.LaborRoom(stage, jobId) : site.Remaining(stage, jobId);
         var free = room - context.ReservedWork(plotId, stage, jobId, room, citizen.Id);
         if (free <= 0)
@@ -215,7 +226,7 @@ public static class CycleEngine
         var yard = WorldMap.Yard(plotId);
         var duration = job.Kind == JobKind.Haul
             ? SkillRules.WorkTime(citizen, job.Skill, 0, BuildingCatalog.HaulBaseTime) + WorldMap.Walk(
-                citizen.Carried(job.Resource!.Value) > 0 ? WorldMap.Places[WorldMap.Camp] : village.PickupPoint(job.Resource.Value, yard),
+                citizen.CyclePrivateOutput || citizen.Carried(job.Resource!.Value) > 0 ? WorldMap.Places[WorldMap.Camp] : village.PickupPoint(job.Resource.Value, yard),
                 yard)
             : SkillRules.WorkTime(citizen, job.Skill, 0, GameRules.CraftLength) + WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard);
 
@@ -230,6 +241,7 @@ public static class CycleEngine
     /// <summary>Starts researching the technology the citizens voted for, at its building.</summary>
     public static void StartResearch(Citizen citizen, WorkContext context, DateTimeOffset now)
     {
+        citizen.CyclePrivateOutput = false;
         CheckReady(citizen, now);
         var (technology, plotId) = TechnologyRules.CheckResearch(context.Village, citizen);
 
@@ -452,16 +464,16 @@ public static class CycleEngine
                 break;
 
             case TaskEffect.Sow:
-                overflowed = !FarmRules.Sow(village, task.Crop!.Value, now);
+                overflowed = !FarmRules.Sow(village, task.Crop!.Value, now, citizen.CyclePrivateOutput ? citizen.AccountId : null);
                 break;
 
             case TaskEffect.Water:
-                overflowed = FarmRules.Water(village, now) == 0;
+                overflowed = FarmRules.Water(village, now, citizen.CyclePrivateOutput ? citizen.AccountId : null) == 0;
                 break;
 
             case TaskEffect.Harvest:
             {
-                var crop = FarmRules.Harvest(village, now);
+                var crop = FarmRules.Harvest(village, now, citizen.CyclePrivateOutput ? citizen.AccountId : null);
                 overflowed = crop is null;
                 foreach (var output in crop?.Harvest ?? [])
                 {
@@ -598,7 +610,7 @@ public static class CycleEngine
         if(task.Effect is TaskEffect.Survey or TaskEffect.Build && contributed>0)
             experienceShare*=Math.Min(1,(double)contributed/Math.Max(1,YieldMath.Whole(task.BaseYield*factor)));
         if(task.Effect==TaskEffect.Repair && repaired>0)experienceShare*=Math.Min(1,repaired/5.0);
-        if (task.RequiredBuilding is {} producedAt && !overflowed && village.Structures.FirstOrDefault(s => s.Kind == producedAt) is {} producer)
+        if (task.RequiredBuilding is {} producedAt && !overflowed && village.Structures.FirstOrDefault(s => s.Kind == producedAt && (citizen.CyclePrivateOutput ? s.OwnerAccountId == citizen.AccountId : s.OwnerAccountId == null)) is {} producer)
         {
             producer.ProductionCycles++;
             if (producer.ProductionCycles % 10 == 0) producer.Damage = Math.Min(100, producer.Damage + 1);
@@ -616,6 +628,13 @@ public static class CycleEngine
     private static void Keep(Citizen citizen, Village village, ResourceKind kind, int amount,
         List<ResourceAmount> carried, List<ResourceAmount> lost)
     {
+        if (citizen.CyclePrivateOutput)
+        {
+            var kept = Math.Min(amount, PersonalInventory.Room(citizen, kind));
+            if (kept > 0) PersonalInventory.Add(citizen, kind, kept, 0);
+            if (amount > kept) lost.Add(new ResourceAmount(kind, amount - kept));
+            return;
+        }
         var left = amount - village.Store(kind, amount);
         var held = Math.Min(left, Math.Max(0, StorageRules.CarryLimit(citizen, citizen.CycleEndsAt ?? DateTimeOffset.UtcNow) - citizen.Carried(kind)));
         if (held > 0)
@@ -653,7 +672,7 @@ public static class CycleEngine
         {
             if (job.Id == BuildingCatalog.LendAHand)
             {
-                var needed = ConstructionSite.CrewNeeded(site.Definition.Stages[stage], context.RecentCitizenCount);
+                var needed = site.RequiredCrew(stage, context.RecentCitizenCount);
                 if (stage == site.Stage && site.HandCount(stage) < needed && !site.HasHand(stage, citizen.Id))
                 {
                     site.AddHand(stage, citizen.Id);
@@ -663,10 +682,11 @@ public static class CycleEngine
             else if (job.Kind == JobKind.Haul)
             {
                 var resource = job.Resource!.Value;
-                amount = Min(potential, Available(citizen, village, resource), site.Remaining(stage, job.Id), ownLimit);
+                amount = Min(potential, site.OwnerAccountId is null ? Available(citizen, village, resource) : PersonalInventory.Amount(citizen, resource), site.Remaining(stage, job.Id), ownLimit);
                 if (amount > 0)
                 {
-                    TakeFromHandsThenStorage(citizen, village, resource, amount);
+                    if (site.OwnerAccountId is null) TakeFromHandsThenStorage(citizen, village, resource, amount);
+                    else PersonalInventory.Remove(citizen, resource, amount);
                     site.Record(stage, job.Id, amount, citizen.Id);
                 }
             }
@@ -691,7 +711,7 @@ public static class CycleEngine
         }
 
         var overflowed = amount <= 0;
-        var completed = site is null ? null : ConstructionRules.Advance(village, site, context.RecentCitizenCount, now);
+        var completed = site is null ? null : ConstructionRules.Advance(village, site, context.RecentCitizenCount, now, citizen);
         var hungry = Eat(citizen, village, now);
 
         var report = Finish(citizen, village, job.Id, job.Primary, job.Secondary, job.Skill, SkillRules.Challenge(citizen, job.Skill, 0),
@@ -794,8 +814,11 @@ public static class CycleEngine
             return false;
         }
 
-        var eaten = citizen.TakeFromLoad(ResourceKind.Food, 1);
-        if (eaten == 0)
+        var eaten = citizen.CyclePrivateOutput
+            ? (PersonalInventory.Amount(citizen, ResourceKind.Food) > 0 ? 1 : 0)
+            : citizen.TakeFromLoad(ResourceKind.Food, 1);
+        if (citizen.CyclePrivateOutput && eaten > 0) PersonalInventory.Remove(citizen, ResourceKind.Food, 1);
+        if (eaten == 0 && !citizen.CyclePrivateOutput)
         {
             eaten = village.Take(ResourceKind.Food, 1);
         }
@@ -904,7 +927,7 @@ public static class CycleEngine
     /// </summary>
     private static TimeSpan Walk(Citizen citizen, Village village, TaskDefinition task, TilePoint? spot, DateTimeOffset now)
     {
-        if (FarmRules.Walk(village, task, now) is { } farmWalk)
+        if (FarmRules.Walk(village, task, now, citizen.CyclePrivateOutput ? citizen.AccountId : null) is { } farmWalk)
         {
             return farmWalk;
         }
@@ -1081,11 +1104,11 @@ public static class CycleEngine
         var outputs = task.Effect switch
         {
             TaskEffect.Resources => task.Outputs,
-            TaskEffect.Harvest when FarmRules.RipeBed(village, now) is { Crop: { } crop } => FarmCatalog.Get(crop).Harvest,
+            TaskEffect.Harvest when FarmRules.RipeBed(village, now, citizen.CyclePrivateOutput ? citizen.AccountId : null) is { Crop: { } crop } => FarmCatalog.Get(crop).Harvest,
             _ => [],
         };
         bool NoRoom(ResourceAmount output) =>
-            citizen.Carried(output.Resource) >= StorageRules.CarryLimit(citizen, now) && village.FreeSpace(output.Resource) <= 0;
+            citizen.CyclePrivateOutput ? PersonalInventory.Room(citizen, output.Resource) <= 0 : citizen.Carried(output.Resource) >= StorageRules.CarryLimit(citizen, now) && village.FreeSpace(output.Resource) <= 0;
         var blocked = outputs.FirstOrDefault(NoRoom);
         if (blocked is not null && outputs.All(NoRoom))
         {
@@ -1096,10 +1119,12 @@ public static class CycleEngine
     }
 
     private static int Available(Citizen citizen, Village village, ResourceKind kind) =>
-        citizen.Carried(kind) + village.Stock(kind);
+        citizen.CyclePrivateOutput ? PersonalInventory.Amount(citizen, kind) : citizen.Carried(kind) + village.Stock(kind);
 
     private static void TakeFromHandsThenStorage(Citizen citizen, Village village, ResourceKind kind, int amount)
     {
+        if (amount <= 0) return;
+        if (citizen.CyclePrivateOutput) { PersonalInventory.Remove(citizen, kind, amount); return; }
         var fromHands = citizen.TakeFromLoad(kind, amount);
         village.Take(kind, amount - fromHands);
     }

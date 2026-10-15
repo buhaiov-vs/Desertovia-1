@@ -251,14 +251,14 @@ public sealed class Village
     public Herd HerdOf(AnimalKind kind) => Wildlife.Single(h => h.Kind == kind);
 
     public bool Has(BuildingKind kind) =>
-        Structures.Any(s => s.Kind == kind && !s.Decommissioning)
-        || Storages.Any(s => BuildingCatalog.ForStorage(s.Kind) == kind && !s.Decommissioning);
+        Structures.Any(s => s.OwnerAccountId == null && s.Kind == kind && !s.Decommissioning)
+        || Storages.Any(s => s.OwnerAccountId == null && BuildingCatalog.ForStorage(s.Kind) == kind && !s.Decommissioning);
 
     /// <summary>Finished buildings and open sites of this kind; repeats need more material.</summary>
-    public int CountOf(BuildingKind kind) =>
-        Structures.Count(s => s.Kind == kind)
-        + Storages.Count(s => BuildingCatalog.ForStorage(s.Kind) == kind)
-        + Sites.Count(s => s.Kind == kind);
+    public int CountOf(BuildingKind kind, Guid? owner = null) =>
+        Structures.Count(s => s.Kind == kind && s.OwnerAccountId == owner)
+        + Storages.Count(s => BuildingCatalog.ForStorage(s.Kind) == kind && s.OwnerAccountId == owner)
+        + Sites.Count(s => s.Kind == kind && s.OwnerAccountId == owner);
 
     /// <summary>What is built or planned on a plot.</summary>
     public BuildingKind? KindAt(string plotId) =>
@@ -276,10 +276,10 @@ public sealed class Village
         plotIds.Any(plotId => WorldMap.Footprint(plotId) is { } taken && taken.Overlaps(area));
 
     public int Stock(ResourceKind kind) =>
-        StorageCatalog.IsGood(kind) ? Storages.Sum(s => s.Amount(kind)) : Knowledge;
+        StorageCatalog.IsGood(kind) ? Storages.Where(s => s.OwnerAccountId == null).Sum(s => s.Amount(kind)) : Knowledge;
 
     public int FreeSpace(ResourceKind kind) =>
-        StorageCatalog.IsGood(kind) ? Storages.Sum(s => s.FreeSpace(kind)) : int.MaxValue;
+        StorageCatalog.IsGood(kind) ? Storages.Where(s => s.OwnerAccountId == null).Sum(s => s.FreeSpace(kind)) : int.MaxValue;
 
     /// <summary>Stores as much as fits, specialised buildings first, and returns the stored amount.</summary>
     public int Store(ResourceKind kind, int amount)
@@ -291,7 +291,7 @@ public sealed class Village
         }
 
         var stored = 0;
-        var order = Storages
+        var order = Storages.Where(s => s.OwnerAccountId == null)
             .OrderBy(s => s.Definition.IsGeneral)
             .ThenByDescending(s => s.Amount(kind) > 0);
         foreach (var building in order)
@@ -318,7 +318,7 @@ public sealed class Village
         }
 
         var taken = 0;
-        foreach (var building in Storages.OrderBy(s => !s.Definition.IsGeneral))
+        foreach (var building in Storages.Where(s => s.OwnerAccountId == null).OrderBy(s => !s.Definition.IsGeneral))
         {
             if (amount - taken <= 0)
             {
@@ -334,7 +334,7 @@ public sealed class Village
     /// <summary>Where a citizen walks to drop this good: the nearest building with room, else the nearest that accepts it.</summary>
     public TilePoint DropPoint(ResourceKind kind, TilePoint from)
     {
-        var accepting = Storages.Where(s => s.Definition.AcceptsGood(kind)).ToList();
+        var accepting = Storages.Where(s => s.OwnerAccountId == null && s.Definition.AcceptsGood(kind)).ToList();
         var target = accepting.Where(s => s.FreeSpace(kind) > 0).MinBy(s => WorldMap.Yard(s.PlotId).DistanceTo(from))
                      ?? accepting.MinBy(s => WorldMap.Yard(s.PlotId).DistanceTo(from));
         return target is null ? WorldMap.Places[WorldMap.Camp] : WorldMap.Yard(target.PlotId);
@@ -343,7 +343,7 @@ public sealed class Village
     /// <summary>Where a citizen picks up this good: the nearest building holding it.</summary>
     public TilePoint PickupPoint(ResourceKind kind, TilePoint to)
     {
-        var target = Storages.Where(s => s.Amount(kind) > 0).MinBy(s => WorldMap.Yard(s.PlotId).DistanceTo(to));
+        var target = Storages.Where(s => s.OwnerAccountId == null && s.Amount(kind) > 0).MinBy(s => WorldMap.Yard(s.PlotId).DistanceTo(to));
         return target is null ? WorldMap.Places[WorldMap.Camp] : WorldMap.Yard(target.PlotId);
     }
 

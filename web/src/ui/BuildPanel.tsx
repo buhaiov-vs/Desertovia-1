@@ -32,7 +32,8 @@ export function BuildPanel({
   const built = builtKinds(village, catalog)
   const discovered = discoveredTechnologies(village)
   const maximum = catalog.rules.maximumOpenSites
-  const full = village.sites.length >= maximum
+  const publicSites = village.sites.filter(s=>!s.ownerAccountId)
+  const full = publicSites.length >= maximum
   const buildable = catalog.buildings.filter((b) => b.stages.length > 0)
   const later = catalog.buildings.filter((b) => b.stages.length === 0)
 
@@ -66,12 +67,12 @@ export function BuildPanel({
         <h3>
           {t('build.sites')}{' '}
           <span className="muted">
-            {village.sites.length} / {maximum}
+            {publicSites.length} / {maximum}
           </span>
         </h3>
-        {village.sites.length === 0 && <p className="muted small">{t('build.noSites')}</p>}
+        {publicSites.length === 0 && <p className="muted small">{t('build.noSites')}</p>}
         <ul className="site-list">
-          {village.sites.map((site) => {
+          {publicSites.map((site) => {
             const definition = catalog.buildings.find((b) => b.kind === site.kind)
             const stage = definition?.stages[site.stage]
             return (
@@ -113,7 +114,7 @@ export function BuildPanel({
               <button
                 key={definition.kind}
                 className="task-card"
-                disabled={full || missing.length > 0 || undiscovered !== null || !tsar && definition.kind === 'Hospital'}
+                disabled={full || missing.length > 0 || undiscovered !== null || !tsar && ['Hospital', 'Castle'].includes(definition.kind) || definition.kind === 'Castle' && buildingCount(village, catalog, 'Castle') > 0}
                 onClick={() => onPlace(definition)}
               >
                 <TileIcon tile={BUILDING_SIGNS[definition.kind] ?? taskIcon('build')} scale={2} />

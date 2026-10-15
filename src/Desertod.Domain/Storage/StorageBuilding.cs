@@ -9,6 +9,7 @@ namespace Desertod.Domain.Storage;
 public sealed class StorageBuilding
 {
     public StorageKind Kind { get; set; }
+    public Guid? OwnerAccountId { get; set; }
 
     /// <summary>Unique within a village; identifies the building.</summary>
     public required string PlotId { get; set; }
@@ -21,6 +22,7 @@ public sealed class StorageBuilding
     public List<StoredGood> Investment { get; set; } = [];
 
     public List<StoredGood> Goods { get; set; } = [];
+    public List<Desertod.Domain.Economy.PersonalGood> PersonalCosts { get; set; } = [];
 
     public StorageDefinition Definition => StorageCatalog.Get(Kind);
 

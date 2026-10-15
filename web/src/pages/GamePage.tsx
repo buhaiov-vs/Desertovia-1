@@ -1,3 +1,4 @@
+import { createOperationId } from '../api'
 import { HospitalPanel } from '../ui/HospitalPanel'
 import { SramoslavPanel } from '../ui/SramoslavPanel'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -99,7 +100,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const i18n = useI18n()
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [ownCitizen, setCitizen] = useState<Citizen | null | undefined>(undefined)
-  const [placing, setPlacing] = useState<{ definition: BuildingDefinition } | null>(null)
+  const [placing, setPlacing] = useState<{ definition: BuildingDefinition; private?:boolean; requestId?:string } | null>(null)
   /** Citizen the Tsar clicked: appoints them Governor or writes their subtitle. */
   const [subtitleFor, setSubtitleFor] = useState<string | null>(null)
   /** Place on the map the player clicked to send their citizen there. */
@@ -411,7 +412,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     }
   }
 
-  const start = (task: Task, spot: TilePoint | null = null) => run(() => api.startTask(slug, task.id, spot))
+  const start = (task: Task, spot: TilePoint | null = null, workplacePlotId?: string) => run(() => api.startTask(slug, task.id, spot, workplacePlotId))
   const startJob = (choice: JobChoice) => run(() => api.startJob(slug, choice.plotId, choice.stage, choice.jobId))
   const carry = () => run(() => api.startTask(slug, CARRY_TO_STORAGE))
   const research = () => run(() => api.research(slug))
@@ -545,11 +546,15 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     if (!placing) return null
     return {
       kind: placing.definition.kind,
+      private: placing.private,
       onPick: async (x, y) => {
         const building = i18n.building(placing.definition.kind).name
         setPlacing(null)
         try {
-          setVillageState(await api.placeBlueprint(slug, placing.definition.kind, x, y))
+          if(placing.private){
+            await api.economyAction(slug,{requestId:placing.requestId!,action:'private-build',building:placing.definition.kind,x,y})
+            setVillageState((await api.village(slug)).state)
+          } else setVillageState(await api.placeBlueprint(slug, placing.definition.kind, x, y))
           setNotice(i18n.t('build.placed', { building }))
         } catch (exception) {
           setNotice(i18n.error(exception))
@@ -853,6 +858,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         </div>
         <ChatPanel
           key={slug}
+          mentionCandidates={citizens.filter(c=>!live.away.has(c.id)).map(c=>({id:c.id,name:c.name}))}
           incoming={live.chatArrivals}
           interrupted={showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
@@ -955,6 +961,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               inviteCode={live.inviteCode}
               onVillage={setVillageState}
               onNewInviteCode={async () => live.setInviteCode((await api.newInviteCode(slug)).inviteCode)}
+              onPrivatePlace={(definition)=>{setPlacing({definition,private:true,requestId:createOperationId()});setNotice(null);setPanel('none')}}
               onPlace={(definition) => {
                 setPlacing({ definition })
                 setNotice(null)
@@ -992,6 +999,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         <ServerClock offsetMs={serverOffset}>
           {(now) => (
             <InventoryPanel
+              onPrivatePlace={(definition)=>{setPlacing({definition,private:true,requestId:createOperationId()});setNotice(null);setPanel('none')}}
               village={village}
               citizen={citizen}
               catalog={catalog}

@@ -43,9 +43,7 @@ export function TopBar({
           )
         })}
         <span className="resource-chip">
-          <span className="morale-icon" aria-hidden>
-            ☺
-          </span>
+          {citizen ? <span title={i18n.language==='ru'?'Личная энергия и сытость':'Personal energy and hunger'}>⚡ {Math.floor(citizen.energy)}/{Math.floor(citizen.maximumEnergy)} {citizen.isHungry?'🍽':'🥖'}</span> : <><span className="morale-icon" aria-hidden>☺</span>
           <Hint
             text={t('hint.morale', {
               value: Math.round(village.morale * 100),
@@ -54,7 +52,7 @@ export function TopBar({
             })}
           >
             {Math.round(village.morale * 100)}
-          </Hint>
+          </Hint></>}
         </span>
         <WeatherChip village={village} catalog={catalog} citizen={citizen} citizens={citizens} onForecast={onForecast} />
       </div>

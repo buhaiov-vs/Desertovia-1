@@ -155,7 +155,7 @@ export function TargetPopup({
   now: number
   pending: boolean
   error: string | null
-  onStart: (task: Task, spot: TilePoint | null) => void
+  onStart: (task: Task, spot: TilePoint | null, workplacePlotId?: string) => void
   onStartJob: (choice: JobChoice) => void
   ruler: boolean
   onCivic: (plotId:string, operation:string)=>Promise<void>
@@ -174,7 +174,7 @@ export function TargetPopup({
   const beds = target.kind === 'building' ? village.fields.filter((bed) => bed.plotId === target.plotId) : []
   const storage =
     target.kind === 'building' && target.storage ? village.storages.find((s) => s.plotId === target.plotId) : undefined
-  const built = new Set<string>([...builtKinds(village, catalog), ...village.completedProjects])
+  const built = new Set<string>([...builtKinds(village, catalog), ...village.structures.filter(s=>s.ownerAccountId===citizen.accountId).map(s=>s.kind), ...village.completedProjects])
   const wildWood =
     target.kind === 'tree' && !inForestArea(Math.floor(target.spot.x), Math.floor(target.spot.y))
   const damage = target.kind === 'building' ? damageOf(village, target.plotId) : 0
@@ -189,7 +189,7 @@ export function TargetPopup({
       </header>
       <div className="target-popup-body">
         {operationError&&<p className="error">{operationError}</p>}
-        {target.kind==='building'&&ruler&&<div className="civic-actions"><button disabled={pending} onClick={()=>void operate('upgrade')}>Улучшить</button>
+        {target.kind==='building'&&ruler&&!village.structures.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&!village.storages.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&<div className="civic-actions"><button disabled={pending} onClick={()=>void operate('upgrade')}>Улучшить</button>
           {confirm?<><span>Подтвердить медленную разборку?</span><button onClick={()=>void operate('demolish')}>Снести</button><button onClick={()=>setConfirm(false)}>Отмена</button></>:<button onClick={()=>setConfirm(true)}>Снести</button>}</div>}
         {blockedBank&&<p className="warning">Сначала постройте Царский мост.</p>}
         {working && <p className="small muted">{t('target.busy')}</p>}
@@ -223,7 +223,7 @@ export function TargetPopup({
             fields={village.fields}
             resources={village.resources}
             disabled={disabled}
-            onStart={(task) => onStart(task, spotFor(target, task))}
+            onStart={(task) => onStart(task, spotFor(target, task), target.kind === 'building' && task.requiredBuilding === target.building ? target.plotId : undefined)}
           />
         )}
         {!site && !storage && tasks.length === 0 && <p className="small muted">{t('target.nothing')}</p>}

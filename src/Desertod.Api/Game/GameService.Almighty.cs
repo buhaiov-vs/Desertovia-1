@@ -110,13 +110,20 @@ public sealed partial class GameService
                 using var saved = JsonDocument.Parse(priorObservation.Snapshot);
                 if(saved.RootElement.TryGetProperty("stock",out var oldStock)) previousStock = new { priorObservation.At, stock = oldStock.Clone() };
             }
+            var accounting = await db.KingdomEconomies.AsNoTracking().SingleOrDefaultAsync(x => x.VillageId == villageId, ct);
+            var economicChanges = await db.LedgerEntries.AsNoTracking().Where(x => x.VillageId == villageId && x.At >= now.AddHours(-6) && x.Operation != "opening")
+                .GroupBy(x => new { x.Asset, x.Operation }).Select(g => new { g.Key.Asset, g.Key.Operation, delta = g.Sum(x => x.Delta), entries = g.Count() }).Take(20).ToListAsync(ct);
+            var incomeDay = EconomyDay(now);
+            var wagesToday = await db.GameWallets.Where(w=>w.VillageId==villageId && w.IncomeDay==incomeDay).SumAsync(w=>(long?)w.EarnedToday,ct) ?? 0;
+            var tradingProfitToday = await db.GameWallets.Where(w=>w.VillageId==villageId && w.IncomeDay==incomeDay).SumAsync(w=>(long?)w.ProfitToday,ct) ?? 0;
             var snapshot = JsonSerializer.Serialize(new {
                 now, facts, stock, previousStock,
+                economy = new { startedAt = accounting?.StartedAt, accounting?.TreasuryCoins, wagesToday, tradingProfitToday, changes = economicChanges, taxMode = "preview", currency = "test dezcoins; never account candles" },
                 combat = new { currentDefense = defense, warningSeconds = RaidRules.UndeadWarning.TotalSeconds,
                     smallRaids = EnemyCatalog.Enemies.Where(e => e.Undead && !e.DungeonOnly).Select(e => new { enemy = e.Kind.ToString(), count = (int)Math.Ceiling((3 + recentWorkers / 2) * e.RaidCountMultiplier), e.Power }),
                     uncertainty = "Охрана должна оставаться на задании к моменту удара; погрешность боя обычная. Прогноз не гарантия победы." },
                 defenseSectors = await db.Citizens.Where(c => c.VillageId == villageId && c.DefenseSector != null).Select(c => new { c.DefenseSector, c.DefenseReadyAt }).ToListAsync(ct),
-                economyAccuracy = "Складские остатки, не прибыль. Полного денежного ledger пока нет. Налоги/реальные свечи не менять.",
+                economyAccuracy = "Складские остатки, не прибыль. Учёт операций только с даты startedAt; внутренние переносы не доход. Начальные остатки не заработок. Налоги/реальные свечи не менять.",
                 chat = recent.OrderBy(m => m.SentAt).Select(m => new { text = m.Text, id = m.Id, author = m.AccountId.ToString()[..8] }),
                 catalog = new {
                     enemies = EnemyCatalog.Enemies.Select(e => new { kind = e.Kind.ToString(), e.Name, e.Power, e.Damage, e.InjuryMinutes, e.Undead, e.DungeonOnly, e.Coordinated, e.RaidCountMultiplier,

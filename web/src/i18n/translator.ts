@@ -121,7 +121,9 @@ export function createTranslator(language: Language) {
   /** Server problems carry a code and arguments; identifiers in the arguments are translated too. */
   const error = (exception: unknown) => {
     if (exception instanceof ApiError && exception.code) {
-      const template = dictionary.errors[exception.code] ?? en.errors[exception.code]
+      const template = exception.code === 'storage.missingInput' && typeof exception.parameters.missing === 'number'
+        ? dictionary.errors['storage.missingAmount'] ?? en.errors['storage.missingAmount']
+        : dictionary.errors[exception.code] ?? en.errors[exception.code]
       if (template) {
         const parameters: Parameters = { ...exception.parameters }
         if (typeof parameters.resource === 'string') parameters.resource = resource(parameters.resource).toLowerCase()

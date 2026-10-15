@@ -37,7 +37,8 @@ public sealed partial class GameService(
     VillageStateChanges changes,
     CitizenPresence presence,
     IHospitalBridge hospitalBridge,
-    ILogger<GameService> logger)
+    ILogger<GameService> logger,
+    IConfiguration configuration)
 {
     private const int MaximumAttempts = 5;
 
@@ -262,6 +263,7 @@ public sealed partial class GameService(
     /// <summary>The citizen leaves the village for good; see <see cref="Departure.Leave"/>. Their chat lines go with them.</summary>
     public async Task LeaveVillageAsync(string slug, Guid accountId, CancellationToken cancellationToken)
     {
+        ProtectPrimaryWorld(slug);
         var key = await RequireCitizenAsync(slug, accountId, cancellationToken);
         if (key.IsDue)
         {
@@ -271,6 +273,7 @@ public sealed partial class GameService(
         await WithVillageAsync(key.VillageId, async db =>
         {
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var run = citizen.DungeonRunId is { } runId
                 ? await db.DungeonRuns.SingleOrDefaultAsync(r => r.Id == runId, cancellationToken)
@@ -301,7 +304,9 @@ public sealed partial class GameService(
     /// The Tsar deletes the village with its citizens, quests, projects, runs and chat. Not while heroes are away in a
     /// dungeon: their fight runs in memory and comes back to the village.
     /// </summary>
-    public async Task DeleteVillageAsync(string slug, Guid accountId, CancellationToken cancellationToken) =>
+    public async Task DeleteVillageAsync(string slug, Guid accountId, CancellationToken cancellationToken)
+    {
+        ProtectPrimaryWorld(slug);
         await WithVillageAsync(await FindVillageIdAsync(slug, cancellationToken), async db =>
         {
             var village = await LoadVillageAsync(db, slug, cancellationToken);
@@ -323,6 +328,14 @@ public sealed partial class GameService(
             await notifier.VillageDeleted(slug);
             return true;
         }, cancellationToken);
+
+    }
+
+    private void ProtectPrimaryWorld(string slug)
+    {
+        if (configuration["Hosting:PrimaryVillage"] is {Length: > 0} primary && string.Equals(primary, slug, StringComparison.OrdinalIgnoreCase))
+            throw new GameRuleException("village.protectedWorld", "This kingdom and its characters cannot be deleted. Sign out to leave the game.");
+    }
 
     /// <summary>A newcomer can leave the tribe short of beds.</summary>
     private Task RefreshQuestsAsync(Guid villageId, string slug, CancellationToken cancellationToken) =>
@@ -353,7 +366,7 @@ public sealed partial class GameService(
             key,
             "startTask",
             $"{request.TaskId} {request.Spot}",
-            (citizen, context, now) => CycleEngine.Start(citizen, task, context, now, request.Spot),
+            (citizen, context, now) => CycleEngine.Start(citizen, task, context, now, request.Spot, request.WorkplacePlotId),
             cancellationToken);
     }
 
@@ -371,6 +384,7 @@ public sealed partial class GameService(
         return await WithVillageAsync(key.VillageId, async db =>
         {
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
             TechnologyRules.CastVote(village, citizen, technologyId, await CountElectorateAsync(db, village, cancellationToken), now);
@@ -436,6 +450,7 @@ public sealed partial class GameService(
         {
             await SyncHospitalAsync(db, key.VillageId, cancellationToken, true);
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
@@ -470,6 +485,7 @@ public sealed partial class GameService(
         {
             await SyncHospitalAsync(db, key.VillageId, cancellationToken);
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
@@ -498,7 +514,7 @@ public sealed partial class GameService(
             cancellationToken);
 
     private Task<VillageStateDto> PlaceBlueprintRuleAsync(string slug, Guid accountId, string action, string detail,
-        BuildingKind kind, Action<Village, DateTimeOffset> rule, CancellationToken ct) => kind == BuildingKind.Hospital
+        BuildingKind kind, Action<Village, DateTimeOffset> rule, CancellationToken ct) => kind is BuildingKind.Hospital or BuildingKind.Castle
         ? RuleAsync(slug, accountId, action, detail, rule, ct)
         : PlanAsync(slug, accountId, action, detail, rule, ct);
 
@@ -576,6 +592,7 @@ public sealed partial class GameService(
                 throw new UnauthorizedAccessException();
             }
 
+            db.AuditActor = accountId; db.AuditOperation = (actionName + ":" + detail)[..Math.Min(80, actionName.Length + detail.Length + 1)];
             var state = await ActAsync(db, village, action, cancellationToken);
             logger.TsarActed(slug, actionName, detail);
             return state;
@@ -593,6 +610,7 @@ public sealed partial class GameService(
         {
             var village = await LoadVillageAsync(db, slug, cancellationToken);
             var ruler = await RequireRulerAsync(db, village, accountId, cancellationToken);
+            db.AuditActor = accountId; db.AuditOperation = (actionName + ":" + detail)[..Math.Min(80, actionName.Length + detail.Length + 1)];
             var state = await ActAsync(db, village, action, cancellationToken);
             logger.RulerActed(slug, ruler, actionName, detail);
             return state;
@@ -637,6 +655,7 @@ public sealed partial class GameService(
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        await PayUsefulWorkAsync(db, village, report, now, cancellationToken);
         await RescueSweepAsync(db,village,now,cancellationToken);
         if (report?.BuildingCompleted is not { } kind || BuildingCatalog.Get(kind).Shelter == 0)
         {
@@ -657,6 +676,7 @@ public sealed partial class GameService(
         {
             await SyncHospitalAsync(db, key.VillageId, cancellationToken);
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             StorageRules.Drop(citizen, village);
@@ -677,6 +697,7 @@ public sealed partial class GameService(
         {
             await SyncHospitalAsync(db, key.VillageId, cancellationToken);
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
@@ -697,6 +718,7 @@ public sealed partial class GameService(
         return await WithVillageAsync(key.VillageId, async db =>
         {
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
             var raids = await FightDueRaidsAsync(db, village, null, now, cancellationToken);
@@ -836,6 +858,7 @@ public sealed partial class GameService(
         {
             await SyncHospitalAsync(db, key.VillageId, cancellationToken);
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
@@ -857,6 +880,7 @@ public sealed partial class GameService(
         {
             await SyncHospitalAsync(db, key.VillageId, cancellationToken);
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
@@ -886,6 +910,7 @@ public sealed partial class GameService(
         {
             await SyncHospitalAsync(db, key.VillageId, cancellationToken);
             var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
             HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
@@ -1240,6 +1265,7 @@ public sealed partial class GameService(
 
         return village.ToStateDto(context.Work, context.CompletedInOrder, electorate, quests, tsar, trips, dungeon, now) with
         {
+            KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),
             CivicOrders = village.CivicOrders,
             Housing = village.Structures.Where(s => ShelterRules.Beds(s) > 0).Select(s => new HousingDto(s.PlotId, ShelterRules.Beds(s),
                 residents.Count(c => c.HomePlotId == s.PlotId), s.Level)).ToArray(),
@@ -1257,10 +1283,10 @@ public sealed partial class GameService(
             .ToListAsync(cancellationToken);
 
     /// <summary>Runs a change to the village while no other change to it runs in this process.</summary>
-    private async Task<T> WithVillageAsync<T>(Guid villageId, Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken)
+    private async Task<T> WithVillageAsync<T>(Guid villageId, Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken, [System.Runtime.CompilerServices.CallerMemberName] string operation = "change")
     {
         using var _ = await AcquireLockAsync(villageId, cancellationToken);
-        return await WithRetryAsync(action, cancellationToken, villageId);
+        return await WithRetryAsync(action, cancellationToken, villageId, operation);
     }
 
     private async Task<IDisposable> AcquireLockAsync(Guid villageId, CancellationToken cancellationToken)
@@ -1276,7 +1302,7 @@ public sealed partial class GameService(
         return releaser;
     }
 
-    private async Task<T> WithRetryAsync<T>(Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken, Guid? villageId = null)
+    private async Task<T> WithRetryAsync<T>(Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken, Guid? villageId = null, string operation = "change")
     {
         for (var attempt = 1; ; attempt++)
         {
@@ -1288,7 +1314,9 @@ public sealed partial class GameService(
                 // The existing in-process lock is not shared by another API instance or settler.
                 var lockKey = villageId.Value.ToString();
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
+                var before = await BeginAccountingAsync(db, villageId.Value, cancellationToken);
                 var result = await action(db);
+                await FinishAccountingAsync(db, villageId.Value, before, operation, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return result;
             }

@@ -33,6 +33,7 @@ public enum BuildingKind
     RopeBridge,
     Hospital,
     Longhouse,
+    Castle,
 }
 
 public enum JobKind
@@ -217,6 +218,14 @@ public static class BuildingCatalog
                 Stage("roof", "Roof", 3, Job("bring-reeds", 16), Job("thatch-roof", 3)),
             ],
             Storage: StorageKind.Storehouse, Technology: TechnologyCatalog.Bookkeeping),
+        new(BuildingKind.Castle, "Royal castle", "The Tsar's residence. Three levels expand the kingdom west, north and south.", [],
+            [
+                Stage("ground", "Ground", 3, Job("clear-ground", 12), Job("mark-outline", 8)),
+                Stage("foundation", "Foundation", 3, Job("bring-stones", 160), Job("lay-stones", 60)),
+                Stage("frame", "Frame", 3, Job("bring-logs", 240), Job("hew-beams", 40), Job("raise-posts", 60)),
+                Stage("walls", "Walls", 3, Job("bring-planks", 60), Job("weave-walls", 40)),
+                Stage("roof", "Roof", 3, Job("bring-reeds", 80), Job("thatch-roof", 40)),
+            ]),
         new(BuildingKind.Treasury, "Treasury", "A strong room for gold. Needs a later age.", [BuildingKind.Smithy], [],
             Storage: StorageKind.Treasury),
         new(BuildingKind.Farm, "Farm", "Fields to tend.", [],

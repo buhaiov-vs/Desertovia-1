@@ -53,7 +53,7 @@ public sealed record RaidDto(
     IReadOnlyList<ResourceAmount> Loot);
 
 /// <param name="Room">Work a labor job can take right now; it cannot run ahead of the delivered material.</param>
-public sealed record SiteJobDto(string JobId, int Done, int Required, int Room);
+public sealed record SiteJobDto(string JobId, int Done, int Required, int Room, int Reserved = 0);
 
 /// <param name="CrewNeeded">Different citizens the stage needs, scaled down for small streams.</param>
 /// <param name="Hands">Different citizens who already worked on the stage.</param>
@@ -326,6 +326,7 @@ public sealed record CitizenDto(
     double Power,
     ExternalRecovery? Recovery = null)
 {
+    public IReadOnlyDictionary<string, double>? ActionEnergyCosts { get; init; }
     public string? HomePlotId { get; init; }
     public Guid? SpouseAccountId { get; init; }
     public string? SpouseName { get; init; }
@@ -460,7 +461,7 @@ public static class DtoMapper
                 s.Damage))
             .ToList(),
         village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level)).ToList(),
-        village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount)).ToList(),
+        village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount, context)).ToList(),
         context.Project is { } project ? project.ToDto(context) : null,
         completedProjects,
         quests
@@ -562,7 +563,7 @@ public static class DtoMapper
             poll.Winner);
     }
 
-    public static SiteDto ToDto(this ConstructionSite site, int recentCitizens) => new(
+    public static SiteDto ToDto(this ConstructionSite site, int recentCitizens, WorkContext? context = null) => new(
         site.Kind,
         site.PlotId,
         site.Stage,
@@ -579,7 +580,8 @@ public static class DtoMapper
                         site.Required(index, job.JobId),
                         BuildingCatalog.FindJob(job.JobId)?.Kind == JobKind.Labor
                             ? site.LaborRoom(index, job.JobId)
-                            : site.Remaining(index, job.JobId)))
+                            : site.Remaining(index, job.JobId),
+                        context?.ReservedWork(site.PlotId, index, job.JobId, site.Remaining(index, job.JobId)) ?? 0))
                     .ToList()))
             .ToList(), site.TargetLevel);
 
@@ -688,7 +690,10 @@ public static class DtoMapper
         citizen.Armor,
         citizen.Arrows,
         Math.Round(CombatRules.Power(citizen), 1), citizen.Recovery)
-        { HomePlotId=citizen.HomePlotId, SpouseAccountId=citizen.SpouseAccountId, SpouseName=citizen.SpouseName,
+        { ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
+            .Concat(BuildingCatalog.Jobs.Select(job => new KeyValuePair<string, double>(job.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.JobCost(village, job, now), now))))
+            .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value),
+            HomePlotId=citizen.HomePlotId, SpouseAccountId=citizen.SpouseAccountId, SpouseName=citizen.SpouseName,
             MarriedSince=citizen.MarriedSince, ExhaustedUntil=citizen.ExhaustedUntil, ExhaustedCycles=citizen.ExhaustedCycles };
 
     public static CatalogDto Catalog(GameOptions options) => new(

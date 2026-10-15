@@ -723,6 +723,7 @@ export interface QuestCompletion {
 }
 
 export interface SiteJob {
+  reserved?: number
   jobId: string
   done: number
   required: number
@@ -1083,6 +1084,7 @@ export interface SkillValue {
 }
 
 export interface Citizen {
+  actionEnergyCosts?: Record<string, number>
   homePlotId?:string|null
   spouseAccountId?:string|null
   spouseName?:string|null

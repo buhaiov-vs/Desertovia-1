@@ -28,6 +28,7 @@ export function siteVisualKey(site: Site) {
 /** The hut pilot shares its existing plot, door, server stages and final art. */
 export class HutConstruction extends Container {
   readonly light = new Container()
+  readonly roofAnchor: { x: number; y: number }
   readonly phase: Phase
   private readonly finished?: BuildingLighting
   constructor(tiles: TileSet,site: Site,definition: BuildingDefinition|undefined,x:number,y:number) {
@@ -35,6 +36,14 @@ export class HutConstruction extends Container {
     this.phase=hutPhase(site,definition)
     this.position.set(x*TILE,y*TILE)
     this.zIndex=(y+3)*TILE
+    const heightOf = (phase: Phase) => phase === 'ground' ? 16 : phase === 'finish' ? 41 :
+      (frames[phase].bounds[3] - frames[phase].bounds[1]) * 40 / anchors[phase].width
+    const stageIndex = stages.indexOf(this.phase)
+    const work = (site.stages[site.stage]?.jobs ?? []).filter(job => !job.jobId.startsWith('bring-'))
+    const required = work.reduce((sum, job) => sum + job.required, 0)
+    const share = required > 0 ? Math.min(1, work.reduce((sum, job) => sum + job.done, 0) / required) : 0
+    const visibleHeight = Math.max(heightOf(stages[Math.max(0, stageIndex - 1)]), heightOf(this.phase) * share)
+    this.roofAnchor = { x: x * TILE + 24, y: y * TILE + 48 - visibleHeight }
     const ground=new Graphics()
     ground.ellipse(24,43,23,5).fill({color:0x715534,alpha:0.32})
     this.addChild(ground)

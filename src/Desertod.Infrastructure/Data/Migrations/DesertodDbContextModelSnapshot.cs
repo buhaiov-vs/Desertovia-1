@@ -280,6 +280,12 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<Guid?>("RescuePatientId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ReservedProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("ReservedSiteWork")
+                        .HasColumnType("integer");
+
                     b.Property<double>("ShelterQuality")
                         .HasColumnType("double precision");
 

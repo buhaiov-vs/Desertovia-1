@@ -615,5 +615,58 @@
     "bot_pr": 34,
     "hospital_transport": true,
     "patient_layout": "staggered_map_beds_and_individual_full_name_cards"
+  },
+  "post_release_feedback": {
+    "D-046": {
+      "recorded_on": "2026-10-15",
+      "priority": "P1",
+      "status": "confirmed_source_bug_fix_planned",
+      "version": "0.5.2",
+      "source_commit": "29e4ba057ea903e6ef827af64892c599c16818b9",
+      "cause": "Duplicated spouse, housing and condition summary inside CharacterSheet stat progress cells",
+      "stat_source": "current citizen.stats, not spouse stats",
+      "todo": "NEXT_TODO.md#d-046--p1--карточка-персонажа-супруг-повторяется-в-характеристиках",
+      "game_code_changed_for_this_request": false,
+      "deployed_for_this_request": false,
+      "live_account_investigated": false
+    },
+    "D-047": {
+      "recorded_on": "2026-10-15",
+      "status": "diagnosed_fix_planned",
+      "report": "FEEDBACK_TRIAGE_2026_10_15.md",
+      "feedback_records_read": 77,
+      "new_records_since_last_digest": [
+        53,
+        77
+      ],
+      "confirmed_source_issues": [
+        "UI-01",
+        "UI-02",
+        "UI-03",
+        "UI-04",
+        "BUILD-01"
+      ],
+      "needs_reproduction": [
+        "ENERGY-01"
+      ],
+      "game_code_changed_for_this_request": false,
+      "deployed_for_this_request": false
+    },
+    "D-048": {
+      "recorded_on": "2026-10-15",
+      "status": "detailed_fix_plan_ready",
+      "plan": "REGRESSION_FIX_PLAN_0_5_2.md",
+      "scope": [
+        "UI-01",
+        "UI-02",
+        "UI-03",
+        "UI-04",
+        "BUILD-01",
+        "ENERGY-01"
+      ],
+      "game_code_changed_for_this_request": false,
+      "runtime_tests_run_for_this_request": false,
+      "deployed_for_this_request": false
+    }
   }
 }

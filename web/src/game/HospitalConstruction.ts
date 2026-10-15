@@ -5,12 +5,14 @@ import { TILE, town, type TileSet } from './sheets'
 
 /** Fixed footprint, construction stages and materials outside the walls. */
 export class HospitalConstruction extends Container {
+  readonly roofAnchor: { x: number; y: number }
   readonly light = new Container()
   private readonly building?: BuildingLighting
   constructor(tiles: TileSet, site: Site, x: number, y: number) {
     super()
     this.position.set(x * TILE, y * TILE)
     this.zIndex = (y + 3) * TILE
+    this.roofAnchor = { x: x * TILE + 24, y: y * TILE + (site.stage === 0 ? 42 : site.stage === 1 ? 29 : site.stage === 2 ? 7 : site.stage === 3 ? 18 : 0) }
     if ((site.targetLevel ?? 1) === 1) {
       this.addChild(new Graphics().roundRect(2, 2, 44, 44, 3).fill({ color: 0x715c43, alpha: .4 }))
       if (site.stage === 1) this.addChild(new Graphics().rect(5, 29, 38, 14).stroke({ color: 0x797c79, width: 3 }))

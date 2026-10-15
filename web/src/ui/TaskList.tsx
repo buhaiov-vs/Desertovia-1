@@ -1,3 +1,4 @@
+import { ActionEnergy } from './ActionEnergy'
 import { useState } from 'react'
 import {
   blockedByLoad,
@@ -157,6 +158,7 @@ export function TaskCard({
           {outcome && ` · ${outcome}`}
           {inputs && ` · ${t('task.uses', { inputs })}`}
         </span>
+        <ActionEnergy citizen={citizen} action={task.id} />
         {mastery > 0 && (
           <span className="task-meta">
             {t('task.mastery', {

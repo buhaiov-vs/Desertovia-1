@@ -666,6 +666,18 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
       })
     }
   }, [tsar, canWork, working, ownId, slug, applyCitizen, setVillageState, i18n])
+  // Only the isolated E2E build exposes deterministic selection setup. Vite removes
+  // this listener from production; tests still exercise the real popup/chat composition.
+  useEffect(() => {
+    if (import.meta.env.VITE_DESERTOD_E2E !== '1' || !pickWorld) return
+    const select = (event: Event) => {
+      const { target, screen, point } = (event as CustomEvent<{ target: WorldTarget; screen: { x: number; y: number }; point: TilePoint }>).detail
+      pickWorld(target, screen, point)
+    }
+    window.addEventListener('desertovia-e2e-select', select)
+    return () => window.removeEventListener('desertovia-e2e-select', select)
+  }, [pickWorld])
+
   const worldPickable = useMemo(
     () => (tsar ? (target: WorldTarget) => target.kind === 'building' && target.building === 'Hospital' || villageRef.current !== null && watchable(target, villageRef.current) : null),
     [tsar],
@@ -842,7 +854,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         <ChatPanel
           key={slug}
           incoming={live.chatArrivals}
-          interrupted={panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
+          interrupted={showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}

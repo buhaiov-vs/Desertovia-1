@@ -706,7 +706,8 @@
       "document": "ALMIGHTY_DIRECTOR_PLAN.md",
       "automatic_events_enabled": false,
       "ai_architecture": "single_director_shared_memory_multiple_responsibilities",
-      "clarification": "D-054"
+      "clarification": "D-054",
+      "implementation_plan": "ALMIGHTY_IMPLEMENTATION_PLAN.md"
     },
     "D-052": {
       "state": "verified_branch_not_deployed",
@@ -735,6 +736,13 @@
         "lint exit0, existing warnings",
         "5 targeted Playwright passed: notes RU/EN, real EnemyLayer timing, recovery format,320px hospital"
       ]
+    },
+    "D-055": {
+      "state": "plan_saved",
+      "document": "ALMIGHTY_IMPLEMENTATION_PLAN.md",
+      "runtime_changed": false,
+      "deployed": false,
+      "recommended_first_scope": "steps0-8 observe/propose; tactical commander and new event scenarios later"
     }
   }
 }

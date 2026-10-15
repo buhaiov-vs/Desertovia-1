@@ -24,6 +24,7 @@ if (!string.IsNullOrWhiteSpace(logLevelsFile))
     builder.Configuration.AddJsonFile(Path.GetFullPath(logLevelsFile), optional: true, reloadOnChange: true);
 }
 
+builder.Services.Configure<GameOptions>(builder.Configuration.GetSection(GameOptions.Section));
 var gameOptions = builder.Configuration.GetSection(GameOptions.Section).Get<GameOptions>() ?? new GameOptions();
 DayCycle.Configure(gameOptions.DayLength);
 CombatRules.Configure(gameOptions.PeacefulTime);

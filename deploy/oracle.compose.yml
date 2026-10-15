@@ -40,6 +40,7 @@ services:
       Authentication__Telegram__BotUsername: ${TELEGRAM_BOT_USERNAME:?required}
       Authentication__Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:?required}
       Authentication__Telegram__BrowserBridgeUrl: http://127.0.0.1:8686/dezertovia/auth-bridge
+      Game__HospitalEnabled: ${HOSPITAL_ENABLED:-false}
       Game__DayLength: ${DAY_LENGTH:-04:00:00}
       Game__PeacefulTime: ${PEACEFUL_TIME:-1.00:00:00}
     mem_limit: 1024m

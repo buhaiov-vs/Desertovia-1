@@ -186,3 +186,19 @@ Earlier focused batch8other API checks PASS. Prior source848f087 CI38814781348
 completed SUCCESS (380Domain/215API/browser/builds). New exact source CI next;
 prior run is not substituted for it. Private operator suite14PASS including
 UTC gate, CI pin guards and pending-battle-safe rollback behavior.
+
+
+Final CI11f148c/38816921808:380Domain PASS,216/217API; failure was the
+parallel/reward test's12second deadline with randomized wave variants and5HP
+fixture enemies. Fixed fixture enemies to1HP (one actual guard hit), retaining
+real service ticks/transactions/reload/rewards and independent full-balance tests.
+No game runtime change in this follow-up. Final CI must be rerun on corrected
+source; do not mark11f148c ready based on216passes.
+
+Supplementary synthetic maximum-horde benchmark on11f148c (outside repository,
+no production calls):48skeletons,32residents,all3sides,guard duty present vs expired
+between announcement and arrival, closed gates. Six encounters finish189–301
+simulated seconds;95th-percentile domain tick2.3–8.1ms,maximum44.9ms here. Not an
+HTTP/database load guarantee. Unprepared cases have8–13wounds,0–65damage, prepared
+cases repel the raid. No village wipe or hanging actors. Existing performance
+limits/budget are unchanged.

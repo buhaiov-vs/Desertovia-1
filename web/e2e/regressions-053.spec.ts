@@ -1,5 +1,9 @@
 import { test, expect, developmentLogin, expectVillageView, openMenu, DEMO_SLUG, uniqueName } from './fixtures.ts'
 
+// Real Pixi composition is substantially heavier than the isolated chat stand.
+test.setTimeout(120_000)
+test.use({ trace: { mode: 'retain-on-failure', screenshots: false, snapshots: true } })
+
 test('real game selected object owns its header while dark hidden chat does not block the map', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('desertod.language', 'en')

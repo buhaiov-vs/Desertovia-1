@@ -651,6 +651,22 @@
       ],
       "game_code_changed_for_this_request": false,
       "deployed_for_this_request": false
+    },
+    "D-048": {
+      "recorded_on": "2026-10-15",
+      "status": "detailed_fix_plan_ready",
+      "plan": "REGRESSION_FIX_PLAN_0_5_2.md",
+      "scope": [
+        "UI-01",
+        "UI-02",
+        "UI-03",
+        "UI-04",
+        "BUILD-01",
+        "ENERGY-01"
+      ],
+      "game_code_changed_for_this_request": false,
+      "runtime_tests_run_for_this_request": false,
+      "deployed_for_this_request": false
     }
   }
 }

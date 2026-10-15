@@ -40,7 +40,6 @@ test('real game selected object owns its header while dark hidden chat does not 
       return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2))
     })
     expect(unblocked, 'The card close button receives the tap').toBe(true)
-    await page.screenshot({ path: test.info().outputPath(`dark-selected-${mode}.png`) })
     await header.locator('button.close').click()
     await expect(chat).toBeVisible()
     await expect(chat).toHaveAttribute('data-mode', mode)
@@ -70,5 +69,4 @@ test('real character sheet shows spouse once and preserves own stat rows on a ph
   await expect(stats.locator('tbody > tr')).toHaveCount(5)
   await expect(stats.locator('p')).toHaveCount(0)
   expect(await stats.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
-  await page.screenshot({ path: test.info().outputPath('own-stats-with-spouse.png') })
 })

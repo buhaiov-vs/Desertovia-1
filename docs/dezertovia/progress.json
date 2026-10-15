@@ -615,5 +615,20 @@
     "bot_pr": 34,
     "hospital_transport": true,
     "patient_layout": "staggered_map_beds_and_individual_full_name_cards"
+  },
+  "post_release_feedback": {
+    "D-046": {
+      "recorded_on": "2026-10-15",
+      "priority": "P1",
+      "status": "confirmed_source_bug_fix_planned",
+      "version": "0.5.2",
+      "source_commit": "29e4ba057ea903e6ef827af64892c599c16818b9",
+      "cause": "Duplicated spouse, housing and condition summary inside CharacterSheet stat progress cells",
+      "stat_source": "current citizen.stats, not spouse stats",
+      "todo": "NEXT_TODO.md#d-046--p1--карточка-персонажа-супруг-повторяется-в-характеристиках",
+      "game_code_changed_for_this_request": false,
+      "deployed_for_this_request": false,
+      "live_account_investigated": false
+    }
   }
 }

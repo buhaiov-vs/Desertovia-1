@@ -934,5 +934,28 @@
     "runtime_changed": false,
     "bot_feedback_states_changed": false,
     "raw_messages_published": false
+  },
+  "combat_and_fixes_d068": {
+    "state": "planned_not_started",
+    "document": "COMBAT_AND_FIXES_PATCH_PLAN.md",
+    "scope": [
+      "COMBAT-01",
+      "COMBAT-UI",
+      "ENERGY-02",
+      "UI-05",
+      "CYCLE-02",
+      "ENERGY-03",
+      "LAND-01",
+      "STORAGE-UX"
+    ],
+    "source_plans": [
+      "RAID_REWORK_PLAN.md",
+      "FEEDBACK_REVIEW_2026_10_15_EVENING.md"
+    ],
+    "workflow": "finish_agreed_code_then_targeted_and_full_checks",
+    "live_unchanged": "0.6.1",
+    "runtime_changed": false,
+    "version_assigned": false,
+    "next": "Follow unified plan and latest user instruction; no new implementation or rollout has occurred."
   }
 }

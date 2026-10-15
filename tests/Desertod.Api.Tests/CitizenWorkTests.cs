@@ -92,7 +92,7 @@ public sealed class CitizenWorkTests(DesertodApiFactory factory)
         var state = await OkJsonAsync(await village.Tsar.GetAsync(village.Path));
         var wood = state.GetProperty("state").GetProperty("resources").EnumerateArray()
             .Single(r => r.GetProperty("kind").GetString() == "Wood");
-        Assert.Equal(16, wood.GetProperty("amount").GetInt32());
+        Assert.Equal(6, wood.GetProperty("amount").GetInt32());
     }
 
     [Fact]

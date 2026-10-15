@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   builtKinds,
   CARRY_TO_STORAGE,
@@ -11,7 +12,7 @@ import {
   type TilePoint,
   type VillageState,
 } from '../api'
-import { inForestArea, type NatureKind, type WorldTarget } from '../game/worldMap'
+import { canReachBank, inForestArea, type NatureKind, type WorldTarget } from '../game/worldMap'
 import { useI18n, type Translator } from '../i18n'
 import type { UiKey } from '../i18n/en'
 import { FieldsCard } from './FieldsCard'
@@ -140,6 +141,8 @@ export function TargetPopup({
   onStart,
   onStartJob,
   onTake,
+  onCivic,
+  ruler,
   onClose,
 }: {
   target: WorldTarget
@@ -154,13 +157,18 @@ export function TargetPopup({
   error: string | null
   onStart: (task: Task, spot: TilePoint | null) => void
   onStartJob: (choice: JobChoice) => void
+  ruler: boolean
+  onCivic: (plotId:string, operation:string)=>Promise<void>
   onTake: (plotId: string, resource: string, amount: number) => void
   onClose: () => void
 }) {
+  const [confirm,setConfirm]=useState(false),[operationError,setOperationError]=useState('')
+  const operate=async(operation:string)=>{if(target.kind!=='building')return;try{await onCivic(target.plotId,operation);setConfirm(false)}catch(e){setOperationError(e instanceof Error?e.message:'Не удалось выполнить действие')}}
   const i18n = useI18n()
   const { t } = i18n
   const working = citizen.cycleEndsAt ? now < Date.parse(citizen.cycleEndsAt) : false
-  const disabled = pending || working || citizen.state === 'Paused'
+  const blockedBank='spot' in target && !canReachBank(village,target.spot)
+  const disabled = blockedBank || pending || working || citizen.state === 'Paused'
   const site = target.kind === 'site' ? village.sites.find((s) => s.plotId === target.plotId) : undefined
   const tasks = tasksFor(target, catalog, village)
   const beds = target.kind === 'building' ? village.fields.filter((bed) => bed.plotId === target.plotId) : []
@@ -180,6 +188,10 @@ export function TargetPopup({
         </button>
       </header>
       <div className="target-popup-body">
+        {operationError&&<p className="error">{operationError}</p>}
+        {target.kind==='building'&&ruler&&<div className="civic-actions"><button disabled={pending} onClick={()=>void operate('upgrade')}>Улучшить</button>
+          {confirm?<><span>Подтвердить медленную разборку?</span><button onClick={()=>void operate('demolish')}>Снести</button><button onClick={()=>setConfirm(false)}>Отмена</button></>:<button onClick={()=>setConfirm(true)}>Снести</button>}</div>}
+        {blockedBank&&<p className="warning">Сначала постройте Царский мост.</p>}
         {working && <p className="small muted">{t('target.busy')}</p>}
         {error && <p className="error">{error}</p>}
         {wildWood && <p className="small muted">{t('target.wildWood')}</p>}

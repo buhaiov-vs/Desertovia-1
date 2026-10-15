@@ -22,10 +22,9 @@ internal static class TestWorld
         village.Trees.Clear();
         village.Storages.Add(StorageBuilding.Create(StorageKind.TownHall, "13,5", Now));
         village.Storages.Add(StorageBuilding.Create(StorageKind.Granary, "17,5", Now));
-        if (fed)
-        {
-            village.Store(ResourceKind.Food, 200);
-        }
+        for(var i=0;i<5;i++) village.Storages.Add(StorageBuilding.Create(StorageKind.TownHall,$"{-40+i*4},-30",Now));
+        for(var i=0;i<4;i++) village.Storages.Add(StorageBuilding.Create(StorageKind.Granary,$"{-40+i*4},-24",Now));
+        if (fed) village.Store(ResourceKind.Food,200);
 
         SetSky(village, rain: false);
         return village;

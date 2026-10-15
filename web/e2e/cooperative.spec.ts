@@ -1,0 +1,26 @@
+import {test,expect} from './fixtures.ts'
+test.beforeEach(async({page})=>{await page.addInitScript(()=>localStorage.setItem('desertod.language','ru'));await page.goto('/e2e/cooperative-harness.html')})
+test('civic actions fit a phone and governors cannot approve',async({page})=>{
+ await page.setViewportSize({width:320,height:740})
+ const modal=page.getByRole('dialog',{name:'Управление городом'})
+ await expect(modal).toContainText('11/12')
+ await expect(page.getByRole('button',{name:'Одобрить',exact:true})).toHaveCount(0)
+ expect(await modal.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true)
+ for(const button of await modal.locator('button').all()){const b=await button.boundingBox();if(b){expect(b.x).toBeGreaterThanOrEqual(0);expect(b.x+b.width).toBeLessThanOrEqual(320)}}
+ await page.screenshot({path:'test-results/cooperative-phone.png',fullPage:true})
+ await page.getByRole('button',{name:'Стать царём'}).click()
+ await expect(page.getByRole('button',{name:'Одобрить',exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'Одобрить',exact:true}).click()
+ await expect(page.getByRole('button',{name:'Одобрить',exact:true})).toHaveCount(0)
+})
+test('dark interface is independent and demolition asks for confirmation',async({page})=>{
+ await page.getByRole('button',{name:'Тёмный',exact:true}).click()
+ await expect(page.locator('html')).toHaveAttribute('data-ui-theme','dark')
+ const color=await page.locator('.modal-body').evaluate(e=>getComputedStyle(e).backgroundColor)
+ expect(color).toBe('rgb(23, 27, 27)')
+ await page.getByRole('button',{name:'Снести · заявка',exact:true}).click()
+ await expect(page.getByRole('button',{name:'Подтвердить снос'})).toBeVisible()
+ await page.getByRole('button',{name:'Отмена',exact:true}).click()
+ await expect(page.getByRole('button',{name:'Подтвердить снос'})).toHaveCount(0)
+ await page.screenshot({path:'test-results/cooperative-dark.png',fullPage:true})
+})

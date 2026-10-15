@@ -51,6 +51,8 @@ public sealed class Village
     public List<Structure> Structures { get; set; } = [];
 
     public List<ConstructionSite> Sites { get; set; } = [];
+    public bool BridgeOpened { get; set; }
+    public List<CivicOrder> CivicOrders { get; set; } = [];
 
     /// <summary>Game animals on the village land, one herd per kind.</summary>
     public List<Herd> Wildlife { get; set; } = [];
@@ -225,6 +227,7 @@ public sealed class Village
             throw new GameRuleException("spot.outsideLand", "This spot is beyond the land.");
         }
 
+        BankAccess.Require(this, spot);
         TsarTrip = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, Wilds?.Lookout);
         TsarSpot = spot;
     }
@@ -239,7 +242,7 @@ public sealed class Village
 
         foreach (var trip in TsarTrip is null ? trips : trips.Append(TsarTrip))
         {
-            Exploration.Reveal(Explored, trip, now, Wilds?.Lookout);
+            if (BankAccess.CanReach(this, trip.To)) Exploration.Reveal(Explored, trip, now, Wilds?.Lookout);
         }
     }
 
@@ -248,8 +251,8 @@ public sealed class Village
     public Herd HerdOf(AnimalKind kind) => Wildlife.Single(h => h.Kind == kind);
 
     public bool Has(BuildingKind kind) =>
-        Structures.Any(s => s.Kind == kind)
-        || Storages.Any(s => BuildingCatalog.ForStorage(s.Kind) == kind);
+        Structures.Any(s => s.Kind == kind && !s.Decommissioning)
+        || Storages.Any(s => BuildingCatalog.ForStorage(s.Kind) == kind && !s.Decommissioning);
 
     /// <summary>Finished buildings and open sites of this kind; repeats need more material.</summary>
     public int CountOf(BuildingKind kind) =>

@@ -14,3 +14,9 @@ createRoot(document.getElementById('root')!).render(
     </I18nProvider>
   </StrictMode>,
 )
+
+const uiThemeMedia=window.matchMedia('(prefers-color-scheme: dark)')
+const applyUiTheme=()=>{const chosen=localStorage.getItem('desertovia.uiTheme')??'auto';document.documentElement.dataset.uiTheme=chosen==='auto'?(uiThemeMedia.matches?'dark':'light'):chosen}
+applyUiTheme()
+uiThemeMedia.addEventListener('change',applyUiTheme)
+window.addEventListener('storage',applyUiTheme)

@@ -194,6 +194,8 @@ public static class CombatRules
         if (citizen.InjuredUntil is not { } current || current < until)
         {
             citizen.InjuredUntil = until;
+            citizen.IdleSpot=citizen.Spot??citizen.Trip?.To??citizen.IdleSpot;
+            citizen.WoundedAt = now;citizen.HospitalizedAt = null;citizen.RescueByCitizenId=null;
         }
     }
 
@@ -234,13 +236,13 @@ public static class CombatRules
         }
 
         TakeOne(citizen, village, ResourceKind.Remedy);
-        citizen.InjuredUntil = null;
+        citizen.InjuredUntil = null;citizen.RescueByCitizenId=null;
     }
 
     /// <summary>Damaged buildings work slower: down to half speed at <see cref="MaximumDamage"/>.</summary>
     public static double BuildingMultiplier(Village village, TaskDefinition task) =>
         task.RequiredBuilding is { } kind && village.Structures.FirstOrDefault(s => s.Kind == kind) is { } building
-            ? 1 - building.Damage / (2.0 * MaximumDamage)
+            ? (building.Damage >= MaximumDamage ? 0 : 1)
             : 1;
 
     /// <summary>Every finished building: plot and damage.</summary>

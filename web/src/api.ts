@@ -24,6 +24,7 @@ export type Skill =
   | 'Guarding'
   | 'Weatherlore'
   | 'Weaponcraft'
+  | 'Recovery'
 
 export type WorkState = 'Idle' | 'Working' | 'AwaitingRenewal' | 'Paused'
 
@@ -628,6 +629,8 @@ export interface ProjectDefinition {
 export type StorageKind = string
 
 export interface StorageDefinition {
+  resourceLimit?: number
+  totalLimit?: number|null
   kind: StorageKind
   name: string
   /** Empty means every good. */
@@ -759,6 +762,8 @@ export interface StorageSlot {
 }
 
 export interface Storage {
+  resourceLimit?: number
+  totalLimit?: number | null
   kind: StorageKind
   plotId: string
   goods: ResourceAmount[]
@@ -774,6 +779,8 @@ export interface ProjectMaterial {
 }
 
 export interface Project {
+  stageName?:string|null
+  bridgeStage?:number
   id: string
   definitionId: string
   name: string
@@ -876,7 +883,12 @@ export const RAIN = {
   forestRegrowth: 2,
 }
 
+export interface CivicOrder { id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
+export interface Housing { plotId:string; beds:number; occupied:number; level:number }
 export interface VillageState {
+  civicOrders?: CivicOrder[]
+  housing?: Housing[]
+  bridgeOpened?: boolean
   id: string
   slug: string
   name: string
@@ -958,6 +970,9 @@ export interface Appearance {
 export const CITIZEN_SUBTITLE_MAXIMUM = 24
 
 export interface ExternalRecovery {
+  cause?:string
+  effectKind?:string|null
+  effectUntil?:string|null
   episodeId: string | null
   admittedAt: string | null
   until: string | null
@@ -975,6 +990,9 @@ export interface HospitalPayment { patientId: string; code: string; requestId: s
 export interface HospitalReceipt { state: string; error: string | null; until: number | null; price: number | null; cutSeconds: number | null }
 
 export interface CitizenSummary {
+  hospitalizedAt?:string|null
+  rescueByCitizenId?:string|null
+  rescuePatientId?:string|null
   id: string
   name: string
   /** Written by the Tsar, shown under the name on the map. */
@@ -1065,6 +1083,11 @@ export interface SkillValue {
 }
 
 export interface Citizen {
+  homePlotId?:string|null
+  spouseAccountId?:string|null
+  spouseName?:string|null
+  exhaustedUntil?:string|null
+  exhaustedCycles?:number
   id: string
   name: string
   /** Written by the Tsar, shown under the name on the map. */
@@ -1292,6 +1315,9 @@ export function loadVillage(slug: string) {
 }
 
 export const api = {
+  rescue: (slug:string, id:string)=>request<Citizen>('POST',`/api/villages/${encodeURIComponent(slug)}/rescue/${id}`),
+  civic: (slug:string, plotId:string, operation:string, partnerAccountId?:string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic`, {plotId,operation,partnerAccountId}),
+  civicDecision: (slug:string, id:string, approve:boolean) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic/${id}`, {approve}),
   sramoslav: (slug: string, text: string) => request<{text: string; ai: boolean}>('POST', `/api/villages/${slug}/sramoslav`, { text }),
   telegramMiniApp: (initData: string) => request<void>('POST', '/auth/telegram/miniapp', { initData }),
   telegramBrowserStart: () => request<{url: string; pin: string}>('POST', '/auth/telegram/browser/start'),

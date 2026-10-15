@@ -7,12 +7,13 @@ public sealed class Trip
     public double FromY { get; set; }
     public double ToX { get; set; }
     public double ToY { get; set; }
+    public double SpeedMultiplier { get; set; } = 1;
     public DateTimeOffset SetOutAt { get; set; }
 
     public TilePoint From => new(FromX, FromY);
     public TilePoint To => new(ToX, ToY);
 
-    public DateTimeOffset ArrivesAt => SetOutAt + TimeSpan.FromSeconds(From.DistanceTo(To) * Exploration.SecondsPerTile);
+    public DateTimeOffset ArrivesAt => SetOutAt + TimeSpan.FromSeconds(From.DistanceTo(To) * Exploration.SecondsPerTile / Math.Max(.1,SpeedMultiplier));
 
     public static Trip Start(TilePoint from, TilePoint to, DateTimeOffset now) =>
         new() { FromX = from.X, FromY = from.Y, ToX = to.X, ToY = to.Y, SetOutAt = now };

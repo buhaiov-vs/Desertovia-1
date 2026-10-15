@@ -49,6 +49,7 @@ export function ProjectPanel({ project, completed }: { project: Project | null; 
       </h3>
       <p className="muted small">{names.description}</p>
       <Bar value={project.progress} maximum={1} tone="gold" />
+      {project.stageName&&<strong>{project.stageName}</strong>}
       <ProjectDetails project={project} />
     </section>
   )

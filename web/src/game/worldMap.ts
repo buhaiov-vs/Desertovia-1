@@ -327,6 +327,7 @@ export const BUILDING_SIGNS: Record<string, TileRef> = {
   StonePile: farm(89),
   DryingRack: town(29),
   Hut: town(83),
+  Longhouse: town(83),
   TownHall: battle(52),
   Woodyard: town(127),
   StoneYard: town(115),
@@ -1158,3 +1159,6 @@ export const TASK_ICONS: Record<string, TileRef> = {
 
 /** Icon for a task or a construction job. Labor jobs without their own icon show a hammer. */
 export const taskIcon = (id: string) => TASK_ICONS[id] ?? HAMMER
+
+/** Matches the server shore guard; hidden/queued API actions are checked again on the server. */
+export function canReachBank(village:VillageState,point:TilePoint) { return village.bridgeOpened || village.completedProjects.includes('tsar-bridge') || point.x<=riverCenter(Math.floor(point.y),seedFrom(village.id)) }

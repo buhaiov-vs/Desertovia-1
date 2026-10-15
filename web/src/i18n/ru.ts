@@ -932,6 +932,7 @@ export const ru: Dictionary = {
     WoodPile: { name: 'Склад дерева', description: 'Сложенное дерево не мокнет и не теснит кучу.' },
     StonePile: { name: 'Склад камня', description: 'Кольцо из камней, в котором помещается больше камня.' },
     DryingRack: { name: 'Склад еды', description: 'Мясо и ягоды сохнут здесь, а не гниют в куче.' },
+    Longhouse: { name: 'Общежитие', description: 'Общий дом: 12 мест, с расширениями до 20 и 28.' },
     Hut: {
       name: 'Хижина',
       description: 'Первый настоящий дом: каменное основание, деревянный сруб, глиняные стены, соломенная крыша. Четверым здесь спится хорошо.',
@@ -958,6 +959,7 @@ export const ru: Dictionary = {
   },
 
   stages: {
+    dismantle:'Разборка', upgrade:'Улучшение склада', expand:'Расширение жилья',
     ground: 'Площадка',
     foundation: 'Основание',
     frame: 'Каркас',
@@ -976,6 +978,7 @@ export const ru: Dictionary = {
   },
 
   jobs: {
+    dismantle:'Разбирать осторожно',
     'bring-sticks': 'Носить хворост',
     'bring-logs': 'Носить брёвна',
     'bring-stones': 'Носить камни',
@@ -1070,6 +1073,7 @@ export const ru: Dictionary = {
     negotiate: 'Вести переговоры',
     command: 'Командовать',
     'keep-watch': 'Стоять в дозоре',
+    'rescue-wounded':'Отнести раненого в больницу',
     repair: 'Чинить постройки',
     'make-poultice': 'Делать припарки',
     'make-spears': 'Делать копья',
@@ -1191,6 +1195,28 @@ export const ru: Dictionary = {
   },
 
   errors: {
+    'bridge.closed': 'Сначала постройте Царский мост.',
+    'project.intelligence': 'Нужны Ум 3 и Строительство 1.',
+    'task.brewer': 'Попроси опытного пивовара: нужны Учёность 3 и Ум 3.',
+    'building.repairFirst': 'Сначала почините здание.',
+    'citizen.exhausted': 'Ты без сознания от переутомления. Дождись восстановления.',
+    'building.emptyStorage': 'Сначала освободите склад.',
+    'building.returnSpace': 'Освободите место для материалов после разборки.',
+    'building.protected': 'Эту постройку сносить нельзя.',
+    'building.orderExists': 'Заявка уже подана.',
+    'building.orderProcessed': 'Решение по этой заявке уже принято.',
+    'building.notBuilt': 'Выберите готовое здание.',
+    'building.busy': 'Сначала завершите текущую стройку.',
+    'building.inUse': 'Сначала завершите работу в здании.',
+    'building.maxLevel': 'Дальнейшее улучшение недоступно.',
+    'housing.relocateFirst': 'Сначала предоставьте жителям другие свободные места.',
+    'housing.pending': 'Заявка на жильё уже подана.',
+    'housing.notSpouse': 'Совместное жильё доступно подтверждённым супругам.',
+    'housing.consent': 'Нужно согласие обоих супругов и подтверждённый брак.',
+    'housing.full': 'В доме недостаточно свободных мест.',
+    'housing.notFound': 'Выберите готовый жилой дом.',
+    'housing.absent': 'Житель больше не живёт в городе.',
+
     'citizen.dormant': 'Неактивные жители не работают.',
     'citizen.alreadyLives': 'Вы уже живёте в этом городе.',
     'citizen.notInVillage': 'Вы не живёте в этом городе.',

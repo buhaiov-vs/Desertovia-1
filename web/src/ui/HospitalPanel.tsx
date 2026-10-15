@@ -11,12 +11,12 @@ const remaining = (until: string | null | undefined, now: number) => {
 }
 
 /** A pending receipt stays bound to the same player, patient and offer across refresh/reconnect. */
-export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVillage, onClose, onUpdated, serverOffsetMs = 0 }:
+export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVillage, onClose, onUpdated, serverOffsetMs = 0, initialPatientId }:
   { slug: string; actorId: string; citizenId?: string; tsar: boolean; village: VillageState
-    onVillage: (state: VillageState) => void; onClose: () => void; onUpdated: () => void; serverOffsetMs?: number }) {
+    onVillage: (state: VillageState) => void; onClose: () => void; onUpdated: () => void; serverOffsetMs?: number; initialPatientId?:string|null }) {
   const i18n = useI18n(), { t } = i18n
   const [status, setStatus] = useState<HospitalStatus | null>(null)
-  const [patientId, setPatientId] = useState<string | null>(citizenId ?? null)
+  const [patientId, setPatientId] = useState<string | null>(initialPatientId ?? citizenId ?? null)
   const [confirmation, setConfirmation] = useState<HospitalTier | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -68,7 +68,7 @@ export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVilla
           {!citizenId && <option value="">{t('hospital.help')}</option>}
           {status?.patients.filter(p => p.id !== citizenId).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select></label>
-        <section className="card hospital-recovery"><strong>{admitted ? t('hospital.duel') : t('hospital.available')}</strong>
+        <section className="card hospital-recovery">{admitted&&<div className="hospital-bed-patient" aria-label="Пациент лежит на больничной койке">🛏️</div>}<strong>{admitted ? recovery?.cause==='battle'?'На лечении после боя':t('hospital.duel') : t('hospital.available')}</strong>
           {admitted && <><p className="hospital-countdown">{t('hospital.until', { time: remaining(recovery?.until, now) })}</p>
           <p className="small">{t('hospital.pause')}</p><p className="small muted">{t('hospital.bonus', { hospital: recovery?.hospitalPercent ?? 0, skill: recovery?.skillPercent ?? 0 })}</p></>}
         </section>
@@ -84,7 +84,7 @@ export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVilla
             <strong>{tier.title}</strong><span>{t('hospital.effect', { min: tier.minHours, max: tier.maxHours })}</span><span>{tier.price} 🕯</span>
           </button>)}</div>}
         <details><summary>{t('hospital.patients', { count: status?.patients.length ?? 0 })}</summary>
-          {status?.patients.map(p => <p key={p.id}>{p.name} · {remaining(p.recovery.until, now)}</p>)}
+          {status?.patients.map(p => <p key={p.id}>{p.name} · на лечении {p.recovery.cause==='battle'?'после боя':'после дуэли'} · {remaining(p.recovery.until, now)}</p>)}
         </details>
         {tsar && hospital && (status?.level ?? 3) < 3 && !village.sites.some(s => s.plotId === hospital.plotId) &&
           <button disabled={busy} onClick={async () => { setBusy(true); try { onVillage(await api.hospitalUpgrade(slug, hospital.plotId)); await refresh() } catch(e) { setMessage(i18n.error(e)) } finally { setBusy(false) } }}>

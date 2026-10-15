@@ -205,7 +205,7 @@ public class ProjectTests
 
         var granary = Assert.Single(village.Storages, s => s.Kind == StorageKind.GreatGranary);
         Assert.Equal("granary", granary.PlotId);
-        Assert.True(village.FreeSpace(ResourceKind.Food) >= 600);
+        Assert.Equal(100,granary.FreeSpace(ResourceKind.Food));
     }
 
     [Fact]

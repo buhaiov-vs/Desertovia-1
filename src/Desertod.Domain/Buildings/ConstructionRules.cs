@@ -102,6 +102,12 @@ public static class ConstructionRules
             throw new GameRuleException("building.cannotCancel", "Citizens have already worked on this site.");
         }
 
+        if(site.Operation is not null)
+        {
+            var structure=village.Structures.SingleOrDefault(b=>b.PlotId==site.PlotId);if(structure is not null)structure.Decommissioning=false;
+            var storage=village.Storages.SingleOrDefault(b=>b.PlotId==site.PlotId);if(storage is not null)storage.Decommissioning=false;
+            var order=village.CivicOrders.SingleOrDefault(o=>o.Id==site.OrderId);if(order is not null)order.Status="cancelled";
+        }
         village.Sites.Remove(site);
     }
 
@@ -194,10 +200,13 @@ public static class ConstructionRules
             return null;
         }
 
+        if(BuildingOperations.Finish(village,site,now))return site.Kind;
         village.Sites.Remove(site);
         if (site.Definition.Storage is { } storage)
         {
-            village.Storages.Add(StorageBuilding.Create(storage, site.PlotId, now));
+            var built=StorageBuilding.Create(storage, site.PlotId, now);
+            BuildingOperations.AddInvestment(site,built.Investment);
+            village.Storages.Add(built);
         }
         else
         {
@@ -206,7 +215,12 @@ public static class ConstructionRules
                 var building = village.Structures.Single(s => s.PlotId == site.PlotId && s.Kind == BuildingKind.Hospital);
                 building.Level = site.TargetLevel;
             }
-            else village.Structures.Add(new Structure { Kind = site.Kind, PlotId = site.PlotId, BuiltAt = now });
+            else
+            {
+                var built=new Structure { Kind = site.Kind, PlotId = site.PlotId, BuiltAt = now };
+                BuildingOperations.AddInvestment(site,built.Investment);
+                village.Structures.Add(built);
+            }
             FarmRules.EnsureBeds(village);
         }
 

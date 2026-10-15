@@ -1,0 +1,19 @@
+# Cooperative update — implementation log
+
+Branch feat/cooperative-update in game and bot. Repository only; NO deployment, live SQL, real wallet calls or Telegram messages.
+
+Source phase: prepared hospital integrated, outlined sprites and undead scaling imported. Added bridge bank guard and versioned six-phase bridge; fixed resource bins/upgrades; civic orders/demolition; persistent communal housing; read-only reciprocal Telegram marriages; exhaustion/fainting and brewer gate; free ward outcomes; silent contextual chat; dark UI and compact selected-object actions.
+
+Verification phase begins after the coordinated source changes. Builds, EF additive migration and focused regression tests are next. This is not a verified release. Legacy built bridges/projects and storage overflow must survive. Legacy investment unknown => no invented demolition refund.
+
+Worktrees: /workspace/Desertovia-batch, /workspace/TG-bots-batch. Canonical bot base already includes proxy health guard and conversational tone. Do not deploy old hospital feature branch directly.
+
+Verification checkpoint (15 Oct): domain suite321/321 passing. API first runtime failure (owned Skills projection without owner) fixed using AsNoTracking. API hospital/ruler/work subset27/29 passing before adapting two intentionally changed contracts (AI silence without bridge, fixed heap limit). A subsequent combined frontend/API build collided on generated wwwroot assets; rerun sequentially. Frontend build passed, lint warnings pending review. Bot27 tests passed including deterministic once-only free-ward effect/extension. Additive EF migration generated and manually amended to backfill old JSON and finished bridges. No migration executed on live.
+
+NEW USER STEERING during verification: patient must LIE in hospital with visible cause (after duel/battle); add 'carry wounded to hospital' assistance after battle, do not leave on battlefield. Response promises: another player clicks wounded and carries without profession change; carry doesn't heal; after5 real minutes no helper, NPC orderlies take them; temporary aid station by campfire if hospital absent. Implement this before finishing tests. Native InjuredUntil and external Recovery remain distinct.
+
+Active local PostgreSQL test container cooperative-postgres port55439, database desertod_e2e, standard local-only dev password. No live network. E2E cooperative-harness+spec added, Vite/tsconfig registrations added, NOT YET run. API session54035 failed at compile due concurrent frontend deleting generated wwwroot files; rerun after frontend done. Domain session33280 passed. Frontend56621 and bot96230 done. Previous API52151 result27/29; fixed expectations in source.
+
+No new game implementation commit yet (many staged imports + unstaged changes). Bot has only initial hospital merge154262b committed; further hospital/marriage code/tests uncommitted. Need complete source steering, migration supplemental fields, test API civic new cases, browser320px/desktop, migration legacy roundtrip, push both feat/cooperative-update branches and reviewable PRs. Keep no deployment. Read CURRENT_MASTER_PLAN/BALANCE_PROPOSAL for full18blocks. Independent new out-of-scope commander remains plan-only.
+
+Rescue implementation added: native WoundedAt/HospitalizedAt/claim fields, helper action and typed endpoint, automatic5minute orderlies fallback, early cancellation releases claim, no treatment-time reduction/item loss from transport. External duel patients go straight to ward; native battlefield wounded can be carried. All wounded stay visible offline, lying pose/bed and cause+remaining-time label, patient click opens rescue/treatment actions, hospital patient list includes battle wounds. Migration WoundedTransport additive. Tests added for transport and fallback; verification in progress. New real-time UI changes broadcast by rescue sweep.

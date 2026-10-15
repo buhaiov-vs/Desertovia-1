@@ -106,6 +106,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const [picked, setPicked] = useState<{ target: WorldTarget; screen: { x: number; y: number } } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
+  const [patientFor,setPatientFor]=useState<string|null>(null)
+  const [hospitalPatient,setHospitalPatient]=useState<string|null>(null)
   const [hospitalOpen, setHospitalOpen] = useState(false)
   const [chaplainOpen, setChaplainOpen] = useState(false)
   const [chatFull, setChatFull] = useState(false)
@@ -525,21 +527,6 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     }
   }
 
-  /** Leaving as a citizen or deleting as the Tsar both end on the home page. */
-  const goAway = async (question: string, action: () => Promise<void>) => {
-    if (!window.confirm(question)) return
-    setPending(true)
-    setError(null)
-    try {
-      await action()
-      navigate('/')
-    } catch (exception) {
-      setError(i18n.error(exception))
-    } finally {
-      setPending(false)
-    }
-  }
-
   const cancelTask = async () => {
     setPending(true)
     setError(null)
@@ -635,14 +622,14 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     villageRef.current = live.state
   })
   const citizens = useMemo(() => [...live.citizens.values()], [live.citizens])
-  const pickCitizen = useMemo(() => (id: string) => { if (id === PRIEST_ID) setChaplainOpen(true); else if (tsar) setSubtitleFor(id) }, [tsar])
+  const pickCitizen = useMemo(() => (id: string) => { if (id === PRIEST_ID) setChaplainOpen(true); else if(live.citizens.get(id)?.injuredUntil||live.citizens.get(id)?.recovery?.until)setPatientFor(id); else if (tsar) setSubtitleFor(id) }, [tsar,live.citizens])
   // Only a citizen can be sent to work; the Tsar watches and walks around, players without a character just look.
   const canWork = !tsar && !!citizen
   const working = citizen?.state === 'Working' || citizen?.state === 'Paused'
   const ownId = citizen?.id
   /** Away citizens stay on the map only while a task they started is still running. */
   const shownCitizens = useMemo(
-    () => citizens.filter((c) => c.id === ownId || c.state === 'Working' || !live.away.has(c.id)),
+    () => citizens.filter((c) => c.id === ownId || c.state === 'Working' || (!!c.injuredUntil&&Date.parse(c.injuredUntil)>Date.now()) || (!!c.recovery?.until&&Date.parse(c.recovery.until)>Date.now()) || !live.away.has(c.id)),
     [citizens, live.away, ownId],
   )
   const pickWorld = useMemo(() => {
@@ -730,7 +717,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         citizens={shownCitizens}
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
-        obscured={chatFull || panel !== 'none' || hospitalOpen || chaplainOpen || pollSetup || subtitleFor !== null}
+        obscured={chatFull || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
         onCitizenPick={pickCitizen}
@@ -771,6 +758,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               catalog={catalog}
               citizens={citizens}
               now={now}
+              actorId={me.id} tsar={tsar} ruler={ruler} onVillage={setVillageState}
               onClose={() => setPicked(null)}
             />
           )}
@@ -792,6 +780,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               error={error}
               onStart={start}
               onStartJob={startJob}
+              onCivic={async (plotId,operation)=>setVillageState(await api.civic(slug,plotId,operation))}
+              ruler={ruler}
               onTake={takeFromStorage}
               onClose={() => setPicked(null)}
             />
@@ -852,7 +842,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         <ChatPanel
           key={slug}
           incoming={live.chatArrivals}
-          interrupted={panel !== 'none' || hospitalOpen || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
+          interrupted={panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}
@@ -933,7 +923,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         </ServerClock>
       </div>
 
-      {hospitalOpen && <HospitalPanel slug={slug} actorId={me.id} citizenId={citizen?.id} tsar={tsar} village={village}
+      {patientFor&&live.citizens.get(patientFor)&&<div className="modal-backdrop"><section className="modal" role="dialog" aria-label="Раненый житель"><header className="modal-header"><h2>{live.citizens.get(patientFor)!.name}</h2><button onClick={()=>setPatientFor(null)}>✕</button></header><div className="modal-body"><p>{live.citizens.get(patientFor)!.recovery?.until?'На лечении после дуэли':live.citizens.get(patientFor)!.hospitalizedAt?'На лечении после боя':'Ранен после боя, ждёт помощи'}</p><p className="small muted">Переноска не лечит. Если никто не поможет, санитары заберут раненого через 5 минут.</p>{citizen&&citizen.id!==patientFor&&!live.citizens.get(patientFor)!.hospitalizedAt&&!live.citizens.get(patientFor)!.recovery?.until&&<button disabled={pending||!!live.citizens.get(patientFor)!.rescueByCitizenId} onClick={()=>{const id=patientFor;setPatientFor(null);void run(()=>api.rescue(slug,id))}}>Отнести в больницу</button>}<button onClick={()=>{setHospitalPatient(patientFor);setPatientFor(null);setHospitalOpen(true)}}>Лечение</button></div></section></div>}
+      {hospitalOpen && <HospitalPanel initialPatientId={hospitalPatient} slug={slug} actorId={me.id} citizenId={citizen?.id} tsar={tsar} village={village}
         onVillage={setVillageState} serverOffsetMs={serverOffset} onClose={() => setHospitalOpen(false)} onUpdated={() => { void loadCitizen() }} />}
       {chaplainOpen && <SramoslavPanel slug={slug} onClose={() => setChaplainOpen(false)} onReply={text => canvas.current?.say(PRIEST_ID, text, 12)} />}
       {panel === 'menu' && (
@@ -950,6 +941,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               tsar={tsar}
               ruler={ruler}
               inviteCode={live.inviteCode}
+              onVillage={setVillageState}
               onNewInviteCode={async () => live.setInviteCode((await api.newInviteCode(slug)).inviteCode)}
               onPlace={(definition) => {
                 setPlacing({ definition })
@@ -979,12 +971,6 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               onOpenDungeon={() => dungeonAction(() => api.openDungeon(slug))}
               onCancelDungeon={() => dungeonAction(() => api.cancelDungeon(slug))}
               dungeonError={dungeonError}
-              onLeaveVillage={() =>
-                goAway(i18n.t('menu.leaveConfirm', { village: village.name }), () => api.leaveVillage(slug))
-              }
-              onDeleteVillage={() =>
-                goAway(i18n.t('menu.deleteConfirm', { village: village.name }), () => api.deleteVillage(slug))
-              }
             />
           )}
         </ServerClock>

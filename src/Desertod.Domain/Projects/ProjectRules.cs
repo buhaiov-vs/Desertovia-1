@@ -20,7 +20,7 @@ public static class ProjectRules
 
     public const int SupervisionBase = 3;
 
-    public static int SupervisionCapacity(int engineerIntelligence) => SupervisionBase + engineerIntelligence;
+    public static int SupervisionCapacity(int engineerIntelligence) => 3 + Math.Clamp((engineerIntelligence - 1) / 2, 0, 3);
 
     /// <summary>Marks the project complete, rewards the village and splits Renown by contribution share.</summary>
     public static ProjectCompletion Complete(
@@ -30,6 +30,7 @@ public static class ProjectRules
         DateTimeOffset now)
     {
         var reward = project.Definition.Reward;
+        if (project.DefinitionId == ProjectCatalog.TsarBridge) village.BridgeOpened = true;
         project.Status = ProjectStatus.Completed;
         project.CompletedAt = now;
 
@@ -42,12 +43,11 @@ public static class ProjectRules
         var shares = contributors.Keys.ToDictionary(id => id, project.ShareOf);
         var total = shares.Values.Sum();
         var renown = new Dictionary<Guid, int>();
-        foreach (var (citizenId, share) in shares)
-        {
-            var amount = total <= 0 ? 0 : (int)Math.Round(reward.RenownPool * share / total, MidpointRounding.AwayFromZero);
-            contributors[citizenId].Renown += amount;
-            renown[citizenId] = amount;
-        }
+        var exact = shares.Select(kv => new { Id = kv.Key, Value = total <= 0 ? 0 : reward.RenownPool * kv.Value / total }).ToList();
+        var allocation = exact.ToDictionary(x => x.Id, x => (int)Math.Floor(x.Value));
+        var remainder = total <= 0 ? 0 : reward.RenownPool - allocation.Values.Sum();
+        foreach (var item in exact.OrderByDescending(x => x.Value - Math.Floor(x.Value)).ThenBy(x => x.Id).Take(remainder)) allocation[item.Id]++;
+        foreach (var (id, amount) in allocation) { contributors[id].Renown += amount; renown[id] = amount; }
 
         return new ProjectCompletion(project.DefinitionId, project.Definition.Name, renown);
     }

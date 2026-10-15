@@ -64,7 +64,9 @@ public static class CycleEngine
     public static void Start(Citizen citizen, TaskDefinition task, WorkContext context, DateTimeOffset now, TilePoint? spot = null)
     {
         var village = context.Village;
+        if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge)) village.BridgeOpened=true;
         CheckReady(citizen, now);
+        if(task.Id==RescueRules.TaskId)throw new GameRuleException("rescue.target","Click a wounded citizen to carry them.");
         if (spot is { } picked && !Wilderness.IsWild(task))
         {
             WorkSpots.Check(village, task, picked, now);
@@ -99,6 +101,12 @@ public static class CycleEngine
         }
 
         SkillRules.Check(citizen, task);
+        if (task.Effect is TaskEffect.Survey or TaskEffect.Supervise && citizen.Stats.Intelligence < 3)
+            throw new GameRuleException("project.intelligence", "Surveying and supervision require Intelligence 3 and Building 1.");
+        if (task.Id == "brew-vigor" && (citizen.SkillLevel(Skill.Scholarship) < 3 || citizen.Stats.Intelligence < 3))
+            throw new GameRuleException("task.brewer", "Ask a skilled brewer: Scholarship 3 and Intelligence 3 are required.");
+        if (task.RequiredBuilding is {} productionKind && village.Structures.FirstOrDefault(s => s.Kind == productionKind)?.Damage >= 100)
+            throw new GameRuleException("building.repairFirst", "Repair this building before working inside.");
 
         if (task.Effect is TaskEffect.Sow or TaskEffect.Water or TaskEffect.Harvest)
         {
@@ -141,8 +149,12 @@ public static class CycleEngine
         }
 
         var work = SkillRules.WorkTime(citizen, task.Skill, task.SkillLevel, TimeSpan.FromSeconds(task.WorkSeconds));
+        if (task.Effect is TaskEffect.Build or TaskEffect.Repair or TaskEffect.Supervise && DayCycle.IsNight(now)) work *= 1.25;
+        if (task.RequiredBuilding is {} used && village.Structures.FirstOrDefault(s => s.Kind == used) is {} worn)
+            work *= worn.Damage > 75 ? 1.25 : worn.Damage > 50 ? 1.1 : 1;
         var walk = repairYard is { } yard ? WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard) : Walk(citizen, village, task, spot, now);
-        Begin(citizen, task.Id, work + walk, WeatherRules.EnergyCost(village, !WeatherRules.IsIndoor(task), now), village, now);
+        Begin(citizen, task.Id, work + walk, WeatherRules.EnergyCost(village, !WeatherRules.IsIndoor(task), now) *
+            (task.Effect is TaskEffect.Build or TaskEffect.Repair ? 2 : task.Effect == TaskEffect.Supervise || task.Inputs.Count > 0 ? 1.5 : 1.25), village, now, walk);
         citizen.CurrentSiteId = null;
         citizen.CurrentSiteStage = null;
         citizen.Spot = spot;
@@ -152,6 +164,17 @@ public static class CycleEngine
         }
     }
 
+    public static void StartRescue(Citizen helper,Citizen patient,WorkContext context,DateTimeOffset now)
+    {
+        CheckReady(helper,now);RescueRules.Check(helper,patient,now);
+        var spot=patient.Spot??patient.IdleSpot??patient.Trip?.To??WorldMap.Places[WorldMap.Camp];
+        BankAccess.Require(context.Village,spot);
+        var walk=WorldMap.Walk(WorldMap.Places[WorldMap.Camp],spot)+WorldMap.Walk(spot,RescueRules.Ward(context.Village))*2;
+        Begin(helper,RescueRules.TaskId,GameRules.CraftLength+walk,1.5,context.Village,now,walk);
+        helper.CurrentSiteId=null;helper.CurrentSiteStage=null;helper.RescuePatientId=patient.Id;
+        helper.Spot=spot;helper.SetOut(spot,context.Village,now);patient.RescueByCitizenId=helper.Id;
+    }
+
     /// <summary>Tasks a citizen takes weapons for: work where beasts attack, and guard duty.</summary>
     public static bool IsArmed(TaskDefinition task) => task.Danger is not null || task.Effect == TaskEffect.Guard;
 
@@ -159,6 +182,7 @@ public static class CycleEngine
     public static void StartJob(Citizen citizen, string plotId, int stage, string jobId, WorkContext context, DateTimeOffset now)
     {
         var village = context.Village;
+        if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge)) village.BridgeOpened=true;
         CheckReady(citizen, now);
         var job = ConstructionRules.CheckJob(village, citizen, plotId, stage, jobId, context.RecentCitizenCount);
 
@@ -169,7 +193,9 @@ public static class CycleEngine
                 yard)
             : SkillRules.WorkTime(citizen, job.Skill, 0, GameRules.CraftLength) + WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard);
 
-        Begin(citizen, job.Id, duration, WeatherRules.EnergyCost(village, true, now), village, now);
+        BankAccess.Require(village, yard);
+        if (DayCycle.IsNight(now) && job.Kind == JobKind.Labor) duration += GameRules.CraftLength * .25;
+        Begin(citizen, job.Id, duration, WeatherRules.EnergyCost(village, true, now) * (job.Kind == JobKind.Labor ? 2 : 1.25), village, now, WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard));
         citizen.CurrentSiteId = plotId;
         citizen.CurrentSiteStage = stage;
     }
@@ -183,7 +209,8 @@ public static class CycleEngine
         Begin(citizen, TechnologyCatalog.ResearchTaskId,
             SkillRules.WorkTime(citizen, SkillRules.Research, 0, GameRules.CraftLength)
             + WorldMap.Walk(WorldMap.Places[WorldMap.Camp], WorldMap.Yard(plotId)),
-            WeatherRules.EnergyCost(context.Village, false, now), context.Village, now);
+            WeatherRules.EnergyCost(context.Village, false, now), context.Village, now,
+            WorldMap.Walk(WorldMap.Places[WorldMap.Camp], WorldMap.Yard(plotId)));
         citizen.CurrentTechnologyId = technology.Id;
         citizen.CurrentSiteId = plotId;
         citizen.CurrentSiteStage = null;
@@ -197,6 +224,9 @@ public static class CycleEngine
     public static void Cancel(Citizen citizen, DateTimeOffset now, Village? village = null)
     {
         HospitalRules.RequireReady(citizen, now);
+        if (citizen.ExhaustedUntil > now)
+            throw new GameRuleException("citizen.exhausted", "You fainted from exhaustion. Wait until you recover.",
+                new Dictionary<string, object> { ["readyAt"] = citizen.ExhaustedUntil.Value });
         if (citizen.WorkState(now) != WorkState.Working)
         {
             throw new GameRuleException("task.notRunning", "There is no task running.");
@@ -326,7 +356,8 @@ public static class CycleEngine
                 break;
 
             case TaskEffect.Repair:
-                repaired = CombatRules.Repair(village, YieldMath.Whole(task.BaseYield * factor));
+                repaired = CombatRules.Repair(village, 5);
+                contributed = repaired > 0 ? 1 : 0;
                 overflowed = repaired == 0;
                 break;
 
@@ -453,7 +484,7 @@ public static class CycleEngine
                 {
                     var limit = task.Effect == TaskEffect.Survey
                         ? project.Remaining(key)
-                        : Math.Max(0, project.BuildLimit - project.BuildProgress);
+                        : Math.Max(0, project.BuildLimit - project.BuildProgress - (project.StagedBridge && !project.HasCrew(citizen.Id, context.RecentCitizenCount) ? 1 : 0));
                     amount = Min(YieldMath.Whole(task.BaseYield * factor), limit,
                         project.ContributionRoom(citizen.Id, key, context.ActiveCitizenCount));
                 }
@@ -470,7 +501,8 @@ public static class CycleEngine
             }
 
             case TaskEffect.Supervise:
-                overflowed = project is null || project.Phase != ProjectPhase.Construction || project.BuildDone;
+                overflowed = project is null || project.Phase != ProjectPhase.Construction || project.BuildDone || context.BuildersWorking == 0;
+                if (!overflowed && project is not null) { contributed = 1; if (project.StagedBridge) project.RegisterHand(citizen.Id); }
                 break;
 
             case TaskEffect.Expedition:
@@ -532,6 +564,11 @@ public static class CycleEngine
         }
 
         var hungry = task.Effect != TaskEffect.Unload && Eat(citizen, village, now);
+        if (task.RequiredBuilding is {} producedAt && !overflowed && village.Structures.FirstOrDefault(s => s.Kind == producedAt) is {} producer)
+        {
+            producer.ProductionCycles++;
+            if (producer.ProductionCycles % 10 == 0) producer.Damage = Math.Min(100, producer.Damage + 1);
+        }
         var report = Finish(citizen, village, task.Id, task.Primary, task.Secondary, task.Skill,
             SkillRules.Challenge(citizen, task.Skill, task.SkillLevel), experienceShare, hungry,
             produced, carried, moraleGained, contributed, rareFind, overflowed);
@@ -546,7 +583,7 @@ public static class CycleEngine
         List<ResourceAmount> carried, List<ResourceAmount> lost)
     {
         var left = amount - village.Store(kind, amount);
-        var held = Math.Min(left, Math.Max(0, StorageRules.TakeLimit - citizen.Carried(kind)));
+        var held = Math.Min(left, Math.Max(0, StorageRules.CarryLimit(citizen, citizen.CycleEndsAt ?? DateTimeOffset.UtcNow) - citizen.Carried(kind)));
         if (held > 0)
         {
             citizen.Carry(kind, held);
@@ -625,7 +662,7 @@ public static class CycleEngine
         var hungry = Eat(citizen, village, now);
 
         var report = Finish(citizen, village, job.Id, job.Primary, job.Secondary, job.Skill, SkillRules.Challenge(citizen, job.Skill, 0),
-            overflowed ? GameRules.OverflowExperienceMultiplier : 1, hungry,
+            job.Id == "dismantle" || overflowed ? 0 : Math.Min(1, (double)amount / Math.Max(1, job.PerCycle)), hungry,
             produced, carried, 0, overflowed ? 0 : amount, false, overflowed);
         return report with { SiteId = plotId, BuildingCompleted = completed, Lost = lost };
     }
@@ -647,6 +684,8 @@ public static class CycleEngine
         bool rareFind,
         bool overflowed)
     {
+        if (skill == Skill.Building && (overflowed || taskId == "dismantle")) experienceShare = 0;
+        if (skill == Skill.Building) challenge = 1;
         var earned = GameRules.BaseExperiencePerCycle
                      * challenge
                      * (citizen.CycleTired ? GameRules.TiredExperienceMultiplier : 1)
@@ -659,7 +698,14 @@ public static class CycleEngine
         var secondaryResult = Progression.AddExperience(citizen.Stats, secondary, secondaryExperience);
         var skillLevelsGained = SkillRules.AddExperience(citizen, skill, experience);
         SkillRules.CatchUp(citizen);
-        var renown = primaryResult.RenownGained + secondaryResult.RenownGained;
+        var usefulBuild = skill == Skill.Building && contributed > 0 && taskId != "dismantle";
+        var renown = primaryResult.RenownGained + secondaryResult.RenownGained + (usefulBuild ? 1 : 0);
+        citizen.ExhaustedCycles = citizen.CycleTired ? citizen.ExhaustedCycles + 1 : 0;
+        if (citizen.ExhaustedCycles >= 3)
+        {
+            citizen.ExhaustedUntil = citizen.CycleEndsAt!.Value + DayCycle.DayLength / 2;
+            citizen.ExhaustedCycles = 0;
+        }
         citizen.Renown += renown;
 
         return new CycleReport(
@@ -733,6 +779,9 @@ public static class CycleEngine
         }
 
         HospitalRules.RequireReady(citizen, now);
+        if (citizen.ExhaustedUntil > now)
+            throw new GameRuleException("citizen.exhausted", "You fainted from exhaustion. Wait until you recover.",
+                new Dictionary<string, object> { ["readyAt"] = citizen.ExhaustedUntil.Value });
         if (CombatRules.IsInjured(citizen, now))
         {
             throw new GameRuleException("citizen.injured", "You are wounded and cannot work until the wound heals. A remedy heals it at once.",
@@ -758,11 +807,13 @@ public static class CycleEngine
     /// <summary>The weather of a cycle is the weather it started in.</summary>
     private static DateTimeOffset WorkedAt(Citizen citizen, DateTimeOffset now) => citizen.CycleStartedAt ?? now;
 
-    private static void Begin(Citizen citizen, string taskId, TimeSpan duration, double energyCost, Village village, DateTimeOffset now)
+    private static void Begin(Citizen citizen, string taskId, TimeSpan duration, double energyCost, Village village, DateTimeOffset now, TimeSpan? walkDuration = null)
     {
+        if (now - citizen.EnergyUpdatedAt >= TimeSpan.FromMinutes(30)) citizen.ExhaustedCycles = 0;
         var renewing = citizen.GraceEndsAt is not null && now <= citizen.GraceEndsAt;
         citizen.Streak = renewing ? citizen.Streak + 1 : 0;
 
+        if (citizen.HasMedicalEffect("snorers", now)) energyCost *= 1.2;
         var energy = citizen.CurrentEnergy(now, village);
         citizen.CycleTired = energy < energyCost;
         citizen.StoredEnergy = citizen.CycleTired ? energy : energy - energyCost;
@@ -773,7 +824,10 @@ public static class CycleEngine
         citizen.Spot = null;
         citizen.IdleSpot = null;
         citizen.CycleStartedAt = now;
-        citizen.CycleEndsAt = now + duration;
+        // Walking retains its normal speed. Only work is slowed by exhaustion.
+        var task = GameCatalog.FindTask(taskId);
+        var walking = walkDuration ?? (task is null ? TimeSpan.Zero : Walk(citizen, village, task));
+        citizen.CycleEndsAt = now + (citizen.CycleTired ? duration + (duration > walking ? duration - walking : TimeSpan.Zero) * 2 : duration) + walking * (1/citizen.MedicalWalk(now)-1);
         citizen.CycleSettled = false;
     }
 
@@ -871,6 +925,8 @@ public static class CycleEngine
                 break;
 
             case TaskEffect.Build:
+                if(project.StagedBridge && project.BridgeStage==4 && (citizen.Stats.Intelligence<3 || citizen.SkillLevel(Skill.Building)<1))
+                    throw new GameRuleException("project.intelligence","Bridge inspection requires Intelligence 3 and Building 1.");
                 if (!project.SurveyDone)
                 {
                     throw new GameRuleException("project.surveyFirst", "An engineer must survey the site first.");
@@ -976,7 +1032,7 @@ public static class CycleEngine
             _ => [],
         };
         bool NoRoom(ResourceAmount output) =>
-            citizen.Carried(output.Resource) >= StorageRules.TakeLimit && village.FreeSpace(output.Resource) <= 0;
+            citizen.Carried(output.Resource) >= StorageRules.CarryLimit(citizen, now) && village.FreeSpace(output.Resource) <= 0;
         var blocked = outputs.FirstOrDefault(NoRoom);
         if (blocked is not null && outputs.All(NoRoom))
         {

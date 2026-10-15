@@ -6,6 +6,7 @@ public sealed class ChaplainMessage
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid VillageId { get; set; }
     public required string Text { get; set; }
+    public string? Topic { get; set; }
     public DateTimeOffset SentAt { get; set; }
 
     public static ChaplainMessage Speak(Guid villageId, string text, DateTimeOffset now)

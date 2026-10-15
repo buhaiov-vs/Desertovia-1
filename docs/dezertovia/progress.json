@@ -420,31 +420,27 @@
     ]
   },
   "hospital_plan": {
-    "decision": "D-028",
+    "decision": "D-025",
     "document": "HOSPITAL_PLAN.md",
-    "state": "implemented_verified_locally_not_deployed",
-    "branch": "feat/hospital",
-    "game_code_changed": true,
+    "state": "plan_and_art_proposal_prepared",
+    "branch": "docs/hospital-plan",
+    "game_code_changed": false,
     "live_changed": false,
     "payment_operations_executed": false,
-    "art": "art/hospital-proposal/prepared",
+    "art": "art/hospital-proposal",
     "draft_frames": 2,
     "dedicated_hospital_asset_found": false,
     "existing_native_injuries_found": true,
     "existing_bot_hospital_found": true,
     "checks": [
-      "311 domain tests passed",
-      "171 API tests passed, including 3 cross-service hospital cases with fake bridge",
-      "23 focused bot/proxy/identity tests passed after final access fix",
-      "773 full bot tests passed before final access-only fix; latest full suite in PR CI",
-      "16 browser tests passed on phone and desktop: confirmation/retry/320px + all27 prepared buildings alpha/lighting",
-      "frontend production build and lint passed (warning-only baseline)",
-      "asset deterministic rebuild and common pixel/outline registration passed"
+      "source code comparison: native Remedy and external duel hospital",
+      "saved generated source + exact2 frame crops, alpha/bounds/SHA manifest",
+      "docs links/JSON and AGENTS/CLAUDE synchronization"
     ],
-    "next_stage": "review paired repository PRs; no deployment authorized",
+    "next_stage": "external status synchronization and existing treatment link, before embedded payment",
     "recovery_bonuses": {
       "decision": "D-026",
-      "state": "implemented_candidate_balance_not_live",
+      "state": "planned_not_implemented",
       "hospital_level_bonus": true,
       "patient_skill_bonus": true,
       "recommended_hospital_percent": [
@@ -459,35 +455,9 @@
       "recommended_skill_name": "Восстановление",
       "apply_once_per_admission": true,
       "bot_and_game_share_expiry": true,
-      "payment_tariffs_unchanged": true,
-      "training_tasks": [
-        "learn-first-aid",
-        "practice-first-aid"
-      ]
+      "payment_tariffs_unchanged": true
     },
-    "postponed_by_owner_during_incident": false,
-    "payment_tests": "temporary SQLite and fake Telegram only",
-    "implementation": {
-      "document": "HOSPITAL_IMPLEMENTATION.md",
-      "bot_branch": "feat/desertovia-hospital",
-      "bot_commit": "9da022d",
-      "bot_pr": "https://github.com/desertod666/TG-bots/pull/32",
-      "game_pr": "https://github.com/desertod666/Desertovia/pull/23",
-      "feature_flag": "Game__HospitalEnabled",
-      "feature_flag_default": false,
-      "game_migration": "AddExternalRecovery",
-      "native_wounds_separate": true,
-      "durable_payment_receipts": true,
-      "current_work_pauses_without_restart": true,
-      "hospital_levels": 3,
-      "deployed": false,
-      "release_version_changed": false
-    },
-    "ci": {
-      "game_pr": 23,
-      "bot_pr": 32,
-      "state": "running_on_github_not_deployment"
-    }
+    "postponed_by_owner_during_incident": true
   },
   "routing_incident": {
     "date": "2026-10-14",
@@ -507,5 +477,132 @@
     "data_reset": false,
     "game_code_changed": false,
     "new_game_release": false
+  },
+  "batch_update_plan": {
+    "decision": "D-037",
+    "state": "planned_not_started",
+    "document": "BATCH_UPDATE_PLAN.md",
+    "proposed_blocks": 18,
+    "workflow": "complete_agreed_changes_then_validate_final_code",
+    "full_suite_after_each_small_change": false,
+    "final_required_checks_preserved": true,
+    "default_scope": "repositories_only_no_deployment"
+  },
+  "batch_balance_proposal": {
+    "decision": "D-038",
+    "state": "proposed_not_applied_or_simulated",
+    "document": "BALANCE_PROPOSAL.md",
+    "bridge_work_units": 230,
+    "communal_housing_beds": [
+      12,
+      20,
+      28
+    ],
+    "free_hospital_outcome_percent": {
+      "normal": 75,
+      "debuff": 20,
+      "extension": 5
+    },
+    "deployed": false
+  },
+  "current_master_plan": {
+    "decision": "D-039",
+    "state": "implementation_verification",
+    "document": "CURRENT_MASTER_PLAN.md",
+    "resume_document": "SESSION_HANDOFF.md",
+    "implementation_checklist": [
+      {
+        "block": 1,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 2,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 3,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 4,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 5,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 6,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 7,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 8,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 9,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 10,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 11,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 12,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 13,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 14,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 15,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 16,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 17,
+        "state": "not_started_in_batch"
+      },
+      {
+        "block": 18,
+        "state": "not_started_in_batch"
+      }
+    ],
+    "balance_state": "proposed_not_applied_or_simulated",
+    "latest_request": "execute_full_plan_without_deployment",
+    "deployment_authorized_for_batch": false,
+    "implementation_branch": "feat/cooperative-update",
+    "hospital_rescue": "implemented_in_verification_no_deploy"
+  },
+  "undead_visual_size": {
+    "decision": "D-040",
+    "state": "code_prepared_not_runtime_verified_or_deployed",
+    "source_branch": "fix/larger-undead",
+    "source_commit": "07d8f66",
+    "document": "ENEMY_SCALE_CHANGE.md",
+    "size_multiplier": 2,
+    "affected": [
+      "Zombie",
+      "Skeleton"
+    ],
+    "batch_block": 18,
+    "validation": "deferred_to_batch_final_phase",
+    "deployed": false
   }
 }

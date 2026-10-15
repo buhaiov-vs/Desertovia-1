@@ -934,6 +934,7 @@ export const en = {
     WoodPile: { name: 'Wood pile', description: 'Stacked wood stays dry and does not crowd the heap.' },
     StonePile: { name: 'Stone pile', description: 'A ring of stones that holds more stones.' },
     DryingRack: { name: 'Drying rack', description: 'Meat and berries dry here instead of rotting in the heap.' },
+    Longhouse: { name: 'Communal house', description: 'Twelve beds, expandable to twenty and twenty-eight.' },
     Hut: {
       name: 'Hut',
       description: 'The first real house: stone base, timber frame, clay walls, thatched roof. Four people sleep well here.',
@@ -960,6 +961,7 @@ export const en = {
   } as Record<string, { name: string; description: string }>,
 
   stages: {
+    dismantle:'Dismantling', upgrade:'Storage upgrade', expand:'Housing expansion',
     ground: 'Ground',
     foundation: 'Foundation',
     frame: 'Frame',
@@ -978,6 +980,7 @@ export const en = {
   } as Record<string, string>,
 
   jobs: {
+    dismantle:'Dismantle carefully',
     'bring-sticks': 'Bring sticks',
     'bring-logs': 'Bring logs',
     'bring-stones': 'Bring stones',
@@ -1072,6 +1075,7 @@ export const en = {
     negotiate: 'Negotiate',
     command: 'Command',
     'keep-watch': 'Keep watch',
+    'rescue-wounded':'Carry the wounded to hospital',
     repair: 'Repair buildings',
     'make-poultice': 'Make poultices',
     'make-spears': 'Make spears',
@@ -1194,6 +1198,12 @@ export const en = {
   } as Record<string, { ruler: string; citizen: string }>,
 
   errors: {
+    'bridge.closed': 'Build the Tsar Bridge first.',
+    'project.intelligence': 'Intelligence 3 and Building 1 required.',
+    'task.brewer': 'Ask a brewer: Scholarship 3 and Intelligence 3 required.',
+    'building.repairFirst': 'Repair the building first.',
+    'citizen.exhausted': 'You are unconscious from exhaustion. Wait to recover.',
+
     'citizen.dormant': 'Inactive citizens cannot work.',
     'citizen.alreadyLives': 'You already live in this village.',
     'citizen.notInVillage': 'You do not live in this village.',

@@ -23,7 +23,7 @@ public sealed class SramoslavService(ChatService chat, IDbContextFactory<Deserto
         {
             using var scope = scopes.CreateScope();
             var bridge = scope.ServiceProvider.GetRequiredService<TelegramBrowserBridge>();
-            if (!bridge.Enabled) return "Слышу тебя, чадо. Договоритесь с соседями, кому сейчас нужна помощь.";
+            if (!bridge.Enabled) return null;
             try
             {
                 var reply = await bridge.CallAsync<SramoslavReply>("speak", new
@@ -36,7 +36,7 @@ public sealed class SramoslavService(ChatService chat, IDbContextFactory<Deserto
                 return reply.Text;
             }
             catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
-            { return "Слышу тебя, чадо. Связь подводит, но деревню строим вместе!"; }
+            { return null; }
         }
         finally { gate.Release(); }
     }

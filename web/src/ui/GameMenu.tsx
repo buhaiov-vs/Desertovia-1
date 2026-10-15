@@ -1,3 +1,4 @@
+import { CivicPanel } from './CivicPanel'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import {
@@ -48,8 +49,8 @@ export interface MenuProps {
   slug: string
   tab: MenuTab
   onTab: (tab: MenuTab) => void
-  onClose: () => void
   onHospital: () => void
+  onClose: () => void
   village: VillageState
   population: { total: number; online: number }
   /** The village owner: rules and plans, never works, sees no storage numbers. */
@@ -58,6 +59,7 @@ export interface MenuProps {
   ruler: boolean
   /** Only known to the owner of a private village. */
   inviteCode: string | null
+  onVillage: (state:VillageState)=>void
   onNewInviteCode: () => Promise<void>
   onPlace: (definition: BuildingDefinition) => void
   onWithdraw: (plotId: string) => void
@@ -86,10 +88,6 @@ export interface MenuProps {
   onOpenDungeon: () => void
   onCancelDungeon: () => void
   dungeonError: string | null
-  /** The citizen leaves the village for good; asks first. */
-  onLeaveVillage: () => void
-  /** The Tsar deletes the village; asks first. */
-  onDeleteVillage: () => void
 }
 
 function JoinPrompt(props: MenuProps) {
@@ -120,7 +118,7 @@ export function GameMenu(props: MenuProps) {
   const { t } = i18n
   const [filter, setFilter] = useState<TaskFilter>('all')
   const working = citizen?.cycleEndsAt ? now < Date.parse(citizen.cycleEndsAt) : false
-  const disabled = pending || working || citizen?.state === 'Paused'
+  const disabled = pending || working
   const built = new Set<string>([...builtKinds(village, catalog), ...village.completedProjects])
   const discovered = discoveredTechnologies(village)
   // Project tasks only show while a project runs, and only the ones it has use for.
@@ -149,6 +147,7 @@ export function GameMenu(props: MenuProps) {
         </header>
 
         <div className="modal-body">
+          {tab === 'village' && <button onClick={props.onHospital}>🏥 Больница</button>}
           {tab === 'village' && <section className="card village-population" title={t('chat.populationHelp')}>
             {t('chat.population', props.population)}
           </section>}
@@ -157,7 +156,7 @@ export function GameMenu(props: MenuProps) {
 
           {tab === 'village' && (
             <>
-              <button onClick={props.onHospital}>✚ {t('hospital.title')}</button>
+              <CivicPanel village={village} tsar={tsar} ruler={ruler} actorId={props.me.id} citizen={citizen} onVillage={props.onVillage} />
               <QuestPanel
                 village={village}
                 catalog={catalog}
@@ -308,7 +307,7 @@ export function GameMenu(props: MenuProps) {
           )}
 
           {tab === 'character' &&
-            (citizen ? <><button className="primary" onClick={props.onHospital}>✚ {t( citizen.state === 'Paused' ? 'hospital.duel' : 'hospital.open')}</button><CharacterSheet citizen={citizen} catalog={catalog} structures={village.structures} /></> : <JoinPrompt {...props} />)}
+            (citizen ? <CharacterSheet citizen={citizen} catalog={catalog} structures={village.structures} /> : <JoinPrompt {...props} />)}
 
           {tab === 'tasks' &&
             (citizen ? (
@@ -357,17 +356,6 @@ export function GameMenu(props: MenuProps) {
             ))}
         </div>
         <div className="menu-actions">
-          {tsar ? (
-            <button className="danger" disabled={pending} onClick={props.onDeleteVillage}>
-              {t('menu.deleteVillage')}
-            </button>
-          ) : (
-            citizen && (
-              <button className="danger" disabled={pending} onClick={props.onLeaveVillage}>
-                {t('menu.leaveVillage')}
-              </button>
-            )
-          )}
           <Link to="/" className="button">
             {t('menu.toMainMenu')}
           </Link>

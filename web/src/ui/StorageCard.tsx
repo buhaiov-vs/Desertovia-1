@@ -21,7 +21,7 @@ export function StorageCard({ storage, catalog, take }: { storage: Storage; cata
     <div className="storage-card">
       {info && (
         <p className="muted small">
-          {t('inventory.slots', { used: storage.slots.length, total: info.slots, size: info.slotSize })}
+          {storage.resourceLimit ? `До ${storage.resourceLimit} каждого ресурса${storage.totalLimit ? ` · всего ${storage.totalLimit}` : ''}` : t('inventory.slots', { used: storage.slots.length, total: info.slots, size: info.slotSize })}
           {' · '}
           {info.accepts.length === 0
             ? t('storage.acceptsAll')

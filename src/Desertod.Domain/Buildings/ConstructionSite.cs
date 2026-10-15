@@ -9,6 +9,9 @@ public sealed class ConstructionSite
     public required string PlotId { get; set; }
 
     public int TargetLevel { get; set; } = 1;
+    public string? Operation { get; set; }
+    public Guid? OrderId { get; set; }
+    public int OperationWork { get; set; }
 
     public DateTimeOffset PlacedAt { get; set; }
 
@@ -26,7 +29,7 @@ public sealed class ConstructionSite
     /// <summary>Citizens who worked on each stage; a stage needs a crew of different people.</summary>
     public List<SiteHand> Hands { get; set; } = [];
 
-    public BuildingDefinition Definition => BuildingCatalog.Get(Kind);
+    public BuildingDefinition Definition => BuildingOperations.Definition(this);
 
     public bool IsFinished => Stage >= Definition.Stages.Count;
 
@@ -156,6 +159,9 @@ public sealed class Structure
     public BuildingKind Kind { get; set; }
     public required string PlotId { get; set; }
     public int Level { get; set; } = 1;
+    public bool Decommissioning { get; set; }
+    public int ProductionCycles { get; set; }
+    public List<Desertod.Domain.Storage.StoredGood> Investment { get; set; } = [];
     public DateTimeOffset BuiltAt { get; set; }
 
     /// <summary>Harm done by raiders, 0 to <see cref="Combat.CombatRules.MaximumDamage"/>; repaired by citizens.</summary>

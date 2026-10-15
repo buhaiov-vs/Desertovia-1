@@ -16,13 +16,14 @@ public static class VigorDrinks
             throw new GameRuleException("citizen.dormant", "Dormant citizens cannot work.");
         }
 
+        if(citizen.ExhaustedUntil > now) throw new GameRuleException("citizen.exhausted","You cannot drink while unconscious.");
         if (ReadyAt(citizen) is { } readyAt && now < readyAt)
         {
             throw new GameRuleException("drink.cooldown", "Your heart is still racing from the last drink.",
                 new Dictionary<string, object> { ["readyAt"] = readyAt });
         }
 
-        if (citizen.CurrentEnergy(now, village) >= citizen.MaximumEnergy)
+        if (citizen.CurrentEnergy(now, village) >= citizen.EnergyLimit(now))
         {
             throw new GameRuleException("drink.full", "You are full of energy already.");
         }
@@ -33,7 +34,7 @@ public static class VigorDrinks
         }
 
         citizen.FlushEnergy(now, village);
-        citizen.StoredEnergy = Math.Min(citizen.MaximumEnergy, citizen.StoredEnergy + GameRules.VigorDrinkEnergy);
+        citizen.StoredEnergy = Math.Min(citizen.EnergyLimit(now), citizen.StoredEnergy + GameRules.VigorDrinkEnergy);
         citizen.LastDrinkAt = now;
     }
 }

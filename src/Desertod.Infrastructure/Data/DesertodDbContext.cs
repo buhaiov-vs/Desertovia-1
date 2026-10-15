@@ -71,12 +71,15 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 storage.Property(s => s.Kind).HasConversion<string>();
                 storage.Ignore(s => s.Definition);
                 storage.OwnsMany(s => s.Goods, good => good.Property(g => g.Kind).HasConversion<string>());
+                storage.OwnsMany(s => s.Investment, good => good.Property(g => g.Kind).HasConversion<string>());
             });
             village.OwnsMany(v => v.Structures, structure =>
             {
                 structure.ToJson();
                 structure.Property(s => s.Kind).HasConversion<string>();
+                structure.OwnsMany(s => s.Investment, good => good.Property(g => g.Kind).HasConversion<string>());
             });
+            village.OwnsMany(v=>v.CivicOrders, order=>order.ToJson());
             village.OwnsMany(v => v.Sites, site =>
             {
                 site.ToJson();

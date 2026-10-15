@@ -19,6 +19,12 @@ public static class GameEndpoints
             SramoslavService service, CancellationToken cancellationToken) =>
             service.AskAsync(slug, user.RequireAccountId(), request.Text, cancellationToken)).RequireRateLimiting(ChatService.RateLimit);
 
+        player.MapPost("/villages/{slug}/civic", (string slug, CivicRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.CivicRequestAsync(slug, user.RequireAccountId(), request, ct));
+        player.MapPost("/villages/{slug}/civic/{id:guid}", (string slug, Guid id, CivicDecision request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.CivicDecisionAsync(slug, user.RequireAccountId(), id, request, ct));
+        player.MapPost("/villages/{slug}/rescue/{patientId:guid}", (string slug,Guid patientId,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
+            game.RescueAsync(slug,user.RequireAccountId(),patientId,ct));
         player.MapGet("/catalog", (CatalogDto catalog) => catalog);
 
         player.MapGet("/villages/public", async (GameService game, IConfiguration config, CancellationToken cancellationToken) =>

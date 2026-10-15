@@ -122,7 +122,7 @@ public class CycleEngineTests
     }
 
     [Fact]
-    public void TiredCitizen_GainsNoExperience_AndLessYield()
+    public void TiredCitizen_WorksSlowlyAndGainsQuarterExperience()
     {
         var (citizen, village) = Setup();
         citizen.StoredEnergy = 0;
@@ -132,8 +132,9 @@ public class CycleEngineTests
         var report = Finish(citizen, WorkContext.For(village));
 
         Assert.True(report.Tired);
-        Assert.Equal(0, report.PrimaryExperience);
-        Assert.Equal(1, village.Stock(ResourceKind.Wood));
+        Assert.InRange(report.PrimaryExperience, 2, 3);
+        Assert.True(citizen.CycleEndsAt-Now>=TimeSpan.FromSeconds(Task("chop-wood").WorkSeconds*3));
+        Assert.True(village.Stock(ResourceKind.Wood)>=2);
     }
 
     [Fact]

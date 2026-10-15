@@ -62,7 +62,7 @@ public sealed partial class GameService
                         || c.Recovery?.Available != true || c.RecoveryPausedAt is not null && p.Until is null) updated.Add(c);
                     HospitalRules.Apply(c, new ExternalRecovery { EpisodeId = p.EpisodeId,
                         AdmittedAt = Utc(p.AdmittedAt), Until = Utc(p.Until), CheckedAt = now, Available = true,
-                        HospitalPercent = p.HospitalPercent, SkillPercent = p.SkillPercent }, now);
+                        HospitalPercent = p.HospitalPercent, SkillPercent = p.SkillPercent, EffectKind=p.Effect?.Kind, EffectUntil=Utc(p.Effect?.Until) }, now);
                 }
             }
             catch (Exception error) when (error is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
@@ -78,6 +78,25 @@ public sealed partial class GameService
                 last = null;
                 logger.LogWarning("Hospital bridge unavailable; external recovery remains conservative.");
             }
+        }
+        if (linked.Any(c => c.MarriageCheckedAt is null || now-c.MarriageCheckedAt >= TimeSpan.FromSeconds(60)))
+        {
+            try
+            {
+                foreach(var chunk in linked.Chunk(100))
+                {
+                    var response=await hospitalBridge.RelationshipsAsync(long.Parse(ids[chunk[0].AccountId]), chunk.Select(c=>long.Parse(ids[c.AccountId])).ToArray(),ct);
+                    foreach(var relation in response.Relationships)
+                    {
+                        var c=chunk.SingleOrDefault(p=>ids[p.AccountId]==relation.Id);if(c is null)continue;
+                        c.SpouseName=relation.Name;c.MarriedSince=Utc(relation.Since);c.MarriageCheckedAt=now;
+                        c.SpouseAccountId=relation.SpouseId is null ? null : await db.ExternalLogins.Where(l=>l.Provider=="telegram"&&l.ProviderUserId==relation.SpouseId)
+                            .Select(l=>(Guid?)l.AccountId).SingleOrDefaultAsync(ct);
+                    }
+                }
+            }
+            catch(Exception e) when(e is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
+            { logger.LogWarning("Marriage sync unavailable; retained last confirmed relationship."); }
         }
         await db.SaveChangesAsync(ct);
         foreach (var c in linked)
@@ -97,12 +116,17 @@ public sealed partial class GameService
 
     public async Task RefreshHospitalAsync(CancellationToken ct)
     {
-        if (!hospitalBridge.Enabled) return;
         await using var db = await contextFactory.CreateDbContextAsync(ct);
         var villages = await db.Citizens.Where(c => c.Status == CitizenStatus.Active)
             .Select(c => c.VillageId).Distinct().ToListAsync(ct);
         foreach (var id in villages)
-            await WithVillageAsync(id, async context => { await SyncHospitalAsync(context, id, ct); return true; }, ct);
+            await WithVillageAsync(id, async context =>
+            {
+                await SyncHospitalAsync(context,id,ct);
+                var village=await context.Villages.SingleAsync(v=>v.Id==id,ct);
+                await RescueSweepAsync(context,village,time.GetUtcNow(),ct);await context.SaveChangesAsync(ct);
+                changes.Mark(id);return true;
+            },ct);
     }
 
     public async Task<HospitalDto> GetHospitalAsync(string slug, Guid accountId, CancellationToken ct)
@@ -119,8 +143,8 @@ public sealed partial class GameService
             var uid = await TelegramIdAsync(db, accountId, ct);
             var state = reply?.Patients.FirstOrDefault(p => p.Id == uid?.ToString());
             return new HospitalDto(reply is not null, HospitalRules.Level(village), reply?.Balance, me?.Recovery,
-                state?.Tiers ?? reply?.Patients.FirstOrDefault()?.Tiers ?? [], citizens.Where(c => HospitalRules.IsAdmitted(c, time.GetUtcNow()))
-                    .Select(c => new HospitalPatientDto(c.Id, c.Name, c.Recovery)).ToList());
+                state?.Tiers ?? reply?.Patients.FirstOrDefault()?.Tiers ?? [], citizens.Where(c => HospitalRules.IsAdmitted(c, time.GetUtcNow()) || c.InjuredUntil>time.GetUtcNow())
+                    .Select(c => new HospitalPatientDto(c.Id, c.Name, HospitalRules.IsAdmitted(c,time.GetUtcNow()) ? c.Recovery : new ExternalRecovery{Cause="battle",Until=c.InjuredUntil,Available=true})).ToList());
         }, ct);
     }
 

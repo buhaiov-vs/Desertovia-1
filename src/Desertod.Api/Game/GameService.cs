@@ -1,3 +1,4 @@
+using Desertod.Domain.Skills;
 using System.Text;
 using Desertod.Domain;
 using Desertod.Domain.Buildings;
@@ -111,8 +112,8 @@ public sealed partial class GameService(
     }
 
     public async Task<VillageDto> GetVillageAsync(string slug, Guid accountId, CancellationToken cancellationToken)
+        => await WithVillageAsync(await FindVillageIdAsync(slug,cancellationToken), async db =>
     {
-        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var village = await LoadVillageAsync(db, slug, cancellationToken);
         if (village.EnsureCamp(time.GetUtcNow()))
         {
@@ -132,7 +133,7 @@ public sealed partial class GameService(
             isOwner ? village.InviteCode : null,
             citizens.Select(c => c.ToSummaryDto(now)).ToList(),
             citizens.Where(c => !presence.IsPresent(c.Id)).Select(c => c.Id).ToList());
-    }
+    }, cancellationToken);
 
     /// <summary>The player's village page connected to the hub; a citizen of this village is present while it stays open.</summary>
     public async Task ConnectAsync(string slug, Guid accountId, string connectionId, CancellationToken cancellationToken)
@@ -629,13 +630,14 @@ public sealed partial class GameService(
     }
 
     /// <summary>A finished shelter changes who sleeps where.</summary>
-    private static async Task AfterSettleAsync(
+    private async Task AfterSettleAsync(
         DesertodDbContext db,
         Village village,
         CycleReport? report,
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        await RescueSweepAsync(db,village,now,cancellationToken);
         if (report?.BuildingCompleted is not { } kind || BuildingCatalog.Get(kind).Shelter == 0)
         {
             return;
@@ -858,6 +860,12 @@ public sealed partial class GameService(
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
             var raids = await FightDueRaidsAsync(db, village, null, now, cancellationToken);
+            if(citizen.RescuePatientId is {} patientId)
+            {
+                var patient=await db.Citizens.SingleOrDefaultAsync(c=>c.Id==patientId&&c.VillageId==village.Id,cancellationToken);
+                if(patient?.RescueByCitizenId==citizen.Id)patient.RescueByCitizenId=null;
+                citizen.RescuePatientId=null;
+            }
             CycleEngine.Cancel(citizen, now, village);
             await db.SaveChangesAsync(cancellationToken);
             logger.CitizenActed(citizen.Id, slug, "cancelTask", "");
@@ -1005,10 +1013,21 @@ public sealed partial class GameService(
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        if (context.Project is not { Status: ProjectStatus.Active, IsComplete: true } project)
+        if (context.Project is not { Status: ProjectStatus.Active } project) return null;
+        if (project.StagedBridge)
         {
-            return null;
+            var finished = (project.SurveyDone ? 1 : 0) + VillageProject.BridgeEnds.Count(end => project.BuildProgress >= end);
+            while (project.RewardedStages < finished)
+            {
+                var index = project.RewardedStages - 1;
+                var ids = index < 0 ? project.Contributions.Where(c => c.Key == VillageProject.SurveyKey).Select(c=>c.CitizenId).ToArray()
+                    : project.BridgeHands.Where(h=>h.StartsWith($"{index}:")).Select(h=>Guid.Parse(h[(h.IndexOf(':')+1)..])).ToArray();
+                var recipients = await db.Citizens.Where(c=>ids.Contains(c.Id)).OrderBy(c=>c.Id).ToListAsync(cancellationToken);
+                for (var i=0; i<recipients.Count; i++) recipients[i].Renown += 5/recipients.Count + (i < 5%recipients.Count ? 1 : 0);
+                project.RewardedStages++;
+            }
         }
+        if (!project.IsComplete) return null;
 
         var contributorIds = project.Contributions.Select(c => c.CitizenId).Distinct().ToList();
         var contributors = await db.Citizens
@@ -1143,7 +1162,7 @@ public sealed partial class GameService(
             .ToListAsync(cancellationToken);
 
         // Active citizens, plus anyone still in a cycle whatever their status: working counts include them.
-        var citizens = await db.Citizens
+        var citizens = await db.Citizens.AsNoTracking()
             .Where(c => c.VillageId == village.Id
                         && (c.Status == CitizenStatus.Active || (!c.CycleSettled && c.CycleEndsAt > now)))
             .Select(c => new
@@ -1154,6 +1173,7 @@ public sealed partial class GameService(
                 IsWorking = !c.CycleSettled && c.CycleEndsAt > now,
                 c.CurrentTaskId,
                 c.Stats.Intelligence,
+                c.Skills,
             })
             .ToListAsync(cancellationToken);
 
@@ -1164,11 +1184,11 @@ public sealed partial class GameService(
             Village = village,
             Project = project,
             CompletedProjects = completedProjects.ToHashSet(),
-            ActiveCitizenCount = citizens.Count(c => c.IsActive),
+            ActiveCitizenCount = Math.Max(1, citizens.Count(c => c.IsActive && c.CycleStartedAt >= now.AddHours(-2))),
             RecentCitizenCount = Math.Max(1, citizens.Count(c => c.IsActive && c.CycleStartedAt >= recentSince)),
             SupervisionCapacity = working
                 .Where(c => c.CurrentTaskId == SuperviseTaskId)
-                .Sum(c => ProjectRules.SupervisionCapacity(c.Intelligence)),
+                .Sum(c => ProjectRules.SupervisionCapacity(c.Skills.SingleOrDefault(s => s.Kind == Skill.Building)?.Level ?? 0)),
             BuildersWorking = working.Count(c => c.CurrentTaskId == BuildTaskId && c.Id != citizenId),
         };
         return new VillageContext(work, completedProjects, citizens.Where(c => c.IsActive).Select(c => c.Id).ToList());
@@ -1180,6 +1200,9 @@ public sealed partial class GameService(
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        var residents = await db.Citizens.Where(c=>c.VillageId==village.Id&&c.Status==CitizenStatus.Active).ToListAsync(cancellationToken);
+        ShelterRules.Assign(village,residents,now);
+        await db.SaveChangesAsync(cancellationToken);
         var context = await LoadContextAsync(db, village, null, now, cancellationToken);
         var electorate = context.ActiveCitizenIds.Count(presence.IsPresent);
         var quests = await db.VillageQuests
@@ -1198,7 +1221,15 @@ public sealed partial class GameService(
             .OrderByDescending(r => r.OpenedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return village.ToStateDto(context.Work, context.CompletedInOrder, electorate, quests, tsar, trips, dungeon, now);
+        return village.ToStateDto(context.Work, context.CompletedInOrder, electorate, quests, tsar, trips, dungeon, now) with
+        {
+            CivicOrders = village.CivicOrders,
+            Housing = village.Structures.Where(s => ShelterRules.Beds(s) > 0).Select(s => new HousingDto(s.PlotId, ShelterRules.Beds(s),
+                residents.Count(c => c.HomePlotId == s.PlotId), s.Level)).ToArray(),
+            BridgeOpened = village.BridgeOpened,
+            Project = context.Work.Project is {StagedBridge:true} bridge ? bridge.ToDto(context.Work) with
+            { BridgeStage=bridge.BridgeStage, StageName=!bridge.SurveyDone ? "Разметка" : new[]{"Основания","Опоры","Пролёт","Настил","Приёмка","Мост открыт"}[bridge.BridgeStage] } : context.Work.Project?.ToDto(context.Work)
+        };
     }
 
     /// <summary>Last walks of the village's citizens, those who left included: what they saw stays seen.</summary>

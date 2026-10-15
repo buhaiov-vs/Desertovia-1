@@ -1,0 +1,77 @@
+using Desertod.Domain;
+using Desertod.Domain.Buildings;
+using Desertod.Domain.Entities;
+using Desertod.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+namespace Desertod.Api.Game;
+
+public sealed record CivicRequest(string PlotId, string Operation, Guid? PartnerAccountId = null);
+public sealed record CivicDecision(bool Approve);
+public sealed partial class GameService
+{
+    public async Task<VillageStateDto> CivicRequestAsync(string slug, Guid actor, CivicRequest request, CancellationToken ct) =>
+        await WithVillageAsync(await FindVillageIdAsync(slug, ct), async db =>
+        {
+            await SyncHospitalAsync(db, await FindVillageIdAsync(slug,ct), ct);
+            var village = await LoadVillageAsync(db, slug, ct);
+            var people = await db.Citizens.Where(c => c.VillageId == village.Id && c.Status == CitizenStatus.Active).ToListAsync(ct);
+            var citizen = people.SingleOrDefault(c => c.AccountId == actor);
+            if (citizen is null && village.OwnerAccountId != actor) throw new UnauthorizedAccessException();
+            var now = time.GetUtcNow();
+            if (request.Operation == "housing")
+            {
+                if (citizen is null) throw new UnauthorizedAccessException();
+                if (village.CivicOrders.Any(o => o.RequestedBy == actor && o.Operation == "housing" && o.Status == "pending"))
+                    throw new GameRuleException("housing.pending", "You already have a housing application.");
+                if (request.PartnerAccountId is {} partner && citizen.SpouseAccountId != partner)
+                    throw new GameRuleException("housing.notSpouse", "Joint housing is available only with your confirmed spouse.");
+                village.CivicOrders.Add(new CivicOrder { PlotId=request.PlotId, Operation="housing", RequestedBy=actor,
+                    PartnerAccountId=request.PartnerAccountId, CreatedAt=now });
+            }
+            else
+            {
+                if (village.OwnerAccountId != actor && citizen?.IsGovernor != true) throw new UnauthorizedAccessException();
+                var order = BuildingOperations.Request(village, actor, request.PlotId, request.Operation, now);
+                if (village.OwnerAccountId == actor) BuildingOperations.Approve(village, order, people, now);
+            }
+            await db.SaveChangesAsync(ct); changes.Mark(village.Id);
+            return await BuildStateAsync(db, village, now, ct);
+        }, ct);
+
+    public async Task<VillageStateDto> CivicDecisionAsync(string slug, Guid actor, Guid id, CivicDecision decision, CancellationToken ct) =>
+        await WithVillageAsync(await FindVillageIdAsync(slug, ct), async db =>
+        {
+            await SyncHospitalAsync(db, await FindVillageIdAsync(slug,ct), ct);
+            var village = await LoadVillageAsync(db, slug, ct);
+            var order = village.CivicOrders.SingleOrDefault(o => o.Id == id) ?? throw new NotFoundException("building.orderMissing", "Application not found.");
+            if (order.Status != "pending") throw new GameRuleException("building.orderProcessed", "This application was already processed.");
+            var now=time.GetUtcNow();
+            if (order.PartnerAccountId == actor && village.OwnerAccountId != actor)
+            {
+                if (decision.Approve) order.PartnerAccepted=true; else order.Status="rejected";
+            }
+            else
+            {
+                if (village.OwnerAccountId != actor) throw new UnauthorizedAccessException();
+                if (!decision.Approve) order.Status="rejected";
+                else
+                {
+                    var people=await db.Citizens.Where(c=>c.VillageId==village.Id && c.Status==CitizenStatus.Active).ToListAsync(ct);
+                    if(order.Operation=="housing")
+                    {
+                        var resident=people.SingleOrDefault(c=>c.AccountId==order.RequestedBy) ?? throw new GameRuleException("housing.absent", "The resident is absent.");
+                        var moving=new List<Citizen>{resident};
+                        if(order.PartnerAccountId is {} partner)
+                        {
+                            if(!order.PartnerAccepted || resident.SpouseAccountId!=partner || resident.MarriageCheckedAt is null || now-resident.MarriageCheckedAt>TimeSpan.FromSeconds(90)) throw new GameRuleException("housing.consent", "Both spouses must agree first.");
+                            moving.Add(people.Single(c=>c.AccountId==partner));
+                        }
+                        ShelterRules.Move(village,people,moving,order.PlotId,now); order.Status="completed";order.ApprovedAt=now;
+                    }
+                    else BuildingOperations.Approve(village,order,people,now);
+                }
+            }
+            await db.SaveChangesAsync(ct);changes.Mark(village.Id);
+            return await BuildStateAsync(db,village,now,ct);
+        }, ct);
+}

@@ -32,6 +32,7 @@ public enum BuildingKind
     Bakery,
     RopeBridge,
     Hospital,
+    Longhouse,
 }
 
 public enum JobKind
@@ -102,6 +103,7 @@ public static class BuildingCatalog
 
     public static IReadOnlyList<JobDefinition> Jobs { get; } =
     [
+        Labor("dismantle", "Dismantle carefully", Stat.Strength, Stat.Endurance, false),
         Haul("bring-sticks", "Bring sticks", ResourceKind.Wood, 4, Stat.Endurance, Stat.Strength),
         Haul("bring-logs", "Bring logs", ResourceKind.Wood, 4, Stat.Strength, Stat.Endurance),
         Haul("bring-stones", "Bring stones", ResourceKind.Stone, 3, Stat.Strength, Stat.Endurance),
@@ -141,6 +143,11 @@ public static class BuildingCatalog
 
     public static IReadOnlyList<BuildingDefinition> Buildings { get; } =
     [
+        new(BuildingKind.Longhouse, "Communal house", "A shared home with room for twelve, expandable to twenty-eight.", [BuildingKind.Hut],
+            [Stage("foundation", "Foundation", 3, Job("bring-stones",60), Job("clear-ground",15)),
+             Stage("frame", "Frame", 3, Job("bring-logs",60), Job("bring-planks",12), Job("raise-posts",25)),
+             Stage("roof", "Roof", 3, Job("bring-reeds",40), Job("lay-cover",20))],
+            Shelter:12, ShelterQuality:0.9, Technology:TechnologyCatalog.Carpentry),
         new(BuildingKind.Heap, "Heap", "A fenced patch of ground for any goods. Small and messy.", [],
             [Stage("ground", "Ground", 2, Job("clear-ground", 2), Job("bring-sticks", 4))],
             Storage: StorageKind.Heap),

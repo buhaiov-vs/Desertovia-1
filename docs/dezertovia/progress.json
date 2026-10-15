@@ -487,5 +487,22 @@
     "full_suite_after_each_small_change": false,
     "final_required_checks_preserved": true,
     "default_scope": "repositories_only_no_deployment"
+  },
+  "batch_balance_proposal": {
+    "decision": "D-038",
+    "state": "proposed_not_applied_or_simulated",
+    "document": "BALANCE_PROPOSAL.md",
+    "bridge_work_units": 230,
+    "communal_housing_beds": [
+      12,
+      20,
+      28
+    ],
+    "free_hospital_outcome_percent": {
+      "normal": 75,
+      "debuff": 20,
+      "extension": 5
+    },
+    "deployed": false
   }
 }

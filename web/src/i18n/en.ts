@@ -1214,6 +1214,16 @@ export const en = {
   } as Record<string, { ruler: string; citizen: string }>,
 
   errors: {
+    "defense.mode": "Choose hold position or intercept.",
+    "defense.guard": "Start guard duty before attacking.",
+    "defense.arriving": "The guard is still arriving. Try again shortly.",
+    "defense.wounded": "You are wounded. Recover before attacking.",
+    "defense.noWall": "Complete the palisade first.",
+    "raid.finished": "This battle has already finished.",
+    "raid.targetGone": "This enemy is no longer available. Choose another target.",
+    "raid.alreadyFighting": "The battle has begun and cannot be cancelled.",
+    "raid.noApproach": "No reachable approach is available for this raid.",
+
     "building.clearGround": "Choose dry, cleared land away from the river and ravine.",
     "economy.priceChanged": "The price changed. Refresh the menu.",
     "castle.unique": "A castle already exists or is being built.",

@@ -202,3 +202,7 @@ simulated seconds;95th-percentile domain tick2.3–8.1ms,maximum44.9ms here. Not
 HTTP/database load guarantee. Unprepared cases have8–13wounds,0–65damage, prepared
 cases repel the raid. No village wipe or hanging actors. Existing performance
 limits/budget are unchanged.
+
+Final localization review: new defense/order/arrival/target-gone/no-approach errors
+now have Russian and English dictionary entries; approach names follow the selected
+language. No API/combat balance change. This follow-up also needs exact finalCI.

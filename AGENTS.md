@@ -1,3 +1,22 @@
+# D-069: 0.7 READY, scheduled16.10.2026 07:00 Europe/Oslo
+
+Full code/checks completed. Public PR37 MERGED3e757dae87a4f3984b26f71104c7994abb0b06a9,
+tree identical to tested runtime0540a2a006d2c72b580b37f74387f1e53e68f9eb.
+CI38817618664 SUCCESS:380Domain+217API+121browser/1expectedskip; frontend/DockerPASS.
+Bot source3f7038c886e8ea37c98191a32ba0c3f558b05e69, CI38811556338 SUCCESS816tests;
+PR38 merged canonical0054f4c. Payload ONLYalmighty.py over installed budgetfix3fd0c1c.
+See docs/dezertovia/RELEASE_0_7.md for final scope/pins/readiness, and implementation
+log for history. Includes AI-SPEECH-01: no director service JSON in Father chat.
+
+INSTALLATION NOT YET DONE. LIVE0.6.1/61d726c verified externally HTTP200, Telegram
+login true/dev false. Scheduled one-time task confirmed16.10.2026 07:00Europe/Oslo
+=05:00UTC; no earlier. Private bolig-agent ops/almighty-release contains reviewed
+live-combat operator/candidate/payload. Trigger live-combat-request.json must NOT
+exist before deadline; report→deploy→independent check, exact successful CI, backup,
+profile/skill/stat preservation. Do not run old request/pins or private main deploy.
+No synthetic messages/payments/raids, no progress reset. Append actual deployment
+receipt only AFTER release. Earlier checkpoints/PLAN/CI failures below are history.
+
 # D-069 / 0.7 candidate: implemented, final CI then scheduled release
 
 Full D-068 code batch and AI-SPEECH-01 are implemented. Public PR37 contains

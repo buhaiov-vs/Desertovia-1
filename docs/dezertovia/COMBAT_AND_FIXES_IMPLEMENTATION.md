@@ -16,7 +16,7 @@
 | LAND-01 | implemented: пересечение всего участка UI/API |
 | STORAGE-UX | implemented: компактная сводка без смены ёмкостей |
 | AI-SPEECH-01 | implemented: отдельный речевой контракт, guards до обрезки, фильтр старой истории |
-| Checks | final exact CI required; previous source CI passed |
+| Checks | SUCCESS0540a2a/38817618664:380Domain+217API+121browser/1skip, builds |
 | Scheduled rollout | Automation confirmed for16.10.2026 07:00 Europe/Oslo; only ready exact CI; no switch before05:00UTC |
 
 План: COMBAT_AND_FIXES_PATCH_PLAN.md + RAID_REWORK_PLAN.md.
@@ -206,3 +206,17 @@ limits/budget are unchanged.
 Final localization review: new defense/order/arrival/target-gone/no-approach errors
 now have Russian and English dictionary entries; approach names follow the selected
 language. No API/combat balance change. This follow-up also needs exact finalCI.
+
+
+## Final — READY, not installed
+
+Exact0540a2a006d2c72b580b37f74387f1e53e68f9eb, CI38817618664 SUCCESS alljobs:
+380Domain/217API/121browser PASS,1expectedskip, lint/build/Docker PASS. No retries
+or flaky browser cases in final output. PublicPR37 merged3e757dae; trees match.
+BotCI38811556338/source3f7038c SUCCESS816 tests; PR38 already merged canonical.
+Final read-only external health:200, game61d726c, TG logintrue/devfalse.
+
+New release record RELEASE_0_7.md supersedes checkpoint readiness. Private ops
+candidate ready after this exactCI; no trigger before05:00UTC. Automation updated
+with exact source/CI/one-file bot payload, guide, report/deploy/independent-check
+steps and scheduled16Oct07:00Europe/Oslo. Server installation has NOT happened.

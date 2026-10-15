@@ -928,12 +928,14 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               onCancelTask={cancelTask}
               drinks={
                 (village.resources.find((r) => r.kind === 'VigorDrink')?.amount ?? 0) +
-                (citizen?.load.find((good) => good.resource === 'VigorDrink')?.amount ?? 0)
+                (citizen?.load.find((good) => good.resource === 'VigorDrink')?.amount ?? 0) +
+                (citizen?.personalGoods?.find((good) => good.kind === 'VigorDrink')?.amount ?? 0)
               }
               onDrink={drink}
               remedies={
                 (village.resources.find((r) => r.kind === 'Remedy')?.amount ?? 0) +
-                (citizen?.load.find((good) => good.resource === 'Remedy')?.amount ?? 0)
+                (citizen?.load.find((good) => good.resource === 'Remedy')?.amount ?? 0) +
+                (citizen?.personalGoods?.find((good) => good.kind === 'Remedy')?.amount ?? 0)
               }
               onHeal={heal}
             />

@@ -51,6 +51,27 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
     }
 
     [Fact]
+    public async Task Purchased_drink_is_usable_through_existing_action_without_charging_or_consuming_twice()
+    {
+        var v=await players.FoundVillageAsync("Personal drink");var a=await players.JoinAsync(v,"Buyer");
+        await players.ArrangeVillageAsync(v.Slug,(city,now)=>{
+            var storage=StorageBuilding.Create(StorageKind.TownHall,"3,3",now);
+            storage.Put(ResourceKind.VigorDrink,2);city.Storages.Add(storage);
+        });
+        await View(a.Client,v.Path);await SeedWallet(v.Slug,a.Id,100);
+        await players.ArrangeCitizenAsync(a.Id,(p,now)=>{p.StoredEnergy=10;p.EnergyUpdatedAt=now;});
+        var request=new{requestId=Guid.NewGuid(),action="buy-stock",resource="VigorDrink",amount=1};
+        await Players.OkJsonAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",request));
+        await Players.OkJsonAsync(await a.Client.PostAsync(v.Path+"/me/drink",null));
+        await Players.AssertRuleBrokenAsync(await a.Client.PostAsync(v.Path+"/me/drink",null),"drink.cooldown");
+        var view=await View(a.Client,v.Path);Assert.Empty(view.Inventory);Assert.Equal(70,view.Coins);
+        var citizen=await players.LoadCitizenAsync(a.Id);Assert.NotNull(citizen.LastDrinkAt);
+        await using var db=await Db();var city=await db.Villages.AsNoTracking().SingleAsync(x=>x.Slug==v.Slug);
+        Assert.Equal(1,city.Stock(ResourceKind.VigorDrink));
+        Assert.Contains(view.Journal,x=>x.Asset=="VigorDrink"&&x.Delta==-1&&x.Location.StartsWith("personal:"));
+    }
+
+    [Fact]
     public async Task Two_buyers_cannot_buy_the_same_lot_and_money_and_basis_are_conserved()
     {
         var v=await players.FoundVillageAsync("Market race");var a=await players.JoinAsync(v,"Seller");var b=await players.JoinAsync(v,"First");var c=await players.JoinAsync(v,"Second");

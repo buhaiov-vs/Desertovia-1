@@ -1,3 +1,4 @@
+using Desertod.Domain.Economy;
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Entities;
 
@@ -8,7 +9,7 @@ public static class VigorDrinks
 {
     public static DateTimeOffset? ReadyAt(Citizen citizen) => citizen.LastDrinkAt + GameRules.VigorDrinkCooldown;
 
-    /// <summary>Takes one drink from the citizen's hands first, then from the village storage.</summary>
+    /// <summary>Takes one owned drink first, then from the citizen's hands or the village storage.</summary>
     public static void Drink(Citizen citizen, Village village, DateTimeOffset now)
     {
         if (citizen.Status == CitizenStatus.Dormant)
@@ -28,7 +29,9 @@ public static class VigorDrinks
             throw new GameRuleException("drink.full", "You are full of energy already.");
         }
 
-        if (citizen.TakeFromLoad(ResourceKind.VigorDrink, 1) == 0 && village.Take(ResourceKind.VigorDrink, 1) == 0)
+        if (PersonalInventory.Amount(citizen, ResourceKind.VigorDrink) > 0)
+            PersonalInventory.Remove(citizen, ResourceKind.VigorDrink, 1);
+        else if (citizen.TakeFromLoad(ResourceKind.VigorDrink, 1) == 0 && village.Take(ResourceKind.VigorDrink, 1) == 0)
         {
             throw new GameRuleException("drink.none", "There is no vigor drink in your hands or in storage.");
         }

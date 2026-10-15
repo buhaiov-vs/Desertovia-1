@@ -771,7 +771,7 @@
       "deployment": "paused_by_D-058"
     },
     "D-060": {
-      "state": "implemented_local_checks_repository_ci_required",
+      "state": "implemented_final_head_ci_required",
       "branch": "feat/kingdom-economy",
       "base_commit": "e7fbe91b28c676df400444a40cb5fee3765413f9",
       "record": "TODO_IMPLEMENTATION_0_6.md",
@@ -782,7 +782,19 @@
       "local_browser_passed": 9,
       "migration": "20261015164112_KingdomEconomy",
       "deployment": "paused_by_D-058",
-      "bot_runtime_changed": false
+      "bot_runtime_changed": false,
+      "game_pr": 34,
+      "primary_package_ci": {
+        "run": 38775233433,
+        "source": "2e45f61d27bcb1ee6c29478a9be6181f2d51423b",
+        "conclusion": "success",
+        "domain_passed": 343,
+        "api_passed": 195,
+        "browser_passed": 89,
+        "browser_skipped": 1
+      },
+      "personal_consumables_domain_passed": 32,
+      "personal_consumables_api_passed": 10
     }
   }
 }

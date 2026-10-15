@@ -1,4 +1,5 @@
 using Desertod.Domain.Catalog;
+using Desertod.Domain.Economy;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Technologies;
 using static Desertod.Domain.Tests.TestWorld;
@@ -80,6 +81,25 @@ public class VigorDrinkTests
         citizen.StoredEnergy = 10;
         Assert.Equal("drink.none", Assert.Throws<GameRuleException>(() => VigorDrinks.Drink(citizen, village, Now)).Code);
         Assert.Null(citizen.LastDrinkAt);
+    }
+
+    [Fact]
+    public void Personal_drink_uses_owned_stock_and_preserves_cooldown_and_common_supply()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.VigorDrink, 2);
+        var citizen = NewCitizen(village);
+        citizen.StoredEnergy = 10;
+        PersonalInventory.Add(citizen, ResourceKind.VigorDrink, 2, 60);
+
+        VigorDrinks.Drink(citizen, village, Now);
+
+        Assert.Equal(10 + GameRules.VigorDrinkEnergy, citizen.CurrentEnergy(Now, village), 6);
+        Assert.Equal(1, PersonalInventory.Amount(citizen, ResourceKind.VigorDrink));
+        Assert.Equal(30, Assert.Single(citizen.PersonalGoods).CostBasis);
+        Assert.Equal(2, village.Stock(ResourceKind.VigorDrink));
+        Assert.Equal("drink.cooldown", Assert.Throws<GameRuleException>(() => VigorDrinks.Drink(citizen, village, Now)).Code);
+        Assert.Equal(1, PersonalInventory.Amount(citizen, ResourceKind.VigorDrink));
     }
 
     [Fact]

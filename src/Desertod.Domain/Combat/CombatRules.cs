@@ -1,3 +1,4 @@
+using Desertod.Domain.Economy;
 using Desertod.Domain.Buildings;
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Entities;
@@ -230,12 +231,13 @@ public static class CombatRules
             throw new GameRuleException("heal.notInjured", "You are not wounded.");
         }
 
-        if (Available(citizen, village, ResourceKind.Remedy) == 0)
+        if (PersonalInventory.Amount(citizen, ResourceKind.Remedy) == 0 && Available(citizen, village, ResourceKind.Remedy) == 0)
         {
             throw new GameRuleException("heal.none", "There is no remedy in storage. A healer must make some first.");
         }
 
-        TakeOne(citizen, village, ResourceKind.Remedy);
+        if (PersonalInventory.Amount(citizen, ResourceKind.Remedy) > 0) PersonalInventory.Remove(citizen, ResourceKind.Remedy, 1);
+        else TakeOne(citizen, village, ResourceKind.Remedy);
         citizen.InjuredUntil = null;citizen.RescueByCitizenId=null;
     }
 

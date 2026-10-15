@@ -88,8 +88,10 @@ public sealed partial class GameService
             return await EconomyViewAsync(db, village, account, before, asset, ct);
         }, ct);
 
-    public async Task<EconomyView> ChangeEconomyAsync(string slug, Guid account, EconomyRequest request, CancellationToken ct) =>
-        await WithVillageAsync(await FindVillageIdAsync(slug, ct), async db =>
+    public async Task<EconomyView> ChangeEconomyAsync(string slug, Guid account, EconomyRequest request, CancellationToken ct)
+    {
+        CitizenSummaryDto[] updates = [];
+        var result = await WithVillageAsync(await FindVillageIdAsync(slug, ct), async db =>
         {
             var village = await LoadVillageAsync(db, slug, ct);
             await RequireEconomyMemberAsync(db, village, account, ct);
@@ -101,6 +103,8 @@ public sealed partial class GameService
             {
                 if (prior.AccountId != account || prior.Fingerprint != fingerprint)
                     throw new GameRuleException("economy.reusedRequest", "This request was already used for another operation.");
+                var current = await db.Citizens.SingleOrDefaultAsync(c => c.VillageId == village.Id && c.AccountId == account, ct);
+                updates = current is null ? [] : [current.ToSummaryDto(time.GetUtcNow())];
                 return await EconomyViewAsync(db, village, account, null, null, ct);
             }
             var now = time.GetUtcNow();
@@ -108,6 +112,8 @@ public sealed partial class GameService
             var wallet = await WalletAsync(db, village.Id, account, now, ct);
             var state = await db.KingdomEconomies.SingleAsync(x => x.VillageId == village.Id, ct);
             var citizen = await db.Citizens.SingleOrDefaultAsync(c => c.VillageId == village.Id && c.AccountId == account, ct);
+            var affected = new HashSet<Guid>();
+            if (citizen is not null) affected.Add(citizen.Id);
             if (request.Amount is < 1 or > PersonalInventory.PerResource || request.Price is < 0 or > 1_000_000)
                 throw new GameRuleException("economy.amount", "Choose an amount from 1 to 100 and a valid whole price.");
             Citizen Own()
@@ -154,6 +160,7 @@ public sealed partial class GameService
                     if (PersonalInventory.Room(recipient, request.Resource) < request.Amount) throw new GameRuleException("inventory.full", "The recipient's inventory is full.");
                     var basis = PersonalInventory.Remove(sender, request.Resource, request.Amount);
                     PersonalInventory.Add(recipient, request.Resource, request.Amount, basis);
+                    affected.Add(recipient.Id);
                     break;
                 }
                 case "list":
@@ -174,6 +181,7 @@ public sealed partial class GameService
                     if (lot.Status != "open") throw new GameRuleException("market.closed", "This lot is already closed.");
                     var seller = await db.Citizens.SingleOrDefaultAsync(c => c.VillageId == village.Id && c.AccountId == lot.SellerAccountId, ct)
                         ?? throw new GameRuleException("inventory.recipient", "The seller is no longer a resident.");
+                    affected.Add(seller.Id);
                     if (request.Action == "cancel-lot")
                     {
                         if (lot.SellerAccountId != account) throw new UnauthorizedAccessException();
@@ -243,8 +251,14 @@ public sealed partial class GameService
             }
             db.EconomyReceipts.Add(new EconomyReceipt { VillageId = village.Id, RequestId = request.RequestId, AccountId = account, Fingerprint = fingerprint, At = now });
             await db.SaveChangesAsync(ct); changes.Mark(village.Id);
+            updates = db.ChangeTracker.Entries<Citizen>().Where(e => affected.Contains(e.Entity.Id))
+                .Select(e => e.Entity.ToSummaryDto(now)).ToArray();
             return await EconomyViewAsync(db, village, account, null, null, ct);
         }, ct);
+        // Publish only after the financial transaction committed, so connected clients reload owned goods.
+        foreach (var updated in updates) await notifier.CitizenUpdated(slug, updated);
+        return result;
+    }
 
     private async Task<EconomyView> EconomyViewAsync(DesertodDbContext db, Village village, Guid account, Guid? before, string? asset, CancellationToken ct)
     {

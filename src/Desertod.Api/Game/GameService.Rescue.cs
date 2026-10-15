@@ -27,7 +27,8 @@ public sealed partial class GameService
     private async Task RescueSweepAsync(DesertodDbContext db,Village village,DateTimeOffset now,CancellationToken ct)
     {
         var people=await db.Citizens.Where(c=>c.VillageId==village.Id&&c.Status==CitizenStatus.Active).ToListAsync(ct);
-        var before=people.ToDictionary(p=>p.Id,p=>(p.HospitalizedAt,p.RescueByCitizenId,p.RescuePatientId));
+        var before=people.ToDictionary(p=>p.Id,p=>(p.HospitalizedAt,p.RescueByCitizenId,p.RescuePatientId,p.RecoveryPausedAt,p.CycleEndsAt));
+        foreach(var person in people)HospitalRules.Resume(person,now);
         foreach(var helper in people.Where(c=>c.RescuePatientId!=null))
         {
             var patient=people.SingleOrDefault(c=>c.Id==helper.RescuePatientId);
@@ -38,7 +39,7 @@ public sealed partial class GameService
         }
         foreach(var patient in people.Where(c=>RescueRules.NeedsHelp(c,now)&&c.RescueByCitizenId is null))
             if(patient.WoundedAt is null||now-patient.WoundedAt>=TimeSpan.FromMinutes(5))RescueRules.Admit(patient,village,now);
-        var changed=people.Where(p=>before[p.Id]!=(p.HospitalizedAt,p.RescueByCitizenId,p.RescuePatientId)).ToList();
+        var changed=people.Where(p=>before[p.Id]!=(p.HospitalizedAt,p.RescueByCitizenId,p.RescuePatientId,p.RecoveryPausedAt,p.CycleEndsAt)).ToList();
         if(changed.Count>0)
         {
             await db.SaveChangesAsync(ct);changes.Mark(village.Id);

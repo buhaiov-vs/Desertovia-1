@@ -160,4 +160,28 @@ public sealed class AlmightyApiTests(DesertodApiFactory factory)
         Assert.True(AlmightyService.Trusted(http,options));
     }
 
+    [Fact]
+    public async Task Large_village_review_fits_the_bridge_limit_with_history_and_direction_options()
+    {
+        var v=await players.FoundVillageAsync("Large director snapshot");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var city=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);var now=factory.Clock.GetUtcNow();
+        city.CreatedAt=now.AddDays(-10);city.RaidsPlannedPeriod=long.MaxValue;
+        for(var i=0;i<150;i++)
+        {
+            var account=new Desertod.Domain.Entities.Account{DisplayName="Synthetic "+i,CreatedAt=now};db.Accounts.Add(account);
+            var c=Desertod.Domain.Rules.CharacterCreation.Create(city.Id,account.Id,"Synthetic "+i,now);
+            c.DefenseSector="north";
+            if(i==0){c.CurrentTaskId=Desertod.Domain.Catalog.GameCatalog.KeepWatch;c.CycleStartedAt=now;c.CycleEndsAt=now.AddHours(1);c.CycleSettled=false;}
+            db.Citizens.Add(c);factory.Services.GetRequiredService<CitizenPresence>().Touch(c.Id,v.Slug);
+        }
+        db.AlmightyStates.Add(new(){VillageId=city.Id,Intent=new string('я',1000),NextReviewAt=now});
+        for(var i=0;i<4;i++)db.AlmightyProposals.Add(new(){VillageId=city.Id,ReviewId=Guid.CreateVersion7(),Reason=new string('я',1200),Result=new string('я',500),Status="Applied",CreatedAt=now.AddDays(-1).AddSeconds(i)});
+        for(var i=0;i<20;i++)db.ChatMessages.Add(Desertod.Domain.Chat.ChatMessage.Write(city.Id,city.OwnerAccountId,null,"Царь",new string('я',120),now.AddSeconds(-20+i)));
+        await db.SaveChangesAsync();
+        var review=await factory.Services.GetRequiredService<GameService>().BeginAlmightyReviewAsync(city.Id,default);
+        Assert.NotNull(review);Assert.Contains(review.Options,o=>o.Composition=="elite");
+        Assert.InRange(review.Snapshot.Length,1,36000);
+    }
+
 }

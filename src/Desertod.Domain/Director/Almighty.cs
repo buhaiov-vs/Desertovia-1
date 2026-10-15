@@ -66,7 +66,7 @@ public sealed class AlmightyObservation
 
 public sealed record AlmightyFacts(int Population, int Online, int ReadyGuards, int Patients, int PendingRaids,
     int BuildingSites, int DamagedBuildings, int RecentLosses, bool Peaceful, bool Resting);
-public sealed record AlmightyOption(string Id, string Title, string Effect, EnemyKind? Enemy = null, string? Sector = null);
+public sealed record AlmightyOption(string Id, string Title, string Effect, EnemyKind? Enemy = null, string? Sector = null, string? Composition = null);
 
 public static class AlmightyPolicy
 {
@@ -89,11 +89,18 @@ public static class AlmightyPolicy
             {
                 var prefix = enemy.Kind.ToString().ToLowerInvariant() + "s";
                 result.Add(new(prefix + "_small", "Малая волна: " + enemy.Name,
-                    $"Предупреждение3 реальные минуты; сила врага{enemy.Power}, урон зданиям{enemy.Damage}, ранение{enemy.InjuryMinutes} реальных минут. Обычные награды и потери.", enemy.Kind));
-                if (enemy.Coordinated)
-                    foreach (var approach in approaches ?? []) result.Add(new(prefix + "_" + approach.Sector,
-                        enemy.Name + ": подход " + approach.Sector,
-                        "Малая волна с серверным маршрутом, предупреждение3 реальные минуты. Охрана чужого сектора не участвует; резерв Авто даёт75% личного вклада.", enemy.Kind, approach.Sector));
+                    $"Предупреждение3 реальные минуты; живой бой с отдельными врагами. Состав ограничен готовностью деревни при объявлении; ранение{enemy.InjuryMinutes} реальных минут. Обычные награды и ремонтируемый ущерб.", enemy.Kind));
+                foreach (var approach in approaches ?? [])
+                {
+                    foreach(var profile in new[]{"mixed","swarm","elite"})
+                    {
+                        var id=prefix+"_"+approach.Sector+(profile=="mixed"?"":"_"+profile);
+                        var label=profile=="swarm"?"много слабых":profile=="elite"?"немного сильных":"смешанный состав";
+                        result.Add(new(id,enemy.Name+": "+approach.Sector+", "+label,
+                            "Одна сторона, отдельные враги, проход через вход или пролом. Общий бюджет по готовности при объявлении, без скрытого усиления после подготовки.",
+                            enemy.Kind,approach.Sector,profile));
+                    }
+                }
             }
         }
         return result;

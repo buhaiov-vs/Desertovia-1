@@ -4,16 +4,16 @@ for (const language of ['ru', 'en'] as const) {
   test(`version opens documented history and returns to settings (${language})`, async ({ page }) => {
     await page.addInitScript(lang => localStorage.setItem('desertod.language', lang), language)
     await page.goto('/e2e/cooperative-harness.html')
-    const button = page.getByRole('button', { name: /(?:Дезертовия|Desertovia) 0\.6/ })
+    const button = page.getByRole('button', { name: /(?:Дезертовия|Desertovia) 0\.7/ })
     await button.click()
     const notes = page.locator('.patch-notes')
     await expect(notes).toBeVisible()
     await expect(button).toHaveAttribute('aria-expanded', 'true')
     await expect(notes.locator('details[open]')).toHaveCount(1)
-    await expect(notes.locator('details[open] summary')).toContainText('0.6')
+    await expect(notes.locator('details[open] summary')).toContainText('0.7')
     await notes.locator('summary').filter({ hasText: '0.5.2' }).click()
     await expect(notes.locator('details[open]')).toHaveCount(2)
-    await expect(notes.locator('details[open] summary').first()).toContainText('0.6')
+    await expect(notes.locator('details[open] summary').first()).toContainText('0.7')
     for (const theme of ['light', 'dark']) {
       await page.evaluate(value => { document.documentElement.dataset.uiTheme = value }, theme)
       for (const width of [320, 1440]) {

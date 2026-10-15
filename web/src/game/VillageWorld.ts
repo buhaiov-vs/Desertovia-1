@@ -288,6 +288,9 @@ export class VillageWorld {
   private readonly placementLayer = new Container()
   private readonly ghost = new Graphics()
   private onPick: ((x: number, y: number) => void) | null = null
+  private onEnemyPick:((battleId:string,unitId:string)=>void)|null=null
+  setEnemySelection(id:string|null){this.enemies.select(id)}
+  setEnemyPick(onPick:((battleId:string,unitId:string)=>void)|null){this.onEnemyPick=onPick}
   private onCitizenPick: ((citizenId: string) => void) | null = null
   private onWorldPick: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => void) | null = null
   private worldPickable: ((target: WorldTarget) => boolean) | null = null
@@ -1318,6 +1321,7 @@ export class VillageWorld {
     this.drawBuildings()
     this.wildlife.setHerds(state.wildlife)
     this.enemies.setRaids(state.raids)
+    this.enemies.setBattles(state.battles??[])
     this.activeProjectId = state.project?.definitionId ?? null
     this.setCitizens(this.citizens, this.highlightId)
     this.setTsar(state.tsar)
@@ -1325,6 +1329,7 @@ export class VillageWorld {
     const project = state.project
     const key = JSON.stringify([
       state.completedProjects,
+      state.fortifications?.map(f=>[f.id,f.damage>=100,f.open]),
       project?.definitionId,
       project?.phase,
       project ? project.surveyDone : 0,
@@ -1417,10 +1422,13 @@ export class VillageWorld {
       const fraction = completed.has(PALISADE.id) ? 1 : project!.buildDone / Math.max(project!.buildRequired, 1)
       const standing = Math.floor(fraction * PALISADE.pieces.length + 1e-6)
       PALISADE.pieces.forEach((piece, index) => {
+        const wall=state.fortifications?.find(f=>f.x===piece.x&&f.y===piece.y)
+        if(wall&&wall.damage>=100)return
         if (index < standing) add(this.tileSprite(piece.tile, piece.x, piece.y))
         else if (palisadeActive && index % 4 === 0) add(this.tileSprite(town(47), piece.x, piece.y))
       })
       if (palisadeActive) add(this.tileSprite(town(83), PALISADE.yard.x - 1, PALISADE.yard.y - 1))
+      for(const gate of state.fortifications??[])if(gate.gate&&!gate.open&&gate.damage<100)add(this.tileSprite(town(56),gate.x,gate.y))
     }
 
     // Gold vein: nuggets in the outcrop thin out as it is dug; an empty vein is bare grey rock.
@@ -1953,6 +1961,9 @@ export class VillageWorld {
       }
       if (!this.onPick) {
         const screen = local(event)
+        const worldPoint=this.world.toLocal(screen)
+        const enemy=this.enemies.pick(worldPoint.x,worldPoint.y)
+        if(enemy&&this.onEnemyPick){this.onEnemyPick(enemy.battleId,enemy.unitId);return}
         const citizenId = this.onCitizenPick ? this.citizenAt(screen) : null
         if (citizenId) {
           this.onCitizenPick?.(citizenId)
@@ -2132,6 +2143,13 @@ export class VillageWorld {
         walker.targetY=(plot?plot.y+3:CAMPFIRE.y+1)*TILE
         walker.way=[];speed=WALK_SPEED*.5
       }
+      const combatant=this.village?.battles?.filter(b=>!b.finishedAt&&!['Warning','Cancelled'].includes(b.phase))
+        .flatMap(b=>b.fighters).find(f=>f.citizenId===walker.id&&f.active&&f.health>0)
+      if(combatant&&!hurt){
+        walker.targetX=combatant.x*TILE;walker.targetY=combatant.y*TILE;walker.way=[]
+        walker.staying=true;walker.roaming=false
+        speed=Math.max(WALK_SPEED,Math.hypot(walker.targetX-walker.x,walker.targetY-walker.y)*5)
+      }
       const end = walker.way.at(-1)
       if (end && (end.x !== walker.targetX || end.y !== walker.targetY)) walker.way = []
       let goal = walker.way[0] ?? { x: walker.targetX, y: walker.targetY }
@@ -2157,7 +2175,9 @@ export class VillageWorld {
       walker.bed.position.set(Math.round(walker.x),Math.round(walker.y))
       walker.bed.zIndex=walker.y+.4
       walker.phase += seconds * (moving ? 12 : walker.working ? 6 : 1.5)
-      const bob = moving ? Math.abs(Math.sin(walker.phase)) * -1.5 : walker.working ? Math.max(0, Math.sin(walker.phase)) * -1.5 : 0
+      const strikeAt=combatant?.nextAttackAt?Date.parse(combatant.nextAttackAt)-(combatant.weapon==='Bow'?2500:2000):0
+      const strike=combatant&&!moving?Math.sin(Math.max(0,Math.min(1,(now-strikeAt)/240))*Math.PI)*3:0
+      const bob = strike>0?-strike:moving ? Math.abs(Math.sin(walker.phase)) * -1.5 : walker.working ? Math.max(0, Math.sin(walker.phase)) * -1.5 : 0
       walker.sprite.position.set(Math.round(walker.x), Math.round(walker.y + bob))
       if (sortDepth) walker.sprite.zIndex = walker.y + 0.5
       walker.icon.position.set(Math.round(walker.x), Math.round(walker.y - 22))

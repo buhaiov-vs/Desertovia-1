@@ -1,3 +1,4 @@
+import { mergeBattles } from './api'
 import { appPath } from './paths'
 import { HubConnectionBuilder, LogLevel, type HubConnection } from '@microsoft/signalr'
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
@@ -68,7 +69,16 @@ export interface LiveVillageHandlers {
  * `resident`: the player has a citizen here; with the Tsar, the only ones who get the chat.
  */
 export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVillageHandlers = {}) {
-  const [state, setState] = useState<VillageState | null>(null)
+  const [state, setRawState] = useState<VillageState | null>(null)
+  const setState = useCallback((value: VillageState | null | ((previous:VillageState|null)=>VillageState|null)) => {
+    setRawState(previous=>{
+      const next=typeof value==='function'?value(previous):value
+      if(!next||!previous||next.id!==previous.id)return next
+      const newest=(s:VillageState)=>Math.max(0,...(s.battles??[]).map(b=>Date.parse(b.lastTickAt)))
+      return {...next,battles:mergeBattles(previous.battles,next.battles),
+        fortifications:newest(previous)>newest(next)?previous.fortifications:next.fortifications}
+    })
+  },[])
   const [citizens, setCitizens] = useState<Map<string, CitizenSummary>>(new Map())
   /** Citizens who are away; see `Village.awayCitizenIds`. */
   const [away, setAway] = useState<ReadonlySet<string>>(new Set())
@@ -109,8 +119,12 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
       .configureLogging(LogLevel.Warning)
       .build()
 
-    connection.on('villageUpdated', (next: VillageState) => setState(next))
+    connection.on('villageUpdated', (next: VillageState) => setState(previous=>({...next,battles:mergeBattles(previous?.battles,next.battles)})))
     connection.on('villageEvents', (events: VillageEvents) => {
+      if(events.battles?.length || events.fortifications)setState(previous=>previous?{
+        ...previous,battles:mergeBattles(previous.battles,events.battles),
+        fortifications:events.fortifications??previous.fortifications,
+      }:previous)
       for (const report of events.cycles) {
         push({ kind: 'cycle', report })
         callbacks.current.onCycleCompleted?.(report)
@@ -158,6 +172,8 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     // Groups are per connection, and lines written while offline come back with the history.
     connection.onreconnected(async () => {
       await connection.invoke('JoinVillage', slug)
+      const refreshed=await loadVillage(slug)
+      if(!cancelled){setState(refreshed.state);setCitizens(new Map(refreshed.citizens.map(c=>[c.id,c])))}
       if (!memberRef.current) return
       const history = await joinChat(connection, slug)
       if (history && !cancelled) {
@@ -189,7 +205,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
       cancelled = true
       void connection.stop()
     }
-  }, [slug, receive])
+  }, [slug, receive, setState])
 
   // Night falls, day breaks and the sky changes when the period ends, and the server sends nothing at that moment.
   const periodEndsAt = state?.weather.periodEndsAt
@@ -212,7 +228,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
       cancelled = true
       window.clearTimeout(id)
     }
-  }, [slug, periodEndsAt])
+  }, [slug, periodEndsAt, setState])
 
   // A newcomer gets the chat once they settle in.
   useEffect(() => {
@@ -234,7 +250,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     }
   }, [hub, member, slug])
 
-  const sendChat = useCallback(async (text: string, mentions?: string[]) => receive(await api.sendChat(slug, text, mentions)), [slug, receive])
+  const sendChat = useCallback(async (text: string, mentions?: string[]) => receive(await api.sendChat(slug, text, mentions)), [slug, receive, setState])
 
   const updateCitizen = useCallback(
     (citizen: CitizenSummary) => setCitizens((previous) => new Map(previous).set(citizen.id, citizen)),

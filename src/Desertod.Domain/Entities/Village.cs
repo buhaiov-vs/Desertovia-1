@@ -104,6 +104,7 @@ public sealed class Village
 
     /// <summary>Attacks on the way and the last fought ones; see <see cref="RaidRules"/>.</summary>
     public List<Raid> Raids { get; set; } = [];
+    public List<Fortification> Fortifications { get; set; } = [];
 
     /// <summary>The last night (a <see cref="DayCycle"/> period) the beasts decided whether to attack.</summary>
     public long RaidsPlannedPeriod { get; set; }

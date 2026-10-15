@@ -211,8 +211,10 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
         await Players.OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+$"/director/{proposal.Id}/vote",new{accept=true}));
         await Players.OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+$"/director/{proposal.Id}/vote",new{accept=true}));
         var loaded=await db.Villages.AsNoTracking().SingleAsync(x=>x.Id==city.Id);var raid=Assert.Single(loaded.Raids);
-        Assert.Equal(option.Sector,raid.EntrySector);Assert.True(raid.ApproachPath.Count>1);
-        Assert.All(raid.ApproachPath.Zip(raid.ApproachPath.Skip(1)),pair=>Assert.Equal(1,Math.Abs(pair.First.X-pair.Second.X)+Math.Abs(pair.First.Y-pair.Second.Y)));
+        Assert.Equal(option.Sector,raid.EntrySector);Assert.Equal(2,raid.EngineVersion);Assert.Empty(raid.ApproachPath);
+        var battle=await db.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==raid.Id);
+        Assert.Equal(option.Sector,battle.Sector);Assert.Equal(option.Composition,battle.Composition);
+        Assert.Equal(raid.Count,battle.Units.Count);Assert.NotEmpty(battle.Units);
         Assert.True((await residents[0].Client.PutAsJsonAsync(v.Path+"/me/defense",new{mode=option.Sector})).IsSuccessStatusCode);
         var guard=await players.LoadCitizenAsync(residents[0].Id);Assert.Equal(option.Sector,guard.DefenseSector);Assert.NotNull(guard.DefenseReadyAt);
         Assert.InRange((guard.DefenseReadyAt!.Value-factory.Clock.GetUtcNow()).TotalSeconds,25,30);
@@ -263,6 +265,7 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
             city.Structures.Add(new Structure{Kind=BuildingKind.LeanTo,PlotId="4,18",BuiltAt=now});
             var s=StorageBuilding.Create(StorageKind.TownHall,"3,3",now);s.Put(resource,10);city.Storages.Add(s);
         });
+        await Players.AssertRuleBrokenAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",new{requestId=Guid.NewGuid(),action="private-build",building="Hut",x=-1,y=10}),"building.publicApproval");
         var request=new{requestId=Guid.NewGuid(),action="private-build",building="Hut",x=-8,y=10};
         await Players.OkJsonAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",request));
         await Players.OkJsonAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",request));

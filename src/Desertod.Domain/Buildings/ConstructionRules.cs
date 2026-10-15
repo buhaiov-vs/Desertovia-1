@@ -57,7 +57,7 @@ public static class ConstructionRules
 
         var footprint = WorldMap.Footprint(x, y);
         BankAccess.Require(village, WorldMap.Yard(WorldMap.PlotAt(x, y)));
-        if (privateOwner is not null && (kind is BuildingKind.Castle or BuildingKind.Hospital or BuildingKind.RopeBridge || KingdomRules.Area(village).Contains(footprint)))
+        if (privateOwner is not null && (kind is BuildingKind.Castle or BuildingKind.Hospital or BuildingKind.RopeBridge || KingdomRules.Area(village).Overlaps(footprint)))
             throw new GameRuleException("building.privateKind", "This building requires the Tsar's approval.");
         if (kind == BuildingKind.RopeBridge)
         {

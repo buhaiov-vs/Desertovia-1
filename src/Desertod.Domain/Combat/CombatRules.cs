@@ -5,6 +5,7 @@ using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Weather;
+using Desertod.Domain.World;
 
 namespace Desertod.Domain.Combat;
 
@@ -196,6 +197,7 @@ public static class CombatRules
         {
             citizen.InjuredUntil = until;
             citizen.IdleSpot=citizen.Spot??citizen.Trip?.To??citizen.IdleSpot;
+            if (!citizen.CycleSettled && citizen.CycleEndsAt > now) citizen.RecoveryPausedAt ??= now;
             citizen.WoundedAt = now;citizen.HospitalizedAt = null;citizen.RescueByCitizenId=null;
         }
     }
@@ -239,6 +241,7 @@ public static class CombatRules
         if (PersonalInventory.Amount(citizen, ResourceKind.Remedy) > 0) PersonalInventory.Remove(citizen, ResourceKind.Remedy, 1);
         else TakeOne(citizen, village, ResourceKind.Remedy);
         citizen.InjuredUntil = null;citizen.RescueByCitizenId=null;
+        HospitalRules.Resume(citizen, now, now);
     }
 
     /// <summary>Damaged buildings work slower: down to half speed at <see cref="MaximumDamage"/>.</summary>
@@ -249,11 +252,18 @@ public static class CombatRules
 
     /// <summary>Every finished building: plot and damage.</summary>
     public static IEnumerable<(string PlotId, int Damage)> Buildings(Village village) =>
-        village.Structures.Select(s => (s.PlotId, s.Damage)).Concat(village.Storages.Select(s => (s.PlotId, s.Damage)));
+        village.Structures.Select(s => (s.PlotId, s.Damage)).Concat(village.Storages.Select(s => (s.PlotId, s.Damage)))
+            .Concat(village.Fortifications.Select(f => (f.Id, f.Damage)));
 
     /// <summary>The building most in need of repair, or null when none is damaged.</summary>
     public static string? MostDamaged(Village village) =>
         Buildings(village).Where(b => b.Damage > 0).OrderByDescending(b => b.Damage).Select(b => b.PlotId).FirstOrDefault();
+
+    public static TilePoint RepairYard(Village village,string plot)
+    {
+        var wall=village.Fortifications.FirstOrDefault(f=>f.Id==plot);
+        return wall is null?WorldMap.Yard(plot):new TilePoint(wall.X+.5+(wall.X==-1?1:0),wall.Y+.5+(wall.Y==-1?1:wall.Y==26?-1:0));
+    }
 
     /// <summary>Adds damage to a building, up to <see cref="MaximumDamage"/>. Returns the damage done.</summary>
     public static int Damage(Village village, string plotId, int amount)
@@ -281,10 +291,12 @@ public static class CombatRules
     public static int DamageOf(Village village, string plotId) =>
         village.Structures.FirstOrDefault(s => s.PlotId == plotId)?.Damage
         ?? village.Storages.FirstOrDefault(s => s.PlotId == plotId)?.Damage
+        ?? village.Fortifications.FirstOrDefault(f => f.Id == plotId)?.Damage
         ?? 0;
 
     private static void SetDamage(Village village, string plotId, int damage)
     {
+        if (village.Fortifications.FirstOrDefault(f => f.Id == plotId) is {} wall) { wall.Damage = damage; return; }
         if (village.Structures.FirstOrDefault(s => s.PlotId == plotId) is { } structure)
         {
             structure.Damage = damage;

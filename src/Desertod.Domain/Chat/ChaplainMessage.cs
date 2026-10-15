@@ -12,7 +12,7 @@ public sealed class ChaplainMessage
     public static ChaplainMessage Speak(Guid villageId, string text, DateTimeOffset now)
     {
         text = text.Trim();
-        if (text.Length is < 1 or > ChatMessage.TextMaximumLength)
+        if (!ChaplainSpeech.IsPlainText(text) || text.Length > ChatMessage.TextMaximumLength)
             throw new ArgumentException("Chaplain speech must fit a chat line.", nameof(text));
         return new() { VillageId = villageId, Text = text, SentAt = now };
     }

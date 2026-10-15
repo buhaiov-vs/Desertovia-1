@@ -1,4 +1,5 @@
 using Desertod.Domain.Buildings;
+using Desertod.Domain.Combat;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Skills;
 
@@ -13,8 +14,12 @@ public static class HospitalRules
 
     public static void RequireReady(Citizen citizen, DateTimeOffset now)
     {
+        Resume(citizen, now);
         if (citizen.Recovery is { Available: false })
             throw new GameRuleException("hospital.unavailable", "Hospital status is temporarily unavailable. Try again shortly.");
+        if (citizen.RecoveryPausedAt is not null && CombatRules.IsInjured(citizen,now) && !IsAdmitted(citizen,now))
+            throw new GameRuleException("citizen.injured", "You are wounded and cannot work until recovery.",
+                new Dictionary<string,object>{["readyAt"]=citizen.InjuredUntil!.Value});
         if (IsAdmitted(citizen, now) || citizen.RecoveryPausedAt is not null)
             throw new GameRuleException("hospital.admitted", "You are recovering after a duel. Wait for discharge or open treatment.");
     }
@@ -24,7 +29,7 @@ public static class HospitalRules
     {
         var previousUntil = citizen.Recovery?.Until;
         citizen.Recovery = state;
-        if (!state.Available || IsAdmitted(citizen, now))
+        if (!state.Available || IsAdmitted(citizen, now) || CombatRules.IsInjured(citizen, now) && !citizen.CycleSettled)
         {
             if (citizen.RecoveryPausedAt is null)
             {
@@ -34,16 +39,25 @@ public static class HospitalRules
                 // Work completed before this admission may be banked after discharge, never restarted.
             }
         }
-        else if (citizen.RecoveryPausedAt is { } paused)
+        else Resume(citizen, now, previousUntil);
+    }
+
+    /// <summary>Shared pause for overlapping native wounds and external hospital stays: resume once.</summary>
+    public static bool Resume(Citizen citizen, DateTimeOffset now, DateTimeOffset? previousUntil = null)
+    {
+        if(citizen.RecoveryPausedAt is not {} paused || citizen.Recovery?.Available==false
+            || IsAdmitted(citizen,now) || CombatRules.IsInjured(citizen,now))return false;
+        var ends=new[]{previousUntil,citizen.Recovery?.Until,citizen.InjuredUntil}
+            .Where(at=>at is not null).Select(at=>at!.Value).ToArray();
+        var discharged=ends.Length==0?now:ends.Max();
+        if(discharged>now)discharged=now;
+        var duration=discharged>paused?discharged-paused:TimeSpan.Zero;
+        if(!citizen.CycleSettled && citizen.CycleEndsAt>paused)
         {
-            var discharged = previousUntil is { } end && end < now ? end : now;
-            var duration = discharged > paused ? discharged - paused : TimeSpan.Zero;
-            if (!citizen.CycleSettled && citizen.CycleEndsAt > paused)
-            {
-                citizen.CycleStartedAt += duration;
-                citizen.CycleEndsAt += duration;
-            }
-            citizen.RecoveryPausedAt = null;
+            citizen.CycleStartedAt+=duration;
+            citizen.CycleEndsAt+=duration;
         }
+        citizen.RecoveryPausedAt=null;
+        return true;
     }
 }

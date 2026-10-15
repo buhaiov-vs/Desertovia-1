@@ -1,3 +1,28 @@
+# D-069 / 0.7 candidate: implemented, final CI then scheduled release
+
+Full D-068 code batch and AI-SPEECH-01 are implemented. Public PR37 contains
+server individual battles, real terrain/gates/breaches, serial waves and combat
+UI, energy/cycle/boundary/storage fixes. See docs/dezertovia/COMBAT_AND_FIXES_IMPLEMENTATION.md
+for exact code/checkpoints. Bot PR38 merged, tested source3f7038c / CI38811556338
+SUCCESS816 tests; only almighty.py runtime payload, preserving installed budget
+repair3fd0c1c. Previous game CI passed but final game source needs exact CI.
+LIVE game remains0.6.1/61d726c. Automatic release scheduled16.10.2026 07:00
+Europe/Oslo =05:00UTC, NEVER earlier. Private ops candidate may be prepared now;
+do not create deploy/live-combat-request.json until the deadline. Release only
+ready exact pins with successful CI, backups, independent preservation check.
+No artificial player messages/raids/payments, no progress or stat resets.
+
+# D-069: реализация разрешена; установка не раньше07:00 Осло
+
+Владелец15.10.2026 разрешил весь код и тесты пакета D-068. Реализовать в
+feat/live-village-combat: COMBAT-01/UI, ENERGY-02, UI-05, CYCLE-02, ENERGY-03,
+LAND-01, STORAGE-UX. Сначала закончить код, затем проверки. Установка разрешена
+на16.10.2026 07:00 Europe/Oslo (05:00UTC), НЕ раньше. До времени LIVE0.6.1
+не менять. Разрешение на реализацию снимает прежний PLAN-only, но не временной
+барьер. Не устанавливать непрошедший точный CI код, не сбрасывать прогресс/
+реальные свечи, не запускать тестовые волны/сообщения на production. См.
+docs/dezertovia/COMBAT_AND_FIXES_IMPLEMENTATION.md. Никакая установка ещё не сделана.
+
 # D-068: единый план патча — новая оборона и связанные исправления
 
 Владелец: «Пиши сейчас весь этот план, будем все править». Состав/порядок/

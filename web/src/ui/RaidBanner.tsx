@@ -60,22 +60,27 @@ export function RaidBanner({
 }) {
   const i18n = useI18n()
   const { t } = i18n
-  const raid = comingRaids(village.raids, now)[0]
+  const fighting=village.battles?.find(b=>!b.finishedAt&&b.phase!=='Warning'&&b.phase!=='Cancelled')
+  const raid = (fighting&&village.raids.find(r=>r.id===fighting.id)) || comingRaids(village.raids, now)[0]
   if (!raid) return null
+  const battle=village.battles?.find(b=>b.id===raid.id)
+  const active=!!battle&&battle.phase!=='Warning'&&!battle.finishedAt
+  const alive=battle?.units.filter(u=>u.health>0&&!u.exitedAt).length??raid.count
   const defenders = defendersOf(raid, citizens.values(), catalog)
+  const guarding=active?battle.fighters.filter(f=>f.guard&&f.active&&f.health>0).length:defenders.length
   return (
     <div className="raid-banner" role="alert">
       <div className="raid-banner-title">
-        {t('raid.coming', {
+        {active?`${i18n.enemy(raid.enemy)} · ${i18n.language==='ru'?(battle.phase==='Retreating'?'отступают':'в деревне'):(battle.phase==='Retreating'?'retreating':'in the village')} · ${alive}/${raid.count}`:battle?.deferred?(i18n.language==='ru'?'Следующая волна ждёт завершения боя':'Next wave waits for this battle'):t('raid.coming', {
           count: raid.count,
           enemy: i18n.enemy(raid.enemy),
           time: countdown(Date.parse(raid.strikesAt) - now),
         })}
-        {raid.entrySector && <span> · {i18n.language === 'ru' ? 'Подход' : 'Approach'}: {({north:'Север',west:'Запад',south:'Юг'} as Record<string,string>)[raid.entrySector] ?? raid.entrySector}</span>}
+        {raid.entrySector && <span> · {i18n.language === 'ru' ? 'Подход' : 'Approach'}: {(i18n.language==='ru'?({north:'Север',west:'Запад',south:'Юг'} as Record<string,string>):({north:'North',west:'West',south:'South'} as Record<string,string>))[raid.entrySector] ?? raid.entrySector}</span>}
         {raid.waves > 1 && <span className="muted"> · {t('raid.wave', { wave: raid.wave, waves: raid.waves })}</span>}
       </div>
       <div className="raid-banner-row small">
-        <span>{t('raid.defenders', { count: defenders.length })}</span>
+        <span>{t('raid.defenders', { count: guarding })}</span>
         {watch && (
           <button className="primary" disabled={pending} onClick={() => onWatch(watch)} title={t('raid.hint')}>
             {t('raid.guard')}

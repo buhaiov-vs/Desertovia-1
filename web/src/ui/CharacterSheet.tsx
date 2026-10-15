@@ -1,3 +1,4 @@
+import { currentEnergy } from '../energy'
 import type { Catalog, Citizen, StatRequirement, Structure } from '../api'
 import { useI18n } from '../i18n'
 import { CharacterPortrait } from './CharacterPortrait'
@@ -9,9 +10,10 @@ import { formatRecoveryTime } from './recoveryTime'
 export function CharacterSheet({ citizen, catalog, structures, now = Date.now() }: { citizen: Citizen; catalog: Catalog; structures: Structure[]; now?: number }) {
   const i18n = useI18n()
   const { t } = i18n
+  const energy = citizen ? currentEnergy(citizen, now) : 0
   const describeNeeds = (needs: StatRequirement[]) => needs.map((r) => `${i18n.stat(r.stat)} ${r.minimum}`).join(', ')
   const { rules } = catalog
-  const rest = restHints(citizen, catalog, structures, i18n, citizen.energy)
+  const rest = restHints(citizen, catalog, structures, i18n, energy)
   const streakBonus = Math.min(citizen.streak * rules.streakPerRenewal, rules.streakMaximumBonus)
   const medicalReasons:Record<string,string>={breakfast:'Испорченный завтрак: ходьба −25%, запас сил −20%.',cast:'Гипс не по размеру: ходьба −20%, груз −25%.',snorers:'Храпящие соседи: расход энергии +20%.',cups:'Лечение банками: груз −20%.'}
   return (
@@ -34,10 +36,10 @@ export function CharacterSheet({ citizen, catalog, structures, now = Date.now() 
             <Hint text={rest.energy}>{t('character.energy')}</Hint>
           </span>
           <div className="bar energy">
-            <div style={{ width: `${(citizen.energy / citizen.maximumEnergy) * 100}%` }} />
+            <div style={{ width: `${(energy / citizen.maximumEnergy) * 100}%` }} />
           </div>
           <span className="small">
-            {Math.floor(citizen.energy)} / {citizen.maximumEnergy}
+            {Math.floor(energy)} / {citizen.maximumEnergy}
           </span>
         </div>
         <div>

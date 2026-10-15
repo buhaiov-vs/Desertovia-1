@@ -81,7 +81,7 @@ test('real game chat buttons and panels fit the phone and desktop map',async({pa
  await menu.locator('nav.tabs button').filter({hasText:'Village'}).click()
  await expect(menu.locator('.village-population')).toContainText('online')
  await menu.locator('nav.tabs button').filter({hasText:'Settings'}).click()
- await expect(menu.locator('.settings-version')).toContainText('0.6')
+ await expect(menu.locator('.settings-version')).toContainText('0.7')
 })
 
 test('compact launcher and notifications never cover an open vote',async({page})=>{

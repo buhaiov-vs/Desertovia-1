@@ -150,7 +150,7 @@ export function GameMenu(props: MenuProps) {
         </header>
 
         <div className="modal-body">
-          {tab === 'village' && citizen && catalog.tasks.some(t => t.id === citizen.taskId && t.effect === 'Guard') && <DefensePanel slug={props.slug}/>}
+          {tab === 'village' && (ruler || citizen && catalog.tasks.some(t => t.id === citizen.taskId && t.effect === 'Guard')) && <DefensePanel slug={props.slug} village={village} ruler={ruler} canDeploy={!!citizen&&catalog.tasks.some(t=>t.id===citizen.taskId&&t.effect==='Guard')}/>}
           {tab === 'village' && tsar && <AlmightyPanel slug={props.slug}/>}
           {tab === 'village' && (tsar || citizen) && <EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId={props.me.id} onPrivatePlace={props.onPrivatePlace}/>}
           {tab === 'village' && <button onClick={props.onHospital}>🏥 Больница</button>}

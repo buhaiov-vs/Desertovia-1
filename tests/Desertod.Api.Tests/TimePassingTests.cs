@@ -80,7 +80,7 @@ public sealed class TimePassingTests(DesertodApiFactory factory)
     }
 
     [Fact]
-    public async Task Undead_strike_the_camp_when_announced_even_unwatched()
+    public async Task Undead_begin_a_live_fight_after_the_warning_even_unwatched()
     {
         var village = await players.FoundVillageAsync("Night Of The Dead");
         await players.JoinAsync(village);
@@ -94,10 +94,11 @@ public sealed class TimePassingTests(DesertodApiFactory factory)
         {
             var state = await OkJsonAsync(await village.Tsar.GetAsync(village.Path));
             raid = state.GetProperty("state").GetProperty("raids")[0];
-            return raid.GetProperty("outcome").GetString() != nameof(RaidOutcome.Pending);
-        }, "the raid worker fights the undead");
-        Assert.Equal(JsonValueKind.String, raid.GetProperty("resolvedAt").ValueKind);
-        Assert.Contains(raid.GetProperty("outcome").GetString(), new[] { nameof(RaidOutcome.Repelled), nameof(RaidOutcome.Lost) });
+            var battle=state.GetProperty("state").GetProperty("battles")[0];
+            return battle.GetProperty("phase").GetString() != "Warning";
+        }, "the raid worker starts the live undead encounter");
+        Assert.Equal(JsonValueKind.Null, raid.GetProperty("resolvedAt").ValueKind);
+        Assert.Equal(nameof(RaidOutcome.Pending), raid.GetProperty("outcome").GetString());
     }
 
     [Fact]

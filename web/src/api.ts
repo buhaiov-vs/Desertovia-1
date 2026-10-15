@@ -352,7 +352,33 @@ export type RaidSource = 'Night' | 'Undead'
 export type RaidOutcome = 'Pending' | 'Repelled' | 'Lost'
 
 /** An attack on the way, or a fought one kept for the record. */
+export interface Fortification { id:string; x:number; y:number; gate:boolean; open:boolean; damage:number }
+export interface RaidUnit {
+  id:string; variant:'weak'|'regular'|'strong'; x:number; y:number; health:number; maximumHealth:number;
+  attack:number; speed:number; range:number; state:string; targetKind:string|null; targetId:string|null;
+  diedAt:string|null; exitedAt:string|null; nextAttackAt?:string;
+}
+export interface RaidFighter {
+  citizenId:string; x:number; y:number; health:number; maximumHealth:number; damageDealt:number; kills:number;
+  weapon?:string|null; armor?:string|null; arrows?:number; renownEarned?:number; nextAttackAt?:string; wounded:boolean; guard:boolean; active:boolean; mode:'hold'|'intercept'; targetUnitId:string|null;
+}
+export interface RaidBattle {
+  id:string; villageId:string; phase:string; sector:string; tactic:string; composition:string;
+  threatBudget:number; readyDefenders:number; availableReserves:number; startsAt:string; lastTickAt:string;
+  endsAt:string; finishedAt:string|null; revision:number; deferred:boolean;
+  units:RaidUnit[]; fighters:RaidFighter[]; damage?:{plotId:string;amount:number}[];
+  events:{sequence:number;kind:string;target:string;at:string}[];
+}
+
+/** Keep authoritative actor revisions when a slow snapshot races a newer combat delta. */
+export function mergeBattles(previous:readonly RaidBattle[] = [], incoming:readonly RaidBattle[] = []):RaidBattle[] {
+  const all=new Map(previous.map(b=>[b.id,b]));
+  for(const next of incoming)if(next.revision>=(all.get(next.id)?.revision??-1))all.set(next.id,next);
+  return [...all.values()].sort((a,b)=>Date.parse(a.startsAt)-Date.parse(b.startsAt)).slice(-16);
+}
+
 export interface Raid {
+  engineVersion?:number
   id: string
   source: RaidSource
   enemy: EnemyKind
@@ -389,6 +415,7 @@ export interface FightReport {
 }
 
 export interface RaidReport {
+  engineVersion?:number
   raidId: string
   source: RaidSource
   enemy: EnemyKind
@@ -892,6 +919,8 @@ export const RAIN = {
 export interface CivicOrder { buildingKind?:BuildingKind|null; id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
 export interface Housing { plotId:string; beds:number; occupied:number; level:number }
 export interface VillageState {
+  battles?: RaidBattle[]
+  fortifications?: Fortification[]
   kingdomArea?: TileArea
   castleLevel?: number
   civicOrders?: CivicOrder[]
@@ -1197,6 +1226,8 @@ export interface CycleReport {
 
 /** Events of one village since the last `villageEvents` message, in order; only the latest summary per citizen. */
 export interface VillageEvents {
+  battles?: RaidBattle[]
+  fortifications?: Fortification[] | null
   cycles: CycleReport[]
   projects: ProjectCompletion[]
   quests: QuestCompletion[]
@@ -1294,7 +1325,8 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     throw new ApiError(response.status, message, code, parameters)
   }
 
-  return response.status === 204 ? (undefined as T) : ((await response.json()) as T)
+  const text = response.status === 204 ? '' : await response.text()
+  return text ? JSON.parse(text) as T : undefined as T
 }
 
 async function orNull<T>(promise: Promise<T>): Promise<T | null> {
@@ -1366,6 +1398,9 @@ export interface EconomyView {
 export const api = {
   economy: (slug: string, before?: string, asset?: string) => request<EconomyView>('GET', `/api/villages/${encodeURIComponent(slug)}/economy?${new URLSearchParams({...before ? {before} : {}, ...asset ? {asset} : {}})}`),
   economyAction: (slug: string, body: EconomyRequest) => request<EconomyView>('POST', `/api/villages/${encodeURIComponent(slug)}/economy`, body),
+  battleOrder: (slug:string,battleId:string,targetUnitId:string|null,mode:'hold'|'intercept'='intercept') =>
+    request<void>('PUT',`/api/villages/${encodeURIComponent(slug)}/battles/${battleId}/order`,{targetUnitId,mode}),
+  gateOrder: (slug:string,open:boolean) => request<void>('PUT',`/api/villages/${encodeURIComponent(slug)}/gate`,{open}),
   defenseSector: (slug: string, sector: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/me/defense`, { mode: sector }),
   almighty: (slug: string) => request<AlmightyView>('GET', `/api/villages/${encodeURIComponent(slug)}/director`),
   almightyMode: (slug: string, mode: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/director/mode`, { mode }),

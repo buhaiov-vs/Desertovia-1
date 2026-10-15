@@ -10,6 +10,29 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7',date:'2026-10-16',
+    title:{ru:'Живая оборона деревни',en:'Live village defense'},
+    changes:{
+      ru:['Нападающие приходят с одной стороны после предупреждения. Каждый враг имеет своё здоровье, цель и время удара; мгновенный общий расчёт заменён боем на карте.',
+        'Всевышний выбирает подход и состав: больше слабых, меньше сильных или смешанную волну. Бюджет фиксируется при объявлении; подготовка игроков помогает без скрытого усиления врагов.',
+        'Охранник атакует ближайшего доступного врага или выбранную на карте цель. Можно держать позицию или перехватывать; частые нажатия не ускоряют удары.',
+        'Ворота можно открыть и закрыть. Враги ищут вход или ломают забор; повреждения ремонтируются. Костёр остаётся ориентиром центра.',
+        'Ранение приостанавливает текущее дело до выздоровления, сохраняя оплаченные материалы, энергию и вклад. Спасение и перенос в больницу продолжают работать.',
+        'Энергия и предупреждение о нехватке сил обновляются без перезагрузки. Старый снимок больше не заменяет более свежий ответ персонажа или боя.',
+        'Глаз интерфейса не перекрывает полноэкранный чат. Склады получили сворачиваемые карточки, сводку свободного места и подсказки об улучшениях.',
+        'Запрещена частная стройка, частично пересекающая границу царства. Старые дома сохраняются.',
+        'Исправлена публикация служебного JSON от батюшки: реплики и решения используют разные форматы ответа.'],
+      en:['Enemies arrive from one side after the warning. Each has individual health, targets and attack cooldowns; map combat replaces instant aggregate resolution.',
+        'The Almighty chooses the approach and weak, strong or mixed composition. The announcement fixes the threat budget; preparation does not secretly strengthen enemies.',
+        'Guards attack the nearest reachable enemy or a selected map target. Hold/intercept orders never bypass attack cooldowns.',
+        'Rulers control gates. Raiders use openings or breach repairable palisades; the campfire is only a central landmark.',
+        'Wounds pause paid work until recovery without consuming its materials, energy or contribution twice. Wounded transport remains available.',
+        'Energy and low-energy warnings update without reloads. Late snapshots cannot rewind newer citizen or battle state.',
+        'The interface toggle stays out of full-screen chat. Compact storage cards show room and upgrade hints.',
+        'Private footprints cannot overlap kingdom borders; existing homes remain intact.',
+        'Service JSON can no longer become chaplain speech; speech and director decisions have separate output contracts.']}
+  },
+  {
     version: '0.6.1', date: '2026-10-15',
     title: { ru: 'Удобнее на телефоне, восстановление сил и ответы ИИ', en: 'Mobile menus, energy and AI replies' },
     changes: {

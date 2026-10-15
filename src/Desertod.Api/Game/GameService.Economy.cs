@@ -262,7 +262,7 @@ public sealed partial class GameService
                     if (!Enum.IsDefined(request.Building) || request.Building is BuildingKind.Castle or BuildingKind.Hospital or BuildingKind.RopeBridge)
                         throw new GameRuleException("building.privateKind", "This civic building requires the Tsar's approval.");
                     var area = WorldMap.Footprint(request.X, request.Y);
-                    if (KingdomRules.Area(village).Contains(area)) throw new GameRuleException("building.publicApproval", "Inside the kingdom, ask the Tsar to approve construction.");
+                    if (KingdomRules.Area(village).Overlaps(area)) throw new GameRuleException("building.publicApproval", "Inside the kingdom, ask the Tsar to approve construction.");
                     var site = ConstructionRules.PlacePrivate(village, builder.AccountId, request.Building, request.X, request.Y, now);
                     db.AuditOperation = "private-build:" + site.PlotId;
                     break;

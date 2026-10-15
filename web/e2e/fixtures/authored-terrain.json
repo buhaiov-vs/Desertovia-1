@@ -1,0 +1,230 @@
+[
+  {
+    "seed": 0,
+    "wilds": null,
+    "hash": "d0f40db3e180d5a9f36346e90e5d178cd1db551ecd93a793477738ce86e8a830",
+    "blocked": 740,
+    "marsh": 353
+  },
+  {
+    "seed": 0,
+    "wilds": {
+      "ravine": [
+        {
+          "x": -19,
+          "top": 2,
+          "height": 4
+        },
+        {
+          "x": -18,
+          "top": 3,
+          "height": 4
+        }
+      ],
+      "passes": [
+        {
+          "x": -22,
+          "y": 20,
+          "horizontal": true
+        },
+        {
+          "x": 52,
+          "y": 36,
+          "horizontal": false
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "Thicket",
+          "x": -15,
+          "y": 12,
+          "cleared": false
+        },
+        {
+          "kind": "Rockfall",
+          "x": -22,
+          "y": 20,
+          "cleared": false
+        }
+      ],
+      "caveX": -28,
+      "caveY": -8,
+      "lookoutX": -25,
+      "lookoutY": 38
+    },
+    "hash": "c83350df5b1f58b864d282a6ad8e6f15c3516eccd46cf2f01936d90eded5c2d5",
+    "blocked": 886,
+    "marsh": 213
+  },
+  {
+    "seed": 1,
+    "wilds": null,
+    "hash": "b28a87b3329bf4a63d7817a03abefef0a352500418870faab909c154992143a7",
+    "blocked": 808,
+    "marsh": 185
+  },
+  {
+    "seed": 1,
+    "wilds": {
+      "ravine": [
+        {
+          "x": -19,
+          "top": 2,
+          "height": 4
+        },
+        {
+          "x": -18,
+          "top": 3,
+          "height": 4
+        }
+      ],
+      "passes": [
+        {
+          "x": -22,
+          "y": 20,
+          "horizontal": true
+        },
+        {
+          "x": 52,
+          "y": 36,
+          "horizontal": false
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "Thicket",
+          "x": -15,
+          "y": 12,
+          "cleared": false
+        },
+        {
+          "kind": "Rockfall",
+          "x": -22,
+          "y": 20,
+          "cleared": false
+        }
+      ],
+      "caveX": -28,
+      "caveY": -8,
+      "lookoutX": -25,
+      "lookoutY": 38
+    },
+    "hash": "052c5d0908e3bfa924ae9dae92e6c79cd84feb3b14bca56c99ea8ef634589284",
+    "blocked": 997,
+    "marsh": 107
+  },
+  {
+    "seed": 1234,
+    "wilds": null,
+    "hash": "f27a5a16d838f76d741da0ff569308c267e45c48f7f3084a5cb6204c2af19f66",
+    "blocked": 813,
+    "marsh": 139
+  },
+  {
+    "seed": 1234,
+    "wilds": {
+      "ravine": [
+        {
+          "x": -19,
+          "top": 2,
+          "height": 4
+        },
+        {
+          "x": -18,
+          "top": 3,
+          "height": 4
+        }
+      ],
+      "passes": [
+        {
+          "x": -22,
+          "y": 20,
+          "horizontal": true
+        },
+        {
+          "x": 52,
+          "y": 36,
+          "horizontal": false
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "Thicket",
+          "x": -15,
+          "y": 12,
+          "cleared": false
+        },
+        {
+          "kind": "Rockfall",
+          "x": -22,
+          "y": 20,
+          "cleared": false
+        }
+      ],
+      "caveX": -28,
+      "caveY": -8,
+      "lookoutX": -25,
+      "lookoutY": 38
+    },
+    "hash": "207cb1adc8bab483df33b43f5673ae4b2a30fb96db34809ec24db46fb9eab02a",
+    "blocked": 893,
+    "marsh": 139
+  },
+  {
+    "seed": 4294967295,
+    "wilds": null,
+    "hash": "96559dea473c411187a00e89ede28f7f5749f343d4dc5d81ac9d87815c25e8b9",
+    "blocked": 825,
+    "marsh": 116
+  },
+  {
+    "seed": 4294967295,
+    "wilds": {
+      "ravine": [
+        {
+          "x": -19,
+          "top": 2,
+          "height": 4
+        },
+        {
+          "x": -18,
+          "top": 3,
+          "height": 4
+        }
+      ],
+      "passes": [
+        {
+          "x": -22,
+          "y": 20,
+          "horizontal": true
+        },
+        {
+          "x": 52,
+          "y": 36,
+          "horizontal": false
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "Thicket",
+          "x": -15,
+          "y": 12,
+          "cleared": false
+        },
+        {
+          "kind": "Rockfall",
+          "x": -22,
+          "y": 20,
+          "cleared": false
+        }
+      ],
+      "caveX": -28,
+      "caveY": -8,
+      "lookoutX": -25,
+      "lookoutY": 38
+    },
+    "hash": "99491f867a7643c3c1cf92ac1ca92cf8ac962565832293208f7d306d702ad222",
+    "blocked": 899,
+    "marsh": 116
+  }
+]

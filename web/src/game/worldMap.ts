@@ -50,7 +50,7 @@ export function canBuildAt(catalog: Catalog, village: VillageState, x: number, y
   const inside = x >= land.x && y >= land.y && x + area.width <= land.x + land.width && y + area.height <= land.y + land.height
   return (
     inside &&
-    (!privateBuild || !(x>=kingdom.x && y>=kingdom.y && x+area.width<=kingdom.x+kingdom.width && y+area.height<=kingdom.y+kingdom.height)) &&
+    (!privateBuild || !overlaps(area,kingdom)) &&
     canReachBank(village,{x:x+area.width/2,y:y+area.height-.5}) &&
     (x >= 0 && y >= 0 && x + area.width <= 28 && y + area.height <= 26 ||
       Array.from({length:area.width*area.height},(_,i)=>({x:x+i%area.width,y:y+Math.floor(i/area.width)})).every(p=>

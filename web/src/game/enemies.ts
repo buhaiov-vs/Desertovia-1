@@ -1,5 +1,5 @@
 import { Container, Graphics, GraphicsContext } from 'pixi.js'
-import type { EnemyKind, Raid } from '../api'
+import type { EnemyKind, Raid, RaidBattle } from '../api'
 import { TILE } from './sheets'
 import { CAMPFIRE, MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH, Terrain } from './worldMap'
 
@@ -291,6 +291,66 @@ export class EnemyLayer {
   private readonly packs = new Map<string, Pack>()
   private readonly layer: Container
   private raids: Raid[] = []
+  private battles:RaidBattle[] = []
+  private liveViews=new Map<string,{actor:Graphics;bar:Graphics;health:number;hitAt:number}>()
+  private selectedUnit:string|null=null
+  select(id:string|null){this.selectedUnit=id}
+  setBattles(battles:RaidBattle[]){this.battles=battles}
+  pick(x:number,y:number):{battleId:string;unitId:string}|null{
+    for(const battle of this.battles){
+      if(['Warning','Cancelled','Finished'].includes(battle.phase))continue
+      const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
+      const height=(variant:string)=>enemyHeight(kind)*(variant==='strong'?1.35:variant==='weak' ? .85 : 1)
+      const unit=battle.units.filter(u=>{
+        const dy=y-u.y*TILE
+        return u.health>0&&!u.exitedAt&&Math.abs(u.x*TILE-x)<=TILE*.8&&dy>=-height(u.variant)-4&&dy<=6
+      }).sort((a,b)=>Math.hypot(a.x*TILE-x,a.y*TILE-height(a.variant)/2-y)-Math.hypot(b.x*TILE-x,b.y*TILE-height(b.variant)/2-y))[0]
+      if(unit){this.selectedUnit=unit.id;return{battleId:battle.id,unitId:unit.id}}
+    }
+    return null
+  }
+  private updateLive(seconds:number,now:number,sortDepth:boolean){
+    const shown=new Set<string>()
+    const draw=(id:string,x:number,y:number,hp:number,max:number,kind:EnemyKind|null,variant:string,dead:boolean,attackAt=0,deathAt=0)=>{
+      shown.add(id)
+      let view=this.liveViews.get(id)
+      if(!view){
+        view={actor:kind?new Graphics(this.context(kind)):new Graphics(),bar:new Graphics(),health:hp,hitAt:0}
+        view.actor.position.set(x*TILE,y*TILE);this.layer.addChild(view.actor,view.bar);this.liveViews.set(id,view)
+      }
+      const beforeX=view.actor.x, gap=Math.hypot(beforeX-x*TILE,view.actor.y-y*TILE)
+      const blend=gap>TILE*4?1:Math.min(1,seconds*8)
+      view.actor.x+=(x*TILE-view.actor.x)*blend;view.actor.y+=(y*TILE-view.actor.y)*blend
+      const size=variant==='strong'?1.35:variant==='weak' ? .85 : 1
+      view.actor.scale.set((x*TILE<beforeX-.1?-1:1)*size,size)
+      const strike=Math.max(0,Math.min(1,(now-attackAt)/240))
+      view.actor.rotation=dead?Math.PI/2:Math.sin(strike*Math.PI)*.15
+      if(!dead&&gap>.2)view.actor.y-=Math.abs(Math.sin(now/90))*LOOKS[kind??'Skeleton'].hop
+      if(hp<view.health)view.hitAt=now
+      view.health=hp;view.actor.tint=now-view.hitAt<180?0xff7777:0xffffff
+      view.actor.alpha=dead?Math.max(0,1-(now-deathAt)/10000):1
+      view.bar.clear()
+      if(!dead){
+        const barY=-(kind?enemyHeight(kind)*size:26)-7
+        view.bar.rect(-13,barY,26,4).fill(0x241910)
+        view.bar.rect(-12,barY+1,24*Math.max(0,hp/Math.max(1,max)),2).fill(kind?0xda5546:0x68c86a)
+        if(id===this.selectedUnit)view.bar.circle(0,0,14*size).stroke({color:0xffd75b,width:2})
+      }
+      view.bar.position.set(view.actor.x,view.actor.y)
+      if(sortDepth){view.actor.zIndex=view.actor.y;view.bar.zIndex=view.actor.y+1}
+    }
+    for(const battle of this.battles){
+      if(['Warning','Cancelled'].includes(battle.phase)||now<Date.parse(battle.startsAt))continue
+      if(battle.finishedAt&&now-Date.parse(battle.finishedAt)>10000)continue
+      const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
+      for(const u of battle.units){
+        if(u.exitedAt||u.diedAt&&now-Date.parse(u.diedAt)>10000)continue
+        draw(u.id,u.x,u.y,u.health,u.maximumHealth,kind,u.variant,u.health<=0,['Fighting','Breaching','Raiding'].includes(u.state)&&u.nextAttackAt?Date.parse(u.nextAttackAt)-3000:0,u.diedAt?Date.parse(u.diedAt):now)
+      }
+      for(const f of battle.fighters)if(!battle.finishedAt&&f.active&&f.health>0)draw('guard:'+f.citizenId,f.x,f.y,f.health,f.maximumHealth,null,'regular',false)
+    }
+    for(const [id,view] of this.liveViews)if(!shown.has(id)){view.actor.destroy();view.bar.destroy();this.liveViews.delete(id)}
+  }
   private terrain: Uint8Array | null = null
 
   constructor(layer: Container) {
@@ -328,8 +388,10 @@ export class EnemyLayer {
   }
 
   update(seconds: number, now: number, sortDepth: boolean) {
+    this.updateLive(seconds,now,sortDepth)
     const shown = new Set<string>()
     for (const raid of this.raids) {
+      if ((raid.engineVersion??0)>=2)continue
       if (!this.visible(raid, now)) continue
       shown.add(raid.id)
       if (!this.packs.has(raid.id)) this.packs.set(raid.id, this.addPack(raid, now))

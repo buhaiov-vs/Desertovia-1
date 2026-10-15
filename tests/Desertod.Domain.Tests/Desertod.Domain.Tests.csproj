@@ -22,4 +22,7 @@
     <ProjectReference Include="..\..\src\Desertod.Domain\Desertod.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="../../web/e2e/fixtures/authored-terrain.json" Link="authored-terrain.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

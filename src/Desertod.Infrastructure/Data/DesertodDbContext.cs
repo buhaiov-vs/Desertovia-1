@@ -47,8 +47,20 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
     public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
     public DbSet<MarketLot> MarketLots => Set<MarketLot>();
 
+    public DbSet<Desertod.Domain.Combat.RaidBattle> RaidBattles => Set<Desertod.Domain.Combat.RaidBattle>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Desertod.Domain.Combat.RaidBattle>(battle =>
+        {
+            battle.HasKey(b=>b.Id);
+            battle.HasOne<Desertod.Domain.Entities.Village>().WithMany().HasForeignKey(b=>b.VillageId).OnDelete(DeleteBehavior.Cascade);
+            battle.HasIndex(b=>new { b.VillageId, b.FinishedAt });
+            battle.OwnsMany(b=>b.Units, unit=> { unit.ToJson(); unit.Ignore(u=>u.Position); unit.Ignore(u=>u.Alive); });
+            battle.OwnsMany(b=>b.Fighters, fighter=> { fighter.ToJson(); fighter.Ignore(f=>f.Position); fighter.Property(f=>f.Weapon).HasConversion<string>(); fighter.Property(f=>f.Armor).HasConversion<string>(); });
+            battle.OwnsMany(b=>b.Damage, damage=>damage.ToJson());
+            battle.OwnsMany(b=>b.Events, events=>events.ToJson());
+        });
         modelBuilder.Entity<Village>().Property(v=>v.VigorEnergy).HasDefaultValue(8);
         modelBuilder.Entity<Village>().Property(v=>v.VigorCooldownMinutes).HasDefaultValue(240);
         modelBuilder.Entity<KingdomEconomy>(b => { b.HasKey(x=>x.VillageId); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); });
@@ -172,6 +184,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 poll.OwnsMany(p => p.Ballots);
             });
             village.OwnsMany(v => v.Forecasts, forecast => forecast.ToJson());
+            village.OwnsMany(v => v.Fortifications, wall => { wall.ToJson(); wall.Ignore(f=>f.Blocks); });
             village.OwnsMany(v => v.Raids, raid =>
             {
                 raid.ToJson();

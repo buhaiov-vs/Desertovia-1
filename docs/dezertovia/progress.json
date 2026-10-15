@@ -846,11 +846,18 @@
     "record": "RELEASE_0_6.md"
   },
   "candidate_0_6_1": {
-    "state": "implemented_checks_in_progress",
+    "state": "implemented_backend_verified_browser_ci",
     "deployed": false,
     "document": "MOBILE_NEEDS_0_6_1.md",
     "public_branch": "fix/mobile-needs-and-tonics",
     "bot_branch": "fix/director-response-diagnostics",
-    "real_candles_changed": false
+    "real_candles_changed": false,
+    "public_pr": 36,
+    "bot_pr": 36,
+    "backend": {
+      "domain_passed": 348,
+      "api_passed": 203
+    },
+    "bot_ci": 38792441921
   }
 }

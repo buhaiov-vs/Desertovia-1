@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-15",
-  "phase": "candidate_0_6_1_mobile_needs",
+  "phase": "release_0_6_1_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -9,7 +9,8 @@
     "legacy_043_unreleased": "6897f76c2d8fa0b6fbfb0ce7e26048d997e4a0e6",
     "latest_upstream_inspected": "e23bc943bac17e55d4d5a0b0805d07d53de02108",
     "release_0_5_3": "a980d8daeb2d3ff10609df7894444d57c8992c74",
-    "release_0_6": "143bf9ad569d2bc01d43356c8fc21467c59e544a"
+    "release_0_6": "143bf9ad569d2bc01d43356c8fc21467c59e544a",
+    "release_0_6_1": "61d726c184315d54c3d2c86b4984954bf818e31b"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -846,8 +847,8 @@
     "record": "RELEASE_0_6.md"
   },
   "candidate_0_6_1": {
-    "state": "implemented_backend_verified_browser_ci",
-    "deployed": false,
+    "state": "released_verified",
+    "deployed": true,
     "document": "MOBILE_NEEDS_0_6_1.md",
     "public_branch": "fix/mobile-needs-and-tonics",
     "bot_branch": "fix/director-response-diagnostics",
@@ -855,8 +856,8 @@
     "public_pr": 36,
     "bot_pr": 36,
     "backend": {
-      "domain_passed": 348,
-      "api_passed": 203
+      "domain_passed": 349,
+      "api_passed": 207
     },
     "bot_ci": 38792441921,
     "governor_construction_applications": "implemented_all_available_buildings_owner_approval_required",
@@ -866,6 +867,22 @@
       "browser_civic_pass": 3,
       "lint": "pass",
       "typecheck": "pass"
-    }
+    },
+    "game_ci": 38795831107,
+    "game_sha": "61d726c184315d54c3d2c86b4984954bf818e31b",
+    "bot_sha": "6e87f6054ab6700f552f6d8fe2c56a3b41ee33d6",
+    "install_run": 38797652832,
+    "independent_check_run": 38798016055,
+    "profiles_before": 111,
+    "profiles_after": 111,
+    "lost_progress": 0,
+    "migrations": 21,
+    "release_document": "RELEASE_0_6_1.md",
+    "browser": {
+      "passed": 107,
+      "expected_skipped": 1
+    },
+    "post_install_audit_run": 38798086739,
+    "post_install_audit": "no_new_game_errors_no_overdue_unblocked_construction_claims_old_hut_claim_cleared"
   }
 }

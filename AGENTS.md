@@ -1,3 +1,17 @@
+# D-064: 0.6.1 installed and independently verified
+
+15.10.2026 владелец: «Все выкладывать». D-063 repository-only hold снят для
+полного проверенного патча. LIVE game61d726c184315d54c3d2c86b4984954bf818e31b,
+bot6e87f6054ab6700f552f6d8fe2c56a3b41ee33d6. CI38795831107 PASS:
+349 Domain+207 API+107 browser/1 штатный skip; frontend/Docker PASS.
+Bot CI38792441921:801 PASS. Установка38797652832 и независимая проверка
+38798016055 PASS:111→111 профилей,0 потерь прогресса,21 миграция, PostgreSQL/
+SQLite backup. Всевышний Propose сохранён, Telegram auth работает. Реальные
+свечи/ключи не менялись, синтетических сообщений/платежей не было.
+Посадник подаёт заявки на любые доступные здания; одобряет царь. Четыре bot
+файла, включая llm.py, установлены. См. docs/dezertovia/RELEASE_0_6_1.md.
+Старые candidate/hold ниже — история. Не повторять установку по старым заданиям.
+
 # D-063: candidate0.6.1 — menus, energy, construction and AI diagnostics
 
 Текущее поручение15.10: docs/dezertovia/MOBILE_NEEDS_0_6_1.md. Только кандидат

@@ -147,3 +147,7 @@ checks PASS, plus real PostgreSQL parallel tick/reload/history-trim/one-time rew
 integration PASS. Final frontend/source checks and full new exactCI next.
 
 No server changes. All0.7/runtime ready flags remainfalse until the newCI finishes.
+
+Final review addition: a palisade completed during the warning is initialized on
+the first combat tick; frozen enemy budget/composition do not increase. Covered
+by the PostgreSQL tick/reload test.8cbfc84CI is superseded by this source follow-up.

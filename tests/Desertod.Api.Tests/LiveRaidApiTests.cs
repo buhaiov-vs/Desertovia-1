@@ -141,12 +141,18 @@ public sealed class LiveRaidApiTests(DesertodApiFactory factory)
             var battle=await db.RaidBattles.SingleAsync(b=>b.Id==raidId);var now=factory.Clock.GetUtcNow();
             battle.StartsAt=now.AddSeconds(-1);battle.LastTickAt=battle.StartsAt;battle.EndsAt=now.AddMinutes(4);
             city.Raids.Single(r=>r.Id==raidId).StrikesAt=battle.StartsAt;RaidRules.UpdateNextRaidAt(city);
+            // The wall is completed during preparation, after composition has already been frozen.
+            db.VillageProjects.Add(new(){VillageId=city.Id,DefinitionId=ProjectCatalog.Palisade,Status=ProjectStatus.Completed,StartedAt=now});
             foreach(var unit in battle.Units){unit.X=14.5;unit.Y=13.5;unit.Health=unit.MaximumHealth=5;unit.Speed=0;unit.Attack=0;}
             await db.SaveChangesAsync();
         }
         var service=factory.Services.GetRequiredService<GameService>();
         await service.RaidVillageAsync(villageId,default);
-        await using(var reloaded=await Db())Assert.True((await reloaded.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==raidId)).Revision>0);
+        await using(var reloaded=await Db())
+        {
+            Assert.True((await reloaded.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==raidId)).Revision>0);
+            Assert.NotEmpty((await reloaded.Villages.AsNoTracking().SingleAsync(c=>c.Id==villageId)).Fortifications);
+        }
         for(var i=0;i<12;i++)
         {
             factory.Clock.Advance(TimeSpan.FromSeconds(1));

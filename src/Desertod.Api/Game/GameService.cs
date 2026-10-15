@@ -852,6 +852,9 @@ public sealed partial class GameService(
             .Where(p => p.VillageId == village.Id && p.Status == ProjectStatus.Completed)
             .Select(p => p.DefinitionId)
             .ToListAsync(cancellationToken);
+        // Preparation may complete the palisade after announcement; its real geometry helps
+        // without increasing the already frozen attacker budget.
+        Fortifications.Ensure(village,completedProjects);
         var citizens = await db.Citizens.Where(c => c.VillageId == village.Id).ToListAsync(cancellationToken);
         var injuredBefore = citizens.Where(c=>CombatRules.IsInjured(c,now)).Select(c=>c.Id).ToHashSet();
         var reports = new List<RaidReport>();

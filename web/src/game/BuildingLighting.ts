@@ -4,7 +4,7 @@ import dayAtlas from '../assets/sprites.json'
 import { TILE, art, type ArtName, type TileSet } from './sheets'
 
 type Bounds = readonly number[]
-export const hasPreparedBuilding = (kind: string) => Object.hasOwn(registrations, kind)
+export const hasPreparedBuilding = (kind: string) => Object.hasOwn(registrations, kind === 'Castle' ? 'TownHall' : kind)
 
 /** Visible walls/roof, not transparent canvas margins, define the registration. */
 export function registeredPlacement(bounds: Bounds, width: number, height: number) {
@@ -78,6 +78,7 @@ export class BuildingLighting extends Container {
   private readonly emitsLight: boolean
   constructor(tiles: TileSet, kind: string, x: number, y: number, plotWidth = 3, plotHeight = 3, emitsLight = true) {
     super()
+    if (kind === 'Castle') kind = 'TownHall'
     this.emitsLight = emitsLight
     const pair = registrations[kind as keyof typeof registrations] as { day:string; night:string; dayBounds:number[]; nightBounds:number[]; preparedDay?:string; worldSize?:number[] }
     const [left, top, right, bottom] = pair.dayBounds

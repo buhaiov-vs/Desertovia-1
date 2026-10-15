@@ -1,0 +1,18 @@
+import { test, expect } from '@playwright/test'
+test('owner director proposals fit320px and approval/off do not run client effects',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('desertod.language','ru'))
+ await page.setViewportSize({width:320,height:760})
+ await page.goto('/e2e/almighty-harness.html')
+ await page.getByRole('button',{name:/Всевышний/}).click()
+ const panel=page.locator('.almighty-panel')
+ await expect(panel).toContainText('Я вижу')
+ expect(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true)
+ for(const b of await panel.getByRole('button').all()){const box=await b.boundingBox();if(box){expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(320)}}
+ await page.getByRole('button',{name:'✓ Согласиться',exact:true}).click()
+ await expect(panel).toContainText('Балансы не изменены')
+ await expect(page.getByRole('button',{name:'✓ Согласиться',exact:true})).toHaveCount(0)
+ await page.getByRole('button',{name:'Выключить',exact:true}).click()
+ await expect(page.getByRole('button',{name:'Выключить',exact:true})).toHaveClass(/active/)
+ await page.evaluate(()=>document.documentElement.dataset.uiTheme='dark')
+ expect(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true)
+})

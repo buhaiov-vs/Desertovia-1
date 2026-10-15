@@ -167,3 +167,31 @@ Native Injury/Remedy/CombatRules сохраняются; external duel срок 
 D-026 /DZ-31 PLAN: hospital-level + patient Recovery skill time bonus, bounded,
 snapshot once per admission and shared authoritative bot expiry. Recommendation
 2/4/6% + skill up to5%, cap10%, not approved balance. No code/payment change.
+
+
+## D-051/D-052 — дополнение15.10
+
+| ID | Основа | Изменение | Статус |
+| --- | --- | --- | --- |
+| D-051 | RaidRules/RaidWorker, ChaplainChatWorker, SramoslavService, DZ-24 | Единый директор/каталог/журнал: ALMIGHTY_DIRECTOR_PLAN.md | PLAN, без автомата |
+| D-052 | SettingsPanel, version.ts, modal scroll | PatchNotes, каталог RU/EN и раскрываемая история | BRANCH, без deployment |
+
+| D-053 | EnemyLayer, VillageWorld, HospitalPanel | Появление по strikesAt, общий formatRecoveryTime с реальной шкалой | VERIFIED BRANCH,5 целевых browser PASS, build/lint PASS; без deploy |
+
+
+## D-059 — исполнение новой очереди
+
+| Источник | Содержание | Статус |
+| --- | --- | --- |
+| TODO_EXECUTION_GUIDE.md | Восемь задач после сверки TODO; файлы, транзакции, совместимость, критерии готовности и 6.1 SOL Высокое для всего объёма | PLAN/DOCS, runtime не менялся; без выкладки по D-058 |
+
+
+## D-060 — реализация восьми пунктов
+
+| Контракт | Существующая основа | Изменение | Состояние |
+| --- | --- | --- | --- |
+| Сохранность/причины | GameService/ProblemDetails | Single-world destructive guard и точные RU/EN отказы | BRANCH, локально проверено |
+| Замок/территории | BuildingCatalog/ConstructionRules/Civic/WorldMap | Castle/уровни/owner источник/границы/частная стройка | BRANCH, локально проверено |
+| Учёт/инвентарь/торговля | Village transaction/Storage/Citizen/InventoryPanel | Ledger/wallet/receipts/PersonalGoods/market/test exchange | BRANCH, локально проверено; налог preview |
+| Чат/мобильный UX | ChatService/ChatPanel/Settings/прежняя карта | stable mentions, popup preference, компактный статус, map placement | BRANCH, целевой browser PASS |
+| Всевышний | PR33 + signed bot PR35 | Агрегаты учёта, DB route regression, прежние возможности сохранены | BRANCH; production flag не менялся |

@@ -67,6 +67,10 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<Guid?>("CitizenId")
                         .HasColumnType("uuid");
 
+                    b.PrimitiveCollection<List<Guid>>("MentionCitizenIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
                     b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -87,6 +91,156 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.HasIndex("VillageId", "SentAt");
 
                     b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Director.AlmightyObservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Option")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VillageId", "At");
+
+                    b.ToTable("AlmightyObservations");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Director.AlmightyProposal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Intent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NoticeState")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Option")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId")
+                        .IsUnique();
+
+                    b.HasIndex("VillageId", "Status", "CreatedAt");
+
+                    b.ToTable("AlmightyProposals");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Director.AlmightyState", b =>
+                {
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("BudgetDay")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CallsToday")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Intent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastError")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("LastNoticeAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastReviewAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastSignal")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("Lease")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("LeaseUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("NextReviewAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("RestUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("VillageId");
+
+                    b.HasIndex("NextReviewAt");
+
+                    b.ToTable("AlmightyStates");
                 });
 
             modelBuilder.Entity("Desertod.Domain.Dungeons.DungeonRun", b =>
@@ -150,6 +304,179 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.ToTable("DungeonRuns");
                 });
 
+            modelBuilder.Entity("Desertod.Domain.Economy.EconomyReceipt", b =>
+                {
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("VillageId", "RequestId");
+
+                    b.ToTable("EconomyReceipts");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.GameWallet", b =>
+                {
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Coins")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("EarnedToday")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("ExchangeDay")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ExchangedToday")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("IncomeDay")
+                        .HasColumnType("date");
+
+                    b.Property<long>("ProfitToday")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TestCandles")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("VillageId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("GameWallets");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.KingdomEconomy", b =>
+                {
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CandlesIssuedToday")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("FundDay")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("TreasuryCoins")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("VillageId");
+
+                    b.ToTable("KingdomEconomies");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.LedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Asset")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("Delta")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VillageId", "OperationId");
+
+                    b.HasIndex("VillageId", "At", "Id");
+
+                    b.ToTable("LedgerEntries");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.MarketLot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("BuyerAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CostBasis")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("Price")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Resource")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SellerAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VillageId", "Status", "CreatedAt");
+
+                    b.ToTable("MarketLots");
+                });
+
             modelBuilder.Entity("Desertod.Domain.Entities.Account", b =>
                 {
                     b.Property<Guid>("Id")
@@ -206,6 +533,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("CycleEndsAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("CyclePrivateOutput")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("CycleSettled")
                         .HasColumnType("boolean");
 
@@ -217,6 +547,12 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Property<int>("CyclesSinceMeal")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("DefenseReadyAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DefenseSector")
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("DungeonRunId")
                         .HasColumnType("uuid");
@@ -686,6 +1022,33 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Desertod.Domain.Director.AlmightyObservation", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Director.AlmightyProposal", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Director.AlmightyState", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Desertod.Domain.Dungeons.DungeonRun", b =>
                 {
                     b.HasOne("Desertod.Domain.Entities.Village", null)
@@ -767,6 +1130,57 @@ namespace Desertod.Infrastructure.Data.Migrations
                         });
 
                     b.Navigation("Heroes");
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.EconomyReceipt", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.GameWallet", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.KingdomEconomy", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.LedgerEntry", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Desertod.Domain.Economy.MarketLot", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Desertod.Domain.Entities.Account", b =>
@@ -878,6 +1292,32 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1
                                 .ToJson("Appearance")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CitizenId");
+                        });
+
+                    b.OwnsMany("Desertod.Domain.Economy.PersonalGood", "PersonalGoods", b1 =>
+                        {
+                            b1.Property<Guid>("CitizenId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("Amount");
+
+                            b1.Property<long>("CostBasis");
+
+                            b1.Property<string>("Kind")
+                                .IsRequired();
+
+                            b1.HasKey("CitizenId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Citizens");
+
+                            b1
+                                .ToJson("PersonalGoods")
                                 .HasColumnType("jsonb");
 
                             b1.WithOwner()
@@ -1022,6 +1462,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Navigation("Load");
 
+                    b.Navigation("PersonalGoods");
+
                     b.Navigation("Recovery");
 
                     b.Navigation("Skills");
@@ -1113,6 +1555,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<int>("OperationWork");
 
                             b1.Property<Guid?>("OrderId");
+
+                            b1.Property<Guid?>("OwnerAccountId");
 
                             b1.Property<DateTimeOffset>("PlacedAt");
 
@@ -1206,6 +1650,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<int>("Level");
 
+                            b1.Property<Guid?>("OwnerAccountId");
+
                             b1.Property<string>("PlotId")
                                 .IsRequired();
 
@@ -1264,6 +1710,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<string>("Enemy")
                                 .IsRequired();
+
+                            b1.Property<string>("EntrySector");
 
                             b1.Property<Guid>("Id");
 
@@ -1339,6 +1787,29 @@ namespace Desertod.Infrastructure.Data.Migrations
                                     b2.WithOwner()
                                         .HasForeignKey("RaidVillageId", "Raid__synthesizedOrdinal");
                                 });
+
+                            b1.OwnsMany("Desertod.Domain.Combat.RaidWaypoint", "ApproachPath", b2 =>
+                                {
+                                    b2.Property<Guid>("RaidVillageId");
+
+                                    b2.Property<int>("Raid__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("X");
+
+                                    b2.Property<int>("Y");
+
+                                    b2.HasKey("RaidVillageId", "Raid__synthesizedOrdinal", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("RaidVillageId", "Raid__synthesizedOrdinal");
+                                });
+
+                            b1.Navigation("ApproachPath");
 
                             b1.Navigation("Loot");
 
@@ -1421,6 +1892,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<string>("Kind")
                                 .IsRequired();
 
+                            b1.Property<Guid?>("OwnerAccountId");
+
                             b1.Property<string>("PlotId")
                                 .IsRequired();
 
@@ -1479,9 +1952,35 @@ namespace Desertod.Infrastructure.Data.Migrations
                                         .HasForeignKey("StorageBuildingVillageId", "StorageBuilding__synthesizedOrdinal");
                                 });
 
+                            b1.OwnsMany("Desertod.Domain.Economy.PersonalGood", "PersonalCosts", b2 =>
+                                {
+                                    b2.Property<Guid>("StorageBuildingVillageId");
+
+                                    b2.Property<int>("StorageBuilding__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("Amount");
+
+                                    b2.Property<long>("CostBasis");
+
+                                    b2.Property<string>("Kind")
+                                        .IsRequired();
+
+                                    b2.HasKey("StorageBuildingVillageId", "StorageBuilding__synthesizedOrdinal", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("StorageBuildingVillageId", "StorageBuilding__synthesizedOrdinal");
+                                });
+
                             b1.Navigation("Goods");
 
                             b1.Navigation("Investment");
+
+                            b1.Navigation("PersonalCosts");
                         });
 
                     b.OwnsOne("Desertod.Domain.Technologies.TechnologyPoll", "Poll", b1 =>

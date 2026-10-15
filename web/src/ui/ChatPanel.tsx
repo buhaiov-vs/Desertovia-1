@@ -1,3 +1,4 @@
+import { useGamePopups } from '../gamePreferences'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { CHAT_MESSAGE_MAXIMUM, type ChatMessage } from '../api'
 import { type FeedEntry } from '../hooks'
@@ -16,6 +17,7 @@ type Line =
 
 /** Village chat with the tribe's activities woven in; the activities can be hidden to read only the players. */
 export function ChatPanel({
+  mentionCandidates = [],
   feed,
   messages,
   member,
@@ -28,6 +30,7 @@ export function ChatPanel({
   onModeChange,
   interrupted = false,
 }: {
+  mentionCandidates?: {id:string;name:string}[]
   incoming?: ChatMessage[]
   onModeChange?: (mode: ChatMode) => void
   interrupted?: boolean
@@ -40,10 +43,12 @@ export function ChatPanel({
   /** Server time minus local time; activities are stamped with the local time they arrived. */
   serverOffsetMs: number
   phone: boolean
-  onSend: (text: string) => Promise<void>
+  onSend: (text: string, mentions?: string[]) => Promise<void>
 }) {
   const i18n = useI18n()
   const { t } = i18n
+  const popups = useGamePopups()
+  const [mentionPicker,setMentionPicker] = useState(false), [selectedMentions,setSelectedMentions] = useState<string[]>([])
   const [mode,setMode] = useState<ChatMode>(()=>{
     try {
       const saved=localStorage.getItem(MODE_KEY)
@@ -122,8 +127,9 @@ export function ChatPanel({
     const other=fresh.filter(message=>!own(message))
     if(other.length===0)return
     if(interrupted||collapsed||!nearBottom.current)setUnread(count=>count+other.length)
-    if(collapsed&&!interrupted)setToasts(previous=>[...previous,...other.map(message=>({message,expires:Date.now()+4200}))].slice(-2))
-  },[incoming,collapsed,own,interrupted])
+    if(collapsed&&!interrupted&&popups)setToasts(previous=>[...previous,...other.map(message=>({message,expires:Date.now()+4200}))].slice(-2))
+  },[incoming,collapsed,own,interrupted,popups])
+  useEffect(()=>{if(!popups)setToasts([])},[popups])
   useEffect(()=>{
     if(toasts.length===0)return
     const timer=window.setTimeout(()=>setToasts(previous=>previous.filter(toast=>toast.expires>Date.now())),Math.max(0,Math.min(...toasts.map(toast=>toast.expires))-Date.now()))
@@ -170,7 +176,8 @@ export function ChatPanel({
     setSending(true)
     setError(null)
     try {
-      await onSend(text)
+      await onSend(text, selectedMentions.filter(id=>mentionCandidates.some(c=>c.id===id&&text.includes("@"+c.name))))
+      setSelectedMentions([])
       setDraft('')
       toBottom()
     } catch (exception) {
@@ -223,7 +230,7 @@ export function ChatPanel({
                 <li
                   key={line.key}
                   data-line-key={line.key}
-                  className={`chat-line message${own(line.message) ? ' own' : ''}`}
+                  className={`chat-line message${line.message.mentionCitizenIds?.includes(ownCitizenId??'')?' mentioned':''}${own(line.message) ? ' own' : ''}`}
                   title={new Date(line.message.sentAt).toLocaleString()}
                 >
                   <span className={`chat-author${line.message.isTsar ? ' tsar' : ''}${line.message.isChaplain ? ' chaplain' : ''}`}>
@@ -237,7 +244,9 @@ export function ChatPanel({
           </ol>
           {unread>0&&<button className="chat-jump" onClick={toBottom}>{t('chat.new')} ↓ {unread}</button>}
           {member ? (
+            <>{mentionPicker&&<div className="mention-picker">{mentionCandidates.filter(c=>c.id!==ownCitizenId).map(c=><button type="button" key={c.id} onClick={()=>{const next=draft+(draft&&!draft.endsWith(' ')?' ':'')+'@'+c.name+' ';if(next.length<=CHAT_MESSAGE_MAXIMUM){setDraft(next);setSelectedMentions(previous=>[...new Set([...previous,c.id])].slice(-5))}setMentionPicker(false)}}>@{c.name}</button>)}</div>}
             <form className="chat-form" onSubmit={send}>
+              <button type="button" className="chat-mention" aria-label={i18n.language==='ru'?'Упомянуть жителя':'Mention a resident'} aria-expanded={mentionPicker} onClick={()=>setMentionPicker(!mentionPicker)}>＠</button>
               <input
                 onFocus={()=>{if(phone&&mode==='quarter')changeMode('full')}}
                 value={draft}
@@ -249,7 +258,7 @@ export function ChatPanel({
               <button type="submit" className="primary" disabled={sending || draft.trim() === ''}>
                 {t('chat.send')}
               </button>
-            </form>
+            </form></>
           ) : (
             <p className="chat-line muted">{t('chat.membersOnly')}</p>
           )}

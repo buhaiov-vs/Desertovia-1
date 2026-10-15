@@ -2,6 +2,7 @@ using Desertod.Domain.Buildings;
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Combat;
 using Desertod.Domain.Entities;
+using Desertod.Domain.Economy;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
@@ -123,6 +124,27 @@ public class CombatTests
         Assert.Null(citizen.InjuredUntil);
         Assert.Equal(0, village.Stock(ResourceKind.Remedy));
         Assert.Equal("heal.notInjured", Assert.Throws<GameRuleException>(() => CombatRules.Heal(citizen, village, Now)).Code);
+    }
+
+    [Fact]
+    public void Personal_remedy_heals_native_wound_without_touching_duel_recovery_or_common_stock()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.Remedy, 2);
+        var citizen = NewCitizen(village);
+        citizen.InjuredUntil = Now.AddMinutes(30);
+        citizen.Recovery = new ExternalRecovery { Available = true, Until = Now.AddHours(24) };
+        PersonalInventory.Add(citizen, ResourceKind.Remedy, 2, 60);
+
+        CombatRules.Heal(citizen, village, Now);
+
+        Assert.Null(citizen.InjuredUntil);
+        Assert.Equal(Now.AddHours(24), citizen.Recovery.Until);
+        Assert.Equal(1, PersonalInventory.Amount(citizen, ResourceKind.Remedy));
+        Assert.Equal(30, Assert.Single(citizen.PersonalGoods).CostBasis);
+        Assert.Equal(2, village.Stock(ResourceKind.Remedy));
+        Assert.Equal("heal.notInjured", Assert.Throws<GameRuleException>(() => CombatRules.Heal(citizen, village, Now)).Code);
+        Assert.Equal(1, PersonalInventory.Amount(citizen, ResourceKind.Remedy));
     }
 
     [Fact]

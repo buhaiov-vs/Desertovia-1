@@ -5,11 +5,13 @@ import { api, type VillageState, type Citizen } from '../api'
 export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}:{village:VillageState;tsar:boolean;ruler:boolean;actorId:string;citizen?:Citizen|null;onVillage:(v:VillageState)=>void;plotId?:string}) {
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[confirm,setConfirm]=useState<string|null>(null)
   const run=async(action:()=>Promise<VillageState>)=>{if(busy)return;setBusy(true);setError('');try{onVillage(await action());setConfirm(null)}catch(e){setError(e instanceof Error?e.message:'Не удалось выполнить действие')}finally{setBusy(false)}}
-  const homes=(village.housing??[]).filter(h=>!plotId||h.plotId===plotId)
+  const privateBuilding = [...(village.structures??[]),...(village.storages??[])].find(b=>b.plotId===plotId)?.ownerAccountId
+  const homes=(village.housing??[]).filter(h=>(!plotId||h.plotId===plotId)&&!(village.structures??[]).some(s=>s.plotId===h.plotId&&s.ownerAccountId&&s.ownerAccountId!==actorId))
   const orders=(village.civicOrders??[]).filter(o=>o.status==='pending' && (tsar||ruler||o.requestedBy===actorId||o.partnerAccountId===actorId))
   return <section className="civic-panel">
     {error&&<p className="error" role="alert">{error}</p>}
-    {plotId&&ruler&&<div className="civic-actions"><button disabled={busy} onClick={()=>run(()=>api.civic(village.slug,plotId,'upgrade'))}>Улучшить{tsar?'':' · заявка'}</button>
+    {privateBuilding&&<p>Личная постройка</p>}
+    {plotId&&ruler&&!privateBuilding&&<div className="civic-actions"><button disabled={busy} onClick={()=>run(()=>api.civic(village.slug,plotId,'upgrade'))}>Улучшить{tsar?'':' · заявка'}</button>
       {confirm===plotId?<><span>Разобрать медленно? Возврат: 25% учтённых материалов.</span><button disabled={busy} onClick={()=>run(()=>api.civic(village.slug,plotId,'demolish'))}>Подтвердить снос</button><button onClick={()=>setConfirm(null)}>Отмена</button></>:<button disabled={busy} onClick={()=>setConfirm(plotId)}>Снести{tsar?'':' · заявка'}</button>}</div>}
     {!plotId&&<h3>Жильё и заявки</h3>}
     {citizen?.spouseName&&<p>Брак: {citizen.spouseName}</p>}

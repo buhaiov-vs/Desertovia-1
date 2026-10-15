@@ -12,7 +12,7 @@ public sealed record SramoslavQuestion(string? Text);
 
 /// <summary>The chaplain can speak; he has no game commands or access to wallets.</summary>
 public sealed class SramoslavService(ChatService chat, IDbContextFactory<DesertodDbContext> factory,
-    IServiceScopeFactory scopes, IMemoryCache cache)
+    IServiceScopeFactory scopes, IMemoryCache cache, IAlmightyBridge director, IConfiguration config)
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     internal async Task<string?> AnswerChatAsync(string village, string name, string text, object history,
@@ -26,6 +26,8 @@ public sealed class SramoslavService(ChatService chat, IDbContextFactory<Deserto
             if (!bridge.Enabled) return null;
             try
             {
+                if (config.GetValue<bool>("Game:AlmightyEnabled"))
+                    return (await director.SpeakAsync(new { kind = "speech", context = new { village, name, text, history, buildings, memory = await PublicDirectorMemoryAsync(village, cancellationToken) } }, cancellationToken))?.Text;
                 var reply = await bridge.CallAsync<SramoslavReply>("speak", new
                 {
                     text, context = new { village, name, chat = history, buildings,
@@ -60,6 +62,10 @@ public sealed class SramoslavService(ChatService chat, IDbContextFactory<Deserto
             if (!bridge.Enabled) return new("Чадо, я пока отдыхаю. Скоро снова поговорим.", false);
             try
             {
+                if (config.GetValue<bool>("Game:AlmightyEnabled"))
+                    return await director.SpeakAsync(new { kind = "speech", context = new { village = village.Name, text,
+                        buildings = village.Structures.Select(s => s.Kind.ToString()).ToArray(), memory = await PublicDirectorMemoryAsync(village.Name, cancellationToken) } }, cancellationToken)
+                        ?? new("Чадо, связь сейчас подводит. Попробуй позже.", false);
                 return await bridge.CallAsync<SramoslavReply>("speak", new
                 {
                     text,
@@ -72,4 +78,15 @@ public sealed class SramoslavService(ChatService chat, IDbContextFactory<Deserto
         }
         finally { gate.Release(); }
     }
+    private async Task<object> PublicDirectorMemoryAsync(string name, CancellationToken ct)
+    {
+        await using var db = await factory.CreateDbContextAsync(ct);
+        var primary = config["Hosting:PrimaryVillage"];
+        var id = await db.Villages.Where(v => v.Slug == primary && v.Name == name).Select(v => (Guid?)v.Id).SingleOrDefaultAsync(ct);
+        if(id is null) return Array.Empty<object>();
+        // Speech shares factual outcomes; pending proposals and private enemy intent are never exposed to chat.
+        return await db.AlmightyProposals.AsNoTracking().Where(p => p.VillageId == id && p.Status == "Applied")
+            .OrderByDescending(p => p.DecidedAt).Take(6).Select(p => new { p.Option, p.Result, p.DecidedAt }).ToListAsync(ct);
+    }
+
 }

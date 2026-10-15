@@ -51,6 +51,10 @@ public static class StorageRules
         var building = village.Storages.SingleOrDefault(s => s.PlotId == plotId)
                        ?? throw new GameRuleException("take.noStorage", "There is no storage building here.");
 
+        if (building.OwnerAccountId is {} owner && owner != citizen.AccountId)
+            throw new GameRuleException("building.private", "This storage belongs to another player.");
+        if (building.OwnerAccountId is not null)
+            return Desertod.Domain.Economy.PrivateWarehouse.Withdraw(citizen, building, kind, amount);
         var room = CarryLimit(citizen,now) - citizen.Carried(kind);
         if (room <= 0)
         {

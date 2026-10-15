@@ -24,6 +24,9 @@ public static class BuildingOperations
     {
         var original=BuildingCatalog.Get(site.Kind);
         StageJob Haul(string id,int amount)=>new(id,amount);
+        if(site.Operation=="castle-upgrade") return original with { Stages = original.Stages.Select(stage => stage with {
+            Jobs = stage.Jobs.Select(job => BuildingCatalog.FindJob(job.JobId)?.Kind == JobKind.Labor
+                ? job with { Amount = checked(job.Amount * (1 << (site.TargetLevel - 1))) } : job).ToArray() }).ToArray() };
         if(site.Operation=="demolish") return original with { Stages=[new("dismantle","Dismantling",1,[new("dismantle",site.OperationWork)])] };
         if(site.Operation=="storage-upgrade") return original with { Stages=[new("upgrade","Storage upgrade",3,
             [Haul("bring-logs",60),Haul("bring-stones",40),Haul("bring-planks",20),new("raise-posts",24)])] };
@@ -44,6 +47,9 @@ public static class BuildingOperations
             throw new GameRuleException("building.orderExists","An application already exists for this building.");
         if(!village.Structures.Any(s=>s.PlotId==plot)&&!village.Storages.Any(s=>s.PlotId==plot))
             throw new GameRuleException("building.notBuilt","Select a completed building.");
+        var privateOwner = village.Structures.SingleOrDefault(s=>s.PlotId==plot)?.OwnerAccountId ?? village.Storages.SingleOrDefault(s=>s.PlotId==plot)?.OwnerAccountId;
+        if (privateOwner is not null && privateOwner != actor)
+            throw new GameRuleException("building.private", "Only the private owner can request this operation.");
         var order=new CivicOrder{PlotId=plot,Operation=operation,RequestedBy=actor,CreatedAt=now};
         village.CivicOrders.Add(order);return order;
     }
@@ -51,7 +57,8 @@ public static class BuildingOperations
     public static void Approve(Village village,CivicOrder order,IReadOnlyList<Citizen> citizens,DateTimeOffset now)
     {
         if(order.Status!="pending") throw new GameRuleException("building.orderProcessed","This application was already processed.");
-        if(village.Sites.Count>=BuildingCatalog.MaximumOpenSites||village.Sites.Any(s=>s.PlotId==order.PlotId))
+        var operationOwner = village.Structures.SingleOrDefault(s=>s.PlotId==order.PlotId)?.OwnerAccountId ?? village.Storages.SingleOrDefault(s=>s.PlotId==order.PlotId)?.OwnerAccountId;
+        if(village.Sites.Count(s=>s.OwnerAccountId==operationOwner)>=(operationOwner is null ? BuildingCatalog.MaximumOpenSites : 1)||village.Sites.Any(s=>s.PlotId==order.PlotId))
             throw new GameRuleException("building.busy","Finish the existing work first.");
         var structure=village.Structures.SingleOrDefault(s=>s.PlotId==order.PlotId);
         var storage=village.Storages.SingleOrDefault(s=>s.PlotId==order.PlotId);
@@ -62,7 +69,9 @@ public static class BuildingOperations
         if(citizens.Any(c=>!c.CycleSettled&&(c.CurrentSiteId==order.PlotId ||
             GameCatalog.FindTask(c.CurrentTaskId??"")?.RequiredBuilding==kind)))
             throw new GameRuleException("building.inUse","Finish the work inside this building first.");
-        var site=new ConstructionSite{Kind=kind,PlotId=order.PlotId,PlacedAt=now,OrderId=order.Id,Scale=1};
+        var site=new ConstructionSite{Kind=kind,PlotId=order.PlotId,PlacedAt=now,OrderId=order.Id,Scale=1,OwnerAccountId=structure?.OwnerAccountId??storage?.OwnerAccountId};
+        if (kind == BuildingKind.Castle && order.Operation == "demolish")
+            throw new GameRuleException("building.protected", "The royal castle cannot be demolished.");
         if(order.Operation=="demolish")
         {
             if(storage?.Goods.Any(g=>g.Amount>0)==true) throw new GameRuleException("building.emptyStorage","Empty this storage before demolition.");
@@ -76,6 +85,8 @@ public static class BuildingOperations
             site.Operation="demolish";site.TargetLevel=0;
             site.OperationWork=Math.Max(3,(int)Math.Ceiling(BuildingCatalog.Get(kind).Stages.Sum(s=>s.Jobs.Where(j=>BuildingCatalog.FindJob(j.JobId)?.Kind==JobKind.Labor).Sum(j=>j.Amount))*0.3));
         }
+        else if(structure is {Kind:BuildingKind.Castle,Level:<3})
+        {site.Operation="castle-upgrade";site.TargetLevel=structure.Level+1;site.Scale=Math.Pow(2,structure.Level);}
         else if(storage is not null&&StorageLimits.Upgrade(storage.Kind) is not null) site.Operation="storage-upgrade";
         else if(structure is {Kind:BuildingKind.Longhouse,Level:<3})
         {site.Operation="housing-upgrade";site.TargetLevel=structure.Level+1;}
@@ -84,7 +95,7 @@ public static class BuildingOperations
         ShelterRules.Assign(village,citizens,now);
     }
 
-    public static bool Finish(Village village,ConstructionSite site,DateTimeOffset now)
+    public static bool Finish(Village village,ConstructionSite site,DateTimeOffset now,Citizen? worker=null)
     {
         if(site.Operation is null)return false;
         var structure=village.Structures.SingleOrDefault(s=>s.PlotId==site.PlotId);
@@ -94,8 +105,21 @@ public static class BuildingOperations
             if(storage?.Goods.Any(g=>g.Amount>0)==true)throw new GameRuleException("building.emptyStorage","Empty this storage first.");
             var investment=structure?.Investment??storage?.Investment??[];
             var returns=investment.Select(g=>new StoredGood{Kind=g.Kind,Amount=g.Amount/4}).Where(g=>g.Amount>0).ToList();
+            if (site.OwnerAccountId is {} owner)
+            {
+                if (worker is null || worker.AccountId != owner) throw new GameRuleException("building.private", "Only the owner can finish this work.");
+                foreach (var good in returns)
+                    if (Desertod.Domain.Economy.PersonalInventory.Room(worker,good.Kind) < good.Amount)
+                        throw new GameRuleException("inventory.full", "Make room for the salvaged material first.");
+                if (structure is not null) village.Structures.Remove(structure);
+                if (storage is not null) village.Storages.Remove(storage);
+                foreach (var good in returns) Desertod.Domain.Economy.PersonalInventory.Add(worker,good.Kind,good.Amount,0);
+                var ownOrder=village.CivicOrders.SingleOrDefault(o=>o.Id==site.OrderId);
+                if(ownOrder is not null)ownOrder.Status="completed";
+                village.Sites.Remove(site); return true;
+            }
             // Simulate ALL refunds together: total-capacity bins are shared between resources.
-            var bins=village.Storages.Where(s=>s.PlotId!=site.PlotId).Select(s=>new StorageBuilding
+            var bins=village.Storages.Where(s=>s.PlotId!=site.PlotId && s.OwnerAccountId==null).Select(s=>new StorageBuilding
                 {Kind=s.Kind,PlotId=s.PlotId,Decommissioning=s.Decommissioning,
                  Goods=s.Goods.Select(g=>new StoredGood{Kind=g.Kind,Amount=g.Amount}).ToList()}).ToList();
             foreach(var good in returns)
@@ -111,7 +135,7 @@ public static class BuildingOperations
         else
         {
             if(site.Operation=="storage-upgrade"&&storage is not null)storage.Kind=StorageLimits.Upgrade(storage.Kind)!.Value;
-            if(site.Operation=="housing-upgrade"&&structure is not null)structure.Level=site.TargetLevel;
+            if(site.Operation is "housing-upgrade" or "castle-upgrade" && structure is not null)structure.Level=site.TargetLevel;
             AddInvestment(site,structure?.Investment??storage!.Investment);
         }
         var order=village.CivicOrders.SingleOrDefault(o=>o.Id==site.OrderId);

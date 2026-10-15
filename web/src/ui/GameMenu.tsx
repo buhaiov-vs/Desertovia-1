@@ -1,3 +1,6 @@
+import { EconomyPanel } from './EconomyPanel'
+import { DefensePanel } from './DefensePanel'
+import { AlmightyPanel } from './AlmightyPanel'
 import { CivicPanel } from './CivicPanel'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -61,6 +64,7 @@ export interface MenuProps {
   inviteCode: string | null
   onVillage: (state:VillageState)=>void
   onNewInviteCode: () => Promise<void>
+  onPrivatePlace?: (definition: BuildingDefinition) => void
   onPlace: (definition: BuildingDefinition) => void
   onWithdraw: (plotId: string) => void
   catalog: Catalog
@@ -119,7 +123,7 @@ export function GameMenu(props: MenuProps) {
   const [filter, setFilter] = useState<TaskFilter>('all')
   const working = citizen?.cycleEndsAt ? now < Date.parse(citizen.cycleEndsAt) : false
   const disabled = pending || working
-  const built = new Set<string>([...builtKinds(village, catalog), ...village.completedProjects])
+  const built = new Set<string>([...builtKinds(village, catalog), ...village.structures.filter(s=>s.ownerAccountId===props.me.id).map(s=>s.kind), ...village.completedProjects])
   const discovered = discoveredTechnologies(village)
   // Project tasks only show while a project runs, and only the ones it has use for.
   const visibleTask = (task: Task) => task.id!=='rescue-wounded' && projectWants(village.project, task)
@@ -147,9 +151,12 @@ export function GameMenu(props: MenuProps) {
         </header>
 
         <div className="modal-body">
+          {tab === 'village' && citizen && catalog.tasks.some(t => t.id === citizen.taskId && t.effect === 'Guard') && <DefensePanel slug={props.slug}/>}
+          {tab === 'village' && tsar && <AlmightyPanel slug={props.slug}/>}
+          {tab === 'village' && (tsar || citizen) && <EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId={props.me.id} onPrivatePlace={props.onPrivatePlace}/>}
           {tab === 'village' && <button onClick={props.onHospital}>🏥 Больница</button>}
           {tab === 'village' && <section className="card village-population" title={t('chat.populationHelp')}>
-            {t('chat.population', props.population)}
+            {t('chat.population', props.population)} · ☺ {Math.round(village.morale*100)}% · 👑 {village.castleLevel??0}/3
           </section>}
           {citizen && <NextAction citizen={citizen} catalog={catalog} now={now} pending={pending} onCancel={props.onCancelTask} />}
           {error && <p className="error">{error}</p>}
@@ -307,7 +314,7 @@ export function GameMenu(props: MenuProps) {
           )}
 
           {tab === 'character' &&
-            (citizen ? <CharacterSheet citizen={citizen} catalog={catalog} structures={village.structures} /> : <JoinPrompt {...props} />)}
+            (citizen ? <CharacterSheet citizen={citizen} catalog={catalog} structures={village.structures} now={now} /> : <JoinPrompt {...props} />)}
 
           {tab === 'tasks' &&
             (citizen ? (

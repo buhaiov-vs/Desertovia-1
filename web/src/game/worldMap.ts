@@ -43,12 +43,20 @@ export function buildingFootprints(village: VillageState): TileArea[] {
  * Same check as the server: inside the build area, off reserved ground, clear of other buildings.
  * Trees do not stop a blueprint: its builders fell them first.
  */
-export function canBuildAt(catalog: Catalog, village: VillageState, x: number, y: number) {
+export function canBuildAt(catalog: Catalog, village: VillageState, x: number, y: number, privateBuild = false) {
   const area = footprint(x, y)
-  const land = catalog.buildArea
+  const kingdom = village.kingdomArea ?? catalog.buildArea
+  const land = privateBuild ? {x:MAP_LEFT,y:MAP_TOP,width:MAP_WIDTH,height:MAP_HEIGHT} : kingdom
   const inside = x >= land.x && y >= land.y && x + area.width <= land.x + land.width && y + area.height <= land.y + land.height
   return (
     inside &&
+    (!privateBuild || !(x>=kingdom.x && y>=kingdom.y && x+area.width<=kingdom.x+kingdom.width && y+area.height<=kingdom.y+kingdom.height)) &&
+    canReachBank(village,{x:x+area.width/2,y:y+area.height-.5}) &&
+    (x >= 0 && y >= 0 && x + area.width <= 28 && y + area.height <= 26 ||
+      Array.from({length:area.width*area.height},(_,i)=>({x:x+i%area.width,y:y+Math.floor(i/area.width)})).every(p=>
+        Math.abs(p.x+.5-riverCenter(p.y,seedFrom(village.id)))>=2 &&
+        !(village.wilds?.ravine.some(r=>r.x===p.x&&p.y>=r.top&&p.y<r.top+r.height)) &&
+        !(village.wilds?.obstacles.some(o=>o.x===p.x&&o.y===p.y&&!o.cleared)))) &&
     !catalog.reservedAreas.some((reserved) => overlaps(reserved, area)) &&
     !buildingFootprints(village).some((taken) => overlaps(taken, area))
   )
@@ -328,6 +336,7 @@ export const BUILDING_SIGNS: Record<string, TileRef> = {
   DryingRack: town(29),
   Hut: town(83),
   Longhouse: town(83),
+  Castle: town(84),
   TownHall: battle(52),
   Woodyard: town(127),
   StoneYard: town(115),

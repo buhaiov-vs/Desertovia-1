@@ -86,17 +86,28 @@ public sealed class FoundingVillageTests(DesertodApiFactory factory)
     [Fact]
     public async Task Private_village_is_hidden_from_the_public_list()
     {
-        var open = await players.FoundVillageAsync("Open Village");
-        var hidden = await players.FoundVillageAsync("Hidden Village", isPrivate: true);
+        // This assertion concerns privacy, not the top-50 ranking in the shared, ever-growing fixture.
+        var isolated = new DesertodApiFactory();
+        await isolated.InitializeAsync();
+        try
+        {
+            var isolatedPlayers = new Players(isolated);
+            var open = await isolatedPlayers.FoundVillageAsync("Open Village");
+            var hidden = await isolatedPlayers.FoundVillageAsync("Hidden Village", isPrivate: true);
 
-        var listed = (await open.Tsar.GetFromJsonAsync<JsonElement>("/api/villages/public")).EnumerateArray()
-            .Select(v => v.GetProperty("slug").GetString())
-            .ToList();
+            var listed = (await open.Tsar.GetFromJsonAsync<JsonElement>("/api/villages/public")).EnumerateArray()
+                .Select(v => v.GetProperty("slug").GetString())
+                .ToList();
 
-        Assert.Contains(open.Slug, listed);
-        Assert.DoesNotContain(hidden.Slug, listed);
-        Assert.Null(open.InviteCode);
-        Assert.NotNull(hidden.InviteCode);
+            Assert.Contains(open.Slug, listed);
+            Assert.DoesNotContain(hidden.Slug, listed);
+            Assert.Null(open.InviteCode);
+            Assert.NotNull(hidden.InviteCode);
+        }
+        finally
+        {
+            await ((IAsyncLifetime)isolated).DisposeAsync();
+        }
     }
 
     [Fact]

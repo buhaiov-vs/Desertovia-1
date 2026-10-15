@@ -15,6 +15,7 @@ export interface GameCanvasHandle {
 }
 
 export interface Placement {
+  private?: boolean
   /** Building kind being placed. */
   kind: string
   /** Top-left tile of the building. */
@@ -98,7 +99,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     () => world?.setBuildingNames((kind, isStorage) => (isStorage ? storage(kind) : building(kind).name)),
     [world, building, storage],
   )
-  useEffect(() => world?.setPlacement(placement?.onPick ?? null, placement?.kind), [world, placement])
+  useEffect(() => world?.setPlacement(placement?.onPick ?? null, placement?.kind, placement?.private), [world, placement])
   useEffect(() => world?.setCitizenPick(onCitizenPick), [world, onCitizenPick])
   useEffect(() => world?.setWorldPick(onWorldPick), [world, onWorldPick])
   useEffect(() => world?.setWorldPickable(worldPickable), [world, worldPickable])

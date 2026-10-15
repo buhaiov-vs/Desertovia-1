@@ -72,7 +72,7 @@ public static class GameRules
     /// </summary>
     public const double EnergyBase = 36;
     public const double EnergyPerEndurance = 1;
-    public const double EnergyFullRegenerationHours = 24;
+    public const double EnergyFullRegenerationHours = 12;
     public const double EnergyCostPerCycle = 1;
 
     /// <summary>Playtest: everyone has full energy in this window, then regeneration resumes from the stored snapshot.</summary>

@@ -1,3 +1,4 @@
+import { ActionEnergy } from './ActionEnergy'
 import type { ReactNode } from 'react'
 import type { Catalog, Citizen, CycleReport, FightReport } from '../api'
 import { useI18n } from '../i18n'
@@ -79,6 +80,7 @@ export function TaskDonePanel({
           <strong>{i18n.task(report.taskId)}</strong>
         </p>
         {report.fight && <FightSummary fight={report.fight} />}
+        <ActionEnergy citizen={citizen} action={report.taskId} />
         <ul className="done-results">
           {report.produced.map((item) => {
             const lost = report.lost?.find((good) => good.resource === item.resource)?.amount ?? 0

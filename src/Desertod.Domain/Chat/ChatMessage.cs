@@ -19,6 +19,7 @@ public sealed class ChatMessage
 
     public required string Text { get; set; }
     public DateTimeOffset SentAt { get; set; }
+    public List<Guid> MentionCitizenIds { get; set; } = [];
 
     public bool IsTsar => CitizenId is null;
 

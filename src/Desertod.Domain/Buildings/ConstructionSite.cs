@@ -4,6 +4,7 @@ namespace Desertod.Domain.Buildings;
 public sealed class ConstructionSite
 {
     public BuildingKind Kind { get; set; }
+    public Guid? OwnerAccountId { get; set; }
 
     /// <summary>Unique within a village; identifies the site.</summary>
     public required string PlotId { get; set; }
@@ -32,6 +33,8 @@ public sealed class ConstructionSite
     public BuildingDefinition Definition => BuildingOperations.Definition(this);
 
     public bool IsFinished => Stage >= Definition.Stages.Count;
+
+    public int RequiredCrew(int stage, int recent) => OwnerAccountId is not null ? 1 : CrewNeeded(Definition.Stages[stage], recent);
 
     public bool HasWork => Progress.Any(p => p.Done > 0) || Hands.Count > 0;
 
@@ -157,6 +160,7 @@ public sealed class SiteHand
 public sealed class Structure
 {
     public BuildingKind Kind { get; set; }
+    public Guid? OwnerAccountId { get; set; }
     public required string PlotId { get; set; }
     public int Level { get; set; } = 1;
     public bool Decommissioning { get; set; }

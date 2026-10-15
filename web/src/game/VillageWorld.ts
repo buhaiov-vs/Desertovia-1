@@ -1,3 +1,4 @@
+import { formatRecoveryTime } from '../ui/recoveryTime'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
 import { BuildingLighting, hasPreparedBuilding } from './BuildingLighting'
@@ -148,6 +149,7 @@ interface Walker {
   /** Turns around water towards a spot the player sent the walker to, in world pixels; the last one is the target. */
   way: Array<{ x: number; y: number }>
   /** On watch: runs out to meet an attack on its way. */
+  defenseSector: string | null
   guard: boolean
   /** Wounded until then (wall clock, milliseconds): keeps still, tinted, with a red cross over the head. */
   injuredUntil: number
@@ -279,6 +281,8 @@ export class VillageWorld {
   private readonly obstacles = new Map<string, Container>()
   /** Kind of the building being placed: a rope bridge goes over the ravine, everything else on the camp land. */
   private placingKind = ''
+  private placingPrivate = false
+  private readonly kingdomBorder = new Graphics()
   /** What covers each tile, shared with the minimap and the wildlife; trees of the forest area change it. */
   private terrain: Uint8Array | null = null
   private readonly placementLayer = new Container()
@@ -307,9 +311,10 @@ export class VillageWorld {
     this.lights.circle(CAMPFIRE.x * TILE, CAMPFIRE.y * TILE, 1.6 * TILE).fill({ color: 0xffb347, alpha: 0.25 })
 
     this.placementLayer.addChild(this.ghost)
+    this.kingdomBorder.visible=false
     this.placementLayer.visible = false
     this.selection.visible = false
-    this.world.addChild(this.groundLayer, this.objects, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite)
+    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite)
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
@@ -623,12 +628,20 @@ export class VillageWorld {
    * on free land calls `onPick` with the top-left tile. A rope bridge (`kind`) is placed across the ravine instead.
    * Null ends placement.
    */
-  setPlacement(onPick: ((x: number, y: number) => void) | null, kind = '') {
+  setPlacement(onPick: ((x: number, y: number) => void) | null, kind = '', privateBuild = false) {
     this.onPick = onPick
     this.placingKind = kind
+    this.placingPrivate = privateBuild
+    this.drawKingdomBorder()
     this.app.canvas.style.cursor = ''
     this.ghost.clear()
     this.placementLayer.visible = false
+  }
+
+  private drawKingdomBorder() {
+    this.kingdomBorder.clear(); this.kingdomBorder.visible=!!this.onPick
+    const area=this.village?.kingdomArea??this.catalog?.buildArea
+    if(area)this.kingdomBorder.rect(area.x*TILE,area.y*TILE,area.width*TILE,area.height*TILE).fill({color:0xffd269,alpha:.025}).stroke({color:0xffd269,width:1.2,alpha:.85})
   }
 
   /** A click (not a drag) on a citizen calls `onPick` with their id, unless a building is being placed. Null turns it off. */
@@ -745,7 +758,7 @@ export class VillageWorld {
     const free =
       this.catalog !== null &&
       this.village !== null &&
-      (this.placingKind === ROPE_BRIDGE ? canBridgeAt(this.village, x, y) : canBuildAt(this.catalog, this.village, x, y)) &&
+      (this.placingKind === ROPE_BRIDGE ? canBridgeAt(this.village, x, y) : canBuildAt(this.catalog, this.village, x, y, this.placingPrivate)) &&
       this.fog.isAreaExplored(footprint(x, y))
     return { x, y, free }
   }
@@ -817,6 +830,7 @@ export class VillageWorld {
       const hunt = this.huntOf(citizen)
       if (!hunt && walker.hunt) this.wildlife.endHunt(walker.id)
       walker.hunt = hunt
+      walker.defenseSector = citizen.defenseSector ?? null
       walker.guard = working && this.catalog?.tasks.find((task) => task.id === citizen.taskId)?.effect === 'Guard'
       walker.injuredUntil = Math.max(citizen.injuredUntil ? Date.parse(citizen.injuredUntil) : 0, citizen.recovery?.until ? Date.parse(citizen.recovery.until) : 0)
       const injured = walker.injuredUntil > Date.now()
@@ -1290,6 +1304,7 @@ export class VillageWorld {
       this.showCamp()
     }
     this.village = state
+    this.drawKingdomBorder()
     this.fog.setExplored(state.explored)
     this.drawTrees(state.trees)
     this.drawObstacles(state.wilds)
@@ -1556,6 +1571,7 @@ export class VillageWorld {
       hunt: null,
       sleepsAt: null,
       way: [],
+      defenseSector: null,
       guard: false,
       injuredUntil: 0,
       bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,
@@ -2051,7 +2067,7 @@ export class VillageWorld {
       walker.sprite.anchor.set(.5,hurt?.5:1)
       if(hurt){
         walker.staying=true;walker.working=false;walker.guard=false;walker.hunt=null;walker.roaming=false
-        walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}\n${walker.treatmentCause} · ${Math.max(1,Math.ceil((walker.injuredUntil-now)/60000))} мин`
+        walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}\n${walker.treatmentCause} · ${formatRecoveryTime(walker.injuredUntil, now, 'ru')}`
         walker.subtitle.visible=walker.sprite.visible
       } else if(walker.treatmentCause){walker.subtitle.text=walker.normalSubtitle;walker.subtitle.visible=!!walker.normalSubtitle;walker.treatmentCause='';walker.inHospital=false;walker.carrierId=null}
       if (!hurt && walker.iconKey === INJURED_ICON) {
@@ -2060,7 +2076,12 @@ export class VillageWorld {
         walker.wanderAt = 0
       }
       if (walker.sleepsAt !== null && now >= walker.sleepsAt) walker.staying = true
-      if (walker.guard && front) {
+      if (walker.guard && walker.defenseSector) {
+        const raid = this.village?.raids.find(r => r.outcome === 'Pending' && r.entrySector === walker.defenseSector)
+        const route = raid?.approachPath
+        const post = route && route.length > 1 ? route[Math.max(0,route.length-7)] : ({ north:{x:15,y:7}, west:{x:9,y:13}, south:{x:15,y:19} } as Record<string,{x:number;y:number}>)[walker.defenseSector]
+        if(post){walker.targetX=(post.x+.5)*TILE;walker.targetY=(post.y+.5)*TILE;speed=RUN_SPEED;this.guardsOut=true}
+      } else if (walker.guard && front) {
         walker.targetX = front.x + (pseudo(walker.seed, 9) - 0.5) * 2.5 * TILE
         walker.targetY = front.y + (pseudo(walker.seed, 10) - 0.5) * 1.5 * TILE
         speed = RUN_SPEED

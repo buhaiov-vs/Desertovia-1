@@ -3,13 +3,11 @@ import { api, type HospitalPayment, type HospitalStatus, type HospitalTier, type
 import { CharacterPortrait } from './CharacterPortrait'
 import { useI18n } from '../i18n'
 import type { UiKey } from '../i18n/en'
+import { formatRecoveryTime } from './recoveryTime'
 import dayImage from '../assets/night/hospital.png'
 
 const paymentKey = (slug: string, actor: string) => `desertovia.hospital.payment.${slug}.${actor}`
-const remaining = (until: string | null | undefined, now: number) => {
-  const minutes = Math.max(0, Math.ceil(((until ? Date.parse(until) : now) - now) / 60000))
-  return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`
-}
+
 
 /** A pending receipt stays bound to the same player, patient and offer across refresh/reconnect. */
 export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVillage, onClose, onUpdated, serverOffsetMs = 0, initialPatientId }:
@@ -77,7 +75,7 @@ export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVilla
           {status?.patients.filter(p => p.id !== citizenId).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select></label>
         <section className="card hospital-recovery">{admitted&&<div className="hospital-bed-patient" aria-label="Пациент лежит на больничной койке">{selected?.appearance?<CharacterPortrait appearance={selected.appearance} scale={3}/>:<span>🛏️</span>}</div>}<strong>{admitted ? recovery?.cause==='battle'?'На лечении после боя':t('hospital.duel') : t('hospital.available')}</strong>
-          {admitted && <><p className="hospital-countdown">{t('hospital.until', { time: remaining(recovery?.until, now) })}</p>
+          {admitted && <><p className="hospital-countdown">{t('hospital.until', { time: formatRecoveryTime(recovery?.until, now, i18n.language) })}</p>
           <p className="small">{t('hospital.pause')}</p><p className="small muted">{t('hospital.bonus', { hospital: recovery?.hospitalPercent ?? 0, skill: recovery?.skillPercent ?? 0 })}</p></>}
         </section>
         {message && <p role="status" className="warning">{message}</p>}
@@ -98,7 +96,7 @@ export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVilla
           {status?.patients.map(p => <button type="button" className="hospital-patient-card" disabled={busy||!!payment} key={p.id} aria-label={`Пациент ${p.name}`}
             onClick={()=>{setPatientId(p.id);setConfirmation(null)}}>
             <span className="patient-mini-bed">{p.appearance?<CharacterPortrait appearance={p.appearance} scale={2}/>:<span>🛏️</span>}</span>
-            <span className="patient-card-info"><strong>{p.name}</strong><span>На лечении {p.recovery.cause==='battle'?'после боя':'после дуэли'}</span><small>До выписки: {remaining(p.recovery.until, now)}</small></span>
+            <span className="patient-card-info"><strong>{p.name}</strong><span>На лечении {p.recovery.cause==='battle'?'после боя':'после дуэли'}</span><small>{t('hospital.until', { time: formatRecoveryTime(p.recovery.until, now, i18n.language) })}</small></span>
           </button>)}
         </section>
         {tsar && hospital && (status?.level ?? 3) < 3 && !village.sites.some(s => s.plotId === hospital.plotId) &&

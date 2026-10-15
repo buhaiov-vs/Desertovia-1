@@ -1,4 +1,5 @@
-import type { Catalog, Citizen, VillageState } from '../api'
+import { EconomyPanel } from './EconomyPanel'
+import type { BuildingDefinition, Catalog, Citizen, VillageState } from '../api'
 import { useI18n } from '../i18n'
 import { citizenTitle } from './citizenTitle'
 import { HandsCard } from './HandsCard'
@@ -17,6 +18,7 @@ export function InventoryPanel({
   onDrop,
   onTake,
   onClose,
+  onPrivatePlace,
 }: {
   village: VillageState
   citizen: Citizen | null | undefined
@@ -27,6 +29,7 @@ export function InventoryPanel({
   onCarry: () => void
   onDrop: () => void
   onTake: (plotId: string, resource: string, amount: number) => void
+  onPrivatePlace?: (building:BuildingDefinition)=>void
   onClose: () => void
 }) {
   const i18n = useI18n()
@@ -43,6 +46,7 @@ export function InventoryPanel({
           </button>
         </header>
         <div className="modal-body">
+          {citizen && <EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId={citizen.accountId} onPrivatePlace={onPrivatePlace}/>}
           {error && <p className="error">{error}</p>}
           {citizen && (
             <section className="card">
@@ -98,7 +102,7 @@ export function InventoryPanel({
           <section className="card">
             <h3>{t('inventory.buildings')}</h3>
             <ul className="storage-list">
-              {village.storages.map((storage) => (
+              {village.storages.filter(s=>!s.ownerAccountId).map((storage) => (
                 <li key={storage.plotId}>
                   <strong>{i18n.storage(storage.kind)}</strong>
                   <StorageCard

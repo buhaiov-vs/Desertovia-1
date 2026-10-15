@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Desertod.Domain.Economy;
+using Desertod.Domain.Director;
 using Desertod.Domain.Chat;
 using Desertod.Domain.Dungeons;
 using Desertod.Domain.Entities;
@@ -11,6 +14,9 @@ namespace Desertod.Infrastructure.Data;
 
 public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> options) : DbContext(options)
 {
+    public Guid? AuditActor { get; set; }
+    public string? AuditOperation { get; set; }
+
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
     public DbSet<PasswordLogin> PasswordLogins => Set<PasswordLogin>();
@@ -22,8 +28,40 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
     public DbSet<ChaplainMessage> ChaplainMessages => Set<ChaplainMessage>();
     public DbSet<DungeonRun> DungeonRuns => Set<DungeonRun>();
 
+    public DbSet<AlmightyState> AlmightyStates => Set<AlmightyState>();
+    public DbSet<AlmightyProposal> AlmightyProposals => Set<AlmightyProposal>();
+    public DbSet<AlmightyObservation> AlmightyObservations => Set<AlmightyObservation>();
+
+    public DbSet<KingdomEconomy> KingdomEconomies => Set<KingdomEconomy>();
+    public DbSet<GameWallet> GameWallets => Set<GameWallet>();
+    public DbSet<EconomyReceipt> EconomyReceipts => Set<EconomyReceipt>();
+    public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
+    public DbSet<MarketLot> MarketLots => Set<MarketLot>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<KingdomEconomy>(b => { b.HasKey(x=>x.VillageId); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); });
+        modelBuilder.Entity<GameWallet>(b => { b.HasKey(x=>new{x.VillageId,x.AccountId}); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); b.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId); });
+        modelBuilder.Entity<EconomyReceipt>(b => { b.HasKey(x=>new{x.VillageId,x.RequestId}); b.Property(x=>x.Fingerprint).HasMaxLength(128); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); });
+        modelBuilder.Entity<LedgerEntry>(b => { b.HasKey(x=>x.Id); b.HasIndex(x=>new{x.VillageId,x.At,x.Id}); b.HasIndex(x=>new{x.VillageId,x.OperationId}); b.Property(x=>x.Operation).HasMaxLength(80); b.Property(x=>x.Asset).HasMaxLength(40); b.Property(x=>x.Location).HasMaxLength(100); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); });
+        modelBuilder.Entity<MarketLot>(b => { b.HasKey(x=>x.Id); b.HasIndex(x=>new{x.VillageId,x.Status,x.CreatedAt}); b.Property(x=>x.Resource).HasConversion<string>(); b.Property(x=>x.Status).HasMaxLength(16); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); });
+        modelBuilder.Entity<AlmightyState>(b => {
+            b.HasKey(x => x.VillageId);
+            b.Property(x => x.Version).IsConcurrencyToken();
+            b.HasOne<Village>().WithMany().HasForeignKey(x => x.VillageId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => x.NextReviewAt);
+        });
+        modelBuilder.Entity<AlmightyProposal>(b => {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.ReviewId).IsUnique();
+            b.HasIndex(x => new { x.VillageId, x.Status, x.CreatedAt });
+            b.HasOne<Village>().WithMany().HasForeignKey(x => x.VillageId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<AlmightyObservation>(b => {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.VillageId, x.At });
+            b.HasOne<Village>().WithMany().HasForeignKey(x => x.VillageId).OnDelete(DeleteBehavior.Cascade);
+        });
         modelBuilder.Entity<Account>(account =>
         {
             account.HasKey(a => a.Id);
@@ -70,6 +108,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 storage.ToJson();
                 storage.Property(s => s.Kind).HasConversion<string>();
                 storage.Ignore(s => s.Definition);
+                storage.OwnsMany(s => s.PersonalCosts, cost => cost.Property(g => g.Kind).HasConversion<string>());
                 storage.OwnsMany(s => s.Goods, good => good.Property(g => g.Kind).HasConversion<string>());
                 storage.OwnsMany(s => s.Investment, good => good.Property(g => g.Kind).HasConversion<string>());
             });
@@ -125,6 +164,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 raid.Property(r => r.Enemy).HasConversion<string>();
                 raid.Property(r => r.Outcome).HasConversion<string>();
                 raid.Ignore(r => r.IsPending);
+                raid.OwnsMany(r => r.ApproachPath);
                 raid.OwnsMany(r => r.Stolen, good => good.Property(g => g.Kind).HasConversion<string>());
                 raid.OwnsMany(r => r.Loot, good => good.Property(g => g.Kind).HasConversion<string>());
             });
@@ -144,6 +184,12 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             });
             village.HasIndex(v => v.NextRaidAt);
             village.Property(v => v.ChosenTechnology).HasMaxLength(32);
+            // Exploration mutates a byte buffer in place. Snapshot the contents, not its reference,
+            // so discovered plots remain known on the next request and after reconnecting.
+            village.Property(v => v.Explored).Metadata.SetValueComparer(new ValueComparer<byte[]>(
+                (left,right)=>left!.SequenceEqual(right!),
+                value=>value.Aggregate(0,(hash,part)=>HashCode.Combine(hash,part)),
+                value=>value.ToArray()));
             village.Ignore(v => v.TsarSpot);
             village.OwnsOne(v => v.TsarTrip, MapTrip);
             village.Property<uint>("Version").IsRowVersion();
@@ -155,6 +201,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             citizen.HasIndex(c => new { c.VillageId, c.AccountId }).IsUnique();
             citizen.HasIndex(c => new { c.CycleSettled, c.CycleEndsAt });
             citizen.HasIndex(c => c.IsCarrying);
+            citizen.OwnsMany(c => c.PersonalGoods, goods => { goods.ToJson(); goods.Property(g=>g.Kind).HasConversion<string>(); });
             citizen.OwnsMany(c => c.Load, load =>
             {
                 load.ToJson();

@@ -699,5 +699,115 @@
     "test_payments": 0,
     "test_messages": 0,
     "documentation": "RELEASE_0_5_3.md"
+  },
+  "next_work": {
+    "D-051": {
+      "state": "planned",
+      "document": "ALMIGHTY_DIRECTOR_PLAN.md",
+      "automatic_events_enabled": false,
+      "ai_architecture": "single_director_shared_memory_multiple_responsibilities",
+      "clarification": "D-054",
+      "implementation_plan": "ALMIGHTY_IMPLEMENTATION_PLAN.md"
+    },
+    "D-052": {
+      "state": "verified_branch_not_deployed",
+      "branch": "feat/almighty-patchnotes",
+      "deployed": false,
+      "versions": [
+        "0.5.3",
+        "0.5.2",
+        "0.5.1",
+        "0.5"
+      ],
+      "checks": [
+        "frontend lint: exit 0, existing warnings only",
+        "production TypeScript/Vite/PWA build: passed",
+        "Playwright targeted history RU/EN: 2 passed;320px and1440px;light/dark;open/archive/back/focus",
+        "git diff --check and AGENTS/CLAUDE parity: passed"
+      ]
+    },
+    "D-053": {
+      "state": "verified_branch_not_deployed",
+      "document": "RAID_MEDICAL_FIXES.md",
+      "backend_changed": false,
+      "recovery_time_scale": "real",
+      "checks": [
+        "TypeScript/Vite/PWA production build passed",
+        "lint exit0, existing warnings",
+        "5 targeted Playwright passed: notes RU/EN, real EnemyLayer timing, recovery format,320px hospital"
+      ]
+    },
+    "D-055": {
+      "state": "plan_saved",
+      "document": "ALMIGHTY_IMPLEMENTATION_PLAN.md",
+      "runtime_changed": false,
+      "deployed": false,
+      "recommended_first_scope": "steps0-8 observe/propose; tactical commander and new event scenarios later"
+    },
+    "D-056": {
+      "state": "implementation_final_checks",
+      "version": "0.6",
+      "mode": "Propose",
+      "enabled_requested": true,
+      "owner_telegram_proposals_authorized": true,
+      "record": "ALMIGHTY_0_6_IMPLEMENTATION.md",
+      "deployment": "paused_by_D-058"
+    },
+    "D-057": {
+      "state": "implemented_pending_final_checks",
+      "record": "ALMIGHTY_CATALOG_EXTENSIONS.md"
+    },
+    "D-058": {
+      "state": "no_deployment",
+      "game_pr": 33,
+      "bot_pr": 35,
+      "live_unchanged": true
+    },
+    "D-059": {
+      "state": "instruction_prepared_no_runtime_changes",
+      "record": "TODO_EXECUTION_GUIDE.md",
+      "scope": "eight TODO priorities; execution packets A-D",
+      "recommended_reasoning": "high for all eight points, explicitly requested by owner",
+      "deployment": "paused_by_D-058"
+    },
+    "D-060": {
+      "state": "implemented_final_head_ci_required",
+      "branch": "feat/kingdom-economy",
+      "base_commit": "e7fbe91b28c676df400444a40cb5fee3765413f9",
+      "record": "TODO_IMPLEMENTATION_0_6.md",
+      "scope": "all_eight_points",
+      "local_api_full_passed": 194,
+      "local_api_final_targeted_passed": 15,
+      "local_domain_targeted_passed": 11,
+      "local_browser_passed": 9,
+      "migration": "20261015164112_KingdomEconomy",
+      "deployment": "paused_by_D-058",
+      "bot_runtime_changed": false,
+      "game_pr": 34,
+      "primary_package_ci": {
+        "run": 38775233433,
+        "source": "2e45f61d27bcb1ee6c29478a9be6181f2d51423b",
+        "conclusion": "success",
+        "domain_passed": 343,
+        "api_passed": 195,
+        "browser_passed": 89,
+        "browser_skipped": 1
+      },
+      "personal_consumables_domain_passed": 32,
+      "personal_consumables_api_passed": 10,
+      "final_corrections_targeted_api_passed": 2,
+      "final_corrections": "market reserve included in material ledger; privacy test isolated from shared public top-50 limit"
+    },
+    "D-061": {
+      "state": "implementation_checked_release_preparing",
+      "energy_full_regeneration_real_hours": 12,
+      "post_faint_bonus": false,
+      "construction_speed_changed": false,
+      "deployment_authorized": true,
+      "supersedes": "D-058",
+      "private_operator_branch": "ops/almighty-release",
+      "preflight_run": 38781978374,
+      "profiles_preflight": 107
+    }
   }
 }

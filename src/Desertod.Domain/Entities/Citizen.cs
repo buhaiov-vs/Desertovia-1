@@ -128,6 +128,8 @@ public sealed class Citizen
     }
 
     /// <summary>The last walk out to a spot or a place on the map; the land along it is seen as the citizen gets there.</summary>
+    public string? DefenseSector { get; set; }
+    public DateTimeOffset? DefenseReadyAt { get; set; }
     public Trip? Trip { get; set; }
 
     /// <summary>The dungeon run the citizen answered; no tasks and no walks until they are back from it.</summary>
@@ -147,6 +149,8 @@ public sealed class Citizen
 
     /// <summary>Goods that did not fit in storage. They stay in the citizen's hands until there is room.</summary>
     public List<CarriedGood> Load { get; set; } = [];
+    public List<Desertod.Domain.Economy.PersonalGood> PersonalGoods { get; set; } = [];
+    public bool CyclePrivateOutput { get; set; }
 
     /// <summary>Mirrors <c>Load.Count &gt; 0</c> so the server can find waiting carriers with a simple query.</summary>
     public bool IsCarrying { get; set; }

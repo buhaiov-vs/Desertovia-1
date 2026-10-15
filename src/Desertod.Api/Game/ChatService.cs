@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Desertod.Api.Game;
 
 /// <param name="CitizenId">Null when the Tsar wrote it.</param>
-public sealed record ChatMessageDto(Guid Id, string AuthorName, Guid? CitizenId, bool IsTsar, string Text, DateTimeOffset SentAt, bool IsChaplain = false);
+public sealed record ChatMessageDto(Guid Id, string AuthorName, Guid? CitizenId, bool IsTsar, string Text, DateTimeOffset SentAt, bool IsChaplain = false, IReadOnlyList<Guid>? MentionCitizenIds = null);
 
-public sealed record SendChatRequest(string? Text);
+public sealed record SendChatRequest(string? Text, IReadOnlyList<Guid>? Mentions = null);
 
 /// <summary>Village chat: only the Tsar and the citizens of a village read and write it.</summary>
 public sealed class ChatService(
@@ -45,11 +45,19 @@ public sealed class ChatService(
             .TakeLast(HistoryLength).ToList();
     }
 
-    public async Task<ChatMessageDto> SendAsync(string slug, Guid accountId, string? text, CancellationToken cancellationToken)
+    public async Task<ChatMessageDto> SendAsync(string slug, Guid accountId, string? text, CancellationToken cancellationToken, IReadOnlyList<Guid>? mentions = null)
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var member = await RequireMemberAsync(db, slug, accountId, cancellationToken);
         var message = ChatMessage.Write(member.VillageId, accountId, member.CitizenId, member.Name, text, time.GetUtcNow());
+        var ids = (mentions ?? []).Distinct().ToArray();
+        if (ids.Length > 5) throw new Desertod.Domain.GameRuleException("chat.mentions", "Mention up to five residents.");
+        if (ids.Length > 0)
+        {
+            var targets = await db.Citizens.AsNoTracking().Where(c=>c.VillageId==member.VillageId && ids.Contains(c.Id)).Select(c=>new{c.Id,c.Name}).ToListAsync(cancellationToken);
+            if (targets.Count != ids.Length) throw new Desertod.Domain.GameRuleException("chat.mentions", "Choose residents from this kingdom.");
+            message.MentionCitizenIds = targets.Where(c=>message.Text.Contains("@"+c.Name,StringComparison.Ordinal)).Select(c=>c.Id).ToList();
+        }
         db.ChatMessages.Add(message);
         await db.SaveChangesAsync(cancellationToken);
         logger.ChatMessageSent(accountId, member.Slug, message.Text.Length);
@@ -102,5 +110,5 @@ public sealed class ChatService(
         new(message.Id, "Отец Срамослав", null, false, message.Text, message.SentAt, true);
 
     internal static ChatMessageDto ToDto(ChatMessage message) =>
-        new(message.Id, message.AuthorName, message.CitizenId, message.IsTsar, message.Text, message.SentAt);
+        new(message.Id, message.AuthorName, message.CitizenId, message.IsTsar, message.Text, message.SentAt, MentionCitizenIds: message.MentionCitizenIds);
 }

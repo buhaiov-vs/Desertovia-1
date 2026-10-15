@@ -50,6 +50,11 @@ public static class BuildingOperations
         var privateOwner = village.Structures.SingleOrDefault(s=>s.PlotId==plot)?.OwnerAccountId ?? village.Storages.SingleOrDefault(s=>s.PlotId==plot)?.OwnerAccountId;
         if (privateOwner is not null && privateOwner != actor)
             throw new GameRuleException("building.private", "Only the private owner can request this operation.");
+        var structure = village.Structures.SingleOrDefault(s=>s.PlotId==plot);
+        var storage = village.Storages.SingleOrDefault(s=>s.PlotId==plot);
+        if (operation == "upgrade" && !(structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse, Level: < 3 }
+            || storage is not null && StorageLimits.Upgrade(storage.Kind) is not null))
+            throw new GameRuleException("building.maxLevel", "This building cannot be upgraded further.");
         var order=new CivicOrder{PlotId=plot,Operation=operation,RequestedBy=actor,CreatedAt=now};
         village.CivicOrders.Add(order);return order;
     }

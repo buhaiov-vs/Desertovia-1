@@ -10,7 +10,8 @@ test('hospital patients lie on beds with the cause and stand after discharge',as
  expect(patients[0].reason).toContain('после дуэли');expect(patients[1].reason).toContain('после боя')
  for(const patient of patients){
   expect(patient.rotation).toBeCloseTo(-Math.PI/2,5)
-  expect(patient.reason).toContain('\n')
+  expect(patient.reason).toContain('На лечении')
+   expect(patient.reason).not.toMatch(/реальн|час|минут|\d{2}:\d{2}/)
   for(const bounds of [patient.nameBounds,patient.statusBounds]){
    expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(320)
   }

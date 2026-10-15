@@ -8,11 +8,11 @@ import { useI18n } from '../i18n'
 export type ChatMode = 'hidden' | 'quarter' | 'full'
 const MODE_KEY = 'desertod.chat.mode'
 const EMPTY_INCOMING: ChatMessage[] = []
-const ACTIVITIES_KEY = 'desertod.chat.activities'
+const ACTIVITIES_KEY = 'desertod.chat.activities.v2'
 
 /** `at` is in server time, so activities and messages sort together. */
 type Line =
-  | { kind: 'activity'; key: string; at: number; entry: FeedEntry }
+  | { kind: 'activity'; key: string; at: number; entry: FeedEntry; count?: number }
   | { kind: 'message'; key: string; at: number; message: ChatMessage }
 
 /** Village chat with the tribe's activities woven in; the activities can be hidden to read only the players. */
@@ -67,7 +67,7 @@ export function ChatPanel({
   const [viewport,setViewport]=useState<CSSProperties>({})
   const onModeChangeRef=useRef(onModeChange)
   useEffect(()=>{onModeChangeRef.current=onModeChange})
-  const [showActivities, setShowActivities] = useState(() => localStorage.getItem(ACTIVITIES_KEY) !== '0')
+  const [showActivities, setShowActivities] = useState(() => localStorage.getItem(ACTIVITIES_KEY) === '1')
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -85,7 +85,20 @@ export function ChatPanel({
     if (showActivities) {
       for (const entry of feed) all.push({ kind: 'activity', key: `a-${entry.key}`, at: entry.at + serverOffsetMs, entry })
     }
-    return all.sort((a, b) => a.at - b.at)
+    const grouped: Line[] = []
+    for (const line of all.sort((a, b) => a.at - b.at)) {
+      const previous = grouped.at(-1)
+      if (line.kind==='activity' && line.entry.kind==='cycle' && previous?.kind==='activity' && previous.entry.kind==='cycle') {
+        const a=previous.entry.report, b=line.entry.report
+        if (a.citizenId===b.citizenId && a.taskId===b.taskId && a.siteId===b.siteId && a.buildingCompleted===b.buildingCompleted && line.at-previous.at<=120000) {
+          previous.count=(previous.count??1)+1
+          previous.at=line.at
+          continue
+        }
+      }
+      grouped.push({...line})
+    }
+    return grouped
   }, [messages, feed, showActivities, serverOffsetMs])
 
   const toBottom=useCallback(()=>{
@@ -225,6 +238,7 @@ export function ChatPanel({
                       : line.entry.kind === 'dungeon'
                         ? i18n.describeDungeon(line.entry.run)
                         : t('feed.built', { project: i18n.project(line.entry.completion.projectId).name })}
+                  {(line.count??1)>1 && <strong> ×{line.count}</strong>}
                 </li>
               ) : (
                 <li

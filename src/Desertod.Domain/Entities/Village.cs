@@ -42,6 +42,9 @@ public sealed class Village
     /// <summary>Research points. Not a physical good, so it has no storage limit.</summary>
     public int Knowledge { get; set; }
 
+    public int VigorEnergy { get; set; } = 8;
+    public int VigorCooldownMinutes { get; set; } = 240;
+
     /// <summary>Gold dug from the vein on the far bank; the vein is empty at <see cref="Rules.GoldVein.Size"/>.</summary>
     public int GoldVeinMined { get; set; }
 

@@ -948,23 +948,37 @@ public sealed partial class GameService(
         foreach (var chunk in citizenIds.Chunk(SettlementChunkSize))
         {
             using var _ = await AcquireLockAsync(villageId, cancellationToken);
-            settled += await WithRetryAsync(async db =>
+            foreach (var citizenId in chunk)
             {
-                var village = await db.Villages.SingleAsync(v => v.Id == villageId, cancellationToken);
-                var count = 0;
-                foreach (var citizenId in chunk)
-                    if (await SettleOneAsync(db, village, citizenId, cancellationToken)) count++;
-                return count;
-            }, cancellationToken, villageId);
+                SettlementResult result;
+                try
+                {
+                    // A corrupt/failed cycle must never roll back work already earned by other residents.
+                    result = await WithRetryAsync(async db =>
+                    {
+                        var village = await db.Villages.SingleAsync(v => v.Id == villageId, cancellationToken);
+                        return await SettleOneAsync(db, village, citizenId, cancellationToken);
+                    }, cancellationToken, villageId);
+                }
+                catch (Exception error) when (error is not OperationCanceledException)
+                {
+                    logger.LogError(error, "Cycle settlement failed for one citizen {CitizenId} in village {VillageId}.", citizenId, villageId);
+                    continue;
+                }
+                if (result.Settled) { settled++; changes.Mark(villageId); }
+                // No notification is emitted until the individual financial/progress transaction committed.
+                if (result.Publish is not null)
+                {
+                    try { await result.Publish(); }
+                    catch (Exception error) when (error is not OperationCanceledException)
+                    { logger.LogWarning("Committed cycle notification failed ({Type}).", error.GetType().Name); }
+                }
+            }
         }
-
-        if (settled > 0)
-        {
-            changes.Mark(villageId);
-        }
-
         logger.VillageSettled(settled, citizenIds.Count, villageId, (long)time.GetElapsedTime(started).TotalMilliseconds);
     }
+
+    private sealed record SettlementResult(bool Settled, Func<Task>? Publish = null);
 
     /// <summary>The village state for viewers, or null when the village is gone.</summary>
     public async Task<VillageStateDto?> GetVillageStateAsync(Guid villageId, CancellationToken cancellationToken)
@@ -974,13 +988,13 @@ public sealed partial class GameService(
         return village is null ? null : await BuildStateAsync(db, village, time.GetUtcNow(), cancellationToken);
     }
 
-    private async Task<bool> SettleOneAsync(DesertodDbContext db, Village village, Guid citizenId, CancellationToken cancellationToken)
+    private async Task<SettlementResult> SettleOneAsync(DesertodDbContext db, Village village, Guid citizenId, CancellationToken cancellationToken)
     {
         await SyncHospitalAsync(db, village.Id, cancellationToken);
         var citizen = await db.Citizens.SingleAsync(c => c.Id == citizenId, cancellationToken);
         if (citizen.RecoveryPausedAt is not null || citizen.CycleSettled || citizen.VillageId != village.Id)
         {
-            return false;
+            return new(false);
         }
 
         var now = time.GetUtcNow();
@@ -993,18 +1007,17 @@ public sealed partial class GameService(
             if (raids.Reports.Count > 0)
             {
                 await db.SaveChangesAsync(cancellationToken);
-                await BroadcastRaidsAsync(village, raids, now);
                 changes.Mark(village.Id);
+                return new(false, () => BroadcastRaidsAsync(village, raids, now));
             }
 
-            return false;
+            return new(false);
         }
 
         await AfterSettleAsync(db, village, report, now, cancellationToken);
         var completion = await CompleteProjectIfDoneAsync(db, context, now, cancellationToken);
         var quests = await UpdateQuestsAsync(db, village, citizen, report, now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        await BroadcastRaidsAsync(village, raids, now);
         if (logger.IsEnabled(LogLevel.Debug))
         {
             logger.CycleSettled(
@@ -1017,8 +1030,11 @@ public sealed partial class GameService(
                 report.RareFind);
         }
 
-        await BroadcastEventsAsync(village, citizen, report, completion, quests, now);
-        return true;
+        return new(true, async () =>
+        {
+            await BroadcastRaidsAsync(village, raids, now);
+            await BroadcastEventsAsync(village, citizen, report, completion, quests, now);
+        });
     }
 
     private static string FormatAmounts(IEnumerable<ResourceAmount> amounts) =>
@@ -1315,8 +1331,9 @@ public sealed partial class GameService(
                 var lockKey = villageId.Value.ToString();
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
                 var before = await BeginAccountingAsync(db, villageId.Value, cancellationToken);
+                var savesBeforeAction = db.SuccessfulSaves;
                 var result = await action(db);
-                await FinishAccountingAsync(db, villageId.Value, before, operation, cancellationToken);
+                await FinishAccountingAsync(db, villageId.Value, before, operation, db.SuccessfulSaves > savesBeforeAction, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return result;
             }

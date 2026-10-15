@@ -65,6 +65,7 @@ public sealed class Citizen
 
     /// <summary>Last vigor drink; the next one waits for <see cref="GameRules.VigorDrinkCooldown"/>.</summary>
     public DateTimeOffset? LastDrinkAt { get; set; }
+    public DateTimeOffset? LastEnergyDrinkAt { get; set; }
 
     /// <summary>Hurt in a fight: no work until then, unless a remedy heals the wound sooner.</summary>
     public DateTimeOffset? InjuredUntil { get; set; }

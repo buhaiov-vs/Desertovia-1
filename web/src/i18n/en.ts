@@ -71,7 +71,7 @@ export const en = {
     'needs.perHour': '+{perHour}/h',
     'needs.restSpeed': '({percent}%)',
     'needs.drink': 'Drink +{energy} ({count})',
-    'needs.drinkTitle': 'Gulp a vigor drink: +{energy} energy. Your hands first, then the village storage. Once every 2 hours.',
+    'needs.drinkTitle': 'Gulp a vigor drink: +{energy} energy. Personal goods first, then hands and common storage. Cooldown: {minutes} real minutes.',
     'needs.drinkCooldown': 'Your heart is still racing. Next drink in {minutes} min.',
     'needs.drinkFull': 'You are full of energy already.',
     'hint.fed':
@@ -1226,6 +1226,7 @@ export const en = {
     "economy.reusedRequest": "This request was already used for another operation.",
     "economy.amount": "Amount: 1 to 100. Price must be a positive whole number.",
     "economy.citizen": "A resident character is required for this action.",
+    "economy.candles": "Not enough test candles. Exchange dezcoins for them first.",
     "economy.funds": "Not enough dezcoins. Earn them through useful work or trade.",
     "economy.limit": "The game wallet limit has been reached.",
     "economy.action": "This action is unavailable. Refresh the menu.",

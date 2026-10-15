@@ -17,7 +17,7 @@ public sealed record AlmightyView(AlmightyState State, IReadOnlyList<AlmightyPro
     IReadOnlyList<AlmightyObservation> Observations, bool Enabled);
 public sealed record AlmightyReview(Guid VillageId, string Slug, Guid Lease, string Snapshot, string Intent,
     IReadOnlyList<AlmightyOption> Options);
-public sealed record AlmightyAnswer(string Option, string Reason, string Intent);
+public sealed record AlmightyAnswer(string Option, string Reason, string Intent, string? ErrorCode = null);
 public sealed record AlmightyVote(bool Accept);
 public sealed record AlmightyMode(string Mode);
 public sealed record AlmightyNotice(Guid ProposalId, string Slug, string OwnerId, string Title, string Reason, string Effect, DateTimeOffset ExpiresAt);
@@ -92,7 +92,7 @@ public sealed partial class GameService
             if (state.CallsToday >= AlmightyPolicy.DailyModelLimit) { state.NextReviewAt = day.AddDays(1); await db.SaveChangesAsync(ct); return null; }
             var hourly = await db.AlmightyObservations.CountAsync(o => o.VillageId == villageId && o.At > now.AddHours(-1), ct);
             if (hourly >= 4) { state.NextReviewAt = now.AddMinutes(15); await db.SaveChangesAsync(ct); return null; }
-            var options = AlmightyPolicy.Options(facts, RaidTactics.Approaches(village)).ToList();
+            var options = AlmightyPolicy.Options(facts, RaidTactics.Approaches(village)).Concat(VigorTuning.Options(village)).ToList();
             if (facts.Online >= 3 && facts.PendingRaids == 0 && facts.Patients == 0 && !await db.DungeonRuns.AnyAsync(r => r.VillageId == villageId && r.Phase != DungeonPhase.Ended, ct))
                 options.Add(new("dungeon", "Общий поход", "Открыть сбор в существующий данж. Вход добровольный, обычные правила/награды/ранения."));
             var stock = village.Storages.SelectMany(s => s.Goods).GroupBy(g => g.Kind.ToString()).ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
@@ -118,6 +118,10 @@ public sealed partial class GameService
             var tradingProfitToday = await db.GameWallets.Where(w=>w.VillageId==villageId && w.IncomeDay==incomeDay).SumAsync(w=>(long?)w.ProfitToday,ct) ?? 0;
             var snapshot = JsonSerializer.Serialize(new {
                 now, facts, stock, previousStock,
+                vigor = new { village.VigorEnergy, village.VigorCooldownMinutes,
+                    tired = guardCitizens.Count(c => c.CurrentEnergy(now, village) < 8),
+                    unconscious = guardCitizens.Count(c => c.ExhaustedUntil > now),
+                    fullDrink = "300 DZK or 3 test candles; full energy; 12 real hour cooldown; never heals injuries or unconsciousness" },
                 economy = new { startedAt = accounting?.StartedAt, accounting?.TreasuryCoins, wagesToday, tradingProfitToday, changes = economicChanges, taxMode = "preview", currency = "test dezcoins; never account candles" },
                 combat = new { currentDefense = defense, warningSeconds = RaidRules.UndeadWarning.TotalSeconds,
                     smallRaids = EnemyCatalog.Enemies.Where(e => e.Undead && !e.DungeonOnly).Select(e => new { enemy = e.Kind.ToString(), count = (int)Math.Ceiling((3 + recentWorkers / 2) * e.RaidCountMultiplier), e.Power }),
@@ -156,8 +160,18 @@ public sealed partial class GameService
             state.Lease = null; state.LeaseUntil = null; state.Version++;
             var observation = await db.AlmightyObservations.SingleAsync(o => o.Id == review.Lease, ct);
             var chosen = answer is not null ? review.Options.FirstOrDefault(o => o.Id == answer.Option) : null;
-            if (answer is null || chosen is null || string.IsNullOrWhiteSpace(answer.Reason) || answer.Reason.Length > 1200 || (answer.Intent?.Length ?? 0) > 1000) {
-                state.LastError = "ИИ не ответил или вернул недопустимое решение. Игра работает обычным образом.";
+            if (answer is null || answer.ErrorCode is not null || chosen is null || string.IsNullOrWhiteSpace(answer.Reason) || answer.Reason.Length > 1200 || (answer.Intent?.Length ?? 0) > 1000) {
+                state.LastError = (answer?.ErrorCode switch {
+                    "budget.shared" => "Достигнут общий лимит запросов ИИ батюшки.",
+                    "budget.director" => "Достигнут лимит анализов Всевышнего.",
+                    "model.timeout" or "bridge.timeout" => "ИИ не успел ответить вовремя.",
+                    "model.json" => "ИИ вернул повреждённый формат ответа.",
+                    "model.option" => "ИИ предложил действие, которого нет в разрешённом списке.",
+                    "model.fields" => "Ответ ИИ не прошёл проверку текста.",
+                    "model.provider" => "Провайдеры ИИ не смогли обработать запрос.",
+                    "bridge.http" => "Связь с ИИ батюшки завершилась ошибкой.",
+                    _ => "ИИ не ответил или вернул недопустимое решение."
+                }) + " Игра продолжает работать; настройки не изменены.";
                 observation.Reason = state.LastError;
             } else {
                 state.LastError = ""; state.Intent = string.IsNullOrWhiteSpace(answer.Intent) ? state.Intent : answer.Intent;
@@ -181,6 +195,7 @@ public sealed partial class GameService
         await using var lookup = await contextFactory.CreateDbContextAsync(ct);
         var villageId = await lookup.AlmightyProposals.Where(p => p.Id == id).Select(p => p.VillageId).SingleOrDefaultAsync(ct);
         if (villageId == Guid.Empty) throw new GameRuleException("director.proposal", "Предложение не найдено.");
+        CitizenSummaryDto[] tunedCitizens = [];
         ChaplainMessage? published = null;
         string? publishedSlug = null;
         var decisionResult = await WithVillageAsync(villageId, async db => {
@@ -196,12 +211,24 @@ public sealed partial class GameService
             else {
                 var facts = await DirectorFactsAsync(db, village, state, now, ct);
                 var paths = RaidTactics.Approaches(village);
-                var allowed = AlmightyPolicy.Options(facts, paths).FirstOrDefault(o => o.Id == p.Option);
+                var allowed = AlmightyPolicy.Options(facts, paths).Concat(VigorTuning.Options(village)).FirstOrDefault(o => o.Id == p.Option);
                 var approach = allowed?.Sector is { } sector ? paths.FirstOrDefault(a => a.Sector == sector) : null;
                 var permitted = allowed is not null || p.Option == "dungeon" && facts.Online >= 3 && facts.Patients == 0 && facts.PendingRaids == 0 && !await db.DungeonRuns.AnyAsync(r => r.VillageId == villageId && r.Phase != DungeonPhase.Ended, ct);
+                if (p.Option.StartsWith("vigor_", StringComparison.Ordinal))
+                {
+                    using var snapshot = JsonDocument.Parse(p.Snapshot);
+                    permitted = permitted && snapshot.RootElement.TryGetProperty("vigor", out var vigor)
+                        && vigor.GetProperty("vigorEnergy").GetInt32() == village.VigorEnergy
+                        && vigor.GetProperty("vigorCooldownMinutes").GetInt32() == village.VigorCooldownMinutes;
+                }
                 if (!permitted) { p.Status = "Superseded"; p.Result = "Условия изменились. Нужен новый анализ."; }
                 else {
-                    if (allowed?.Enemy is { } enemy) {
+                    if (p.Option.StartsWith("vigor_", StringComparison.Ordinal)) {
+                        VigorTuning.Apply(village, p.Option);
+                        tunedCitizens = (await db.Citizens.Where(c=>c.VillageId==villageId && c.Status==CitizenStatus.Active).ToListAsync(ct)).Select(c=>c.ToSummaryDto(now)).ToArray();
+                        publishedSlug = village.Slug;
+                        p.Result = $"Взвар: +{village.VigorEnergy} сил, перерыв {village.VigorCooldownMinutes} реальных минут.";
+                    } else if (allowed?.Enemy is { } enemy) {
                         RaidRules.CallUndead(village, enemy, RaidSize.Small,
                             await CountRecentCitizensAsync(db, villageId, now, ct), now);
                         if (approach is not null)
@@ -224,6 +251,7 @@ public sealed partial class GameService
             p.DecidedAt = now; await db.SaveChangesAsync(ct); return p.Result;
         }, ct);
         if(published is not null && publishedSlug is not null) await notifier.ChatMessageSent(publishedSlug, ChatService.ToDto(published));
+        foreach (var citizen in tunedCitizens) await notifier.CitizenUpdated(publishedSlug!, citizen);
         return decisionResult;
     }
     public async Task SetDefenseSectorAsync(string slug, Guid actor, string sector, CancellationToken ct)

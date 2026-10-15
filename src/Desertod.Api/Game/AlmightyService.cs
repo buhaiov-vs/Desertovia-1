@@ -25,8 +25,12 @@ public sealed class AlmightyBridge(IServiceScopeFactory scopes) : IAlmightyBridg
         try { return bridge.Enabled ? await bridge.CallAsync<T>("director", request, ct) : default; }
         catch (Exception e) when (e is InvalidOperationException or JsonException) { return default; }
     }
-    public Task<AlmightyAnswer?> AnalyzeAsync(AlmightyReview r, CancellationToken ct) =>
-        Call<AlmightyAnswer>(new { kind = "analyze", requestId = r.Lease, worldId = r.VillageId, snapshot = r.Snapshot, intent = r.Intent }, ct);
+    public async Task<AlmightyAnswer?> AnalyzeAsync(AlmightyReview r, CancellationToken ct)
+    {
+        try { return await Call<AlmightyAnswer>(new { kind = "analyze", requestId = r.Lease, worldId = r.VillageId, snapshot = r.Snapshot, intent = r.Intent }, ct); }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return new("none", "", "", "bridge.timeout"); }
+        catch (HttpRequestException) { return new("none", "", "", "bridge.http"); }
+    }
     public async Task<AlmightyDelivery> NotifyAsync(AlmightyNotice n, CancellationToken ct) =>
         await Call<AlmightyDelivery>(new { kind = "notify", notice = n }, ct) ?? new("Unavailable");
     public Task<SramoslavReply?> SpeakAsync(object request, CancellationToken ct) => Call<SramoslavReply>(request, ct);

@@ -4,6 +4,7 @@ test('civic actions fit a phone and governors cannot approve',async({page})=>{
  await page.setViewportSize({width:320,height:740})
  const modal=page.getByRole('dialog',{name:'Управление городом'})
  await expect(modal).toContainText('11/12')
+ await page.locator('.civic-applications summary').click()
  await expect(page.getByRole('button',{name:'Одобрить',exact:true})).toHaveCount(0)
  expect(await modal.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true)
  for(const button of await modal.locator('button').all()){const b=await button.boundingBox();if(b){expect(b.x).toBeGreaterThanOrEqual(0);expect(b.x+b.width).toBeLessThanOrEqual(320)}}

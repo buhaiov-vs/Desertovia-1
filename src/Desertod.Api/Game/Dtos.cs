@@ -338,6 +338,8 @@ public sealed record CitizenDto(
     public IReadOnlyDictionary<string, double>? ActionEnergyCosts { get; init; }
     public string? DefenseSector { get; init; }
     public DateTimeOffset? DefenseReadyAt { get; init; }
+    public int VigorEnergy { get; init; } = 8;
+    public int VigorCooldownMinutes { get; init; } = 240;
     public string? HomePlotId { get; init; }
     public Guid? SpouseAccountId { get; init; }
     public string? SpouseName { get; init; }
@@ -695,13 +697,13 @@ public static class DtoMapper
         now,
         citizen.CurrentTechnologyId,
         WeatherRules.IsSynoptic(village, citizen) ? WeatherRules.Reliability(citizen.SkillLevel(Skill.Weatherlore)) : null,
-        VigorDrinks.ReadyAt(citizen),
+        VigorDrinks.ReadyAt(citizen, village),
         CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
         citizen.Weapon,
         citizen.Armor,
         citizen.Arrows,
         Math.Round(CombatRules.Power(citizen), 1), citizen.Recovery)
-        { AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
+        { VigorEnergy = village.VigorEnergy, VigorCooldownMinutes = village.VigorCooldownMinutes, AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
             .Concat(BuildingCatalog.Jobs.Select(job => new KeyValuePair<string, double>(job.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.JobCost(village, job, now), now))))
             .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value),
             DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,

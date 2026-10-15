@@ -34,6 +34,54 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
     }
 
     [Fact]
+    public async Task Candle_energy_purchase_burns_only_test_candles_and_preserves_coins_and_character_progress()
+    {
+        var v=await players.FoundVillageAsync("Candle energy");var a=await players.JoinAsync(v,"Buyer");await View(a.Client,v.Path);
+        await using(var db=await Db())
+        {
+            var c=await db.Citizens.SingleAsync(x=>x.Id==a.Id);c.StoredEnergy=0;c.Renown=53;
+            var wallet=await db.GameWallets.SingleAsync(x=>x.AccountId==c.AccountId&&x.VillageId==c.VillageId);wallet.TestCandles=4;wallet.Coins=500;
+            await db.SaveChangesAsync();
+        }
+        await Players.OkJsonAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",new{requestId=Guid.NewGuid(),action="energy-drink-candles"}));
+        var view=await View(a.Client,v.Path);Assert.Equal(1,view.TestCandles);Assert.Equal(500,view.Coins);
+        await using var check=await Db();var saved=await check.Citizens.AsNoTracking().SingleAsync(c=>c.Id==a.Id);
+        Assert.Equal(saved.MaximumEnergy,saved.StoredEnergy);Assert.Equal(53,saved.Renown);
+        Assert.Equal(-3,Assert.Single(view.Journal,x=>x.Operation=="energy-drink").Delta);
+    }
+
+    [Fact]
+    public async Task Full_energy_purchase_is_atomic_idempotent_and_cannot_be_bought_twice_by_changing_currency()
+    {
+        var v=await players.FoundVillageAsync("Energy shop");var a=await players.JoinAsync(v,"Buyer");
+        await View(a.Client,v.Path);await SeedWallet(v.Slug,a.Id,1000);
+        await players.ArrangeCitizenAsync(a.Id,(c,_)=>c.StoredEnergy=0);
+        var request=new{requestId=Guid.NewGuid(),action="energy-drink-coins"};
+        await Players.OkJsonAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",request));
+        await Players.OkJsonAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",request));
+        var view=await View(a.Client,v.Path);Assert.Equal(700,view.Coins);Assert.NotNull(view.EnergyDrinkReadyAt);
+        await players.ArrangeCitizenAsync(a.Id,(c,_)=>c.StoredEnergy=0);
+        Assert.Equal(HttpStatusCode.BadRequest,(await a.Client.PostAsJsonAsync(v.Path+"/economy",new{requestId=Guid.NewGuid(),action="energy-drink-candles"})).StatusCode);
+        Assert.Equal(700,(await View(a.Client,v.Path)).Coins);
+        Assert.Equal(1,view.Journal.Count(x=>x.Operation=="energy-drink"));
+        await using var db=await Db();var citizen=await db.Citizens.AsNoTracking().SingleAsync(c=>c.Id==a.Id);
+        Assert.Equal(0,citizen.StoredEnergy);
+    }
+
+    [Fact]
+    public async Task Unaffordable_energy_drink_does_not_refill_energy_or_start_a_cooldown()
+    {
+        var v=await players.FoundVillageAsync("No free energy");var a=await players.JoinAsync(v,"Buyer");
+        await View(a.Client,v.Path);
+        await players.ArrangeCitizenAsync(a.Id,(c,_)=>c.StoredEnergy=0);
+        foreach(var action in new[]{"energy-drink-coins","energy-drink-candles"})
+            Assert.Equal(HttpStatusCode.BadRequest,(await a.Client.PostAsJsonAsync(v.Path+"/economy",new{requestId=Guid.NewGuid(),action})).StatusCode);
+        await using var db=await Db();var saved=await db.Citizens.AsNoTracking().SingleAsync(c=>c.Id==a.Id);
+        Assert.Equal(0,saved.StoredEnergy);Assert.Null(saved.LastEnergyDrinkAt);
+        Assert.Empty(await db.EconomyReceipts.Where(x=>x.AccountId==saved.AccountId).ToArrayAsync());
+    }
+
+    [Fact]
     public async Task Common_purchase_is_once_only_and_a_reused_id_cannot_change_the_amount()
     {
         var v=await players.FoundVillageAsync("Stock purchase");var a=await players.JoinAsync(v,"Buyer");

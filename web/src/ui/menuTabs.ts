@@ -3,6 +3,8 @@ import type { UiKey } from '../i18n/en'
 /** Village is shared with everyone, character and tasks are the player's own, settings are not part of the game. */
 export type MenuTab = 'village' | 'character' | 'tasks' | 'build' | 'technologies' | 'settings'
 
+export const TAB_ICONS = { village: 'city', character: 'person', tasks: 'tasks', build: 'build', technologies: 'science', settings: 'settings' } as const
+
 export const TABS: Record<MenuTab, UiKey> = {
   village: 'tab.village',
   character: 'tab.character',

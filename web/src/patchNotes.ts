@@ -10,6 +10,28 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '0.6.1', date: '2026-10-15',
+    title: { ru: 'Удобнее на телефоне, восстановление сил и ответы ИИ', en: 'Mobile menus, energy and AI replies' },
+    changes: {
+      ru: ['Исправлено завершение хижин и сохранение вклада: ошибка одного работника больше не откатывает труд других; отчёты отправляются после сохранения.',
+        'Вкладки меню в одну строку, нижняя панель с едиными иконками. Кнопка возврата открывает карту без перехода на стартовый экран.',
+        'Дома и заявки разделены на сворачиваемые списки. В заявках указаны здания; невозможные улучшения не создают новые заявки.',
+        'Ники игроков можно скрыть в настройках. У пациентов на карте остались статус и причина без длинного таймера.',
+        'События работы по умолчанию скрыты в чате, одинаковые соседние отчёты объединяются со счётчиком.',
+        'Всевышний предлагает настройку силы и перерыва взвара; изменения требуют согласия царя.',
+        'Энергетик батюшки восстанавливает все силы за 300 ДЗК или 3 тестовые свечи раз в 12 реальных часов. Не снимает ранения и обморок.',
+        'Исправлены таймаут и обрезка ответов ИИ; журнал различает причины сбоев.'],
+      en: ['Fixed hut completion and contribution saves: one failed worker no longer rolls back others; reports are published after commit.',
+        'Single-row menu tabs and an icon dock; return to map without leaving the game.',
+        'Separate collapsible homes and applications. Unsupported upgrades no longer create applications.',
+        'Player name visibility setting. Short patient status without a timer on the map.',
+        'Work events hidden by default; repeated adjacent reports grouped with counts.',
+        'Owner-approved director tuning for vigor drinks.',
+        'Full energy for 300 DZK or 3 test candles, once per 12 real hours; no healing or waking.',
+        'Aligned AI timeouts, preserved structured replies and specific failure reasons.'],
+    },
+  },
+  {
     version: '0.6', date: '2026-10-15',
     title: { ru: 'Царство, дезкоины и Всевышний', en: 'The kingdom, dezcoins and the Almighty' },
     changes: {

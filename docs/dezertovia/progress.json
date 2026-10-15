@@ -750,11 +750,18 @@
       "mode": "Propose",
       "enabled_requested": true,
       "owner_telegram_proposals_authorized": true,
-      "record": "ALMIGHTY_0_6_IMPLEMENTATION.md"
+      "record": "ALMIGHTY_0_6_IMPLEMENTATION.md",
+      "deployment": "paused_by_D-058"
     },
     "D-057": {
       "state": "implemented_pending_final_checks",
       "record": "ALMIGHTY_CATALOG_EXTENSIONS.md"
+    },
+    "D-058": {
+      "state": "no_deployment",
+      "game_pr": 33,
+      "bot_pr": 35,
+      "live_unchanged": true
     }
   }
 }

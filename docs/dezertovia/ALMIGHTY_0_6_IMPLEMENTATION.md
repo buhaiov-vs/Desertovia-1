@@ -1,3 +1,5 @@
+> **D-058 · ВЫКЛАДКА ОСТАНОВЛЕНА:** владелец15.10 сказал «Пока не выкладывать». Только код/CI/репозитории; без установки, включения и настоящих уведомлений. LIVE остаётся0.5.3.
+
 # D-056 — единый Всевышний0.6: реализация
 
 В РАБОТЕ,15.10.2026. Владелец разрешил включить механизм и присылать ему через
@@ -51,30 +53,22 @@ persisted receipts/limits, owner-only private inline buttons, signed vote наз
 в игру. Неизвестная доставка не повторяется автоматически. Callback retry
 получает тот же результат; бот не становится владельцем игрового состояния.
 
-## Проверки и оставшаяся работа
+## Итог к D-058: только репозитории
 
-На промежуточной основе:16 bot tests PASS (4new+12proxy),3 Domain PASS,
-3 real PostgreSQL API PASS: права, lease/concurrency/idempotent approve,
-поздний ответ после Off. Компиляция .NET и web прошла до последних малых правок.
-Сейчас итоговые source/build/UI/bot tests ещё продолжить; ничего не выложено.
+Игра: PR33, исполняемый source `a6294ff2e2b5a7b4e655b2f20048418ccb47908e`.
+Бот: PR35, source `2e034c91dbd19a17d34310bc462a4f260281e5ca`.
+Локально333 Domain/185 API PASS; затем6 целевых API с положительной проверкой
+Telegram identity/signature/repeat.6 browser PASS, web build/lint PASS.
+Bot793 полный suite/18 целевых PASS. Bot CI38763812668 PASS, server SKIPPED.
+Game CI38763868096: backend/frontend/Docker PASS; browser ещё выполнялся.
 
-Нужно закончить: UI стенд/финальные проверки, positive Telegram callback и
-проверку свежих условий нападения; release docs/patchnotes/version0.6;
-CI обоих репо; приватный reviewed deploy поверх текущегоa980d8d0.5.3:
-fresh snapshots/backups → только3 bot runtime файла → migration/game → Enabled.
-Убедиться в сохранении100+профилей/прогресса, Telegram/hospital/proxy, модельном
-review и допустимом owner notice. Без лишнего тестового сообщения/платежа.
+PublicDirectorMemory отдаёт речи только применённые факты; pending намерения
+не публикуются. Снимки не передаются в телефонный API. Каталоги динамические,
+EnemyDefinition.Coordinated/RaidCountMultiplier определяют разрешённые варианты.
+Новая механика требует серверного исполнителя, новое содержимое существующих
+каталогов не требует отдельного ручного списка для модели.
 
-Deploy worktree /workspace/bolig-cooperative-release, canonical private
-ops/cooperative-release. Старый regression_release.py жёстко0.5.3: не вызывать
-его deploy для новой версии без нового pin/guard. Нужен отдельный0.6 оператор
-с exact CI и source pins, fresh pre-install snapshot и проверкой18 migrations.
-
-Последнее перед публикацией: локальные333Domain/185API PASS,6 targeted API,
-6 browser PASS; bot793full/18targeted PASS. Игровые каталоги теперь динамические,
-EnemyDefinition.Coordinated/RaidCountMultiplier, автоматические варианты и
-сводка вещей/оружия/рецептов. PublicDirectorMemory даёт речи только уже
-применённые факты, не секретные pending планы. Полные snapshot не уходят в
-телефонный API; Title/Effect карточки вычисляются из сохранённого каталога.
-Подготовлен private operator deploy/almighty_release.py, новая ветка
-ops/almighty-release. Runtime исходники ещё не выложены. Далее exact CI и выпуск.
+В частном worktree `/workspace/bolig-almighty-release` подготовлен черновик
+оператора, но он НЕ запускался. Request/payload отсутствуют. До нового поручения
+не создавать запускающий release request и не выполнять install/enable/notice.
+Кандидат0.6 не установлен, LIVE0.5.3 этим этапом не меняли.

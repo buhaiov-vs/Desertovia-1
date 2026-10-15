@@ -21,8 +21,10 @@ public sealed class TelegramBrowserBridge(HttpClient client, IOptions<TelegramOp
         request.Headers.Add("X-Desertovia-Bridge", Convert.ToHexStringLower(SHA256.HashData(
             Encoding.UTF8.GetBytes("desertovia-bridge:" + options.Value.BotToken))));
         request.Content = JsonContent.Create(body);
-        using var response = await client.SendAsync(request, cancellationToken);
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(TimeSpan.FromSeconds(action == "director" ? 50 : 15));
+        using var response = await client.SendAsync(request, deadline.Token);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<T>(cancellationToken) ?? throw new InvalidOperationException("Invalid login reply.");
+        return await response.Content.ReadFromJsonAsync<T>(deadline.Token) ?? throw new InvalidOperationException("Invalid login reply.");
     }
 }

@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { isInjured, type Catalog, type Citizen, type CitizenSummary, type Structure, type VillageState } from '../api'
 import { useI18n } from '../i18n'
-import { TABS, tabsFor, type MenuTab } from './menuTabs'
+import { TABS, TAB_ICONS, tabsFor, type MenuTab } from './menuTabs'
 import { NextAction } from './NextAction'
 import { ProjectBanner } from './ProjectPanel'
 import { ResourceIcon } from './TileIcon'
@@ -10,6 +10,7 @@ import { restHints } from './needHints'
 import { resourceHint } from './resourceHint'
 import { HUD_RESOURCES } from './texts'
 import { WeatherChip } from './WeatherChip'
+import { NavIcon } from './NavIcon'
 
 export function TopBar({
   village,
@@ -166,12 +167,12 @@ export function BottomBar({
           )}
         </div>
       </div>
-      <div className="hud-buttons" style={{ '--hud-button-count': tsar ? 4 : ruler ? 3 : 5 } as CSSProperties}>
+      <div className="hud-buttons" style={{ '--hud-button-count': tabsFor(tsar, ruler).filter(tab => tab !== 'settings').length + 1 } as CSSProperties}>
         {phone ? (
           // Settings stay reachable from the tab row inside the menu, keeping the phone bar short.
           tabsFor(tsar, ruler).filter((tab) => tab !== 'settings').map((tab) => (
-            <button key={tab} onClick={() => onMenu(tab)}>
-              {t(TABS[tab])}
+            <button key={tab} title={t(TABS[tab])} aria-label={t(TABS[tab])} onClick={() => onMenu(tab)}>
+              <NavIcon name={TAB_ICONS[tab]}/><span>{tab === 'technologies' ? t('tab.technologies').slice(0, 5) + '.' : t(TABS[tab])}</span>
             </button>
           ))
         ) : (
@@ -180,7 +181,7 @@ export function BottomBar({
           </button>
         )}
         <button onClick={onInventory}>
-          {phone ? t('hud.storage') : t('hud.inventory')} {!phone && <kbd>I</kbd>}
+          {phone && <NavIcon name="storage"/>}<span>{phone ? t('hud.storage') : t('hud.inventory')}</span> {!phone && <kbd>I</kbd>}
         </button>
       </div>
     </div>
@@ -221,7 +222,7 @@ function CitizenNeeds({
     ? t('needs.drinkCooldown', { minutes: Math.ceil((drinkReadyAt - now) / 60_000) })
     : full
       ? t('needs.drinkFull')
-      : t('needs.drinkTitle', { energy: catalog.rules.vigorDrinkEnergy })
+      : t('needs.drinkTitle', { energy: citizen.vigorEnergy ?? catalog.rules.vigorDrinkEnergy, minutes: citizen.vigorCooldownMinutes ?? 240 })
   const { rules } = catalog
   const percentOf = (multiplier: number) => i18n.amount(multiplier * 100)
   const mealsDone = Math.min(citizen.cyclesSinceMeal, meals)
@@ -278,7 +279,7 @@ function CitizenNeeds({
       {drinks > 0 && (
         <button className="drink-button" disabled={pending || cooling || full} onClick={onDrink} title={drinkTitle}>
           <ResourceIcon kind="VigorDrink" scale={1.5} />
-          {t('needs.drink', { energy: catalog.rules.vigorDrinkEnergy, count: drinks })}
+          {t('needs.drink', { energy: citizen.vigorEnergy ?? catalog.rules.vigorDrinkEnergy, count: drinks })}
         </button>
       )}
       {isInjured(citizen, now) && <InjuryChip citizen={citizen} remedies={remedies} pending={pending} onHeal={onHeal} />}

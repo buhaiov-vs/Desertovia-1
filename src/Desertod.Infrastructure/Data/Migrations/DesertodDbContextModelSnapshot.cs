@@ -593,6 +593,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("LastDrinkAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("LastEnergyDrinkAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("MarriageCheckedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -816,6 +819,16 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
+
+                    b.Property<int>("VigorCooldownMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(240);
+
+                    b.Property<int>("VigorEnergy")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(8);
 
                     b.HasKey("Id");
 
@@ -1508,6 +1521,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .ValueGeneratedOnAdd();
 
                             b1.Property<DateTimeOffset?>("ApprovedAt");
+
+                            b1.Property<string>("BuildingKind");
 
                             b1.Property<DateTimeOffset>("CreatedAt");
 

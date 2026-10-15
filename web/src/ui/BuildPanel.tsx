@@ -60,7 +60,7 @@ export function BuildPanel({
     <>
       <section className="card">
         <h3>{t(tsar ? 'tsar.title' : 'governor.title')}</h3>
-        <p className="small">{t(tsar ? 'tsar.role' : 'governor.role')}</p>
+        <p className="small">{tsar ? t('tsar.role') : t('build.governorRequests')}</p>
       </section>
 
       <section className="card">
@@ -103,7 +103,7 @@ export function BuildPanel({
         <h3>{t('build.title')}</h3>
         <p className="small">Царский мост через реку строится общим проектом, поворачивать его не нужно. Верёвочный мост ниже — только для ущелья.</p>
         <p className="small muted">{t('build.intro')}</p>
-        {full && <p className="warning small">{t('build.tooMany', { maximum })}</p>}
+        {full && <p className="warning small">{t(tsar ? 'build.tooMany' : 'build.requestsWhileFull', { maximum })}</p>}
         <div className="task-grid">
           {buildable.map((definition) => {
             const missing = definition.requires.filter((kind) => !built.has(kind))
@@ -114,12 +114,13 @@ export function BuildPanel({
               <button
                 key={definition.kind}
                 className="task-card"
-                disabled={full || missing.length > 0 || undiscovered !== null || !tsar && ['Hospital', 'Castle'].includes(definition.kind) || definition.kind === 'Castle' && buildingCount(village, catalog, 'Castle') > 0}
+                disabled={tsar && full || missing.length > 0 || undiscovered !== null || definition.kind === 'Castle' && buildingCount(village, catalog, 'Castle') > 0}
                 onClick={() => onPlace(definition)}
               >
                 <TileIcon tile={BUILDING_SIGNS[definition.kind] ?? taskIcon('build')} scale={2} />
                 <span className="task-text">
                   <span className="task-name">{i18n.building(definition.kind).name}</span>
+                  {!tsar && <span className="task-meta">{t('build.requestTsar')}</span>}
                   <span className="task-meta">{i18n.building(definition.kind).description}</span>
                   {storage && <span className="task-meta">{storage}</span>}
                   {definition.shelter > 0 && <span className="task-meta">{t('build.shelter', { beds: definition.shelter })}</span>}

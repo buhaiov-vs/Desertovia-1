@@ -3,7 +3,6 @@ import { DefensePanel } from './DefensePanel'
 import { AlmightyPanel } from './AlmightyPanel'
 import { CivicPanel } from './CivicPanel'
 import { useState } from 'react'
-import { Link } from 'react-router'
 import {
   blockedByLoad,
   builtKinds,
@@ -363,9 +362,7 @@ export function GameMenu(props: MenuProps) {
             ))}
         </div>
         <div className="menu-actions">
-          <Link to="/" className="button">
-            {t('menu.toMainMenu')}
-          </Link>
+          <button onClick={onClose}>{i18n.language === 'ru' ? 'Вернуться к карте' : 'Back to map'}</button>
         </div>
         <footer className="modal-footer muted small">{t('menu.hint')}</footer>
       </div>

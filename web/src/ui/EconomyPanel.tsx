@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, createOperationId, plotPosition, type BuildingDefinition, type Catalog, type Citizen, type EconomyRequest, type EconomyView, type VillageState } from '../api'
 import { useI18n } from '../i18n'
+import { EnergyDrinkCard } from './EnergyDrinkShop'
 import { ResourceIcon } from './TileIcon'
 
 /** Extends the existing City/Inventory menu. The server owns money, stock and request receipts. */
@@ -58,7 +59,7 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
     const storage=(village.storages??[]).find(b=>b.plotId===plot)
     return target?`${i18n.building(target.kind).name} · ${plot}`:storage?`${i18n.storage(storage.kind)} · ${plot}`:value==='wallet'?text('кошелёк','wallet'):value==='treasury'?text('казна','treasury'):value
   }
-  const verb = (s: string) => ({opening: text('Начальный остаток','Opening balance'), wage: text('Оплата работы','Work pay'), 'work-completed': text('Полезная работа','Useful work'), 'buy-stock': text('Покупка у царства','Kingdom purchase'), trade: text('Торговля','Trade'), 'exchange-burn': text('Обмен ДЗК','DZK exchange'), exchange: text('Тестовые свечи','Test candles'), transfer: text('Передача','Transfer'), list: text('Резерв лота','Lot reserved')})[s] ?? text('Изменение запаса','Stock change')
+  const verb = (s: string) => ({opening: text('Начальный остаток','Opening balance'), wage: text('Оплата работы','Work pay'), 'work-completed': text('Полезная работа','Useful work'), 'buy-stock': text('Покупка у царства','Kingdom purchase'), trade: text('Торговля','Trade'), 'energy-drink': text('Энергетик батюшки','Chaplain energy drink'), 'exchange-burn': text('Обмен ДЗК','DZK exchange'), exchange: text('Тестовые свечи','Test candles'), transfer: text('Передача','Transfer'), list: text('Резерв лота','Lot reserved')})[s] ?? text('Изменение запаса','Stock change')
   return <details className="card economy-panel" onToggle={e => setOpen(e.currentTarget.open)}>
     <summary>{text('Кошелёк, имущество и рынок','Wallet, possessions and market')}</summary>
     {open && <>
@@ -66,6 +67,7 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
       {!view ? <p>{i18n.t('loading')}</p> : <>
         <div className="economy-balances"><strong>🪙 {view.coins} {text('ДЗК','DZK')}</strong><span>🕯 {view.testCandles} {text('тестовых свечей','test candles')}</span></div>
         <p className="small muted">{text('Полезная работа','Useful work')}: {view.workPay} · {text('Стройка и ремонт','Construction and repair')}: {view.constructionPay} {text('ДЗК. Личная стройка не оплачивается царством.','DZK. Private construction earns no kingdom wages.')}</p>
+        {citizen && <EnergyDrinkCard view={view} citizen={citizen} busy={busy} onBuy={currency=>void act({action:'energy-drink-'+currency})}/>}
         <details><summary>{text('Моё имущество и передача','My possessions and transfers')}</summary>
           <p className="small">{text('Личное имущество хранится отдельно от общей ноши и склада. До 100 каждого материала.','Personal goods are separate from communal loads and storage. Up to 100 of each material.')}</p>
           {citizen && <p>{text('Общая экипировка на время работы','Communal gear borrowed for work')}: {citizen.weapon ? i18n.resource(citizen.weapon) : '—'} · {citizen.armor ? i18n.resource(citizen.armor) : '—'}. {text('Вернётся на склад после работы.','Returned after work.')}</p>}

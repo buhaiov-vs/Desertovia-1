@@ -1,4 +1,4 @@
-import { useGamePopups, setGamePopups } from '../gamePreferences'
+import { useGamePopups, setGamePopups, usePlayerNames, setPlayerNames } from '../gamePreferences'
 import { GAME_VERSION } from '../version'
 import { useRef, useState } from 'react'
 import { PatchNotes } from './PatchNotes'
@@ -21,6 +21,7 @@ interface Props {
 export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCode, onAccountChanged }: Props) {
   const { t, language } = useI18n()
   const popups = useGamePopups()
+  const playerNames = usePlayerNames()
   const [showPatchNotes, setShowPatchNotes] = useState(false)
   const versionButton = useRef<HTMLButtonElement>(null)
   const [copied, setCopied] = useState(false)
@@ -55,6 +56,7 @@ export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCod
         {['auto','light','dark'].map((mode,i)=><button className={theme===mode?'active':''} key={mode} onClick={()=>{setTheme(mode);localStorage.setItem('desertovia.uiTheme',mode);document.documentElement.dataset.uiTheme=mode==='auto'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode}}>{['Как на устройстве','Светлый','Тёмный'][i]}</button>)}
         </div><label><input type="checkbox" checked={labels} onChange={e=>{setLabels(e.target.checked);localStorage.setItem('desertovia.buildingLabels',String(e.target.checked))}}/> Названия зданий на карте · применится при обновлении</label></section>
       <section className="card"><label><input type="checkbox" checked={popups} onChange={e=>setGamePopups(e.target.checked)}/>{language==='ru'?'Всплывающие сообщения в игре':'In-game message popups'}</label><p className="small muted">{language==='ru'?'История и счётчик непрочитанных сохраняются.':'History and unread counts stay available.'}</p></section>
+      <section className="card"><label><input type="checkbox" checked={playerNames} onChange={e=>setPlayerNames(e.target.checked)}/>{language==='ru'?'Показывать ники игроков на карте':'Show player names on the map'}</label></section>
       <NotificationToggle />
 
       <section className="card">

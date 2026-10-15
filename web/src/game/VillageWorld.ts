@@ -1,4 +1,4 @@
-import { formatRecoveryTime } from '../ui/recoveryTime'
+import { playerNamesVisible, PREFERENCES_EVENT } from '../gamePreferences'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
 import { BuildingLighting, hasPreparedBuilding } from './BuildingLighting'
@@ -294,7 +294,12 @@ export class VillageWorld {
   /** Outline around what the player clicked while they choose what to do there. */
   private readonly selection = new Graphics()
 
+  private showPlayerNames = playerNamesVisible()
+  private readonly onPreferences = () => { this.showPlayerNames = playerNamesVisible() }
+
   private constructor(app: Application, tiles: TileSet, painter: CharacterPainter, host: HTMLElement, minimap: boolean) {
+    window.addEventListener(PREFERENCES_EVENT, this.onPreferences)
+    window.addEventListener('storage', this.onPreferences)
     this.app = app
     this.tiles = tiles
     this.painter = painter
@@ -356,6 +361,8 @@ export class VillageWorld {
   }
 
   destroy() {
+    window.removeEventListener(PREFERENCES_EVENT, this.onPreferences)
+    window.removeEventListener('storage', this.onPreferences)
     this.minimap?.destroy()
     this.app.canvas.remove()
     this.app.destroy(true, { children: true })
@@ -2059,7 +2066,9 @@ export class VillageWorld {
       const hurt = walker.injuredUntil > now
       walker.sprite.visible=!hurt||!walker.inHospital||walker.wardVisible
       walker.icon.visible=walker.sprite.visible&&!walker.inHospital
-      walker.label.visible=walker.sprite.visible
+      const namesVisible = this.showPlayerNames || walker.id === PRIEST_ID
+      walker.label.visible=walker.sprite.visible && namesVisible
+      if (!hurt) walker.subtitle.visible = walker.sprite.visible && namesVisible && !!walker.subtitle.text
       walker.sprite.tint = hurt ? INJURED_TINT : 0xffffff
       walker.bed.visible=hurt&&walker.sprite.visible
       walker.sprite.rotation=hurt?-Math.PI/2:0
@@ -2067,7 +2076,7 @@ export class VillageWorld {
       walker.sprite.anchor.set(.5,hurt?.5:1)
       if(hurt){
         walker.staying=true;walker.working=false;walker.guard=false;walker.hunt=null;walker.roaming=false
-        walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}\n${walker.treatmentCause} · ${formatRecoveryTime(walker.injuredUntil, now, 'ru')}`
+        walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}${walker.treatmentCause ? ' · ' + walker.treatmentCause : ''}`
         walker.subtitle.visible=walker.sprite.visible
       } else if(walker.treatmentCause){walker.subtitle.text=walker.normalSubtitle;walker.subtitle.visible=!!walker.normalSubtitle;walker.treatmentCause='';walker.inHospital=false;walker.carrierId=null}
       if (!hurt && walker.iconKey === INJURED_ICON) {

@@ -55,9 +55,15 @@ public sealed partial class GameService
         return before;
     }
 
-    private async Task FinishAccountingAsync(DesertodDbContext db, Guid villageId, StockSnapshot before, string operation, CancellationToken ct)
+    private async Task FinishAccountingAsync(DesertodDbContext db, Guid villageId, StockSnapshot before, string operation, bool actionSaved, CancellationToken ct)
     {
-        await db.SaveChangesAsync(ct);
+        // Actions own and save their mutations. Re-saving the same nested JSON graph after a site
+        // removal makes EF treat its shifted synthesized ordinals as edited read-only foreign keys.
+        // A read-only action without a save may still have pending mutations; flush it once first.
+        if (!actionSaved) await db.SaveChangesAsync(ct);
+        // The action is finished; its result is a DTO/detached graph. Keep the transaction open,
+        // but do not re-track already persisted Sites/Progress/Hands just to append journal rows.
+        db.ChangeTracker.Clear();
         var after = await SnapshotStockAsync(db, villageId, ct);
         if (!after.Exists) return; // Legacy multi-world deletion cascades its journal, by design.
         var opId = Guid.CreateVersion7(); var now = time.GetUtcNow();

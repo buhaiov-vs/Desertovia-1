@@ -13,6 +13,52 @@ public sealed class AlmightyApiTests(DesertodApiFactory factory)
 {
     private readonly Players players = new(factory);
     [Fact]
+    public async Task Stale_vigor_proposal_does_not_apply_to_changed_settings()
+    {
+        var v=await players.FoundVillageAsync("Stale tonic");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var id=await db.Villages.Where(x=>x.Slug==v.Slug).Select(x=>x.Id).SingleAsync();
+        var service=factory.Services.GetRequiredService<GameService>();var review=(await service.BeginAlmightyReviewAsync(id,default))!;
+        await service.CompleteAlmightyReviewAsync(review,new("vigor_frequent","Я вижу усталость.","Проверить взвар."),default);
+        var p=await db.AlmightyProposals.AsNoTracking().SingleAsync(x=>x.VillageId==id);
+        var village=await db.Villages.SingleAsync(x=>x.Id==id);village.VigorCooldownMinutes=180;await db.SaveChangesAsync();
+        Assert.True((await v.Tsar.PostAsJsonAsync(v.Path+$"/director/{p.Id}/vote",new{accept=true})).IsSuccessStatusCode);
+        Assert.Equal("Superseded",(await db.AlmightyProposals.AsNoTracking().SingleAsync(x=>x.Id==p.Id)).Status);
+        Assert.Equal(180,(await db.Villages.AsNoTracking().SingleAsync(x=>x.Id==id)).VigorCooldownMinutes);
+    }
+
+    [Fact]
+    public async Task Vigor_tuning_needs_owner_approval_is_persisted_and_repeat_vote_does_not_tune_twice()
+    {
+        var v=await players.FoundVillageAsync("Tonic tuning");var member=await players.JoinAsync(v,"Viewer");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var id=await db.Villages.Where(x=>x.Slug==v.Slug).Select(x=>x.Id).SingleAsync();
+        var service=factory.Services.GetRequiredService<GameService>();
+        var review=(await service.BeginAlmightyReviewAsync(id,default))!;
+        Assert.Contains(review.Options,o=>o.Id=="vigor_stronger");
+        Assert.True(await service.CompleteAlmightyReviewAsync(review,new("vigor_stronger","Я вижу нехватку сил.","Сохранить медленный труд."),default));
+        var proposal=await db.AlmightyProposals.AsNoTracking().SingleAsync(p=>p.VillageId==id);
+        Assert.Equal(8,(await db.Villages.AsNoTracking().SingleAsync(x=>x.Id==id)).VigorEnergy);
+        Assert.Equal(HttpStatusCode.Forbidden,(await member.Client.PostAsJsonAsync(v.Path+$"/director/{proposal.Id}/vote",new{accept=true})).StatusCode);
+        for(var i=0;i<2;i++)Assert.True((await v.Tsar.PostAsJsonAsync(v.Path+$"/director/{proposal.Id}/vote",new{accept=true})).IsSuccessStatusCode);
+        Assert.Equal(10,(await db.Villages.AsNoTracking().SingleAsync(x=>x.Id==id)).VigorEnergy);
+        var me=await member.Client.GetFromJsonAsync<JsonElement>(v.Path+"/me");Assert.Equal(10,me.GetProperty("vigorEnergy").GetInt32());
+    }
+
+    [Fact]
+    public async Task Failed_model_response_records_specific_reason_without_creating_a_proposal()
+    {
+        var v=await players.FoundVillageAsync("Director failure");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var id=await db.Villages.Where(x=>x.Slug==v.Slug).Select(x=>x.Id).SingleAsync();
+        var service=factory.Services.GetRequiredService<GameService>();var review=(await service.BeginAlmightyReviewAsync(id,default))!;
+        await service.CompleteAlmightyReviewAsync(review,new("none","","","model.json"),default);
+        Assert.Empty(await db.AlmightyProposals.Where(x=>x.VillageId==id).ToArrayAsync());
+        var observation=await db.AlmightyObservations.SingleAsync(x=>x.VillageId==id);
+        Assert.Contains("повреждённый формат",observation.Reason);
+    }
+
+    [Fact]
     public async Task Only_owner_reads_modes_and_citizens_cannot_forge_signed_callbacks()
     {
         var v=await players.FoundVillageAsync("Almighty access");

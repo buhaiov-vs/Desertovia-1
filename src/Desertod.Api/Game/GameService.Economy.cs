@@ -23,7 +23,7 @@ public sealed record EconomyView(long Coins, long TestCandles, long EarnedToday,
     bool TaxEnabled, int ExchangeRate, int DailyExchangeLimit, int ExchangedToday, int KingdomCandleRoom,
     DateTimeOffset DayResetsAt, long Treasury, IReadOnlyList<PersonalGoodDto> Inventory, IReadOnlyList<MarketLotDto> Lots,
     IReadOnlyList<LedgerDto> Journal, Guid? NextJournalBefore, DateTimeOffset StartedAt,
-    int WorkPay, int ConstructionPay, IReadOnlyList<EconomyResident> Residents, IReadOnlyList<PrivateStorageDto> PrivateStorages, IReadOnlyDictionary<ResourceKind, int> StockPrices, IReadOnlyList<PrivatePropertyDto> PrivateProperty);
+    int WorkPay, int ConstructionPay, IReadOnlyList<EconomyResident> Residents, IReadOnlyList<PrivateStorageDto> PrivateStorages, IReadOnlyDictionary<ResourceKind, int> StockPrices, IReadOnlyList<PrivatePropertyDto> PrivateProperty, DateTimeOffset? EnergyDrinkReadyAt);
 public sealed record PrivatePropertyDto(string PlotId, BuildingKind Kind, int Level, bool Site, bool HasWork);
 public sealed record EconomyResident(Guid AccountId, string Name);
 public sealed record PrivateStorageDto(string PlotId, StorageKind Kind, IReadOnlyList<ResourceAmount> Goods);
@@ -127,6 +127,26 @@ public sealed partial class GameService
             db.AuditActor = account; db.AuditOperation = request.Action;
             switch (request.Action)
             {
+                case "energy-drink-coins":
+                case "energy-drink-candles":
+                {
+                    await SyncHospitalAsync(db, village.Id, ct);
+                    var buyer = Own();
+                    HospitalRules.RequireReady(buyer, now);
+                    VigorDrinks.RestoreFully(buyer, village, now);
+                    if (request.Action == "energy-drink-coins")
+                    {
+                        EconomyRules.Spend(wallet, 300);
+                        WalletChange(account, -300, "energy-drink");
+                    }
+                    else
+                    {
+                        if (wallet.TestCandles < 3) throw new GameRuleException("economy.candles", "Not enough test candles.");
+                        wallet.TestCandles -= 3;
+                        MoneyEntry(db, village.Id, request.RequestId, account, "energy-drink", "TEST_CANDLE", "wallet", -3, now);
+                    }
+                    break;
+                }
                 case "buy-stock":
                 {
                     var buyer = Own();
@@ -300,6 +320,6 @@ public sealed partial class GameService
             Enum.GetValues<ResourceKind>().Where(StorageCatalog.IsGood).ToDictionary(k=>k,EconomyRules.StorePrice),
             village.Structures.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,s.Kind,s.Level,false,false))
                 .Concat(village.Storages.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,BuildingCatalog.ForStorage(s.Kind)??BuildingKind.Heap,1,false,false)))
-                .Concat(village.Sites.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,s.Kind,s.TargetLevel,true,s.HasWork))).ToArray());
+                .Concat(village.Sites.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,s.Kind,s.TargetLevel,true,s.HasWork))).ToArray(), citizen is null ? null : VigorDrinks.EnergyDrinkReadyAt(citizen));
     }
 }

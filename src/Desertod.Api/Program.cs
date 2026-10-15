@@ -59,7 +59,7 @@ builder.Services.AddHealthChecks().AddDbContextCheck<DesertodDbContext>();
 
 builder.Services.AddSingleton<TelegramLoginVerifier>();
 builder.Services.AddSingleton<TelegramMiniAppVerifier>();
-builder.Services.AddHttpClient<TelegramBrowserBridge>(client => client.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddHttpClient<TelegramBrowserBridge>(client => client.Timeout = Timeout.InfiniteTimeSpan);
 builder.Services.AddSingleton<VillageNotifier>();
 builder.Services.AddSingleton<VillageStateChanges>();
 builder.Services.AddSingleton<CitizenPresence>();

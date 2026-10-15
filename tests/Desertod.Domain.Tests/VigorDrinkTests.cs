@@ -9,6 +9,36 @@ namespace Desertod.Domain.Tests;
 public class VigorDrinkTests
 {
     [Fact]
+    public void Village_settings_control_gain_and_cooldown_without_changing_the_recipe()
+    {
+        var v=NewVillage(); v.VigorEnergy=12; v.VigorCooldownMinutes=180;
+        var c=NewCitizen(v); c.StoredEnergy=0; v.Store(ResourceKind.VigorDrink,2);
+        VigorDrinks.Drink(c,v,Now);
+        Assert.Equal(12,c.CurrentEnergy(Now,v),6);
+        Assert.Equal(Now.AddHours(3),VigorDrinks.ReadyAt(c,v));
+        Assert.Throws<GameRuleException>(()=>VigorDrinks.Drink(c,v,Now.AddHours(2)));
+        Assert.Equal(1,v.Stock(ResourceKind.VigorDrink));
+        for(var i=0;i<8;i++) { if(VigorTuning.Options(v).Any(o=>o.Id=="vigor_stronger"))VigorTuning.Apply(v,"vigor_stronger"); }
+        Assert.Equal(16,v.VigorEnergy);
+        Assert.Throws<GameRuleException>(()=>VigorTuning.Apply(v,"vigor_stronger"));
+    }
+
+    [Fact]
+    public void Full_energy_drink_does_not_wake_the_unconscious_or_remove_injuries()
+    {
+        var v=NewVillage();var c=NewCitizen(v);c.StoredEnergy=0;
+        c.ExhaustedUntil=Now.AddHours(1);
+        Assert.Throws<GameRuleException>(()=>VigorDrinks.RestoreFully(c,v,Now));
+        Assert.Null(c.LastEnergyDrinkAt);
+        c.ExhaustedUntil=null;
+        VigorDrinks.RestoreFully(c,v,Now);
+        Assert.Equal(c.MaximumEnergy,c.StoredEnergy);
+        c.StoredEnergy=0;
+        Assert.Throws<GameRuleException>(()=>VigorDrinks.RestoreFully(c,v,Now.AddMinutes(1)));
+        Assert.Equal(Now.AddHours(12),VigorDrinks.EnergyDrinkReadyAt(c));
+    }
+
+    [Fact]
     public void Drink_FromStorage_GivesEnergy()
     {
         var village = NewVillage();

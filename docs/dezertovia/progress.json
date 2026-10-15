@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-15",
-  "phase": "release_0_6_verified",
+  "phase": "candidate_0_6_1_mobile_needs",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -844,5 +844,28 @@
     "real_candle_changes": false,
     "synthetic_messages": 0,
     "record": "RELEASE_0_6.md"
+  },
+  "candidate_0_6_1": {
+    "state": "implemented_backend_verified_browser_ci",
+    "deployed": false,
+    "document": "MOBILE_NEEDS_0_6_1.md",
+    "public_branch": "fix/mobile-needs-and-tonics",
+    "bot_branch": "fix/director-response-diagnostics",
+    "real_candles_changed": false,
+    "public_pr": 36,
+    "bot_pr": 36,
+    "backend": {
+      "domain_passed": 348,
+      "api_passed": 203
+    },
+    "bot_ci": 38792441921,
+    "governor_construction_applications": "implemented_all_available_buildings_owner_approval_required",
+    "governor_checks": {
+      "api_pass": 18,
+      "domain_construction_pass": 12,
+      "browser_civic_pass": 3,
+      "lint": "pass",
+      "typecheck": "pass"
+    }
   }
 }

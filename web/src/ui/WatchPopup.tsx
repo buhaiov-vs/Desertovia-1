@@ -129,6 +129,7 @@ function SiteProgress({ site, catalog, citizens }: { site: Site; catalog: Catalo
   const i18n = useI18n()
   const { t } = i18n
   const working = citizens.filter((citizen) => citizen.siteId === site.plotId && citizen.state === 'Working')
+  const reserved = site.stages.some(stage=>stage.jobs.some(job=>(job.reserved??0)>0))
   const current = site.stages[site.stage]
   const materials = siteMaterials(site, catalog)
 
@@ -191,7 +192,7 @@ function SiteProgress({ site, catalog, citizens }: { site: Site; catalog: Catalo
         <p className="small highlight">{t('site.handsWanted')}</p>
       )}
       <p className="small">
-        {working.length > 0 ? t('watch.working', { names: working.map((citizen) => citizen.name).join(', ') }) : t('watch.nobody')}
+        {working.length > 0 ? t('watch.working', { names: working.map((citizen) => citizen.name).join(', ') }) : reserved ? (i18n.language==='ru'?'Работа назначена. Ожидаем завершения поручений.':'Work is assigned. Waiting for the orders to finish.') : t('watch.nobody')}
       </p>
     </>
   )

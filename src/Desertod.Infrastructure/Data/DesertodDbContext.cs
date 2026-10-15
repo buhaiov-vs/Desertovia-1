@@ -14,6 +14,15 @@ namespace Desertod.Infrastructure.Data;
 
 public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> options) : DbContext(options)
 {
+    public int SuccessfulSaves { get; private set; }
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        var count = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        SuccessfulSaves++;
+        return count;
+    }
+
     public Guid? AuditActor { get; set; }
     public string? AuditOperation { get; set; }
 
@@ -40,6 +49,8 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Village>().Property(v=>v.VigorEnergy).HasDefaultValue(8);
+        modelBuilder.Entity<Village>().Property(v=>v.VigorCooldownMinutes).HasDefaultValue(240);
         modelBuilder.Entity<KingdomEconomy>(b => { b.HasKey(x=>x.VillageId); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); });
         modelBuilder.Entity<GameWallet>(b => { b.HasKey(x=>new{x.VillageId,x.AccountId}); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); b.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId); });
         modelBuilder.Entity<EconomyReceipt>(b => { b.HasKey(x=>new{x.VillageId,x.RequestId}); b.Property(x=>x.Fingerprint).HasMaxLength(128); b.HasOne<Village>().WithMany().HasForeignKey(x=>x.VillageId).OnDelete(DeleteBehavior.Cascade); });
@@ -118,7 +129,11 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 structure.Property(s => s.Kind).HasConversion<string>();
                 structure.OwnsMany(s => s.Investment, good => good.Property(g => g.Kind).HasConversion<string>());
             });
-            village.OwnsMany(v=>v.CivicOrders, order=>order.ToJson());
+            village.OwnsMany(v=>v.CivicOrders, order=>
+            {
+                order.ToJson();
+                order.Property(o=>o.BuildingKind).HasConversion<string>();
+            });
             village.OwnsMany(v => v.Sites, site =>
             {
                 site.ToJson();

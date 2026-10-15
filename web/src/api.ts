@@ -889,7 +889,7 @@ export const RAIN = {
   forestRegrowth: 2,
 }
 
-export interface CivicOrder { id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
+export interface CivicOrder { buildingKind?:BuildingKind|null; id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
 export interface Housing { plotId:string; beds:number; occupied:number; level:number }
 export interface VillageState {
   kingdomArea?: TileArea
@@ -1093,6 +1093,8 @@ export interface SkillValue {
 }
 
 export interface Citizen {
+  vigorEnergy?: number
+  vigorCooldownMinutes?: number
   accountId?: string
   cyclePrivateOutput?: boolean
   personalGoods?: {kind:string;amount:number;costBasis:number}[]
@@ -1349,6 +1351,7 @@ export interface EconomyRequest {
   requestId: string; action: string; resource?: string; amount?: number; price?: number; target?: string; x?: number; y?: number; building?: string
 }
 export interface EconomyView {
+  energyDrinkReadyAt: string | null
   stockPrices: Record<string,number>
   privateProperty: {plotId:string;kind:string;level:number;site:boolean;hasWork:boolean}[]
   coins: number; testCandles: number; earnedToday: number; profitToday: number; taxPreview: number; taxEnabled: boolean

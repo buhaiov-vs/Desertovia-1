@@ -10,6 +10,7 @@ public sealed class CivicOrder
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public required string PlotId { get; set; }
     public required string Operation { get; set; }
+    public BuildingKind? BuildingKind { get; set; }
     public Guid RequestedBy { get; set; }
     public Guid? PartnerAccountId { get; set; }
     public bool PartnerAccepted { get; set; }
@@ -40,6 +41,17 @@ public static class BuildingOperations
         return original;
     }
 
+    public static CivicOrder RequestBuild(Village village, Guid actor, BuildingKind kind, int x, int y, DateTimeOffset now)
+    {
+        ConstructionRules.ValidatePlacement(village, kind, x, y, checkCapacity: false);
+        var plot = WorldMap.PlotAt(x, y);
+        if (village.CivicOrders.Any(o => o.PlotId == plot && o.Status is "pending" or "working"))
+            throw new GameRuleException("building.orderExists", "An application already exists for this plot.");
+        var order = new CivicOrder { PlotId = plot, Operation = "build", BuildingKind = kind, RequestedBy = actor, CreatedAt = now };
+        village.CivicOrders.Add(order);
+        return order;
+    }
+
     public static CivicOrder Request(Village village,Guid actor,string plot,string operation,DateTimeOffset now)
     {
         if(operation is not ("demolish" or "upgrade")) throw new GameRuleException("building.operation","Unknown building action.");
@@ -50,6 +62,11 @@ public static class BuildingOperations
         var privateOwner = village.Structures.SingleOrDefault(s=>s.PlotId==plot)?.OwnerAccountId ?? village.Storages.SingleOrDefault(s=>s.PlotId==plot)?.OwnerAccountId;
         if (privateOwner is not null && privateOwner != actor)
             throw new GameRuleException("building.private", "Only the private owner can request this operation.");
+        var structure = village.Structures.SingleOrDefault(s=>s.PlotId==plot);
+        var storage = village.Storages.SingleOrDefault(s=>s.PlotId==plot);
+        if (operation == "upgrade" && !(structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse, Level: < 3 }
+            || storage is not null && StorageLimits.Upgrade(storage.Kind) is not null))
+            throw new GameRuleException("building.maxLevel", "This building cannot be upgraded further.");
         var order=new CivicOrder{PlotId=plot,Operation=operation,RequestedBy=actor,CreatedAt=now};
         village.CivicOrders.Add(order);return order;
     }
@@ -57,6 +74,16 @@ public static class BuildingOperations
     public static void Approve(Village village,CivicOrder order,IReadOnlyList<Citizen> citizens,DateTimeOffset now)
     {
         if(order.Status!="pending") throw new GameRuleException("building.orderProcessed","This application was already processed.");
+        if (order.Operation == "build")
+        {
+            var kindToBuild = order.BuildingKind ?? throw new GameRuleException("building.notAvailable", "Select a building.");
+            var plot = WorldMap.PlotPosition(order.PlotId) ?? throw new GameRuleException("building.cannotBuildHere", "Select a valid plot.");
+            var blueprint = ConstructionRules.Place(village, kindToBuild, (int)plot.X, (int)plot.Y, now);
+            blueprint.OrderId = order.Id;
+            order.Status = "working";
+            order.ApprovedAt = now;
+            return;
+        }
         var operationOwner = village.Structures.SingleOrDefault(s=>s.PlotId==order.PlotId)?.OwnerAccountId ?? village.Storages.SingleOrDefault(s=>s.PlotId==order.PlotId)?.OwnerAccountId;
         if(village.Sites.Count(s=>s.OwnerAccountId==operationOwner)>=(operationOwner is null ? BuildingCatalog.MaximumOpenSites : 1)||village.Sites.Any(s=>s.PlotId==order.PlotId))
             throw new GameRuleException("building.busy","Finish the existing work first.");

@@ -555,14 +555,14 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
             await api.economyAction(slug,{requestId:placing.requestId!,action:'private-build',building:placing.definition.kind,x,y})
             setVillageState((await api.village(slug)).state)
           } else setVillageState(await api.placeBlueprint(slug, placing.definition.kind, x, y))
-          setNotice(i18n.t('build.placed', { building }))
+          setNotice(i18n.t(!placing.private && !tsar ? 'build.requested' : 'build.placed', { building }))
         } catch (exception) {
           setNotice(i18n.error(exception))
         }
         window.setTimeout(() => setNotice(null), 5000)
       },
     }
-  }, [placing, slug, i18n, setVillageState])
+  }, [placing, slug, i18n, setVillageState, tsar])
 
   const pollAction = async (action: () => Promise<VillageState>, after?: () => void) => {
     setPending(true)
@@ -895,7 +895,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
           <div className="placement-banner">
             {placing ? (
               <>
-                {i18n.t('build.placing', { building: i18n.building(placing.definition.kind).name })}
+                {i18n.t(!placing.private && !tsar ? 'build.requestPlacing' : 'build.placing', { building: i18n.building(placing.definition.kind).name })}
                 <button onClick={() => setPlacing(null)}>{i18n.t('build.cancel')}</button>
               </>
             ) : (
@@ -946,7 +946,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
       {patientFor&&live.citizens.get(patientFor)&&<div className="modal-backdrop"><section className="modal" role="dialog" aria-label="Раненый житель"><header className="modal-header"><h2>{live.citizens.get(patientFor)!.name}</h2><button onClick={()=>setPatientFor(null)}>✕</button></header><div className="modal-body"><p>{live.citizens.get(patientFor)!.recovery?.until?'На лечении после дуэли':live.citizens.get(patientFor)!.hospitalizedAt?'На лечении после боя':'Ранен после боя, ждёт помощи'}</p><p className="small muted">Переноска не лечит. Если никто не поможет, санитары заберут раненого через 5 минут.</p>{citizen&&citizen.id!==patientFor&&!live.citizens.get(patientFor)!.hospitalizedAt&&!live.citizens.get(patientFor)!.recovery?.until&&<button disabled={pending||!!live.citizens.get(patientFor)!.rescueByCitizenId} onClick={()=>{const id=patientFor;setPatientFor(null);void run(()=>api.rescue(slug,id))}}>Отнести в больницу</button>}<button onClick={()=>{setHospitalPatient(patientFor);setPatientFor(null);setHospitalOpen(true)}}>Лечение</button></div></section></div>}
       {hospitalOpen && <HospitalPanel initialPatientId={hospitalPatient} slug={slug} actorId={me.id} citizenId={citizen?.id} tsar={tsar} village={village}
         onVillage={setVillageState} serverOffsetMs={serverOffset} onClose={() => setHospitalOpen(false)} onUpdated={() => { void loadCitizen() }} />}
-      {chaplainOpen && <SramoslavPanel slug={slug} onClose={() => setChaplainOpen(false)} onReply={text => canvas.current?.say(PRIEST_ID, text, 12)} />}
+      {chaplainOpen && <SramoslavPanel citizen={citizen} slug={slug} onClose={() => setChaplainOpen(false)} onReply={text => canvas.current?.say(PRIEST_ID, text, 12)} />}
       {panel === 'menu' && (
         <ServerClock offsetMs={serverOffset}>
           {(now) => (

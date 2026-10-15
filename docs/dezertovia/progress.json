@@ -477,5 +477,18 @@
     "data_reset": false,
     "game_code_changed": false,
     "new_game_release": false
+  },
+  "chaplain_chat_quiet_and_context": {
+    "decision": "D-034",
+    "state": "planned_not_implemented",
+    "document": "CHAPLAIN_CHAT_TODO.md",
+    "priority": "P1",
+    "source_reviewed": [
+      "ChaplainChatWorker.cs",
+      "SramoslavService.cs"
+    ],
+    "time_zone": "Europe/Kyiv",
+    "requires_new_human_chat_for_ambient": true,
+    "deployed": false
   }
 }

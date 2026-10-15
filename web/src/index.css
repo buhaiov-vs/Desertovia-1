@@ -2503,3 +2503,7 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 .patch-notes time { display:block; font-size:.85em; margin:.3rem 0 0 1.3rem; }
 .patch-notes ul { padding-inline-start:1.4rem; margin:.5rem 0; }
 .patch-notes li { margin:.6rem 0; line-height:1.45; }
+
+.almighty-panel { min-width:0; overflow-wrap:anywhere; }
+.almighty-panel .row { flex-wrap:wrap; }
+.almighty-panel button { white-space:normal; max-width:100%; }

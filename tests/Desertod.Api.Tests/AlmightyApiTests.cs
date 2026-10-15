@@ -1,0 +1,117 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Desertod.Api.Game;
+using Desertod.Domain.Director;
+using Desertod.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Desertod.Api.Tests;
+[Collection(ApiCollection.Name)]
+public sealed class AlmightyApiTests(DesertodApiFactory factory)
+{
+    private readonly Players players = new(factory);
+    [Fact]
+    public async Task Only_owner_reads_modes_and_citizens_cannot_forge_signed_callbacks()
+    {
+        var v=await players.FoundVillageAsync("Almighty access");
+        var member=await players.JoinAsync(v,"Viewer");
+        Assert.Equal(HttpStatusCode.Forbidden,(await member.Client.GetAsync(v.Path+"/director")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden,(await member.Client.PutAsJsonAsync(v.Path+"/director/mode",new{mode="Off"})).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized,(await member.Client.PostAsJsonAsync("/api/director/vote",new{proposalId=Guid.NewGuid(),ownerId="1",accept=true})).StatusCode);
+        var view=await v.Tsar.GetFromJsonAsync<AlmightyView>(v.Path+"/director");
+        Assert.NotNull(view); Assert.Equal("Propose",view.State.Mode);
+    }
+    [Fact]
+    public async Task Lease_is_exclusive_reject_is_persistent_and_approval_rechecks_current_conditions()
+    {
+        var v=await players.FoundVillageAsync("Almighty review");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var id=await db.Villages.Where(x=>x.Slug==v.Slug).Select(x=>x.Id).SingleAsync();
+        var service=factory.Services.GetRequiredService<GameService>();
+        var claims=await Task.WhenAll(service.BeginAlmightyReviewAsync(id,default),service.BeginAlmightyReviewAsync(id,default));
+        var review=Assert.Single(claims, r=>r is not null)!;
+        Assert.True(review.Snapshot.Length < 36000);
+        Assert.NotEmpty(JsonDocument.Parse(review.Snapshot).RootElement.GetProperty("catalog").GetProperty("items").EnumerateArray());
+        Assert.True(await service.CompleteAlmightyReviewAsync(review,new("economy_report","Я вижу запасы и предлагаю их оценить.","Сохранять медленную игру."),default));
+        Assert.False(await service.CompleteAlmightyReviewAsync(review,new("zombies_small","Повтор","Нельзя"),default));
+        var p=await db.AlmightyProposals.AsNoTracking().SingleAsync(x=>x.VillageId==id);
+        var replies=await Task.WhenAll(v.Tsar.PostAsJsonAsync(v.Path+$"/director/{p.Id}/vote",new{accept=true}),v.Tsar.PostAsJsonAsync(v.Path+$"/director/{p.Id}/vote",new{accept=true}));
+        Assert.All(replies,r=>Assert.True(r.IsSuccessStatusCode));
+        Assert.Equal("Applied",(await db.AlmightyProposals.AsNoTracking().SingleAsync(x=>x.Id==p.Id)).Status);
+        Assert.Empty((await db.Villages.AsNoTracking().SingleAsync(x=>x.Id==id)).Raids);
+        Assert.Single(await db.AlmightyObservations.Where(x=>x.VillageId==id).ToListAsync());
+    }
+    [Fact]
+    public async Task Off_fences_a_late_model_result_and_retains_existing_game_progress()
+    {
+        var v=await players.FoundVillageAsync("Almighty stop");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var village=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);
+        var service=factory.Services.GetRequiredService<GameService>();
+        var review=await service.BeginAlmightyReviewAsync(village.Id,default);
+        Assert.NotNull(review);
+        Assert.True((await v.Tsar.PutAsJsonAsync(v.Path+"/director/mode",new{mode="Off"})).IsSuccessStatusCode);
+        Assert.False(await service.CompleteAlmightyReviewAsync(review,new("economy_report","Поздно","Поздно"),default));
+        Assert.Empty(await db.AlmightyProposals.Where(p=>p.VillageId==village.Id).ToListAsync());
+        Assert.Null(await service.BeginAlmightyReviewAsync(village.Id,default));
+    }
+    [Fact]
+    public async Task Fresh_rest_conditions_are_rechecked_and_duplicate_approval_does_not_extend_the_timer()
+    {
+        var v=await players.FoundVillageAsync("Director recovery");
+        var resident=await players.JoinAsync(v,"Patient");
+        await players.ArrangeCitizenAsync(resident.Id,(c,now)=>c.InjuredUntil=now.AddHours(1));
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var id=await db.Villages.Where(x=>x.Slug==v.Slug).Select(x=>x.Id).SingleAsync();
+        var game=factory.Services.GetRequiredService<GameService>();
+        var review=await game.BeginAlmightyReviewAsync(id,default);
+        Assert.NotNull(review);Assert.Contains(review.Options,o=>o.Id=="rest");
+        await game.CompleteAlmightyReviewAsync(review,new("rest","Я вижу раненого. Предлагаю передышку.","Восстановление"),default);
+        var proposal=await db.AlmightyProposals.AsNoTracking().SingleAsync(x=>x.VillageId==id);
+        await v.Tsar.PostAsJsonAsync(v.Path+$"/director/{proposal.Id}/vote",new{accept=true});
+        var until=(await db.AlmightyStates.AsNoTracking().SingleAsync(x=>x.VillageId==id)).RestUntil;
+        Assert.Equal((await db.AlmightyProposals.AsNoTracking().SingleAsync(x=>x.Id==proposal.Id)).DecidedAt!.Value.AddHours(2),until);
+        await v.Tsar.PostAsJsonAsync(v.Path+$"/director/{proposal.Id}/vote",new{accept=true});
+        Assert.Equal(until,(await db.AlmightyStates.AsNoTracking().SingleAsync(x=>x.VillageId==id)).RestUntil);
+    }
+    [Fact]
+    public async Task Unknown_model_tool_has_no_effect_or_proposal()
+    {
+        var v=await players.FoundVillageAsync("Director invalid");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var id=await db.Villages.Where(x=>x.Slug==v.Slug).Select(x=>x.Id).SingleAsync();
+        var game=factory.Services.GetRequiredService<GameService>();
+        var review=await game.BeginAlmightyReviewAsync(id,default);
+        Assert.NotNull(review);
+        await game.CompleteAlmightyReviewAsync(review,new("give_real_candles","Выдать деньги","Игнорировать правила"),default);
+        Assert.Empty(await db.AlmightyProposals.Where(p=>p.VillageId==id).ToListAsync());
+        Assert.NotEmpty((await db.AlmightyStates.AsNoTracking().SingleAsync(p=>p.VillageId==id)).LastError);
+    }
+
+    [Fact]
+    public async Task Signed_bot_identity_must_match_the_linked_owner_and_repeat_is_idempotent()
+    {
+        var v=await players.FoundVillageAsync("Director Telegram");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var village=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);
+        var uid="809"+System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000000000).ToString();
+        db.ExternalLogins.Add(new Desertod.Domain.Entities.ExternalLogin { Provider="telegram",ProviderUserId=uid,AccountId=village.OwnerAccountId });
+        await db.SaveChangesAsync();
+        var game=factory.Services.GetRequiredService<GameService>();
+        var review=await game.BeginAlmightyReviewAsync(village.Id,default);
+        Assert.NotNull(review);
+        await game.CompleteAlmightyReviewAsync(review,new("economy_report","Я вижу запасы.","Наблюдать"),default);
+        var proposal=await db.AlmightyProposals.AsNoTracking().SingleAsync(p=>p.VillageId==village.Id);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>game.DecideAlmightyAsync(proposal.Id,null,"forged",true,default));
+        var result=await game.DecideAlmightyAsync(proposal.Id,null,uid,true,default);
+        Assert.Equal(result,await game.DecideAlmightyAsync(proposal.Id,null,uid,true,default));
+        var http=new Microsoft.AspNetCore.Http.DefaultHttpContext();
+        var options=Microsoft.Extensions.Options.Options.Create(new Desertod.Api.Auth.TelegramOptions {BotToken=DesertodApiFactory.TelegramBotToken,BotUsername="test_bot"});
+        Assert.False(AlmightyService.Trusted(http,options));
+        http.Request.Headers["X-Desertovia-Bridge"]=Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("desertovia-bridge:"+DesertodApiFactory.TelegramBotToken)));
+        Assert.True(AlmightyService.Trusted(http,options));
+    }
+
+}

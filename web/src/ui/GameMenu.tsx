@@ -1,3 +1,5 @@
+import { DefensePanel } from './DefensePanel'
+import { AlmightyPanel } from './AlmightyPanel'
 import { CivicPanel } from './CivicPanel'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -147,6 +149,8 @@ export function GameMenu(props: MenuProps) {
         </header>
 
         <div className="modal-body">
+          {tab === 'village' && citizen && catalog.tasks.some(t => t.id === citizen.taskId && t.effect === 'Guard') && <DefensePanel slug={props.slug}/>}
+          {tab === 'village' && tsar && <AlmightyPanel slug={props.slug}/>}
           {tab === 'village' && <button onClick={props.onHospital}>🏥 Больница</button>}
           {tab === 'village' && <section className="card village-population" title={t('chat.populationHelp')}>
             {t('chat.population', props.population)}

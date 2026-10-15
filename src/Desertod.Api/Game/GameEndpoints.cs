@@ -7,8 +7,24 @@ public static class GameEndpoints
 {
     public static void MapGameEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapPost("/api/director/vote", async (AlmightyTelegramVote vote, HttpContext http,
+            Microsoft.Extensions.Options.IOptions<TelegramOptions> options, GameService game, CancellationToken ct) => {
+            if (!AlmightyService.Trusted(http, options)) return Results.Unauthorized();
+            var result = await game.DecideAlmightyAsync(vote.ProposalId, null, vote.OwnerId, vote.Accept, ct);
+            return Results.Ok(new { result });
+        });
         var player = app.MapGroup("/api").RequireAuthorization();
 
+        player.MapPut("/villages/{slug}/me/defense", async (string slug, AlmightyMode request, ClaimsPrincipal user, GameService game, CancellationToken ct) => {
+            await game.SetDefenseSectorAsync(slug, user.RequireAccountId(), request.Mode, ct); return Results.Ok();
+        });
+        player.MapGet("/villages/{slug}/director", (string slug, ClaimsPrincipal user, GameService game, AlmightyService director, CancellationToken ct) =>
+            game.GetAlmightyAsync(slug, user.RequireAccountId(), director.Enabled, ct));
+        player.MapPut("/villages/{slug}/director/mode", async (string slug, AlmightyMode request, ClaimsPrincipal user, GameService game, CancellationToken ct) => {
+            await game.SetAlmightyModeAsync(slug, user.RequireAccountId(), request.Mode, ct); return Results.Ok();
+        });
+        player.MapPost("/villages/{slug}/director/{id:guid}/vote", async (Guid id, AlmightyVote vote, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            Results.Ok(new { result = await game.DecideAlmightyAsync(id, user.RequireAccountId(), null, vote.Accept, ct) }));
         player.MapGet("/villages/{slug}/hospital", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
             game.GetHospitalAsync(slug, user.RequireAccountId(), ct));
         player.MapPost("/villages/{slug}/hospital/heal", (string slug, HospitalHealRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>

@@ -1,3 +1,4 @@
+using Desertod.Domain.Director;
 using Desertod.Domain.Chat;
 using Desertod.Domain.Dungeons;
 using Desertod.Domain.Entities;
@@ -22,8 +23,29 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
     public DbSet<ChaplainMessage> ChaplainMessages => Set<ChaplainMessage>();
     public DbSet<DungeonRun> DungeonRuns => Set<DungeonRun>();
 
+    public DbSet<AlmightyState> AlmightyStates => Set<AlmightyState>();
+    public DbSet<AlmightyProposal> AlmightyProposals => Set<AlmightyProposal>();
+    public DbSet<AlmightyObservation> AlmightyObservations => Set<AlmightyObservation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AlmightyState>(b => {
+            b.HasKey(x => x.VillageId);
+            b.Property(x => x.Version).IsConcurrencyToken();
+            b.HasOne<Village>().WithMany().HasForeignKey(x => x.VillageId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => x.NextReviewAt);
+        });
+        modelBuilder.Entity<AlmightyProposal>(b => {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.ReviewId).IsUnique();
+            b.HasIndex(x => new { x.VillageId, x.Status, x.CreatedAt });
+            b.HasOne<Village>().WithMany().HasForeignKey(x => x.VillageId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<AlmightyObservation>(b => {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.VillageId, x.At });
+            b.HasOne<Village>().WithMany().HasForeignKey(x => x.VillageId).OnDelete(DeleteBehavior.Cascade);
+        });
         modelBuilder.Entity<Account>(account =>
         {
             account.HasKey(a => a.Id);
@@ -125,6 +147,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 raid.Property(r => r.Enemy).HasConversion<string>();
                 raid.Property(r => r.Outcome).HasConversion<string>();
                 raid.Ignore(r => r.IsPending);
+                raid.OwnsMany(r => r.ApproachPath);
                 raid.OwnsMany(r => r.Stolen, good => good.Property(g => g.Kind).HasConversion<string>());
                 raid.OwnsMany(r => r.Loot, good => good.Property(g => g.Kind).HasConversion<string>());
             });

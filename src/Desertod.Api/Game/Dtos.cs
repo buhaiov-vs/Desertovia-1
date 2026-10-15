@@ -50,7 +50,8 @@ public sealed record RaidDto(
     int Injured,
     int DamagedBuildings,
     IReadOnlyList<ResourceAmount> Stolen,
-    IReadOnlyList<ResourceAmount> Loot);
+    IReadOnlyList<ResourceAmount> Loot,
+    string? EntrySector = null, IReadOnlyList<RaidWaypoint>? ApproachPath = null);
 
 /// <param name="Room">Work a labor job can take right now; it cannot run ahead of the delivered material.</param>
 public sealed record SiteJobDto(string JobId, int Done, int Required, int Room, int Reserved = 0);
@@ -244,6 +245,8 @@ public sealed record CitizenSummaryDto(
     public DateTimeOffset? HospitalizedAt { get; init; }
     public Guid? RescueByCitizenId { get; init; }
     public Guid? RescuePatientId { get; init; }
+    public string? DefenseSector { get; init; }
+    public DateTimeOffset? DefenseReadyAt { get; init; }
 }
 
 /// <param name="InviteCode">Only sent to the owner of a private village.</param>
@@ -327,6 +330,8 @@ public sealed record CitizenDto(
     ExternalRecovery? Recovery = null)
 {
     public IReadOnlyDictionary<string, double>? ActionEnergyCosts { get; init; }
+    public string? DefenseSector { get; init; }
+    public DateTimeOffset? DefenseReadyAt { get; init; }
     public string? HomePlotId { get; init; }
     public Guid? SpouseAccountId { get; init; }
     public string? SpouseName { get; init; }
@@ -531,7 +536,7 @@ public static class DtoMapper
         raid.Injured,
         raid.DamagedBuildings,
         raid.Stolen.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
-        raid.Loot.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList());
+        raid.Loot.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(), raid.EntrySector, raid.ApproachPath);
 
     public static WeatherDto ToWeatherDto(this Village village, DateTimeOffset now)
     {
@@ -631,7 +636,7 @@ public static class DtoMapper
             citizen.CycleEndsAt,
             citizen.Load.Select(g => g.Kind).ToList(),
             CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
-            citizen.Weapon, citizen.Recovery) {HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId};
+            citizen.Weapon, citizen.Recovery) {HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId,DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt};
     }
 
     public static CitizenDto ToDto(this Citizen citizen, Village village, DateTimeOffset now) => new(
@@ -693,6 +698,7 @@ public static class DtoMapper
         { ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
             .Concat(BuildingCatalog.Jobs.Select(job => new KeyValuePair<string, double>(job.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.JobCost(village, job, now), now))))
             .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value),
+            DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,
             HomePlotId=citizen.HomePlotId, SpouseAccountId=citizen.SpouseAccountId, SpouseName=citizen.SpouseName,
             MarriedSince=citizen.MarriedSince, ExhaustedUntil=citizen.ExhaustedUntil, ExhaustedCycles=citizen.ExhaustedCycles };
 

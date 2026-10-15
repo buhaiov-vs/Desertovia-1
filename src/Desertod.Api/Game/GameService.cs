@@ -755,7 +755,8 @@ public sealed partial class GameService(
         {
             var village = await db.Villages.SingleAsync(v => v.Id == villageId, cancellationToken);
             var now = time.GetUtcNow();
-            var planned = RaidRules.PlanNight(village, await CountRecentCitizensAsync(db, villageId, now, cancellationToken), Random.Shared, now);
+            var resting = await db.AlmightyStates.AnyAsync(s => s.VillageId == villageId && s.Mode != "Off" && s.RestUntil > now, cancellationToken);
+            var planned = resting ? null : RaidRules.PlanNight(village, await CountRecentCitizensAsync(db, villageId, now, cancellationToken), Random.Shared, now);
             var raids = await FightDueRaidsAsync(db, village, null, now, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             if (planned is not null)

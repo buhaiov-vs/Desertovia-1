@@ -10,6 +10,24 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '0.6', date: '2026-10-15',
+    title: { ru: 'Всевышний: жизнь города и решения царя', en: 'The Almighty: village life and royal decisions' },
+    changes: {
+      ru: ['Единый ИИ-директор наблюдает за городом, помнит замысел и предлагает события, передышки и нужную работу. Применение — после согласия царя.',
+        'Батюшка присылает предложения царю в личку с кнопками согласия и отказа. В «Городе» появились панель Всевышнего, журнал и переключение режима.',
+        'Анализ ИИ раз в15 минут, важные изменения — от5 минут; не больше4 анализов в час. Новое предложение — не чаще раза в30 минут.',
+        'Направленные подходы скелетов используют серверный маршрут. Охрана выбирает участок; перестроение занимает30 реальных секунд. Против направленной атаки резерв Авто даёт75% личного вклада.',
+        'Экономические советы опираются на запасы и наблюдения. Свечи, цены и налоги автоматически не меняются. Возможен добровольный сбор в существующий данж.',
+        'Версия в настройках открывает историю обновлений. Враги ждут конца таймера; сроки лечения показывают реальные дни, часы и минуты.'],
+      en: ['One AI director watches the village, remembers its intent and proposes events, recovery windows and useful work. Effects require royal approval.',
+        'The chaplain privately sends the owner approval/rejection buttons. Village now has a director panel, journal and mode controls.',
+        'AI reviews every15 minutes, important changes after5 minutes; at most4 reviews/hour. New proposals at most every30 minutes.',
+        'Directional skeleton attacks use server paths. Guards choose a sector; redeployment takes30 real seconds. Auto reserves contribute75% of personal strength to directional attacks.',
+        'Economic advice uses stock observations. Candles, prices and taxes are not changed automatically. Existing dungeons can be proposed for voluntary participation.',
+        'Click the Settings version to read release history. Enemies wait for the countdown; recovery displays real days, hours and minutes.'],
+    },
+  },
+  {
     version: '0.5.3', date: '2026-10-15',
     title: { ru: 'Исправления интерфейса и стройки', en: 'Interface and construction fixes' },
     changes: {

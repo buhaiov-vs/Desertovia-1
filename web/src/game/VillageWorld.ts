@@ -149,6 +149,7 @@ interface Walker {
   /** Turns around water towards a spot the player sent the walker to, in world pixels; the last one is the target. */
   way: Array<{ x: number; y: number }>
   /** On watch: runs out to meet an attack on its way. */
+  defenseSector: string | null
   guard: boolean
   /** Wounded until then (wall clock, milliseconds): keeps still, tinted, with a red cross over the head. */
   injuredUntil: number
@@ -818,6 +819,7 @@ export class VillageWorld {
       const hunt = this.huntOf(citizen)
       if (!hunt && walker.hunt) this.wildlife.endHunt(walker.id)
       walker.hunt = hunt
+      walker.defenseSector = citizen.defenseSector ?? null
       walker.guard = working && this.catalog?.tasks.find((task) => task.id === citizen.taskId)?.effect === 'Guard'
       walker.injuredUntil = Math.max(citizen.injuredUntil ? Date.parse(citizen.injuredUntil) : 0, citizen.recovery?.until ? Date.parse(citizen.recovery.until) : 0)
       const injured = walker.injuredUntil > Date.now()
@@ -1557,6 +1559,7 @@ export class VillageWorld {
       hunt: null,
       sleepsAt: null,
       way: [],
+      defenseSector: null,
       guard: false,
       injuredUntil: 0,
       bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,
@@ -2061,7 +2064,12 @@ export class VillageWorld {
         walker.wanderAt = 0
       }
       if (walker.sleepsAt !== null && now >= walker.sleepsAt) walker.staying = true
-      if (walker.guard && front) {
+      if (walker.guard && walker.defenseSector) {
+        const raid = this.village?.raids.find(r => r.outcome === 'Pending' && r.entrySector === walker.defenseSector)
+        const route = raid?.approachPath
+        const post = route && route.length > 1 ? route[Math.max(0,route.length-7)] : ({ north:{x:15,y:7}, west:{x:9,y:13}, south:{x:15,y:19} } as Record<string,{x:number;y:number}>)[walker.defenseSector]
+        if(post){walker.targetX=(post.x+.5)*TILE;walker.targetY=(post.y+.5)*TILE;speed=RUN_SPEED;this.guardsOut=true}
+      } else if (walker.guard && front) {
         walker.targetX = front.x + (pseudo(walker.seed, 9) - 0.5) * 2.5 * TILE
         walker.targetY = front.y + (pseudo(walker.seed, 10) - 0.5) * 1.5 * TILE
         speed = RUN_SPEED

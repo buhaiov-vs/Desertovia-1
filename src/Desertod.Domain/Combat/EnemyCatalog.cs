@@ -34,7 +34,9 @@ public sealed record EnemyDefinition(
     int Damage,
     int InjuryMinutes,
     bool Undead = false,
-    bool DungeonOnly = false);
+    bool DungeonOnly = false,
+    bool Coordinated = false,
+    double RaidCountMultiplier = 1);
 
 public static class EnemyCatalog
 {
@@ -59,7 +61,7 @@ public static class EnemyCatalog
         new(EnemyKind.Skeleton, "skeleton", 6, 0,
             [new(ResourceKind.IronOre, 1)],
             [new(ResourceKind.Gold, 1)],
-            Damage: 20, InjuryMinutes: 40, Undead: true),
+            Damage: 20, InjuryMinutes: 40, Undead: true, Coordinated: true, RaidCountMultiplier: .75),
         new(EnemyKind.Rat, "grave rat", 1, 0, [], [], Damage: 0, InjuryMinutes: 20, Undead: true, DungeonOnly: true),
         new(EnemyKind.Imp, "imp", 3, 0, [], [], Damage: 0, InjuryMinutes: 30, Undead: true, DungeonOnly: true),
         new(EnemyKind.Ghoul, "ghoul", 7, 0, [], [], Damage: 0, InjuryMinutes: 45, Undead: true, DungeonOnly: true),

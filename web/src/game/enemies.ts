@@ -354,6 +354,15 @@ export class EnemyLayer {
   private center(pack: Pack, now: number) {
     const raid = pack.raid
     const strikesAt = Date.parse(raid.strikesAt)
+    const path = raid.approachPath
+    if (path && path.length > 1) {
+      // Show the final approach at the actual attack time; the full server route remains authoritative.
+      const visible = path.slice(-7)
+      const share = Math.min(1, Math.max(0, (now - strikesAt) / (CHARGE_SECONDS * 1000))) * (visible.length - 1)
+      const index = Math.min(visible.length - 2, Math.floor(share))
+      return lerp({ x: (visible[index].x + .5) * TILE, y: (visible[index].y + .5) * TILE },
+        { x: (visible[index+1].x + .5) * TILE, y: (visible[index+1].y + .5) * TILE }, share - index)
+    }
     const edge = around(pack.angle, EDGE_DISTANCE)
     return lerp(edge, around(pack.angle, BREAK_IN_DISTANCE), (now - strikesAt) / (CHARGE_SECONDS * 1000))
   }

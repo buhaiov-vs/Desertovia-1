@@ -370,6 +370,8 @@ export interface Raid {
   damagedBuildings: number
   stolen: ResourceAmount[]
   loot: ResourceAmount[]
+  entrySector?: string | null
+  approachPath?: { x: number; y: number }[] | null
 }
 
 export interface FightReport {
@@ -991,6 +993,8 @@ export interface HospitalPayment { patientId: string; code: string; requestId: s
 export interface HospitalReceipt { state: string; error: string | null; until: number | null; price: number | null; cutSeconds: number | null }
 
 export interface CitizenSummary {
+  defenseSector?: string | null
+  defenseReadyAt?: string | null
   hospitalizedAt?:string|null
   rescueByCitizenId?:string|null
   rescuePatientId?:string|null
@@ -1316,7 +1320,22 @@ export function loadVillage(slug: string) {
   return prefetched?.slug === slug ? prefetched.promise.catch(() => api.village(slug)) : api.village(slug)
 }
 
+export interface AlmightyProposal {
+  id: string; option: string; title?: string; effect?: string; reason: string; intent: string; status: string;
+  createdAt: string; expiresAt: string; noticeState: string; result: string
+}
+export interface AlmightyView {
+  enabled: boolean;
+  state: { mode: string; intent: string; lastReviewAt: string | null; nextReviewAt: string; restUntil: string | null; lastError: string; callsToday: number; lastSnapshot: string };
+  proposals: AlmightyProposal[];
+  observations: { id: string; at: string; option: string; reason: string; snapshot: string }[]
+}
+
 export const api = {
+  defenseSector: (slug: string, sector: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/me/defense`, { mode: sector }),
+  almighty: (slug: string) => request<AlmightyView>('GET', `/api/villages/${encodeURIComponent(slug)}/director`),
+  almightyMode: (slug: string, mode: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/director/mode`, { mode }),
+  almightyVote: (slug: string, id: string, accept: boolean) => request<{result:string}>('POST', `/api/villages/${encodeURIComponent(slug)}/director/${id}/vote`, { accept }),
   rescue: (slug:string, id:string)=>request<Citizen>('POST',`/api/villages/${encodeURIComponent(slug)}/rescue/${id}`),
   civic: (slug:string, plotId:string, operation:string, partnerAccountId?:string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic`, {plotId,operation,partnerAccountId}),
   civicDecision: (slug:string, id:string, approve:boolean) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic/${id}`, {approve}),

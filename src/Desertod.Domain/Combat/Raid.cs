@@ -52,6 +52,9 @@ public sealed class Raid
     public List<RaidGood> Stolen { get; set; } = [];
     public List<RaidGood> Loot { get; set; } = [];
 
+    public string? EntrySector { get; set; }
+    public List<RaidWaypoint> ApproachPath { get; set; } = [];
+
     public bool IsPending => Outcome == RaidOutcome.Pending;
 }
 

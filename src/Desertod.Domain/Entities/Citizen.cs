@@ -128,6 +128,8 @@ public sealed class Citizen
     }
 
     /// <summary>The last walk out to a spot or a place on the map; the land along it is seen as the citizen gets there.</summary>
+    public string? DefenseSector { get; set; }
+    public DateTimeOffset? DefenseReadyAt { get; set; }
     public Trip? Trip { get; set; }
 
     /// <summary>The dungeon run the citizen answered; no tasks and no walks until they are back from it.</summary>

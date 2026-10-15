@@ -165,7 +165,7 @@ public static class RaidRules
             {
                 Source = RaidSource.Undead,
                 Enemy = kind,
-                Count = kind == EnemyKind.Skeleton ? (int)Math.Ceiling(count * 0.75) : count,
+                Count = (int)Math.Ceiling(count * EnemyCatalog.Get(kind).RaidCountMultiplier),
                 Wave = wave,
                 Waves = waves,
                 AnnouncedAt = now,
@@ -197,6 +197,9 @@ public static class RaidRules
         && citizen.CurrentSiteId is null
         && citizen.CycleStartedAt <= strikesAt
         && strikesAt < citizen.CycleEndsAt
+        && citizen.RecoveryPausedAt is null
+        && citizen.Recovery?.Available != false
+        && !(citizen.Recovery?.Until > strikesAt)
         && !CombatRules.IsInjured(citizen, strikesAt)
         && GameCatalog.FindTask(citizen.CurrentTaskId ?? "") is { Effect: TaskEffect.Guard } task
             ? task
@@ -210,14 +213,14 @@ public static class RaidRules
         && (citizen.CycleStartedAt is not { } started || started > strikesAt || citizen.CycleEndsAt is not { } ends || ends <= strikesAt);
 
     /// <summary>Total defense: the watchers' fight power, the fire, the palisade, the barracks and a captain's command.</summary>
-    public static double Defense(Village village, IReadOnlyList<(Citizen Citizen, TaskDefinition Task)> defenders, IReadOnlyCollection<string> completedProjects)
+    public static double Defense(Village village, IReadOnlyList<(Citizen Citizen, TaskDefinition Task)> defenders, IReadOnlyCollection<string> completedProjects, Raid? raid = null)
     {
         var palisade = completedProjects.Contains(ProjectCatalog.Palisade);
         var command = defenders.Where(d => d.Task.RoleId == CaptainRole)
             .Select(d => 1 + CommandPerEndurance * d.Citizen.Stats.Endurance)
             .DefaultIfEmpty(1)
             .Max();
-        var strength = defenders.Sum(d => CombatRules.Power(d.Citizen) * d.Task.BaseYield);
+        var strength = defenders.Sum(d => CombatRules.Power(d.Citizen) * d.Task.BaseYield * (raid?.EntrySector is not null && string.IsNullOrEmpty(d.Citizen.DefenseSector) ? .75 : 1));
         return (strength + CampfireDefense + (palisade ? PalisadeDefense : 0))
                * command
                * (palisade ? PalisadeMultiplier : 1)
@@ -237,10 +240,10 @@ public static class RaidRules
         var enemy = EnemyCatalog.Get(raid.Enemy);
         var defenders = citizens
             .Select(c => (Citizen: c, Task: GuardTask(c, raid.StrikesAt)))
-            .Where(d => d.Task is not null)
+            .Where(d => d.Task is not null && RaidTactics.CanDefend(d.Citizen, raid))
             .Select(d => (d.Citizen, Task: d.Task!))
             .ToList();
-        var defense = Defense(village, defenders, completedProjects);
+        var defense = Defense(village, defenders, completedProjects, raid);
         var attack = raid.Count * enemy.Power;
         var ratio = defense * (1 + Luck * (2 * random.NextDouble() - 1)) / attack;
         var repelled = ratio >= 1;

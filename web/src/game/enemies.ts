@@ -4,6 +4,8 @@ import { TILE } from './sheets'
 import { CAMPFIRE, MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH, Terrain } from './worldMap'
 
 interface EnemyLook {
+  /** Integer size multiplier baked into geometry; keeps pixel art sharp when facing flips. */
+  size?: number
   /** World pixels per second while closing in. */
   speed: number
   /** Height of the steps while moving, in world pixels. */
@@ -64,6 +66,7 @@ const LOOKS: Record<EnemyKind, EnemyLook> = {
     colors: { e: 0x3a2414, h: 0x5a3a22, k: 0xff7a30, n: 0x1b1206, b: 0x4a2e1a, c: 0xe0d8c0 },
   },
   Zombie: {
+    size: 2,
     speed: 10,
     hop: 0.6,
     pixels: [
@@ -84,6 +87,7 @@ const LOOKS: Record<EnemyKind, EnemyLook> = {
     colors: { h: 0x3a2a1a, g: 0x7aa05a, k: 0xff3030, s: 0x5a4a6a, r: 0x8a2a2a, p: 0x3a3a4a, f: 0x2a2a2a },
   },
   Skeleton: {
+    size: 2,
     speed: 16,
     hop: 1,
     pixels: [
@@ -205,7 +209,7 @@ export function enemyContext(kind: EnemyKind): GraphicsContext {
 
 /** Height of an enemy's look, in world pixels. */
 export function enemyHeight(kind: EnemyKind) {
-  return LOOKS[kind].pixels.length
+  return LOOKS[kind].pixels.length * (LOOKS[kind].size ?? 1)
 }
 
 /** Raiders drawn for one attack at most; a bigger pack is shown by this many. */
@@ -245,13 +249,14 @@ interface Pack {
 
 function drawLook(look: EnemyLook): GraphicsContext {
   const context = new GraphicsContext()
+  const size = look.size ?? 1
   const width = Math.max(...look.pixels.map((row) => row.length))
   const height = look.pixels.length
-  context.ellipse(0, 0, width * 0.45, 1.5).fill({ color: 0x1b1206, alpha: 0.3 })
+  context.ellipse(0, 0, width * size * 0.45, 1.5 * size).fill({ color: 0x1b1206, alpha: 0.3 })
   look.pixels.forEach((row, y) =>
     [...row].forEach((cell, x) => {
       const color = look.colors[cell]
-      if (color !== undefined) context.rect(x - width / 2, y - height, 1, 1).fill({ color })
+      if (color !== undefined) context.rect((x - width / 2) * size, (y - height) * size, size, size).fill({ color })
     }),
   )
   return context

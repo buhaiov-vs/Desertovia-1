@@ -6,6 +6,7 @@ using Desertod.Domain.Entities;
 using Desertod.Domain.Projects;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Stats;
+using Desertod.Domain.World;
 using Xunit.Abstractions;
 using static Desertod.Domain.Tests.TestWorld;
 
@@ -34,11 +35,15 @@ public sealed class RaidBalanceSimulationTests(ITestOutputHelper output)
         var b=RaidBalance.Prepare(v,raid,guards,walls?[ProjectCatalog.Palisade]:[],ids,Now,"west",profile);
         if(walls)foreach(var gate in v.Fortifications.Where(f=>f.Gate))gate.Open=false;
         var initialUnits=b.Units.Count;var budget=b.ThreatBudget;
+        var terrain=AuthoredTerrain.For(v.Id,v.Wilds);
         for(var second=1;second<=330&&b.FinishedAt is null;second++)
         {
             RaidSimulation.Tick(v,raid,b,guards,ids,b.StartsAt.AddSeconds(second));
             Assert.InRange(b.DamageDone,0,RaidSimulation.PlunderDamageLimit);
-            Assert.All(b.Units,u=>Assert.InRange(u.Health,0,u.MaximumHealth));
+            Assert.All(b.Units,u=>{
+                Assert.InRange(u.Health,0,u.MaximumHealth);
+                Assert.False(AuthoredTerrain.Blocked(terrain[AuthoredTerrain.Index((int)Math.Floor(u.X),(int)Math.Floor(u.Y))]));
+            });
         }
         Assert.NotNull(b.FinishedAt);Assert.NotNull(raid.ResolvedAt);
         Assert.Equal(initialUnits,b.Units.Count);Assert.Equal(budget,b.ThreatBudget);

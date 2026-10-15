@@ -81,6 +81,7 @@ public sealed class LiveRaidTests
         foreach(var gate in v.Fortifications.Where(f=>f.Gate))gate.Open=true;
         Assert.True(nav.ClearShot(outside,inside));
         var wall=v.Fortifications.Single(f=>f.X==-1&&f.Y==9);
+        Assert.Equal(new TilePoint(.5,9.5),CombatRules.RepairYard(v,wall.Id));
         Assert.False(nav.Pass(-1,9));wall.Damage=100;Assert.True(nav.Pass(-1,9));
         CombatRules.Repair(v,100);Assert.False(nav.Pass(-1,9));
     }

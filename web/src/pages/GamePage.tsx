@@ -653,7 +653,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     villageRef.current = live.state
   })
   const citizens = useMemo(() => [...live.citizens.values()], [live.citizens])
-  const pickCitizen = useMemo(() => (id: string) => { if (id === PRIEST_ID) setChaplainOpen(true); else if(live.citizens.get(id)?.injuredUntil||live.citizens.get(id)?.recovery?.until)setPatientFor(id); else if (tsar) setSubtitleFor(id) }, [tsar,live.citizens])
+  const pickCitizen = useMemo(() => (id: string) => { setEnemyPick(null); if (id === PRIEST_ID) setChaplainOpen(true); else if(live.citizens.get(id)?.injuredUntil||live.citizens.get(id)?.recovery?.until)setPatientFor(id); else if (tsar) setSubtitleFor(id) }, [tsar,live.citizens])
   // Only a citizen can be sent to work; the Tsar watches and walks around, players without a character just look.
   const canWork = !tsar && !!citizen
   const working = citizen?.state === 'Paused' || citizen?.state === 'Working' && !!citizen.cycleEndsAt && Date.parse(citizen.cycleEndsAt)>raidClock
@@ -674,6 +674,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     }
     if (tsar) {
       return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => {
+        setEnemyPick(null)
         if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
         const watched = target !== null && villageRef.current !== null && watchable(target, villageRef.current)
         setPicked(watched ? { target, screen } : null)
@@ -686,6 +687,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     }
     if (!canWork || !ownId) return null
     return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => {
+      setEnemyPick(null)
       if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
       setError(null)
       setPicked(target ? { target, screen } : null)
@@ -776,7 +778,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         selection={showPicked || showWatched ? picked.target.area : null}
       />
 
-      {!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&enemyPick&&(()=>{
+      {!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&!subtitleFor&&!inviteFor&&enemyPick&&(()=>{
         const battle=village.battles?.find(b=>b.id===enemyPick.battleId)
         const unit=battle?.units.find(u=>u.id===enemyPick.unitId)
         return battle&&unit?<BattleControls key={unit.id} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} onClose={()=>setEnemyPick(null)}/>:null
@@ -899,7 +901,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
           key={slug}
           mentionCandidates={citizens.filter(c=>!live.away.has(c.id)).map(c=>({id:c.id,name:c.name}))}
           incoming={live.chatArrivals}
-          interrupted={showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
+          interrupted={enemyPick!==null || showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}

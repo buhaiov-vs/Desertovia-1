@@ -11,14 +11,16 @@ public sealed class RaidNavigation
     private readonly HashSet<(int X, int Y)> solid = [];
     private readonly Dictionary<(int X, int Y), Fortification> walls;
     private readonly uint seed;
+    private readonly byte[] terrain;
     private readonly Dictionary<(int X, int Y), bool> land = [];
 
     public RaidNavigation(Village village)
     {
         this.village = village;
         seed = Wilderness.Seed(village.Id.ToString());
+        terrain=AuthoredTerrain.For(village.Id,village.Wilds);
         walls = village.Fortifications.ToDictionary(f => (f.X, f.Y));
-        foreach (var plot in village.Structures.Select(s => s.PlotId).Concat(village.Storages.Select(s => s.PlotId)).Concat(village.Sites.Select(s => s.PlotId)))
+        foreach (var plot in village.Structures.Where(s=>s.Kind!=BuildingKind.RopeBridge).Select(s => s.PlotId).Concat(village.Storages.Select(s => s.PlotId)).Concat(village.Sites.Select(s => s.PlotId)))
             if (WorldMap.PlotPosition(plot) is {} p)
                 for (var x = (int)p.X; x < p.X + WorldMap.PlotWidth; x++)
                 for (var y = (int)p.Y; y < p.Y + WorldMap.PlotHeight - 1; y++) solid.Add((x, y));
@@ -29,8 +31,14 @@ public sealed class RaidNavigation
     {
         if (land.TryGetValue((x,y), out var valid)) return valid;
         // Raids use the kingdom's river bank. An enemy has no implicit swimming or closed-bridge permission.
-        valid = WorldMap.Land.Contains(new(x,y,1,1)) && x + .5 < Wilderness.RiverWestBank(y, seed)
-            && !(village.Wilds?.Ravine.Any(r => r.X == x && y >= r.Top && y < r.Top + r.Height) ?? false);
+        valid = AuthoredTerrain.Inside(x,y) && x + .5 < Wilderness.RiverWestBank(y,seed);
+        if(valid)
+        {
+            var kind=terrain[AuthoredTerrain.Index(x,y)];
+            valid=kind is not (AuthoredTerrain.Water or AuthoredTerrain.Mountain)
+                && (kind!=AuthoredTerrain.Ravine || village.Structures.Any(s=>s.Kind==BuildingKind.RopeBridge
+                    && WorldMap.Footprint(s.PlotId) is {} bridge && bridge.Contains(new(x,y,1,1))));
+        }
         land[(x,y)] = valid;
         return valid;
     }

@@ -33,12 +33,19 @@ public sealed partial class GameService
         raid.Id,raid.Source,raid.Enemy,raid.Count,raid.Wave,raid.Waves,raid.StrikesAt,raid.Outcome==RaidOutcome.Repelled,
         raid.Killed,0,0,
         battle.Fighters.Where(f=>f.DamageDealt>0).Select(f=>new RaidDefenderReport(f.CitizenId,
-            people.FirstOrDefault(c=>c.Id==f.CitizenId)?.Name??"",f.Wounded,f.RenownEarned,[])).ToArray(),
+            people.FirstOrDefault(c=>c.Id==f.CitizenId)?.Name??"",f.Wounded,f.RenownEarned,BattleBroken(f,people))).ToArray(),
         battle.Fighters.Where(f=>f.Wounded&&f.DamageDealt==0).Select(f=>new RaidVictimReport(f.CitizenId,
             people.FirstOrDefault(c=>c.Id==f.CitizenId)?.Name??"")).ToArray(),
         raid.Loot.Select(g=>new Desertod.Domain.Catalog.ResourceAmount(g.Kind,g.Amount)).ToArray(),
         raid.Stolen.Select(g=>new Desertod.Domain.Catalog.ResourceAmount(g.Kind,g.Amount)).ToArray(),
         battle.Damage.Where(d=>d.Amount>0).Select(d=>d.PlotId).ToArray(),raid.Outcome==RaidOutcome.Repelled?RaidRules.RepelledMorale:RaidRules.LostMorale) {EngineVersion=2};
+
+    private static IReadOnlyList<Desertod.Domain.Catalog.ResourceKind> BattleBroken(RaidFighter fighter,IReadOnlyList<Citizen> people)
+    {
+        var c=people.FirstOrDefault(c=>c.Id==fighter.CitizenId);
+        return new[]{fighter.Weapon!=c?.Weapon?fighter.Weapon:null,fighter.Armor!=c?.Armor?fighter.Armor:null}
+            .Where(kind=>kind is not null).Select(kind=>kind!.Value).ToArray();
+    }
 
     public async Task SetBattleOrderAsync(string slug,Guid actor,Guid battleId,BattleOrder order,CancellationToken ct)
     {

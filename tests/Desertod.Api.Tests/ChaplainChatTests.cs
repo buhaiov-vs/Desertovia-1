@@ -61,4 +61,21 @@ public sealed class ChaplainChatTests(DesertodApiFactory factory)
         await capped.TickAsync(default);
         Assert.Equal(12,await db.ChaplainMessages.CountAsync(m=>m.VillageId==villageId));
     }
+    [Fact]
+    public async Task Legacy_service_lines_stay_in_the_database_but_are_not_replayed_as_NPC_speech()
+    {
+        var players=new Players(factory);var v=await players.FoundVillageAsync("Legacy speech");
+        await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var id=await db.Villages.Where(x=>x.Slug==v.Slug).Select(x=>x.Id).SingleAsync();
+        var raw="{\"option\":\"none\",\"reason\":\"Я вижу";
+        db.ChaplainMessages.Add(new(){VillageId=id,Text=raw,SentAt=factory.Clock.GetUtcNow()});
+        db.ChaplainMessages.Add(ChaplainMessage.Speak(id,"Соседи, держимся вместе!",factory.Clock.GetUtcNow()));
+        await db.SaveChangesAsync();
+        (await v.Tsar.PostAsJsonAsync(v.Path+"/chat",new{text=raw})).EnsureSuccessStatusCode();
+        var history=await v.Tsar.GetFromJsonAsync<JsonElement>(v.Path+"/chat");
+        Assert.Single(history.EnumerateArray(),m=>m.GetProperty("isChaplain").GetBoolean());
+        Assert.Contains(history.EnumerateArray(),m=>!m.GetProperty("isChaplain").GetBoolean()&&m.GetProperty("text").GetString()==raw);
+        Assert.Equal(2,await db.ChaplainMessages.CountAsync(m=>m.VillageId==id));
+    }
+
 }

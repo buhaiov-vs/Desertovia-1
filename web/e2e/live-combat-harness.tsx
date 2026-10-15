@@ -1,3 +1,4 @@
+import { buildLayout, Terrain } from '../src/game/worldMap'
 // Production render and controls, isolated from real players, payments and director calls.
 import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -25,6 +26,7 @@ const orders:unknown[]=[]
 api.battleOrder=async(_slug,_id,target,mode)=>{orders.push({target,mode})}
 Object.assign(window,{combatStand:{
  update:(next:RaidBattle,time=now+2000)=>{enemies.setBattles([next]);enemies.update(.2,time,true);return {children:layer.children.length,positions:layer.children.map(c=>[c.x,c.y]),rotations:layer.children.map(c=>c.rotation)}},
+ terrain:(seed:number,wilds:Parameters<typeof buildLayout>[1])=>Array.from(buildLayout(seed,wilds).terrain,k=>[Terrain.Water,Terrain.Mountain,Terrain.Ravine].includes(k as 2|7|8)?1:k===Terrain.Marsh?2:0),
  initial:structuredClone(battle),orders,mergeBattles,currentEnergy,
  pick:(x:number,y:number)=>enemies.pick(x,y),
 }})

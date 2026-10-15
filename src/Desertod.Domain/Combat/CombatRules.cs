@@ -5,6 +5,7 @@ using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Weather;
+using Desertod.Domain.World;
 
 namespace Desertod.Domain.Combat;
 
@@ -257,6 +258,12 @@ public static class CombatRules
     /// <summary>The building most in need of repair, or null when none is damaged.</summary>
     public static string? MostDamaged(Village village) =>
         Buildings(village).Where(b => b.Damage > 0).OrderByDescending(b => b.Damage).Select(b => b.PlotId).FirstOrDefault();
+
+    public static TilePoint RepairYard(Village village,string plot)
+    {
+        var wall=village.Fortifications.FirstOrDefault(f=>f.Id==plot);
+        return wall is null?WorldMap.Yard(plot):new TilePoint(wall.X+.5+(wall.X==-1?1:0),wall.Y+.5+(wall.Y==-1?1:wall.Y==26?-1:0));
+    }
 
     /// <summary>Adds damage to a building, up to <see cref="MaximumDamage"/>. Returns the damage done.</summary>
     public static int Damage(Village village, string plotId, int amount)

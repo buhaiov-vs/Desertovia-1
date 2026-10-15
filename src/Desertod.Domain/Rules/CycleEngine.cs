@@ -163,7 +163,7 @@ public static class CycleEngine
             TakeFromHandsThenStorage(citizen, village, input.Resource, input.Amount);
         }
 
-        var repairYard = repairAt is null ? (TilePoint?)null : WorldMap.Yard(repairAt);
+        var repairYard = repairAt is null ? (TilePoint?)null : CombatRules.RepairYard(village,repairAt);
         if ((spot ?? repairYard ?? NaturalPlace(task)) is { } destination)
         {
             citizen.SetOut(destination, village, now);
@@ -185,7 +185,7 @@ public static class CycleEngine
         citizen.SupervisedProgress = task.Effect==TaskEffect.Supervise ? context.Project?.BuildProgress : null;
         citizen.CurrentSiteId = null;
         citizen.CurrentSiteStage = null;
-        citizen.Spot = spot;
+        citizen.Spot = spot ?? repairYard;
         if (IsArmed(task))
         {
             CombatRules.Arm(citizen, village);

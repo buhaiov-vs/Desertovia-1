@@ -15,6 +15,10 @@ public sealed partial class ChaplainChatWorker(IDbContextFactory<DesertodDbConte
     private static readonly TimeSpan Gap = TimeSpan.FromSeconds(90);
     private static readonly TimeSpan AmbientGap = TimeSpan.FromMinutes(20);
     private const int HourlyLimit = 12;
+    private readonly Queue<DateTimeOffset> attempts=new();
+    private readonly Dictionary<Guid,DateTimeOffset> seenCalls=[];
+    private readonly Dictionary<Guid,DateTimeOffset> ambientAttempts=[];
+    private DateTimeOffset lastAttempt=DateTimeOffset.MinValue;
 
     [GeneratedRegex(@"(?i)(?<![\p{L}\p{N}_])(?:батюшк[аеиуо]|срамослав(?:а|у)?|@?sramoslav(?:_bot)?|отче)(?![\p{L}\p{N}_])")]
     private static partial Regex CallPattern();
@@ -42,6 +46,8 @@ public sealed partial class ChaplainChatWorker(IDbContextFactory<DesertodDbConte
             await using var db = await factory.CreateDbContextAsync(cancellationToken);
             var now = time.GetUtcNow();
             var hourAgo = now.AddHours(-1);
+            while(attempts.TryPeek(out var oldAttempt)&&oldAttempt<=hourAgo)attempts.Dequeue();
+            if(attempts.Count>=HourlyLimit||now-lastAttempt<Gap)return;
             // All NPC lines are persisted. Restarting does not reset the shared hourly budget.
             var botTimes = await db.ChaplainMessages.AsNoTracking().Where(m => m.SentAt > hourAgo)
                 .Select(m => m.SentAt).ToListAsync(cancellationToken);
@@ -56,16 +62,17 @@ public sealed partial class ChaplainChatWorker(IDbContextFactory<DesertodDbConte
                 var lastBot = await db.ChaplainMessages.AsNoTracking().Where(m => m.VillageId == village.Id)
                     .MaxAsync(m => (DateTimeOffset?)m.SentAt, cancellationToken) ?? startedAt;
                 var target = recent.FirstOrDefault(m => m.SentAt >= startedAt && m.SentAt > lastBot
-                    && now - m.SentAt < Gap && IsCalled(m.Text));
+                    && now - m.SentAt < Gap && m.SentAt>seenCalls.GetValueOrDefault(village.Id) && IsCalled(m.Text));
                 string? text = null;
                 string? topic = null;
                 if (target is not null)
                 {
+                    seenCalls[village.Id]=target.SentAt;lastAttempt=now;attempts.Enqueue(now);
                     var context = recent.Take(8).Reverse().Select(m => new { name = m.AuthorName, text = m.Text }).ToArray();
                     text = await priest.AnswerChatAsync(village.Name, target.AuthorName, target.Text, context,
                         village.Structures.Select(s => s.Kind.ToString()).ToArray(), cancellationToken);
                 }
-                else if (now - lastBot >= AmbientGap && presence.IsVillagePresent(village.Slug)
+                else if (now - lastBot >= AmbientGap && now-ambientAttempts.GetValueOrDefault(village.Id)>=AmbientGap && presence.IsVillagePresent(village.Slug)
                     && recent.Count(m => now-m.SentAt < TimeSpan.FromMinutes(5)) >= 3
                     && recent.Any(m => m.SentAt > lastBot))
                 {
@@ -77,9 +84,12 @@ public sealed partial class ChaplainChatWorker(IDbContextFactory<DesertodDbConte
                         : "";
                     // No private clock/location enters the public prompt. The bot owns its private tone reference.
                     if (facts.Length > 0)
+                    {
+                        ambientAttempts[village.Id]=now;lastAttempt=now;attempts.Enqueue(now);
                         text = await priest.AnswerChatAsync(village.Name, "деревня",
                             "Коротко откликнись на текущую беседу; можно промолчать. Проверенный факт: " + facts,
                             history, village.Structures.Select(s=>s.Kind.ToString()).ToArray(),cancellationToken);
+                    }
                 }
                 if (!ChaplainSpeech.IsPlainText(text))
                 {

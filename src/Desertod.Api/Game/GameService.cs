@@ -793,7 +793,15 @@ public sealed partial class GameService(
             var now = time.GetUtcNow();
             var resting = await db.AlmightyStates.AnyAsync(s => s.VillageId == villageId && s.Mode != "Off" && s.RestUntil > now, cancellationToken);
             var planned = resting ? null : RaidRules.PlanNight(village, await CountRecentCitizensAsync(db, villageId, now, cancellationToken), Random.Shared, now);
-            if(planned is not null) await PrepareBattleAsync(db,village,planned,now,cancellationToken);
+            if(planned is not null)
+            {
+                try{await PrepareBattleAsync(db,village,planned,now,cancellationToken);}
+                catch(GameRuleException e) when(e.Code=="raid.noApproach")
+                {
+                    village.Raids.Remove(planned);RaidRules.UpdateNextRaidAt(village);planned=null;
+                    logger.LogWarning("Night raid skipped: no reachable approach in village {VillageId}.",villageId);
+                }
+            }
             var raids = await FightDueRaidsAsync(db, village, null, now, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             if (planned is not null)

@@ -88,3 +88,62 @@ was before canonical integration, not claimed as merged full verification.
 At release use ONLY almighty.py based on new budget baseline; never old0.6.1
 app/town_proxy/llm payload. Private ops are being prepared with UTC05:00timegate;
 no live-combat-request.json until authorized time, so no early runner install.
+
+## Checkpoint4 — collision parity and final review fixes
+
+Public PR37, initial runtime9c615c4; CI38812040529 backend/frontend/Docker pass,
+browser still running at checkpoint (superseded by upcoming final source).
+LocalAPI213PASS. Bot PR38 merged canonical0054f4c; exact tested/payload source
+3f7038c886e8ea37c98191a32ba0c3f558b05e69, CI38811556338 SUCCESS:816 tests and
+runner/client checks. Bot narrow payload must preserve deployed3fd0c1c budget
+baseline, not old6e87f60. No installation done.
+
+Final review fixes not yet committed: select whole enemy body including head;
+HP bars above scaled sprites; enemy card interrupts quarter chat and yields to
+other cards/dialogs. Legacy bad NPC service lines filtered from public history
+without deleting DB rows or censoring player JSON. Model attempt pacing avoids
+retrying one unanswered call every5sec; new speech/history focusedAPI checks7PASS.
+Partial boundary API assertion added.
+
+Important geometry finding: old new-nav checked river/ravine but client-only
+ponds/ridges could be crossed. Added AuthoredTerrain.cs as collision port of
+UNCHANGED worldMap.buildLayout, preserving all random draws. Eight independent
+browser-generated golden fixtures (86400tiles) match server masks/hash exactly.
+Domain380PASS after terrain navigation integration. Rope bridges remain passable;
+no map drawing/seed/asset changes. Added actual path/water assertions to simulation
+(to run on final source). New terrain code/masks do not require another migration.
+
+Need next: final type/build + targeted updated browser checks and Domain/API as
+needed; commit final source, full exact CI on PR37 (supersedes9c615c4). No release
+readiness claim until finalCI. Initial local118browser suite was for9c615c4 and may
+be stopped once superseded; do not claim it tests the later source.
+
+Private ops prepared locally /workspace/bolig-almighty-release:
+live_combat_release.py (hard05:00UTCtimegate), test_live_combat_release.py(3PASS),
+new workflow triggering ONLY live-combat-request.json. That trigger file does NOT
+exist; do NOT create/push before07:00Oslo. Prepare candidate JSON/payload/docs now,
+with exact final game/bot SHA+CI receipt, readytrue only after finalCI. Current
+private branch remainsa0dcc1e, changes not yet committed/pushed. OLDgame61d726c;
+one bot filealmighty.py; new private record live-combat-0.7. Rollback withheld if
+new pending battle state exists (old engine would resolve it incorrectly).
+Automation already scheduled, must update its prompt with final manifest/PR/SHA
+and exact future activation/check instructions once ready. Automation id is in
+session tool history, never publish it to user. Server untouched until deadline.
+
+## Checkpoint5 — final source follow-up before exact CI
+
+Initial9c615c4 CI38812040529 completed SUCCESS:372Domain+213API+
+117browser/1expectedskip; frontend/DockerPASS. Local initial browser run was
+superseded/interrupted after68passed and a phone180sec timeout under software
+rendering load; do not call it a full local pass. Remote exact initial source
+completed the full browser suite successfully. Later source requires freshCI.
+
+Terrain golden parity all8cases PASS;380Domain tests. Added actual movement/water
+assertions, real wall repair destination, and safe auto-night skip if all approaches
+blocked. Broken gear now included in defender reports. Native speech history guard
+keeps invalid legacy DB records without displaying them, preserves player JSON,
+and attempts obey pacing even when the model is silent. Seven targeted chat/API
+checks PASS, plus real PostgreSQL parallel tick/reload/history-trim/one-time reward
+integration PASS. Final frontend/source checks and full new exactCI next.
+
+No server changes. All0.7/runtime ready flags remainfalse until the newCI finishes.

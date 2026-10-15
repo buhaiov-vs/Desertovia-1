@@ -299,8 +299,12 @@ export class EnemyLayer {
   pick(x:number,y:number):{battleId:string;unitId:string}|null{
     for(const battle of this.battles){
       if(['Warning','Cancelled','Finished'].includes(battle.phase))continue
-      const unit=battle.units.filter(u=>u.health>0&&!u.exitedAt&&Math.hypot(u.x*TILE-x,u.y*TILE-y)<TILE)
-        .sort((a,b)=>Math.hypot(a.x*TILE-x,a.y*TILE-y)-Math.hypot(b.x*TILE-x,b.y*TILE-y))[0]
+      const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
+      const height=(variant:string)=>enemyHeight(kind)*(variant==='strong'?1.35:variant==='weak' ? .85 : 1)
+      const unit=battle.units.filter(u=>{
+        const dy=y-u.y*TILE
+        return u.health>0&&!u.exitedAt&&Math.abs(u.x*TILE-x)<=TILE*.8&&dy>=-height(u.variant)-4&&dy<=6
+      }).sort((a,b)=>Math.hypot(a.x*TILE-x,a.y*TILE-height(a.variant)/2-y)-Math.hypot(b.x*TILE-x,b.y*TILE-height(b.variant)/2-y))[0]
       if(unit){this.selectedUnit=unit.id;return{battleId:battle.id,unitId:unit.id}}
     }
     return null
@@ -327,8 +331,9 @@ export class EnemyLayer {
       view.actor.alpha=dead?Math.max(0,1-(now-deathAt)/10000):1
       view.bar.clear()
       if(!dead){
-        view.bar.rect(-13,-32,26,4).fill(0x241910)
-        view.bar.rect(-12,-31,24*Math.max(0,hp/Math.max(1,max)),2).fill(kind?0xda5546:0x68c86a)
+        const barY=-(kind?enemyHeight(kind)*size:26)-7
+        view.bar.rect(-13,barY,26,4).fill(0x241910)
+        view.bar.rect(-12,barY+1,24*Math.max(0,hp/Math.max(1,max)),2).fill(kind?0xda5546:0x68c86a)
         if(id===this.selectedUnit)view.bar.circle(0,0,14*size).stroke({color:0xffd75b,width:2})
       }
       view.bar.position.set(view.actor.x,view.actor.y)

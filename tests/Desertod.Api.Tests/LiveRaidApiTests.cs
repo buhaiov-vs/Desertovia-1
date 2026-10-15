@@ -125,6 +125,46 @@ public sealed class LiveRaidApiTests(DesertodApiFactory factory)
         Assert.False(after.CycleTired);
     }
     [Fact]
+    public async Task Parallel_ticks_survive_reload_finish_once_and_trim_nested_legacy_history()
+    {
+        var v=await players.FoundVillageAsync("Persisted fight");var worker=await players.JoinAsync(v);
+        await players.ArrangeCitizenAsync(worker.Id,(c,now)=>{c.CurrentTaskId=GameCatalog.KeepWatch;c.CycleStartedAt=now;c.CycleEndsAt=now.AddHours(1);c.CycleSettled=false;});
+        await players.ArrangeVillageAsync(v.Slug,(city,now)=>{
+            for(var i=0;i<11;i++)city.Raids.Add(new(){Enemy=EnemyKind.Skeleton,Count=1,Outcome=RaidOutcome.Repelled,StrikesAt=now.AddMinutes(-20-i),ResolvedAt=now.AddMinutes(-19-i),Loot=[new(){Kind=ResourceKind.IronOre,Amount=1}]});
+        });
+        var announced=await OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+"/undead",new{enemy="Skeleton",size="Small"}));
+        var raidId=announced.GetProperty("raids").EnumerateArray().Single(r=>r.GetProperty("outcome").GetString()=="Pending").GetProperty("id").GetGuid();
+        Guid villageId;
+        await using(var db=await Db())
+        {
+            var city=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);villageId=city.Id;
+            var battle=await db.RaidBattles.SingleAsync(b=>b.Id==raidId);var now=factory.Clock.GetUtcNow();
+            battle.StartsAt=now.AddSeconds(-1);battle.LastTickAt=battle.StartsAt;battle.EndsAt=now.AddMinutes(4);
+            city.Raids.Single(r=>r.Id==raidId).StrikesAt=battle.StartsAt;RaidRules.UpdateNextRaidAt(city);
+            foreach(var unit in battle.Units){unit.X=14.5;unit.Y=13.5;unit.Health=unit.MaximumHealth=5;unit.Speed=0;unit.Attack=0;}
+            await db.SaveChangesAsync();
+        }
+        var service=factory.Services.GetRequiredService<GameService>();
+        await service.RaidVillageAsync(villageId,default);
+        await using(var reloaded=await Db())Assert.True((await reloaded.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==raidId)).Revision>0);
+        for(var i=0;i<12;i++)
+        {
+            factory.Clock.Advance(TimeSpan.FromSeconds(1));
+            await Task.WhenAll(service.RaidVillageAsync(villageId,default),service.RaidVillageAsync(villageId,default));
+        }
+        await using(var db=await Db())
+        {
+            var city=await db.Villages.AsNoTracking().SingleAsync(x=>x.Id==villageId);
+            var battle=await db.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==raidId);
+            Assert.Equal("Finished",battle.Phase);Assert.NotNull(battle.FinishedAt);
+            Assert.InRange(city.Raids.Count,1,RaidRules.KeptRaids);
+            Assert.Equal(battle.Units.Count,city.Raids.Single(r=>r.Id==raidId).Killed);
+            Assert.Equal(battle.Units.Count*RaidRules.RenownPerKill,(await players.LoadCitizenAsync(worker.Id)).Renown);
+        }
+        var renown=(await players.LoadCitizenAsync(worker.Id)).Renown;
+        await service.RaidVillageAsync(villageId,default);Assert.Equal(renown,(await players.LoadCitizenAsync(worker.Id)).Renown);
+    }
+    [Fact]
     public void Notification_batches_publish_only_committed_effects()
     {
         var changes=new VillageStateChanges();var count=0;

@@ -41,7 +41,7 @@ public sealed class ChatService(
             .ToListAsync(cancellationToken);
         var chaplain = await db.ChaplainMessages.AsNoTracking().Where(m => m.VillageId == member.VillageId)
             .OrderByDescending(m => m.SentAt).Take(HistoryLength).ToListAsync(cancellationToken);
-        return messages.Select(ToDto).Concat(chaplain.Select(ToDto)).OrderBy(m => m.SentAt).ThenBy(m => m.Id)
+        return messages.Select(ToDto).Concat(chaplain.Where(m=>ChaplainSpeech.IsPlainText(m.Text)).Select(ToDto)).OrderBy(m => m.SentAt).ThenBy(m => m.Id)
             .TakeLast(HistoryLength).ToList();
     }
 

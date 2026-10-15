@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { test, expect } from './fixtures.ts'
 type RaidBattle={revision:number;units:{id:string;x:number;y:number;health:number;state:string;diedAt:string|null}[];[key:string]:unknown}
 type Citizen={energy:number;maximumEnergy:number;energyPerHour:number;serverNow:string}
 
-type Stand={initial:RaidBattle;orders:{target:string|null;mode:string}[];update:(b:RaidBattle,time?:number)=>{children:number;positions:number[][];rotations:number[]};pick:(x:number,y:number)=>unknown;mergeBattles:(a:RaidBattle[],b:RaidBattle[])=>RaidBattle[];currentEnergy:(c:Citizen,now:number)=>number}
+type Stand={terrain:(seed:number,wilds:unknown)=>number[];initial:RaidBattle;orders:{target:string|null;mode:string}[];update:(b:RaidBattle,time?:number)=>{children:number;positions:number[][];rotations:number[]};pick:(x:number,y:number)=>unknown;mergeBattles:(a:RaidBattle[],b:RaidBattle[])=>RaidBattle[];currentEnergy:(c:Citizen,now:number)=>number}
 
 test('live renderer shows every actual enemy, individual deaths and authoritative positions',async({page})=>{
   await page.goto('/e2e/live-combat-harness.html');await page.waitForFunction(()=>!!(window as unknown as {combatStand:unknown}).combatStand)
@@ -14,11 +16,11 @@ test('live renderer shows every actual enemy, individual deaths and authoritativ
     b.units[1].x+=1;b.revision++
     const changed=s.update(b)
     return {count:start.children,changed:changed.children,dead:changed.rotations.filter(n=>Math.abs(n-Math.PI/2)<.01).length,
-      picked:s.pick(b.units[1].x*16,b.units[1].y*16),positionsChanged:JSON.stringify(start.positions)!==JSON.stringify(changed.positions)}
+      picked:s.pick(b.units[1].x*16,b.units[1].y*16),headPick:s.pick(b.units[1].x*16,b.units[1].y*16-24),positionsChanged:JSON.stringify(start.positions)!==JSON.stringify(changed.positions)}
   })
   expect(result.count).toBe(26) // 12 enemy actor/bar pairs and the guard health bar pair.
   expect(result.changed).toBe(26);expect(result.dead).toBe(1);expect(result.positionsChanged).toBe(true)
-  expect(result.picked).toEqual({battleId:'battle',unitId:'enemy-1'})
+  expect(result.picked).toEqual({battleId:'battle',unitId:'enemy-1'});expect(result.headPick).toEqual(result.picked)
 })
 
 for(const width of [320,390,1280])test(`enemy controls fit ${width}px and send orders without local damage`,async({page})=>{
@@ -49,4 +51,14 @@ test('a stale village snapshot cannot rewind a newer battle revision and energy 
     return {revision:result.revision,hp:result.units[0].health,energy:s.currentEnergy(c,Date.parse(c.serverNow)+900000)}
   })
   expect(result).toEqual({revision:4,hp:7,energy:1.5})
+})
+
+
+test('server collision fixtures still match the authored ponds, mountains and marsh',async({page})=>{
+  await page.goto('/e2e/live-combat-harness.html');await page.waitForFunction(()=>!!(window as unknown as {combatStand:unknown}).combatStand)
+  const cases=JSON.parse(readFileSync(new URL('./fixtures/authored-terrain.json',import.meta.url),'utf8')) as {seed:number;wilds:unknown;hash:string}[]
+  for(const sample of cases){
+    const mask=await page.evaluate(({seed,wilds})=>(window as unknown as {combatStand:Stand}).combatStand.terrain(seed,wilds),sample)
+    expect(createHash('sha256').update(Buffer.from(mask)).digest('hex')).toBe(sample.hash)
+  }
 })

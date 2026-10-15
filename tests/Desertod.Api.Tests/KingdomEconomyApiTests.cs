@@ -265,6 +265,7 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
             city.Structures.Add(new Structure{Kind=BuildingKind.LeanTo,PlotId="4,18",BuiltAt=now});
             var s=StorageBuilding.Create(StorageKind.TownHall,"3,3",now);s.Put(resource,10);city.Storages.Add(s);
         });
+        await Players.AssertRuleBrokenAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",new{requestId=Guid.NewGuid(),action="private-build",building="Hut",x=-1,y=10}),"building.publicApproval");
         var request=new{requestId=Guid.NewGuid(),action="private-build",building="Hut",x=-8,y=10};
         await Players.OkJsonAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",request));
         await Players.OkJsonAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",request));

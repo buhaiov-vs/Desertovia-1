@@ -24,7 +24,7 @@ export function CharacterSheet({ citizen, catalog, structures }: { citizen: Citi
       <h3 className="character-title">
         {citizen.appearance && <CharacterPortrait appearance={citizen.appearance} scale={3} />}
         <span>
-          {citizen.name} <span className="muted">— {citizenTitle(citizen, i18n)}</span>
+          {t('character.mine')} {citizen.name} <span className="muted">— {citizenTitle(citizen, i18n)}</span>
         </span>
       </h3>
       <div className="character-summary">
@@ -117,11 +117,6 @@ export function CharacterSheet({ citizen, catalog, structures }: { citizen: Citi
               <td className="stat-progress">
                 {stat.experienceToNext > 0 ? (
                   <>
-      {citizen.exhaustedUntil&&Date.parse(citizen.exhaustedUntil)>Date.now()&&<p className="warning">Без сознания от переутомления. Восстановление: {new Date(citizen.exhaustedUntil).toLocaleTimeString()}</p>}
-      {!!citizen.exhaustedCycles&&<p className="small warning">Работа на последнем дыхании: {citizen.exhaustedCycles}/3. Затем обморок на 12 игровых часов.</p>}
-      {citizen.recovery?.effectKind&&citizen.recovery.effectUntil&&Date.parse(citizen.recovery.effectUntil)>Date.now()&&<p className="warning">{medicalReasons[citizen.recovery.effectKind]??'Больничное осложнение'} До {new Date(citizen.recovery.effectUntil).toLocaleString()}</p>}
-      {citizen.homePlotId&&<p className="small">Жильё: {citizen.homePlotId}</p>}
-      {citizen.spouseName&&<p className="small">Супруг: {citizen.spouseName}</p>}
                     <div className="bar">
                       <div style={{ width: `${(stat.experience / stat.experienceToNext) * 100}%` }} />
                     </div>

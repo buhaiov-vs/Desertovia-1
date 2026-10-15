@@ -116,6 +116,16 @@ public static class CycleEngine
 
         CheckHands(citizen, village, task, now);
         CheckProjectTask(citizen, task, context);
+        var projectRoom = int.MaxValue;
+        var projectKey = ProjectWorkKey(task);
+        if (projectKey is not null && context.Project is { } reservedProject)
+        {
+            var room = task.Effect == TaskEffect.Build
+                ? Math.Max(0, reservedProject.BuildLimit - reservedProject.BuildProgress - (reservedProject.StagedBridge && !reservedProject.HasCrew(citizen.AccountId, context.RecentCitizenCount) ? 1 : 0))
+                : reservedProject.Remaining(projectKey);
+            projectRoom = room - context.ReservedWork(reservedProject.Id.ToString(), 0, projectKey, room, citizen.Id);
+            if (projectRoom <= 0) throw new GameRuleException("site.jobBusy", "All needed work is already assigned.");
+        }
         CheckPrey(village, task, now);
         var repairAt = task.Effect == TaskEffect.Repair
             ? CombatRules.MostDamaged(village) ?? throw new GameRuleException("repair.nothing", "No building needs repair.")
@@ -154,8 +164,14 @@ public static class CycleEngine
         if (task.RequiredBuilding is {} used && village.Structures.FirstOrDefault(s => s.Kind == used) is {} worn)
             work *= worn.Damage > 75 ? 1.25 : worn.Damage > 50 ? 1.1 : 1;
         var walk = repairYard is { } yard ? WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard) : Walk(citizen, village, task, spot, now);
-        Begin(citizen, task.Id, work + walk, WeatherRules.EnergyCost(village, !WeatherRules.IsIndoor(task), now) *
-            (task.Effect is TaskEffect.Build or TaskEffect.Repair ? 2 : task.Effect == TaskEffect.Supervise || task.Inputs.Count > 0 ? 1.5 : 1.25), village, now, walk);
+        Begin(citizen, task.Id, work + walk, WorkEnergy.TaskCost(village, task, now), village, now, walk);
+        if (projectKey is not null && context.Project is { } acceptedProject)
+        {
+            var factor = TaskYieldFactor(citizen, village, task, now);
+            var perCycle = task.Effect == TaskEffect.Deliver ? task.Outputs[0].Amount : task.BaseYield;
+            citizen.ReservedSiteWork = Math.Min(projectRoom, YieldMath.Whole(perCycle * factor));
+            citizen.ReservedProjectId = acceptedProject.Id;
+        }
         citizen.SupervisedProgress = task.Effect==TaskEffect.Supervise ? context.Project?.BuildProgress : null;
         citizen.CurrentSiteId = null;
         citizen.CurrentSiteStage = null;
@@ -188,6 +204,14 @@ public static class CycleEngine
         CheckReady(citizen, now);
         var job = ConstructionRules.CheckJob(village, citizen, plotId, stage, jobId, context.RecentCitizenCount);
 
+        var site = ConstructionRules.FindSite(village, plotId);
+        var room = jobId == BuildingCatalog.LendAHand
+            ? ConstructionSite.CrewNeeded(site.Definition.Stages[stage], context.RecentCitizenCount) - site.HandCount(stage)
+            : job.Kind == JobKind.Labor ? site.LaborRoom(stage, jobId) : site.Remaining(stage, jobId);
+        var free = room - context.ReservedWork(plotId, stage, jobId, room, citizen.Id);
+        if (free <= 0)
+            throw new GameRuleException("site.jobBusy", "All needed work is already assigned.");
+
         var yard = WorldMap.Yard(plotId);
         var duration = job.Kind == JobKind.Haul
             ? SkillRules.WorkTime(citizen, job.Skill, 0, BuildingCatalog.HaulBaseTime) + WorldMap.Walk(
@@ -197,9 +221,10 @@ public static class CycleEngine
 
         BankAccess.Require(village, yard);
         if (DayCycle.IsNight(now) && job.Kind == JobKind.Labor) duration += GameRules.CraftLength * .25;
-        Begin(citizen, job.Id, duration, WeatherRules.EnergyCost(village, true, now) * (job.Kind == JobKind.Labor ? 2 : 1.25), village, now, WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard));
+        Begin(citizen, job.Id, duration, WorkEnergy.JobCost(village, job, now), village, now, WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard));
         citizen.CurrentSiteId = plotId;
         citizen.CurrentSiteStage = stage;
+        citizen.ReservedSiteWork = Math.Min(free, jobId == BuildingCatalog.LendAHand ? 1 : SiteWorkYield(citizen, village, job, now));
     }
 
     /// <summary>Starts researching the technology the citizens voted for, at its building.</summary>
@@ -320,10 +345,9 @@ public static class CycleEngine
         task=ProjectTask(task,context);
         var village = context.Village;
         var project = context.Project is { Status: ProjectStatus.Active } active ? active : null;
-        var factor = YieldFactor(citizen, village, task.Primary, task.Secondary, now) * TechnologyRules.YieldMultiplier(village, task.Id)
-                     * SkillRules.YieldMultiplier(citizen, task.Skill, task.SkillLevel)
-                     * WeatherRules.YieldMultiplier(village, task, WorkedAt(citizen, now))
-                     * CombatRules.BuildingMultiplier(village, task);
+        var factor = TaskYieldFactor(citizen, village, task, now);
+        var projectClaim = citizen.ReservedProjectId is { } projectId
+            ? (project?.Id == projectId ? citizen.ReservedSiteWork ?? 0 : 0) : int.MaxValue;
 
         var produced = new List<ResourceAmount>();
         var carried = new List<ResourceAmount>();
@@ -468,7 +492,7 @@ public static class CycleEngine
                 var amount = project is null
                     ? 0
                     : Min(YieldMath.Whole(output.Amount * factor), Available(citizen, village, output.Resource), project.Remaining(key),
-                        project.ContributionRoom(citizen.Id, key, context.ActiveCitizenCount));
+                        project.ContributionRoom(citizen.Id, key, context.ActiveCitizenCount), projectClaim);
 
                 if (amount <= 0)
                 {
@@ -493,7 +517,7 @@ public static class CycleEngine
                         ? project.Remaining(key)
                         : Math.Max(0, project.BuildLimit - project.BuildProgress - (project.StagedBridge && !project.HasCrew(citizen.AccountId, context.RecentCitizenCount) ? 1 : 0));
                     amount = Min(YieldMath.Whole(task.BaseYield * factor), limit,
-                        project.ContributionRoom(citizen.Id, key, context.ActiveCitizenCount));
+                        project.ContributionRoom(citizen.Id, key, context.ActiveCitizenCount), projectClaim);
                 }
 
                 if (amount <= 0)
@@ -618,9 +642,8 @@ public static class CycleEngine
         var plotId = citizen.CurrentSiteId!;
         var stage = citizen.CurrentSiteStage ?? 0;
         var site = village.Sites.SingleOrDefault(s => s.PlotId == plotId);
-        var factor = YieldFactor(citizen, village, job.Primary, job.Secondary, now) / GameRules.StatFactorBase
-                     * SkillRules.YieldMultiplier(citizen, job.Skill, 0)
-                     * WeatherRules.JobMultiplier(village, WorkedAt(citizen, now));
+        var potential = SiteWorkYield(citizen, village, job, now);
+        var ownLimit = citizen.ReservedSiteWork ?? int.MaxValue;
         var amount = 0;
         var produced = new List<ResourceAmount>();
         var carried = new List<ResourceAmount>();
@@ -640,7 +663,7 @@ public static class CycleEngine
             else if (job.Kind == JobKind.Haul)
             {
                 var resource = job.Resource!.Value;
-                amount = Min(YieldMath.Whole(job.PerCycle * factor), Available(citizen, village, resource), site.Remaining(stage, job.Id));
+                amount = Min(potential, Available(citizen, village, resource), site.Remaining(stage, job.Id), ownLimit);
                 if (amount > 0)
                 {
                     TakeFromHandsThenStorage(citizen, village, resource, amount);
@@ -649,7 +672,7 @@ public static class CycleEngine
             }
             else if (stage == site.Stage)
             {
-                amount = Min(YieldMath.Whole(job.PerCycle * factor), site.LaborRoom(stage, job.Id));
+                amount = Min(potential, site.LaborRoom(stage, job.Id), ownLimit);
                 if (amount > 0)
                 {
                     site.Record(stage, job.Id, amount, citizen.Id);
@@ -672,10 +695,28 @@ public static class CycleEngine
         var hungry = Eat(citizen, village, now);
 
         var report = Finish(citizen, village, job.Id, job.Primary, job.Secondary, job.Skill, SkillRules.Challenge(citizen, job.Skill, 0),
-            job.Id == "dismantle" || overflowed ? 0 : Math.Min(1, (double)amount / Math.Max(1, YieldMath.Whole(job.PerCycle * factor))), hungry,
+            job.Id == "dismantle" || overflowed ? 0 : Math.Min(1, (double)amount / Math.Max(1, potential)), hungry,
             produced, carried, 0, overflowed ? 0 : amount, false, overflowed);
         return report with { SiteId = plotId, BuildingCompleted = completed, Lost = lost };
     }
+
+    public static string? ProjectWorkKey(TaskDefinition task) => task.Effect switch
+    {
+        TaskEffect.Build => VillageProject.BuildKey,
+        TaskEffect.Survey => VillageProject.SurveyKey,
+        TaskEffect.Deliver => task.Outputs[0].Resource.ToString(),
+        _ => null,
+    };
+
+    private static double TaskYieldFactor(Citizen citizen, Village village, TaskDefinition task, DateTimeOffset now) =>
+        YieldFactor(citizen, village, task.Primary, task.Secondary, now) * TechnologyRules.YieldMultiplier(village, task.Id)
+        * SkillRules.YieldMultiplier(citizen, task.Skill, task.SkillLevel)
+        * WeatherRules.YieldMultiplier(village, task, WorkedAt(citizen, now)) * CombatRules.BuildingMultiplier(village, task);
+
+    private static int SiteWorkYield(Citizen citizen, Village village, JobDefinition job, DateTimeOffset now) =>
+        YieldMath.Whole(job.PerCycle * YieldFactor(citizen, village, job.Primary, job.Secondary, now) / GameRules.StatFactorBase
+            * SkillRules.YieldMultiplier(citizen, job.Skill, 0)
+            * WeatherRules.JobMultiplier(village, WorkedAt(citizen, now)));
 
     private static CycleReport Finish(
         Citizen citizen,
@@ -823,12 +864,14 @@ public static class CycleEngine
         var renewing = citizen.GraceEndsAt is not null && now <= citizen.GraceEndsAt;
         citizen.Streak = renewing ? citizen.Streak + 1 : 0;
 
-        if (citizen.HasMedicalEffect("snorers", now)) energyCost *= 1.2;
+        energyCost = WorkEnergy.WithMedical(citizen, energyCost, now);
         var energy = citizen.CurrentEnergy(now, village);
         citizen.CycleTired = energy < energyCost;
         citizen.StoredEnergy = citizen.CycleTired ? energy : energy - energyCost;
         citizen.EnergyUpdatedAt = now;
 
+        citizen.ReservedSiteWork = null;
+        citizen.ReservedProjectId = null;
         citizen.CurrentTaskId = taskId;
         citizen.CurrentTechnologyId = null;
         citizen.Spot = null;

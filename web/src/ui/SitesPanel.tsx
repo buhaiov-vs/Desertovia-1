@@ -1,3 +1,4 @@
+import { ActionEnergy } from './ActionEnergy'
 import { LEND_A_HAND, type Catalog, type Citizen, type JobDefinition, type Site, type SiteJob, type VillageState } from '../api'
 import { useI18n } from '../i18n'
 import { TaskIcon } from './TileIcon'
@@ -143,7 +144,9 @@ function JobCard({
   const done = !lend && job.done >= job.required - 1e-6
   const remaining = Math.max(0, job.required - job.done)
   let lock: string | null = null
-  if (!done && definition?.kind === 'Haul' && definition.resource) {
+  if (!done && !lend && Math.max(0, job.room - (job.reserved ?? 0)) <= 0 && (job.reserved ?? 0) > 0) {
+    lock = t('site.jobBusy')
+  } else if (!done && definition?.kind === 'Haul' && definition.resource) {
     const resource = definition.resource
     const inHands = citizen.load.find((good) => good.resource === resource)?.amount ?? 0
     const inStorage = village.resources.find((r) => r.kind === resource)?.amount ?? 0
@@ -169,7 +172,9 @@ function JobCard({
         <span className="task-meta">
           {lend ? '' : `${i18n.amount(job.done)} / ${i18n.amount(job.required)} · `}
           {meta}
+          {(job.reserved ?? 0) > 0 && ` · ${t('site.assigned', { amount: job.reserved ?? 0, free: Math.max(0, job.room - (job.reserved ?? 0)) })}`}
         </span>
+        <ActionEnergy citizen={citizen} action={job.jobId} />
         <div className="bar thin">
           <div style={{ width: `${Math.min(100, (job.done / Math.max(job.required, 1e-6)) * 100)}%` }} />
         </div>

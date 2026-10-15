@@ -43,6 +43,7 @@ jobs:
       - run: dotnet test Desertod.slnx -c Release --no-build --logger trx --results-directory TestResults
 
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: ${{ !cancelled() }}
         with:
           name: backend-test-results
@@ -121,6 +122,7 @@ jobs:
         working-directory: web
 
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: ${{ failure() }}
         with:
           name: playwright-report

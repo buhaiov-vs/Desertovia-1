@@ -93,6 +93,10 @@ public sealed class Citizen
 
     public int? CurrentSiteStage { get; set; }
 
+    /// <summary>Useful construction work claimed by this paid cycle; null for pre-reservation cycles.</summary>
+    public int? ReservedSiteWork { get; set; }
+    public Guid? ReservedProjectId { get; set; }
+
     /// <summary>Spot the player picked on the map for the current gathering task; null works at the task's workplace.</summary>
     public double? SpotX { get; set; }
 

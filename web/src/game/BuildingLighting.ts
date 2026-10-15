@@ -69,6 +69,7 @@ function sampling(texture: Texture, p: ReturnType<typeof registeredPlacement>) {
 
 /** A fixed, aligned mesh with two preloaded textures; state updates retain the same light level. */
 export class BuildingLighting extends Container {
+  readonly roofAnchor: { x: number; y: number }
   private readonly mesh: Mesh<MeshGeometry, Shader>
   private readonly shader: Shader
   private readonly glowShader: Shader
@@ -113,6 +114,7 @@ export class BuildingLighting extends Container {
     pool.blendMode = 'add'
     this.light.addChild(pool,emission)
     this.position.set((x+plotWidth/2)*TILE-width/2,(y+plotHeight)*TILE-height)
+    this.roofAnchor = { x: this.x + width / 2, y: this.y }
     this.zIndex=(y+plotHeight)*TILE
     this.addChild(this.mesh)
     this.light.position.copyFrom(this.position)

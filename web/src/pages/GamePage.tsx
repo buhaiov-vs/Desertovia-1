@@ -842,7 +842,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         <ChatPanel
           key={slug}
           incoming={live.chatArrivals}
-          interrupted={panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
+          interrupted={showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}

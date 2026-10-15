@@ -95,7 +95,7 @@ export const en = {
     'hint.resourceFromNone': 'Nobody in the village knows how to get it yet.',
     'hint.resourceUses': 'Needed for: {uses}.',
     'hint.energy':
-      'Energy: {energy} of {maximum}. Every task costs {cost}; outdoor work in the rain costs more. With no energy left a task gives no experience and only {tiredYield}% of the yield.\nMaximum energy is {base} + {perEndurance} for every point of Endurance.',
+      'Energy: {energy} / {maximum}. Base cost: {cost}; construction, crafting, weather and medical effects can increase it. If energy is below the action cost at start, work is slower and rewards are reduced. Regeneration does not speed up a cycle already started tired. Maximum: {base} + {perEndurance} per Endurance.',
     'hint.perHour':
       'Energy you get back every hour, while working and while away.\nAt full speed (100%) energy refills from 0 to {maximum} in {hours} h: {fullPerHour} per hour. Your rest speed is {percent}%, so {fullPerHour} × {percent}% = {perHour} per hour.',
     'hint.fullIn': 'Full in {hours} h {minutes} min.',
@@ -150,7 +150,12 @@ export const en = {
     'banner.building': 'Building {project}',
 
     'next.working': '— next action in {seconds} s',
-    'next.tired': '(tired)',
+    'task.energyPrice': 'Energy: {cost}',
+    'task.energyLow': 'Not enough energy: work will be slower',
+    'site.assigned': 'Assigned: {amount}, free: {free}',
+    'site.jobBusy': 'All needed work is already assigned.',
+    'character.mine': 'My character —',
+    'next.tired': '(started tired; regeneration applies to your next action)',
     'next.cancel': 'Cancel',
     'next.cancelTitle': 'Stop this task. Spent materials and energy are lost, and it gives nothing.',
     'next.awaiting': '— done! Repeat within {seconds} s to keep your combo.',
@@ -1250,6 +1255,7 @@ export const en = {
     'site.stageDone': 'This part of the building is already finished.',
     'site.handNotNeeded': 'No extra workers are needed here right now.',
     'site.alreadyHelped': 'You already worked on this stage. Another player must help.',
+    'site.jobBusy': 'All needed work is already assigned.',
     'site.jobDone': 'This job is already done.',
     'site.noMaterial': 'There is no {resource} to carry. Gather some first.',
     'site.stageNotReady': 'Finish the {stage} first.',

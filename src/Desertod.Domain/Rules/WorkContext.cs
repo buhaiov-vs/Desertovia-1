@@ -25,7 +25,19 @@ public sealed class WorkContext
     /// <summary>Other citizens currently in a "build" cycle.</summary>
     public int BuildersWorking { get; init; }
 
+    /// <summary>Persisted unfinished construction cycles, including overdue/offline/hospitalized citizens.</summary>
+    public IReadOnlyList<SiteWorkClaim> SiteWork { get; init; } = [];
+
+    public int ReservedWork(string plotId, int stage, string jobId, int remaining, Guid? except = null)
+    {
+        var claims = SiteWork.Where(c => c.CitizenId != except && c.PlotId == plotId && c.Stage == stage && c.JobId == jobId).ToList();
+        // Let old paid cycles finish under their old rules before assigning any new work on this job.
+        return claims.Any(c => c.Amount is null) ? remaining : (int)Math.Min(remaining, claims.Sum(c => (long)(c.Amount ?? 0)));
+    }
+
     public Random Random { get; init; } = Random.Shared;
 
     public static WorkContext For(Village village) => new() { Village = village };
 }
+
+public sealed record SiteWorkClaim(Guid CitizenId, string PlotId, int Stage, string JobId, int? Amount);

@@ -922,23 +922,14 @@ public sealed partial class GameService(
         foreach (var chunk in citizenIds.Chunk(SettlementChunkSize))
         {
             using var _ = await AcquireLockAsync(villageId, cancellationToken);
-            var remaining = new Queue<Guid>(chunk);
-            // A conflict spoils the context; the retry goes on with the citizens not saved yet.
-            await WithRetryAsync(async db =>
+            settled += await WithRetryAsync(async db =>
             {
                 var village = await db.Villages.SingleAsync(v => v.Id == villageId, cancellationToken);
-                while (remaining.TryPeek(out var citizenId))
-                {
-                    if (await SettleOneAsync(db, village, citizenId, cancellationToken))
-                    {
-                        settled++;
-                    }
-
-                    remaining.Dequeue();
-                }
-
-                return true;
-            }, cancellationToken);
+                var count = 0;
+                foreach (var citizenId in chunk)
+                    if (await SettleOneAsync(db, village, citizenId, cancellationToken)) count++;
+                return count;
+            }, cancellationToken, villageId);
         }
 
         if (settled > 0)
@@ -1180,11 +1171,33 @@ public sealed partial class GameService(
             })
             .ToListAsync(cancellationToken);
 
+        var projectTaskIds = GameCatalog.Tasks.Where(task => CycleEngine.ProjectWorkKey(task) is not null).Select(task => task.Id).ToArray();
+        var unfinished = await db.Citizens.AsNoTracking()
+            .Where(c => c.VillageId == village.Id && !c.CycleSettled && c.CurrentTechnologyId == null
+                && (c.CurrentSiteId != null || projectTaskIds.Contains(c.CurrentTaskId!)))
+            .ToListAsync(cancellationToken);
+        foreach (var entry in db.ChangeTracker.Entries<Citizen>().Where(e => e.Entity.VillageId == village.Id))
+        {
+            unfinished.RemoveAll(c => c.Id == entry.Entity.Id);
+            if (!entry.Entity.CycleSettled) unfinished.Add(entry.Entity);
+        }
+        var siteWork = new List<SiteWorkClaim>();
+        foreach (var c in unfinished)
+        {
+            if (c.CurrentTechnologyId is not null) continue;
+            if (c.CurrentSiteId is { } plot && c.CurrentSiteStage is { } stage && c.CurrentTaskId is { } job)
+                siteWork.Add(new SiteWorkClaim(c.Id, plot, stage, job, c.ReservedSiteWork));
+            else if (project is not null && (c.ReservedProjectId is null || c.ReservedProjectId == project.Id)
+                && GameCatalog.FindTask(c.CurrentTaskId ?? "") is { } task && CycleEngine.ProjectWorkKey(task) is { } key)
+                siteWork.Add(new SiteWorkClaim(c.Id, project.Id.ToString(), 0, key, c.ReservedSiteWork));
+        }
+
         var recentSince = now - GameRules.RecentActivityWindow;
         var working = citizens.Where(c => c.IsWorking).ToList();
         var work = new WorkContext
         {
             Village = village,
+            SiteWork = siteWork,
             Project = project,
             CompletedProjects = completedProjects.ToHashSet(),
             ActiveCitizenCount = Math.Max(1, citizens.Count(c => c.IsActive && c.CycleStartedAt >= now.AddHours(-2))),
@@ -1246,7 +1259,7 @@ public sealed partial class GameService(
     private async Task<T> WithVillageAsync<T>(Guid villageId, Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken)
     {
         using var _ = await AcquireLockAsync(villageId, cancellationToken);
-        return await WithRetryAsync(action, cancellationToken);
+        return await WithRetryAsync(action, cancellationToken, villageId);
     }
 
     private async Task<IDisposable> AcquireLockAsync(Guid villageId, CancellationToken cancellationToken)
@@ -1262,14 +1275,21 @@ public sealed partial class GameService(
         return releaser;
     }
 
-    private async Task<T> WithRetryAsync<T>(Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken)
+    private async Task<T> WithRetryAsync<T>(Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken, Guid? villageId = null)
     {
         for (var attempt = 1; ; attempt++)
         {
             await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
             try
             {
-                return await action(db);
+                if (villageId is null) return await action(db);
+                await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+                // The existing in-process lock is not shared by another API instance or settler.
+                var lockKey = villageId.Value.ToString();
+                await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
+                var result = await action(db);
+                await transaction.CommitAsync(cancellationToken);
+                return result;
             }
             catch (DbUpdateConcurrencyException) when (attempt < MaximumAttempts)
             {

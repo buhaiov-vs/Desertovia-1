@@ -199,6 +199,7 @@ function scatter(x: number, y: number): { dx: number; dy: number } {
 const groundLevel = (kind: string, y: number) => (kind === ROPE_BRIDGE ? y * TILE : (y + 3) * TILE)
 
 export class VillageWorld {
+  private readonly constructionRoofs = new WeakMap<Container, { x: number; y: number }>()
   private readonly app: Application
   private readonly tiles: TileSet
   private readonly painter: CharacterPainter
@@ -982,7 +983,7 @@ export class VillageWorld {
       this.buildingViews.push(view)
       this.objects.addChild(view)
     }
-    const name = (kind: string, storage: boolean, plot: TilePoint, alpha = 1) => {
+    const name = (kind: string, storage: boolean, view: Container, alpha = 1) => {
       if (!this.buildingName || localStorage.getItem('desertovia.buildingLabels') !== 'true') return
       const text = new Text({
         text: this.buildingName(kind, storage),
@@ -997,15 +998,21 @@ export class VillageWorld {
       text.anchor.set(0.5, 1)
       text.alpha = alpha
       this.screen.addChildAt(text, 0)
-      this.buildingLabels.push({ text, x: (plot.x + PLOT_WIDTH / 2) * TILE, y: plot.y * TILE + 2 })
+      const bounds = view.getLocalBounds()
+      const roof = view instanceof BuildingLighting || view instanceof HutConstruction || view instanceof HospitalConstruction ? view.roofAnchor : this.constructionRoofs.get(view) ?? {
+        x: view.x + bounds.x + bounds.width / 2,
+        y: view.y + bounds.y,
+      }
+      this.buildingLabels.push({ text, x: roof.x, y: roof.y })
     }
 
     for (const structure of village.structures) {
       const plot = this.plot(structure.plotId)
       if (!plot) continue
-      add(this.finishedView(structure.kind, plot.x, plot.y))
+      const view = this.finishedView(structure.kind, plot.x, plot.y)
+      add(view)
       if (structure.damage > 0) add(this.damageView(structure.plotId, structure.damage, plot.x, plot.y))
-      if (structure.kind !== 'Hospital') name(structure.kind, false, plot)
+      if (structure.kind !== 'Hospital') name(structure.kind, false, view)
       const beds = village.fields.filter((bed) => bed.plotId === structure.plotId)
       if (beds.length > 0) add(this.bedsView(beds, plot.x, plot.y))
     }
@@ -1014,17 +1021,19 @@ export class VillageWorld {
       const plot = this.plot(storage.plotId)
       const definition = this.storageDefinitions.get(storage.kind)
       if (!plot || !definition) continue
-      add(this.finishedView(storage.kind, plot.x, plot.y))
+      const view = this.finishedView(storage.kind, plot.x, plot.y)
+      add(view)
       if (storage.damage > 0) add(this.damageView(storage.plotId, storage.damage, plot.x, plot.y))
-      name(storage.kind, true, plot)
+      name(storage.kind, true, view)
       add(this.goodsYard(storage, definition, plot.x, plot.y))
     }
 
     for (const site of village.sites) {
       const plot = this.plot(site.plotId)
       if (!plot) continue
-      add(this.siteView(site, plot.x, plot.y))
-      name(site.kind, false, plot, 0.7)
+      const view = this.siteView(site, plot.x, plot.y)
+      add(view)
+      name(site.kind, false, view, 0.7)
     }
 
     const covered = new Set<string>()
@@ -1196,6 +1205,10 @@ export class VillageWorld {
 
     view.addChild(new Graphics().rect(0, 0, PLOT_WIDTH * TILE, 3 * TILE).fill({ color: 0x7a5a32, alpha: 0.35 }))
     const ghost = this.finishedView(site.kind, 0, 0, false)
+    const ghostBounds = ghost.getLocalBounds()
+    const top = ghost instanceof BuildingLighting ? ghost.roofAnchor.y : ghost.y + ghostBounds.y
+    this.constructionRoofs.set(view, { x: (x + PLOT_WIDTH / 2) * TILE,
+      y: y * TILE + Math.max(top, 3 * TILE * (1 - Math.min(1, site.progress))) })
     ghost.alpha = 0.22
     view.addChild(ghost)
 
@@ -2144,7 +2157,7 @@ export class VillageWorld {
 
     for (const label of this.buildingLabels) {
       const top = this.world.toGlobal({ x: label.x, y: label.y })
-      label.text.position.set(Math.round(top.x), Math.round(top.y))
+      label.text.position.set(Math.round(top.x), Math.round(top.y - 5))
     }
 
     for (let index = this.bubbles.length - 1; index >= 0; index--) {

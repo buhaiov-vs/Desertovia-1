@@ -52,7 +52,7 @@ public sealed record RaidDto(
     int DamagedBuildings,
     IReadOnlyList<ResourceAmount> Stolen,
     IReadOnlyList<ResourceAmount> Loot,
-    string? EntrySector = null, IReadOnlyList<RaidWaypoint>? ApproachPath = null);
+    string? EntrySector = null, IReadOnlyList<RaidWaypoint>? ApproachPath = null) { public int EngineVersion { get; init; } }
 
 /// <param name="Room">Work a labor job can take right now; it cannot run ahead of the delivered material.</param>
 public sealed record SiteJobDto(string JobId, int Done, int Required, int Room, int Reserved = 0);
@@ -185,7 +185,7 @@ public sealed record VillageStateDto(
     public IReadOnlyList<HousingDto> Housing { get; init; } = [];
     public bool BridgeOpened { get; init; }
     public IReadOnlyList<Fortification> Fortifications { get; init; } = [];
-    public IReadOnlyList<RaidBattle> Battles { get; init; } = [];
+    public IReadOnlyList<RaidBattleDto> Battles { get; init; } = [];
 }
 public sealed record HousingDto(string PlotId, int Beds, int Occupied, int Level);
 
@@ -546,7 +546,7 @@ public static class DtoMapper
         raid.Injured,
         raid.DamagedBuildings,
         raid.Stolen.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
-        raid.Loot.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(), raid.EntrySector, raid.ApproachPath);
+        raid.Loot.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(), raid.EntrySector, raid.ApproachPath) { EngineVersion=raid.EngineVersion };
 
     public static WeatherDto ToWeatherDto(this Village village, DateTimeOffset now)
     {

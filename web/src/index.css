@@ -1872,11 +1872,10 @@ input[aria-invalid='true'] {
   }
 }
 
-/* Under the minimap; stays where it is when the rest of the interface is hidden, so it is found again.
-   Above every panel and popup, below hints and the update prompt. */
+/* Map-only toggle. Dialogs/chat/selected-object cards own the layers above it. */
 .ui-toggle {
   position: absolute;
-  z-index: 999;
+  z-index: 40;
   top: calc(max(10px, env(safe-area-inset-top)) + 186px);
   right: 12px;
   display: flex;
@@ -2450,7 +2449,7 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 :root[data-ui-theme="dark"] { color-scheme:dark; }
 :root[data-ui-theme="dark"] .modal, :root[data-ui-theme="dark"] .card,
 :root[data-ui-theme="dark"] .target-popup, :root[data-ui-theme="dark"] .chat-panel,
-:root[data-ui-theme="dark"] .modal-body { background:#171b1b; color:#e9dfca; }
+:root[data-ui-theme="dark"] .modal-body, :root[data-ui-theme="dark"] .battle-controls { background:#171b1b; color:#e9dfca; }
 :root[data-ui-theme="dark"] .modal-header, :root[data-ui-theme="dark"] .target-popup-header { background:#25241e; color:#f2d58b; }
 :root[data-ui-theme="dark"] .muted { color:#b8b5a7; }
 :root[data-ui-theme="dark"] input, :root[data-ui-theme="dark"] textarea, :root[data-ui-theme="dark"] select { background:#202626; color:#ede6d4; }
@@ -2546,3 +2545,13 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
   .menu-actions { justify-content: stretch; padding: .4rem .7rem; }
   .menu-actions button { width: 100%; }
 }
+
+/* A target card fits beside the map and stays above map toggles, below chat/modals. */
+.battle-controls{position:absolute;z-index:75;left:8px;top:calc(var(--hud-top-bottom, 120px) + 70px);width:min(340px,calc(100% - 16px));max-height:45dvh;overflow:auto;padding:10px;background:var(--parchment);color:var(--ink);border:2px solid #684723;border-radius:10px;box-shadow:0 3px 12px #0007;pointer-events:auto}
+.battle-controls header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.battle-controls .close{flex:none;width:36px;height:36px;min-height:36px;padding:4px}
+.battle-controls p{margin:6px 0;overflow-wrap:anywhere}
+.battle-controls progress{width:100%;height:8px;accent-color:#ba4034}
+.battle-orders{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.battle-orders button{min-width:0;font-size:.85rem;padding:8px 4px;white-space:normal}
+@media(max-width:380px){.battle-controls{max-height:38dvh}}

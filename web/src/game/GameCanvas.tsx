@@ -33,6 +33,8 @@ interface Props {
   placement?: Placement | null
   minimap?: boolean
   /** Called with the id of the citizen clicked on the map; null turns clicking off. */
+  selectedEnemyId?:string|null
+  onEnemyPick?:((battleId:string,unitId:string)=>void)|null
   onCitizenPick?: ((citizenId: string) => void) | null
   /** Called with what a citizen could work at where the map was clicked (null for nothing) and the clicked tile point; null turns clicking off. */
   onWorldPick?: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => void) | null
@@ -52,6 +54,8 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     catalog,
     placement = null,
     minimap = true,
+    selectedEnemyId = null,
+    onEnemyPick = null,
     onCitizenPick = null,
     onWorldPick = null,
     worldPickable = null,
@@ -100,6 +104,8 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     [world, building, storage],
   )
   useEffect(() => world?.setPlacement(placement?.onPick ?? null, placement?.kind, placement?.private), [world, placement])
+  useEffect(()=>world?.setEnemySelection(selectedEnemyId),[world,selectedEnemyId])
+  useEffect(()=>world?.setEnemyPick(onEnemyPick),[world,onEnemyPick])
   useEffect(() => world?.setCitizenPick(onCitizenPick), [world, onCitizenPick])
   useEffect(() => world?.setWorldPick(onWorldPick), [world, onWorldPick])
   useEffect(() => world?.setWorldPickable(worldPickable), [world, worldPickable])

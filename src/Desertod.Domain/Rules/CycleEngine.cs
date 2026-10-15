@@ -299,6 +299,7 @@ public static class CycleEngine
     /// <summary>Banks the result of a completed cycle. Returns null if there is nothing to settle.</summary>
     public static CycleReport? Settle(Citizen citizen, WorkContext context, DateTimeOffset now)
     {
+        HospitalRules.Resume(citizen, now);
         if (citizen.RecoveryPausedAt is not null || HospitalRules.IsAdmitted(citizen, now)
             || citizen.CycleSettled || citizen.CurrentTaskId is null || citizen.CycleEndsAt is null
             || now < citizen.CycleEndsAt)
@@ -867,7 +868,7 @@ public static class CycleEngine
             throw new GameRuleException("dungeon.busy", "You are away in the dungeon.");
         }
 
-        if (citizen.CycleEndsAt is not null && now < citizen.CycleEndsAt)
+        if (!citizen.CycleSettled && citizen.CycleEndsAt is not null && now < citizen.CycleEndsAt)
         {
             throw new GameRuleException("task.cycleRunning", "The current task is not finished yet.");
         }

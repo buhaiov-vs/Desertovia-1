@@ -196,6 +196,7 @@ public static class CombatRules
         {
             citizen.InjuredUntil = until;
             citizen.IdleSpot=citizen.Spot??citizen.Trip?.To??citizen.IdleSpot;
+            if (!citizen.CycleSettled && citizen.CycleEndsAt > now) citizen.RecoveryPausedAt ??= now;
             citizen.WoundedAt = now;citizen.HospitalizedAt = null;citizen.RescueByCitizenId=null;
         }
     }
@@ -239,6 +240,7 @@ public static class CombatRules
         if (PersonalInventory.Amount(citizen, ResourceKind.Remedy) > 0) PersonalInventory.Remove(citizen, ResourceKind.Remedy, 1);
         else TakeOne(citizen, village, ResourceKind.Remedy);
         citizen.InjuredUntil = null;citizen.RescueByCitizenId=null;
+        HospitalRules.Resume(citizen, now, now);
     }
 
     /// <summary>Damaged buildings work slower: down to half speed at <see cref="MaximumDamage"/>.</summary>

@@ -211,8 +211,10 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
         await Players.OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+$"/director/{proposal.Id}/vote",new{accept=true}));
         await Players.OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+$"/director/{proposal.Id}/vote",new{accept=true}));
         var loaded=await db.Villages.AsNoTracking().SingleAsync(x=>x.Id==city.Id);var raid=Assert.Single(loaded.Raids);
-        Assert.Equal(option.Sector,raid.EntrySector);Assert.True(raid.ApproachPath.Count>1);
-        Assert.All(raid.ApproachPath.Zip(raid.ApproachPath.Skip(1)),pair=>Assert.Equal(1,Math.Abs(pair.First.X-pair.Second.X)+Math.Abs(pair.First.Y-pair.Second.Y)));
+        Assert.Equal(option.Sector,raid.EntrySector);Assert.Equal(2,raid.EngineVersion);Assert.Empty(raid.ApproachPath);
+        var battle=await db.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==raid.Id);
+        Assert.Equal(option.Sector,battle.Sector);Assert.Equal(option.Composition,battle.Composition);
+        Assert.Equal(raid.Count,battle.Units.Count);Assert.NotEmpty(battle.Units);
         Assert.True((await residents[0].Client.PutAsJsonAsync(v.Path+"/me/defense",new{mode=option.Sector})).IsSuccessStatusCode);
         var guard=await players.LoadCitizenAsync(residents[0].Id);Assert.Equal(option.Sector,guard.DefenseSector);Assert.NotNull(guard.DefenseReadyAt);
         Assert.InRange((guard.DefenseReadyAt!.Value-factory.Clock.GetUtcNow()).TotalSeconds,25,30);

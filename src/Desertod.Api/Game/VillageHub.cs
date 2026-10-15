@@ -85,7 +85,11 @@ public sealed record VillageEventsDto(
     IReadOnlyList<DungeonDto> Dungeons,
     IReadOnlyList<Guid> Left,
     IReadOnlyList<Guid> Away,
-    IReadOnlyList<Guid> Back);
+    IReadOnlyList<Guid> Back)
+{
+    public IReadOnlyList<RaidBattleDto> Battles { get; init; } = [];
+    public IReadOnlyList<Fortification>? Fortifications { get; init; }
+}
 
 /// <summary>
 /// Sends the village state at once, and queues the other events, which <see cref="VillageStatePublisher"/> sends
@@ -144,6 +148,13 @@ public sealed class VillageNotifier(IHubContext<VillageHub> hub, VillageStateCha
 
     public Task QuestCompleted(string slug, QuestCompletion completion) => Queue(slug, events => events.Quests.Add(completion));
 
+    public Task BattleUpdated(string slug,RaidBattle battle,IReadOnlyList<Fortification> walls)
+    {
+        var snapshot=battle.ToBattleDto();
+        var fortifications=walls.Select(f=>new Fortification{Id=f.Id,X=f.X,Y=f.Y,Gate=f.Gate,Open=f.Open,Damage=f.Damage}).ToArray();
+        return Queue(slug, events=>{events.Battles[snapshot.Id]=snapshot;events.Fortifications=fortifications;});
+    }
+
     public Task RaidFought(string slug, RaidReport report) => Queue(slug, events => events.Raids.Add(report));
 
     public Task DungeonEnded(string slug, DungeonDto run) => Queue(slug, events => events.Dungeons.Add(run));
@@ -167,7 +178,7 @@ public sealed class VillageNotifier(IHubContext<VillageHub> hub, VillageStateCha
                     entry.Value.Dungeons,
                     [.. entry.Value.Left],
                     [.. entry.Value.Away],
-                    [.. entry.Value.Back])))
+                    [.. entry.Value.Back]) { Battles = [..entry.Value.Battles.Values], Fortifications = entry.Value.Fortifications }))
                 .ToList();
             pending.Clear();
             return taken;
@@ -176,6 +187,7 @@ public sealed class VillageNotifier(IHubContext<VillageHub> hub, VillageStateCha
 
     private Task Queue(string slug, Action<PendingEvents> add)
     {
+        if(changes.Defer(()=>Queue(slug,add)))return Task.CompletedTask;
         lock (pending)
         {
             if (!pending.TryGetValue(slug, out var events))
@@ -198,6 +210,8 @@ public sealed class VillageNotifier(IHubContext<VillageHub> hub, VillageStateCha
         public List<QuestCompletion> Quests { get; } = [];
         public Dictionary<Guid, CitizenSummaryDto> Citizens { get; } = [];
         public List<RaidReport> Raids { get; } = [];
+        public Dictionary<Guid,RaidBattleDto> Battles { get; } = [];
+        public IReadOnlyList<Fortification>? Fortifications { get; set; }
         public List<DungeonDto> Dungeons { get; } = [];
         public HashSet<Guid> Left { get; } = [];
         public HashSet<Guid> Away { get; } = [];

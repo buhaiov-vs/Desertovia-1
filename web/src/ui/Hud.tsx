@@ -1,3 +1,5 @@
+import { currentEnergy } from '../energy'
+import { useEnergy } from './useEnergy'
 import type { CSSProperties, ReactNode } from 'react'
 import { isInjured, type Catalog, type Citizen, type CitizenSummary, type Structure, type VillageState } from '../api'
 import { useI18n } from '../i18n'
@@ -27,6 +29,7 @@ export function TopBar({
 }) {
   const i18n = useI18n()
   const { t } = i18n
+  const energy = useEnergy(citizen)
   return (
     <div className="hud-top">
       <div className="hud-top-spacer" />
@@ -44,7 +47,7 @@ export function TopBar({
           )
         })}
         <span className="resource-chip">
-          {citizen ? <span title={i18n.language==='ru'?'Личная энергия и сытость':'Personal energy and hunger'}>⚡ {Math.floor(citizen.energy)}/{Math.floor(citizen.maximumEnergy)} {citizen.isHungry?'🍽':'🥖'}</span> : <><span className="morale-icon" aria-hidden>☺</span>
+          {citizen ? <span title={i18n.language==='ru'?'Личная энергия и сытость':'Personal energy and hunger'}>⚡ {Math.floor(energy)}/{Math.floor(citizen.maximumEnergy)} {citizen.isHungry?'🍽':'🥖'}</span> : <><span className="morale-icon" aria-hidden>☺</span>
           <Hint
             text={t('hint.morale', {
               value: Math.round(village.morale * 100),
@@ -213,8 +216,7 @@ function CitizenNeeds({
   const i18n = useI18n()
   const { t } = i18n
   const meals = catalog.rules.cyclesPerMeal
-  const hoursSinceFetch = Math.max(0, now - Date.parse(citizen.serverNow)) / 3_600_000
-  const energy = Math.min(citizen.maximumEnergy, citizen.energy + citizen.energyPerHour * hoursSinceFetch)
+  const energy = currentEnergy(citizen, now)
   const drinkReadyAt = citizen.drinkReadyAt ? Date.parse(citizen.drinkReadyAt) : 0
   const cooling = now < drinkReadyAt
   const full = energy >= citizen.maximumEnergy

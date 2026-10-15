@@ -22,6 +22,7 @@ public sealed class RaidBattle
     public DateTimeOffset EndsAt { get; set; }
     public DateTimeOffset? FinishedAt { get; set; }
     public long Revision { get; set; }
+    public bool Deferred { get; set; }
     public double DamageDone { get; set; }
     public List<RaidUnit> Units { get; set; } = [];
     public List<RaidFighter> Fighters { get; set; } = [];
@@ -67,6 +68,10 @@ public sealed class RaidFighter
     public double MaximumHealth { get; set; }
     public double DamageDealt { get; set; }
     public int Kills { get; set; }
+    public int RenownEarned { get; set; }
+    public ResourceKind? Weapon { get; set; }
+    public ResourceKind? Armor { get; set; }
+    public int Arrows { get; set; }
     public bool Wounded { get; set; }
     public bool Guard { get; set; }
     public bool Active { get; set; }

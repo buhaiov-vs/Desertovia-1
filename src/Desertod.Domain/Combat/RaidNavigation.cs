@@ -10,7 +10,7 @@ public sealed class RaidNavigation
     private readonly Village village;
     private readonly HashSet<(int X, int Y)> solid = [];
     private readonly Dictionary<(int X, int Y), Fortification> walls;
-    private readonly int seed;
+    private readonly uint seed;
     private readonly Dictionary<(int X, int Y), bool> land = [];
 
     public RaidNavigation(Village village)
@@ -46,15 +46,20 @@ public sealed class RaidNavigation
             "south" => new TilePoint(15.5, area.Y + area.Height + 6.5),
             _ => new TilePoint(area.X - 6.5, 13.5)
         };
-        return NearestFree(wish);
+        return NearestFree(wish,p=>IsOutside(p,sector));
     }
-    public TilePoint NearestFree(TilePoint wish)
+    public bool IsOutside(TilePoint p,string sector)
+    {
+        var area=KingdomRules.Area(village);
+        return sector switch { "north"=>p.Y<area.Y-2, "south"=>p.Y>area.Y+area.Height+2, _=>p.X<area.X-2 };
+    }
+    public TilePoint NearestFree(TilePoint wish,Func<TilePoint,bool>? allowed=null)
     {
         for (var radius=0; radius<=12; radius++)
         for (var x=(int)Math.Floor(wish.X)-radius; x<=(int)Math.Floor(wish.X)+radius; x++)
         for (var y=(int)Math.Floor(wish.Y)-radius; y<=(int)Math.Floor(wish.Y)+radius; y++)
-            if (Pass(x,y)) return new(x+.5,y+.5);
-        return WorldMap.Places[WorldMap.Camp];
+            if (Pass(x,y) && (allowed is null || allowed(new(x+.5,y+.5)))) return new(x+.5,y+.5);
+        throw new GameRuleException("raid.noApproach","No free position on this approach.");
     }
     public static TilePoint GuardPoint(string? sector) => sector switch
     {
@@ -79,6 +84,8 @@ public sealed class RaidNavigation
         var start=((int)Math.Floor(from.X),(int)Math.Floor(from.Y));
         var end=((int)Math.Floor(target.X),(int)Math.Floor(target.Y));
         if(start==end)return target;
+        var centre=new TilePoint(start.Item1+.5,start.Item2+.5);
+        if(from.DistanceTo(centre)>.01)return centre;
         var queue=new PriorityQueue<(int,int),double>();queue.Enqueue(start,0);
         var cost=new Dictionary<(int,int),double>{{start,0}};
         var previous=new Dictionary<(int,int),(int,int)>();

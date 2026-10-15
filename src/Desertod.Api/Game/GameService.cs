@@ -753,8 +753,21 @@ public sealed partial class GameService(
             return await BuildStateAsync(db, village, now, cancellationToken);
         }, cancellationToken);
 
-    public Task<VillageStateDto> CancelUndeadAsync(string slug, Guid accountId, CancellationToken cancellationToken) =>
-        RuleAsync(slug, accountId, "cancelUndead", "", (village, _) => RaidRules.CancelUndead(village), cancellationToken);
+    public async Task<VillageStateDto> CancelUndeadAsync(string slug, Guid accountId, CancellationToken cancellationToken) =>
+        await WithVillageAsync(await FindVillageIdAsync(slug,cancellationToken),async db=>
+        {
+            var village=await LoadVillageAsync(db,slug,cancellationToken);
+            if(village.OwnerAccountId!=accountId)throw new UnauthorizedAccessException();
+            var now=time.GetUtcNow();
+            if(village.Raids.Any(r=>r.IsPending&&r.Source==RaidSource.Undead&&r.EngineVersion>=2&&r.StrikesAt<=now))
+                throw new GameRuleException("raid.alreadyFighting","An active battle cannot be cancelled.");
+            var ids=village.Raids.Where(r=>r.IsPending&&r.Source==RaidSource.Undead).Select(r=>r.Id).ToArray();
+            RaidRules.CancelUndead(village);
+            foreach(var battle in await db.RaidBattles.Where(b=>ids.Contains(b.Id)&&b.FinishedAt==null).ToListAsync(cancellationToken))
+            {battle.Phase="Cancelled";battle.FinishedAt=now;battle.Revision++;}
+            await db.SaveChangesAsync(cancellationToken);changes.Mark(village.Id);
+            return await BuildStateAsync(db,village,now,cancellationToken);
+        },cancellationToken);
 
     /// <summary>Villages with a raid due, or whose beasts have not decided yet about tonight.</summary>
     public async Task<IReadOnlyList<Guid>> FindRaidVillagesAsync(CancellationToken cancellationToken)
@@ -789,9 +802,10 @@ public sealed partial class GameService(
             }
 
             await BroadcastRaidsAsync(village, raids, now);
-            if (planned is not null || raids.Reports.Count > 0 || raids.Changed)
+            if (planned is not null || raids.Reports.Count > 0)
             {
                 changes.Mark(villageId);
+                await db.RaidBattles.Where(b=>b.VillageId==villageId&&b.FinishedAt<now.AddDays(-14)).ExecuteDeleteAsync(cancellationToken);
             }
 
             return true;
@@ -805,7 +819,7 @@ public sealed partial class GameService(
     }
 
     /// <param name="Citizens">Defenders and wounded, to send their new state.</param>
-    private sealed record RaidsFought(IReadOnlyList<RaidReport> Reports, IReadOnlyList<Citizen> Citizens, bool Changed = false);
+    private sealed record RaidsFought(IReadOnlyList<RaidReport> Reports, IReadOnlyList<Citizen> Citizens, bool Changed = false, IReadOnlyList<RaidBattle>? Battles = null, IReadOnlyList<Fortification>? Walls = null);
 
     /// <summary>
     /// Fights the raids that struck by now, before anything else changes the citizens: who was on watch at the moment of
@@ -831,25 +845,51 @@ public sealed partial class GameService(
             .Select(p => p.DefinitionId)
             .ToListAsync(cancellationToken);
         var citizens = await db.Citizens.Where(c => c.VillageId == village.Id).ToListAsync(cancellationToken);
+        var injuredBefore = citizens.Where(c=>CombatRules.IsInjured(c,now)).Select(c=>c.Id).ToHashSet();
         var reports = new List<RaidReport>();
         var changed = false;
+        var updated = new List<RaidBattle>();
         foreach(var raid in due)
         {
             if(raid.EngineVersion < 2) { reports.Add(RaidRules.Resolve(village,raid,citizens,completedProjects,Random.Shared,now)); continue; }
             var battle = await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==raid.Id,cancellationToken)
                 ?? throw new InvalidOperationException("Live raid has no persisted battle.");
-            changed |= RaidSimulation.Tick(village,raid,battle,citizens,
+            var earlier = village.Raids.Where(r=>r.IsPending&&r.EngineVersion>=2&&(r.StrikesAt<raid.StrikesAt || r.StrikesAt==raid.StrikesAt && r.Wave<raid.Wave)).Any();
+            if(battle.Phase=="Warning"&&earlier){battle.Deferred=true;continue;}
+            if(battle.Deferred)
+            {
+                battle.Deferred=false;battle.StartsAt=now;battle.LastTickAt=now;battle.EndsAt=now.AddMinutes(4);raid.StrikesAt=now;
+                foreach(var unit in battle.Units)unit.NextAttackAt=now.AddSeconds(2);
+                var priorRaid=village.Raids.Where(r=>r.Id!=raid.Id&&r.AnnouncedAt==raid.AnnouncedAt&&r.Wave<raid.Wave).OrderByDescending(r=>r.Wave).FirstOrDefault();
+                if(priorRaid is not null)
+                {
+                    var prior=await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==priorRaid.Id,cancellationToken);
+                    if(prior is not null)CarryFighters(prior,battle,now);
+                }
+            }
+            else if(battle.Phase=="Warning"&&battle.Fighters.Count==0&&raid.Wave>1)
+            {
+                var priorRaid=village.Raids.Where(r=>r.Id!=raid.Id&&r.AnnouncedAt==raid.AnnouncedAt&&r.Wave<raid.Wave).OrderByDescending(r=>r.Wave).FirstOrDefault();
+                if(priorRaid is not null)
+                {
+                    var prior=await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==priorRaid.Id,cancellationToken);
+                    if(prior is not null)CarryFighters(prior,battle,now);
+                }
+            }
+            var advanced = RaidSimulation.Tick(village,raid,battle,citizens,
                 citizens.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now);
+            changed |= advanced;
+            if(advanced)updated.Add(battle);
             if(battle.FinishedAt is not null)
                 reports.Add(BattleReport(raid,battle,citizens));
         }
-        if(changed)changes.Mark(village.Id);
         return new RaidsFought(reports,citizens.Where(c=>reports.Any(r=>r.Defenders.Any(d=>d.CitizenId==c.Id)||r.Victims.Any(v=>v.CitizenId==c.Id))
-            || changed && (CombatRules.IsInjured(c,now)||due.Any(r=>r.EngineVersion>=2))).ToArray(),changed);
+            || changed && !injuredBefore.Contains(c.Id) && CombatRules.IsInjured(c,now)).ToArray(),changed,updated,village.Fortifications);
     }
 
     private async Task BroadcastRaidsAsync(Village village, RaidsFought raids, DateTimeOffset now)
     {
+        foreach(var battle in raids.Battles ?? []) await notifier.BattleUpdated(village.Slug,battle,raids.Walls ?? []);
         foreach (var report in raids.Reports)
         {
             logger.RaidFought(village.Slug, report.Count, report.Enemy.ToString(), report.Repelled, report.Defenders.Count);
@@ -1004,23 +1044,27 @@ public sealed partial class GameService(
     {
         await SyncHospitalAsync(db, village.Id, cancellationToken);
         var citizen = await db.Citizens.SingleAsync(c => c.Id == citizenId, cancellationToken);
+        var now = time.GetUtcNow();
+        var resumed=HospitalRules.Resume(citizen,now);
         if (citizen.RecoveryPausedAt is not null || citizen.CycleSettled || citizen.VillageId != village.Id)
         {
             return new(false);
         }
 
-        var now = time.GetUtcNow();
         village.EnsureCamp(now);
         var context = (await LoadContextAsync(db, village, citizen.Id, now, cancellationToken)).Work;
         var raids = await FightDueRaidsAsync(db, village, context.CompletedProjects, now, cancellationToken);
         var report = CycleEngine.Settle(citizen, context, now);
         if (report is null)
         {
-            if (raids.Reports.Count > 0)
+            if (raids.Reports.Count > 0 || raids.Changed || resumed)
             {
                 await db.SaveChangesAsync(cancellationToken);
-                changes.Mark(village.Id);
-                return new(false, () => BroadcastRaidsAsync(village, raids, now));
+                if(raids.Reports.Count>0)changes.Mark(village.Id);
+                return new(false, async () => {
+                    await BroadcastRaidsAsync(village, raids, now);
+                    if(resumed)await notifier.CitizenUpdated(village.Slug,citizen.ToSummaryDto(now));
+                });
             }
 
             return new(false);
@@ -1293,7 +1337,7 @@ public sealed partial class GameService(
 
         return village.ToStateDto(context.Work, context.CompletedInOrder, electorate, quests, tsar, trips, dungeon, now) with
         {
-            Battles = await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==village.Id && (b.FinishedAt==null || b.FinishedAt>=now.AddSeconds(-15))).OrderBy(b=>b.StartsAt).ToListAsync(cancellationToken),
+            Battles = (await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==village.Id && (b.FinishedAt==null || b.FinishedAt>=now.AddSeconds(-15))).OrderBy(b=>b.StartsAt).ToListAsync(cancellationToken)).Select(b=>b.ToBattleDto()).ToArray(),
             Fortifications = village.Fortifications,
             KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),
             CivicOrders = village.CivicOrders,
@@ -1341,6 +1385,7 @@ public sealed partial class GameService(
             {
                 if (villageId is null) return await action(db);
                 await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+                using var notifications=changes.BeginBatch();
                 // The existing in-process lock is not shared by another API instance or settler.
                 var lockKey = villageId.Value.ToString();
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
@@ -1349,6 +1394,7 @@ public sealed partial class GameService(
                 var result = await action(db);
                 await FinishAccountingAsync(db, villageId.Value, before, operation, db.SuccessfulSaves > savesBeforeAction, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
+                notifications.Commit();
                 return result;
             }
             catch (DbUpdateConcurrencyException) when (attempt < MaximumAttempts)

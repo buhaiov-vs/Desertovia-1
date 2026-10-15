@@ -93,6 +93,74 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.ToTable("ChatMessages");
                 });
 
+            modelBuilder.Entity("Desertod.Domain.Combat.RaidBattle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AvailableReserves")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Composition")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("DamageDone")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("Deferred")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EngineVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LastTickAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReadyDefenders")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Sector")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Seed")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Tactic")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("ThreatBudget")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("VillageId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VillageId", "FinishedAt");
+
+                    b.ToTable("RaidBattles");
+                });
+
             modelBuilder.Entity("Desertod.Domain.Director.AlmightyObservation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1035,6 +1103,191 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Desertod.Domain.Combat.RaidBattle", b =>
+                {
+                    b.HasOne("Desertod.Domain.Entities.Village", null)
+                        .WithMany()
+                        .HasForeignKey("VillageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("Desertod.Domain.Combat.RaidBattleEvent", "Events", b1 =>
+                        {
+                            b1.Property<Guid>("RaidBattleId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<DateTimeOffset>("At");
+
+                            b1.Property<string>("Kind")
+                                .IsRequired();
+
+                            b1.Property<int>("Sequence");
+
+                            b1.Property<string>("Target")
+                                .IsRequired();
+
+                            b1.HasKey("RaidBattleId", "__synthesizedOrdinal");
+
+                            b1.ToTable("RaidBattles");
+
+                            b1
+                                .ToJson("Events")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RaidBattleId");
+                        });
+
+                    b.OwnsMany("Desertod.Domain.Combat.RaidDamage", "Damage", b1 =>
+                        {
+                            b1.Property<Guid>("RaidBattleId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("Amount");
+
+                            b1.Property<string>("PlotId")
+                                .IsRequired();
+
+                            b1.HasKey("RaidBattleId", "__synthesizedOrdinal");
+
+                            b1.ToTable("RaidBattles");
+
+                            b1
+                                .ToJson("Damage")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RaidBattleId");
+                        });
+
+                    b.OwnsMany("Desertod.Domain.Combat.RaidFighter", "Fighters", b1 =>
+                        {
+                            b1.Property<Guid>("RaidBattleId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<bool>("Active");
+
+                            b1.Property<string>("Armor");
+
+                            b1.Property<int>("Arrows");
+
+                            b1.Property<Guid>("CitizenId");
+
+                            b1.Property<double>("DamageDealt");
+
+                            b1.Property<bool>("Guard");
+
+                            b1.Property<double>("Health");
+
+                            b1.Property<int>("Kills");
+
+                            b1.Property<double>("MaximumHealth");
+
+                            b1.Property<string>("Mode")
+                                .IsRequired();
+
+                            b1.Property<DateTimeOffset>("NextAttackAt");
+
+                            b1.Property<int>("RenownEarned");
+
+                            b1.Property<bool>("RewardsGranted");
+
+                            b1.Property<Guid?>("TargetUnitId");
+
+                            b1.Property<string>("Weapon");
+
+                            b1.Property<bool>("Wounded");
+
+                            b1.Property<double>("X");
+
+                            b1.Property<double>("Y");
+
+                            b1.HasKey("RaidBattleId", "__synthesizedOrdinal");
+
+                            b1.ToTable("RaidBattles");
+
+                            b1
+                                .ToJson("Fighters")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RaidBattleId");
+                        });
+
+                    b.OwnsMany("Desertod.Domain.Combat.RaidUnit", "Units", b1 =>
+                        {
+                            b1.Property<Guid>("RaidBattleId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<double>("Attack");
+
+                            b1.Property<double>("BlockedSeconds");
+
+                            b1.Property<DateTimeOffset?>("DiedAt");
+
+                            b1.Property<DateTimeOffset?>("ExitedAt");
+
+                            b1.Property<double>("Health");
+
+                            b1.Property<Guid>("Id");
+
+                            b1.Property<double>("MaximumHealth");
+
+                            b1.Property<DateTimeOffset>("NextAttackAt");
+
+                            b1.Property<string>("PlunderPlot");
+
+                            b1.Property<double>("Range");
+
+                            b1.Property<double>("SpawnX");
+
+                            b1.Property<double>("SpawnY");
+
+                            b1.Property<double>("Speed");
+
+                            b1.Property<string>("State")
+                                .IsRequired();
+
+                            b1.Property<string>("TargetId");
+
+                            b1.Property<string>("TargetKind");
+
+                            b1.Property<string>("Variant")
+                                .IsRequired();
+
+                            b1.Property<double>("X");
+
+                            b1.Property<double>("Y");
+
+                            b1.HasKey("RaidBattleId", "__synthesizedOrdinal");
+
+                            b1.ToTable("RaidBattles");
+
+                            b1
+                                .ToJson("Units")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RaidBattleId");
+                        });
+
+                    b.Navigation("Damage");
+
+                    b.Navigation("Events");
+
+                    b.Navigation("Fighters");
+
+                    b.Navigation("Units");
+                });
+
             modelBuilder.Entity("Desertod.Domain.Director.AlmightyObservation", b =>
                 {
                     b.HasOne("Desertod.Domain.Entities.Village", null)
@@ -1708,6 +1961,37 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Navigation("Investment");
                         });
 
+                    b.OwnsMany("Desertod.Domain.Combat.Fortification", "Fortifications", b1 =>
+                        {
+                            b1.Property<Guid>("VillageId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("Damage");
+
+                            b1.Property<bool>("Gate");
+
+                            b1.Property<string>("Id");
+
+                            b1.Property<bool>("Open");
+
+                            b1.Property<int>("X");
+
+                            b1.Property<int>("Y");
+
+                            b1.HasKey("VillageId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Villages");
+
+                            b1
+                                .ToJson("Fortifications")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VillageId");
+                        });
+
                     b.OwnsMany("Desertod.Domain.Combat.Raid", "Raids", b1 =>
                         {
                             b1.Property<Guid>("VillageId");
@@ -1725,6 +2009,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<string>("Enemy")
                                 .IsRequired();
+
+                            b1.Property<int>("EngineVersion");
 
                             b1.Property<string>("EntrySector");
 
@@ -2281,6 +2567,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Navigation("Fields");
 
                     b.Navigation("Forecasts");
+
+                    b.Navigation("Fortifications");
 
                     b.Navigation("Poll");
 

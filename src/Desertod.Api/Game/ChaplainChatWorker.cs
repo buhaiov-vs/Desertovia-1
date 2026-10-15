@@ -81,7 +81,11 @@ public sealed partial class ChaplainChatWorker(IDbContextFactory<DesertodDbConte
                             "Коротко откликнись на текущую беседу; можно промолчать. Проверенный факт: " + facts,
                             history, village.Structures.Select(s=>s.Kind.ToString()).ToArray(),cancellationToken);
                 }
-                if (string.IsNullOrWhiteSpace(text)) continue;
+                if (!ChaplainSpeech.IsPlainText(text))
+                {
+                    if (!string.IsNullOrWhiteSpace(text)) logger.LogWarning("Chaplain service output withheld from public chat.");
+                    continue;
+                }
                 var lastLines = await db.ChaplainMessages.AsNoTracking().Where(m=>m.VillageId==village.Id)
                     .OrderByDescending(m=>m.SentAt).Take(10).Select(m=>m.Text).ToListAsync(cancellationToken);
                 if (lastLines.Any(old => string.Equals(ShortLine(old), ShortLine(text), StringComparison.OrdinalIgnoreCase))) continue;

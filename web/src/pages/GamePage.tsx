@@ -1,3 +1,4 @@
+import { BattleControls } from '../ui/BattleControls'
 import { createOperationId } from '../api'
 import { HospitalPanel } from '../ui/HospitalPanel'
 import { SramoslavPanel } from '../ui/SramoslavPanel'
@@ -105,6 +106,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const [subtitleFor, setSubtitleFor] = useState<string | null>(null)
   /** Place on the map the player clicked to send their citizen there. */
   const [picked, setPicked] = useState<{ target: WorldTarget; screen: { x: number; y: number } } | null>(null)
+  const [enemyPick,setEnemyPick]=useState<{battleId:string;unitId:string}|null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
   const [patientFor,setPatientFor]=useState<string|null>(null)
@@ -138,14 +140,25 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const pollClock = useServerNow(serverOffset, POLL_CLOCK_MS)
   const canvas = useRef<GameCanvasHandle>(null)
   const citizenId = useRef<string | null>(null)
+  const lastCitizenSnapshot = useRef(-Infinity)
   const applyCitizen = useCallback((next: Citizen | null) => {
+    if(next && Date.parse(next.serverNow)<lastCitizenSnapshot.current)return
+    lastCitizenSnapshot.current=next?Date.parse(next.serverNow):-Infinity
     setCitizen(next)
     if (next) setServerOffset(Date.parse(next.serverNow) - Date.now())
   }, [])
 
   const loadCitizen = useCallback(async () => applyCitizen(await api.myCitizen(slug)), [slug, applyCitizen])
+  useEffect(() => {
+    const refresh = () => { if(document.visibilityState==='visible')void loadCitizen().catch(()=>{}) }
+    const interval=window.setInterval(refresh,30_000)
+    window.addEventListener('focus',refresh)
+    document.addEventListener('visibilitychange',refresh)
+    return ()=>{window.clearInterval(interval);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh)}
+  },[loadCitizen])
 
   useEffect(() => {
+    lastCitizenSnapshot.current=-Infinity
     api.myCitizen(slug).then(applyCitizen)
     api.catalog().then(setCatalog)
   }, [slug, applyCitizen])
@@ -220,6 +233,19 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     },
     onVillageDeleted: () => navigate('/'),
   })
+
+  const battleEventsSeen=useRef(new Map<string,number>())
+  useEffect(()=>{
+    for(const battle of live.state?.battles??[]){
+      const seen=battleEventsSeen.current.get(battle.id)??0
+      const fresh=battle.events.filter(e=>e.sequence>seen&&Date.now()+serverOffset-Date.parse(e.at)<5000)
+      battleEventsSeen.current.set(battle.id,Math.max(seen,...battle.events.map(e=>e.sequence)))
+      if(fresh.some(e=>e.kind==='breach')){
+        setNotice(i18n.language==='ru'?'Пролом в заборе! Враги могут пройти внутрь.':'The palisade has been breached!')
+        window.setTimeout(()=>setNotice(null),6000)
+      }
+    }
+  },[live.state?.battles,serverOffset,i18n.language])
 
   const brand = i18n.t('brand')
   const title = live.state ? `${live.state.name} — ${brand}` : brand
@@ -630,7 +656,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const pickCitizen = useMemo(() => (id: string) => { if (id === PRIEST_ID) setChaplainOpen(true); else if(live.citizens.get(id)?.injuredUntil||live.citizens.get(id)?.recovery?.until)setPatientFor(id); else if (tsar) setSubtitleFor(id) }, [tsar,live.citizens])
   // Only a citizen can be sent to work; the Tsar watches and walks around, players without a character just look.
   const canWork = !tsar && !!citizen
-  const working = citizen?.state === 'Working' || citizen?.state === 'Paused'
+  const working = citizen?.state === 'Paused' || citizen?.state === 'Working' && !!citizen.cycleEndsAt && Date.parse(citizen.cycleEndsAt)>raidClock
   const ownId = citizen?.id
   /** Away citizens stay on the map only while a task they started is still running. */
   const shownCitizens = useMemo(
@@ -737,13 +763,26 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         obscured={chatFull || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
+        selectedEnemyId={enemyPick?.unitId??null}
+        onEnemyPick={(battleId,unitId)=>{
+          setEnemyPick({battleId,unitId});setPicked(null)
+          const battle=village.battles?.find(b=>b.id===battleId)
+          const fighter=battle?.fighters.find(f=>f.citizenId===citizen?.id&&f.guard&&f.active&&f.health>0)
+          if(fighter)void api.battleOrder(slug,battleId,unitId,fighter.mode).catch(e=>{setNotice(i18n.error(e));window.setTimeout(()=>setNotice(null),5000)})
+        }}
         onCitizenPick={pickCitizen}
         onWorldPick={pickWorld}
         worldPickable={worldPickable}
         selection={showPicked || showWatched ? picked.target.area : null}
       />
 
-      <button
+      {!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&enemyPick&&(()=>{
+        const battle=village.battles?.find(b=>b.id===enemyPick.battleId)
+        const unit=battle?.units.find(u=>u.id===enemyPick.unitId)
+        return battle&&unit?<BattleControls key={unit.id} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} onClose={()=>setEnemyPick(null)}/>:null
+      })()}
+
+      {!chatFull && <button
         className="ui-toggle"
         onClick={toggleUi}
         title={i18n.t(uiHidden ? 'hud.showInterface' : 'hud.hideInterface')}
@@ -751,7 +790,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         aria-pressed={uiHidden}
       >
         <EyeIcon closed={uiHidden} />
-      </button>
+      </button>}
 
       {dayNight && (
         <button

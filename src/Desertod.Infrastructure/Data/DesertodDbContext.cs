@@ -57,7 +57,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             battle.HasOne<Desertod.Domain.Entities.Village>().WithMany().HasForeignKey(b=>b.VillageId).OnDelete(DeleteBehavior.Cascade);
             battle.HasIndex(b=>new { b.VillageId, b.FinishedAt });
             battle.OwnsMany(b=>b.Units, unit=> { unit.ToJson(); unit.Ignore(u=>u.Position); unit.Ignore(u=>u.Alive); });
-            battle.OwnsMany(b=>b.Fighters, fighter=> { fighter.ToJson(); fighter.Ignore(f=>f.Position); });
+            battle.OwnsMany(b=>b.Fighters, fighter=> { fighter.ToJson(); fighter.Ignore(f=>f.Position); fighter.Property(f=>f.Weapon).HasConversion<string>(); fighter.Property(f=>f.Armor).HasConversion<string>(); });
             battle.OwnsMany(b=>b.Damage, damage=>damage.ToJson());
             battle.OwnsMany(b=>b.Events, events=>events.ToJson());
         });

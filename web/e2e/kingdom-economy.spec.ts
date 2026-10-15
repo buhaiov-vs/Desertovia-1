@@ -48,9 +48,9 @@ test('map placement uses the expanded kingdom and keeps private construction out
   await page.goto('/e2e/economy-harness.html')
   const actual=await page.evaluate(()=>{
     const can=(window as unknown as {kingdomCanBuild:(p:boolean,x:number,y:number)=>boolean}).kingdomCanBuild
-    return [can(false,-4,10),can(true,-4,10),can(false,-8,10),can(true,-8,10),can(true,30,14)]
+    return [can(false,-4,10),can(true,-4,10),can(false,-8,10),can(true,-8,10),can(true,30,14),can(true,-5,10)]
   })
-  expect(actual).toEqual([true,false,false,true,false])
+  expect(actual).toEqual([true,false,false,true,false,false])
 })
 
 test('third tired work warns about fainting before starting on a narrow screen',async({page})=>{

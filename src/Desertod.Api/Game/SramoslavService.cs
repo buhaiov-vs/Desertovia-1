@@ -1,4 +1,5 @@
 using Desertod.Domain;
+using Desertod.Domain.Chat;
 using Desertod.Api.Auth;
 using Desertod.Domain.Rules;
 using Desertod.Infrastructure.Data;
@@ -63,21 +64,24 @@ public sealed class SramoslavService(ChatService chat, IDbContextFactory<Deserto
             try
             {
                 if (config.GetValue<bool>("Game:AlmightyEnabled"))
-                    return await director.SpeakAsync(new { kind = "speech", context = new { village = village.Name, text,
+                    return SafeReply(await director.SpeakAsync(new { kind = "speech", context = new { village = village.Name, text,
                         buildings = village.Structures.Select(s => s.Kind.ToString()).ToArray(), memory = await PublicDirectorMemoryAsync(village.Name, cancellationToken) } }, cancellationToken)
-                        ?? new("Чадо, связь сейчас подводит. Попробуй позже.", false);
-                return await bridge.CallAsync<SramoslavReply>("speak", new
+                        ?? new("Чадо, связь сейчас подводит. Попробуй позже.", false));
+                return SafeReply(await bridge.CallAsync<SramoslavReply>("speak", new
                 {
                     text,
                     context = new { village = village.Name, buildings = village.Structures.Select(s => s.Kind.ToString()).ToArray(),
                         note = "Rules are those of the current game. Do not invent costs, rewards or commands." }
-                }, cancellationToken);
+                }, cancellationToken));
             }
             catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
             { return new("Чадо, связь сейчас подводит. Дай мне минутку и спроси снова.", false); }
         }
         finally { gate.Release(); }
     }
+    private static SramoslavReply SafeReply(SramoslavReply reply) => ChaplainSpeech.IsPlainText(reply.Text)
+        ? reply : new("Чадо, мысль запуталась. Попробуй спросить чуть позже.", false);
+
     private async Task<object> PublicDirectorMemoryAsync(string name, CancellationToken ct)
     {
         await using var db = await factory.CreateDbContextAsync(ct);

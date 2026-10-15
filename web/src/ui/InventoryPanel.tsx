@@ -1,5 +1,6 @@
+import { currentEnergy } from '../energy'
 import { EconomyPanel } from './EconomyPanel'
-import type { BuildingDefinition, Catalog, Citizen, VillageState } from '../api'
+import type { BuildingDefinition, Catalog, Citizen, StorageKind, VillageState } from '../api'
 import { useI18n } from '../i18n'
 import { citizenTitle } from './citizenTitle'
 import { HandsCard } from './HandsCard'
@@ -34,6 +35,13 @@ export function InventoryPanel({
 }) {
   const i18n = useI18n()
   const { t } = i18n
+  const energy = citizen ? currentEnergy(citizen, now) : 0
+  const upgrades:Partial<Record<StorageKind,StorageKind>>={WoodPile:'Woodyard',StonePile:'StoneYard',DryingRack:'Granary'}
+  const publicStores=village.storages.filter(s=>!s.ownerAccountId)
+  const accepts=(kind:StorageKind,resource:string)=>{
+    const definition=catalog.storages.find(d=>d.kind===kind)
+    return !!definition&&(definition.accepts.length===0||definition.accepts.includes(resource))
+  }
   const resources = village.resources.filter((r) => HUD_RESOURCES.includes(r.kind) || r.amount > 0)
   const working = citizen?.cycleEndsAt ? now < Date.parse(citizen.cycleEndsAt) : false
   return (
@@ -57,7 +65,7 @@ export function InventoryPanel({
                 <div>
                   <span className="muted small">{t('character.energy')}</span>
                   <strong>
-                    {Math.floor(citizen.energy)} / {citizen.maximumEnergy}
+                    {Math.floor(energy)} / {citizen.maximumEnergy}
                   </strong>
                 </div>
                 <div>
@@ -98,13 +106,23 @@ export function InventoryPanel({
               ))}
             </div>
             <p className="small muted">{t('inventory.shared')}</p>
+            <details className="storage-overview"><summary>{i18n.language==='ru'?'Где есть место для ресурсов':'Resource storage space'}</summary>
+              <ul className="feed">{resources.filter(r=>r.kind!=='ResearchPoints').map(resource=>{
+                const suitable=publicStores.filter(s=>accepts(s.kind,resource.kind))
+                const room=resource.capacity===null?null:Math.max(0,resource.capacity-resource.amount)
+                return <li key={resource.kind}><strong>{i18n.resource(resource.kind)}</strong>: {room===null?'∞':i18n.amount(room)} {i18n.language==='ru'?'свободно':'free'}
+                  {suitable.length===0?<span className="warning"> · {i18n.language==='ru'?'нет подходящего склада':'no suitable storage'}</span>:<span> · {suitable.map((s,index)=><span key={s.plotId}>{index>0?', ':''}<a href={`#store-${s.plotId}`}>{i18n.storage(s.kind)} ({s.plotId})</a></span>)}</span>}
+                  {room===0&&suitable.length>0&&<span className="warning"> · {i18n.language==='ru'?'лимит заполнен':'capacity reached'}</span>}
+                </li>
+              })}</ul>
+            </details>
           </section>
           <section className="card">
             <h3>{t('inventory.buildings')}</h3>
             <ul className="storage-list">
-              {village.storages.filter(s=>!s.ownerAccountId).map((storage) => (
-                <li key={storage.plotId}>
-                  <strong>{i18n.storage(storage.kind)}</strong>
+              {publicStores.map((storage) => (
+                <li key={storage.plotId} id={`store-${storage.plotId}`}>
+                  <details><summary><strong>{i18n.storage(storage.kind)}</strong> · {storage.plotId} <span className="muted small"> · {storage.goods.reduce((n,g)=>n+g.amount,0)}{storage.totalLimit?`/${storage.totalLimit}`:''}</span></summary>
                   <StorageCard
                     storage={storage}
                     catalog={catalog}
@@ -118,6 +136,11 @@ export function InventoryPanel({
                         : undefined
                     }
                   />
+                  {upgrades[storage.kind]&&<p className="small muted">{i18n.language==='ru'?'Следующее улучшение':'Next upgrade'}: {i18n.storage(upgrades[storage.kind]!)}
+                    {(()=>{const next=catalog.buildings.find(b=>b.storage===upgrades[storage.kind]);const technology=next?.technology
+                      return technology&&!village.technologies.some(t=>t.id===technology&&t.discovered)?` · ${i18n.language==='ru'?'нужно изучить':'research required'} ${i18n.technology(technology).name}`:` · ${i18n.language==='ru'?'заявка через карточку здания':'request through the building card'}`})()}
+                  </p>}
+                  </details>
                 </li>
               ))}
             </ul>

@@ -6,12 +6,37 @@ namespace Desertod.Api.Game;
 /// <summary>Villages whose state changed since it was last sent to the viewers.</summary>
 public sealed class VillageStateChanges
 {
+    private readonly AsyncLocal<CommitBatch?> current = new();
     private readonly ConcurrentDictionary<Guid, byte> changed = new();
+
+    /// <summary>Publish transaction effects only after commit; retries discard their queued effects.</summary>
+    public CommitBatch BeginBatch()
+    {
+        var batch=new CommitBatch(this,current.Value);current.Value=batch;return batch;
+    }
+    public bool Defer(Action effect)
+    {
+        if(current.Value is not {} batch)return false;
+        batch.Effects.Add(effect);return true;
+    }
+    public sealed class CommitBatch(VillageStateChanges owner,CommitBatch? previous) : IDisposable
+    {
+        internal List<Action> Effects { get; }=[];
+        private bool ended;
+        public void Commit()
+        {
+            if(ended)return;
+            ended=true;owner.current.Value=previous;
+            foreach(var effect in Effects) { if(previous is not null)previous.Effects.Add(effect);else effect(); }
+        }
+        public void Dispose(){if(ended)return;ended=true;owner.current.Value=previous;}
+    }
     private readonly Channel<bool> signal = Channel.CreateBounded<bool>(
         new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropWrite });
 
     public void Mark(Guid villageId)
     {
+        if(Defer(()=>Mark(villageId)))return;
         changed[villageId] = 0;
         Wake();
     }

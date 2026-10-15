@@ -26,25 +26,25 @@ public class ProgressionTests
         Assert.Equal(expected, SkillRules.ExperienceToNext(level));
 
     [Fact]
-    public void EveryProfessionLevel_TakesAboutADayOfEnergy()
+    public void EveryProfessionLevel_TakesAboutOneFullPoolOfEnergy()
     {
-        Assert.Equal(36, TasksPerDay, 6);
+        Assert.Equal(72, TasksPerDay, 6);
         foreach (var level in Enumerable.Range(1, GameRules.SkillMaximum - 1))
         {
-            var days = SkillRules.ExperienceToNext(level) / (TasksPerDay * GameRules.BaseExperiencePerCycle);
+            var days = SkillRules.ExperienceToNext(level) / (TasksPerDay / 2 * GameRules.BaseExperiencePerCycle);
             Assert.InRange(days, 0.75, 1.3);
         }
     }
 
     [Fact]
-    public void Stats_GrowAboutTwoPointsADay()
+    public void Stats_GrowAboutFourPointsPerDayAtTheoreticalBaseCost()
     {
         var perDay = TasksPerDay * GameRules.BaseExperiencePerCycle * (1 + GameRules.SecondaryExperienceShare);
         var total = Enumerable.Range(0, 10).Sum(Progression.ExperienceToNext);
         var pointsPerDay = perDay / (total / 10.0);
 
         Assert.Equal(2028, total);
-        Assert.InRange(pointsPerDay, 1.8, 2.6);
+        Assert.InRange(pointsPerDay, 3.6, 5.2);
     }
 
     [Fact]

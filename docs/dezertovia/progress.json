@@ -797,6 +797,17 @@
       "personal_consumables_api_passed": 10,
       "final_corrections_targeted_api_passed": 2,
       "final_corrections": "market reserve included in material ledger; privacy test isolated from shared public top-50 limit"
+    },
+    "D-061": {
+      "state": "implementation_checked_release_preparing",
+      "energy_full_regeneration_real_hours": 12,
+      "post_faint_bonus": false,
+      "construction_speed_changed": false,
+      "deployment_authorized": true,
+      "supersedes": "D-058",
+      "private_operator_branch": "ops/almighty-release",
+      "preflight_run": 38781978374,
+      "profiles_preflight": 107
     }
   }
 }

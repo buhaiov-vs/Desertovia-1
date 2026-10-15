@@ -883,7 +883,7 @@ public static class CycleEngine
 
     private static void Begin(Citizen citizen, string taskId, TimeSpan duration, double energyCost, Village village, DateTimeOffset now, TimeSpan? walkDuration = null)
     {
-        if (now - citizen.EnergyUpdatedAt >= TimeSpan.FromMinutes(30)) citizen.ExhaustedCycles = 0;
+        citizen.ExhaustedCycles = Energy.TiredCycles(citizen, now);
         var renewing = citizen.GraceEndsAt is not null && now <= citizen.GraceEndsAt;
         citizen.Streak = renewing ? citizen.Streak + 1 : 0;
 

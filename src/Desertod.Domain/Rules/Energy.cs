@@ -2,6 +2,10 @@ namespace Desertod.Domain.Rules;
 
 public static class Energy
 {
+    /// <summary>Half an hour away from paid work breaks the consecutive tired-work streak.</summary>
+    public static int TiredCycles(Desertod.Domain.Entities.Citizen citizen, DateTimeOffset now) =>
+        now - citizen.EnergyUpdatedAt >= TimeSpan.FromMinutes(30) ? 0 : citizen.ExhaustedCycles;
+
     public static double Maximum(int endurance) =>
         GameRules.EnergyBase + GameRules.EnergyPerEndurance * endurance;
 

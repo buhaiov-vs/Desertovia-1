@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { api, type Catalog, type Citizen, type EconomyRequest, type EconomyView, type VillageState } from '../src/api'
 import { I18nProvider } from '../src/i18n'
 import { EconomyPanel } from '../src/ui/EconomyPanel'
+import { ActionEnergy } from '../src/ui/ActionEnergy'
 import '../src/index.css'
 
 declare global { interface Window { economyCalls: EconomyRequest[]; failEconomyOnce: boolean; kingdomCanBuild: (personal:boolean,x:number,y:number)=>boolean } }
@@ -18,5 +19,5 @@ api.economyAction=async(_slug,request)=>{
 const village={id:'00000000-0000-0000-0000-000000000001',slug:'test',structures:[],storages:[],sites:[],bridgeOpened:false,completedProjects:[],kingdomArea:{x:-4,y:-3,width:32,height:32},resources:[{kind:'Wood',amount:10,capacity:30},{kind:'Stone',amount:8,capacity:30},{kind:'Planks',amount:2,capacity:30}]} as unknown as VillageState
 const catalog={buildings:[],buildArea:{x:0,y:0,width:28,height:26},reservedAreas:[]} as unknown as Catalog
 window.kingdomCanBuild=(personal,x,y)=>canBuildAt(catalog,village,x,y,personal)
-const citizen={accountId:'me',name:'Игрок',weapon:null,armor:null} as unknown as Citizen
-createRoot(document.getElementById('app')!).render(<I18nProvider><div className="modal-backdrop"><section className="modal menu"><div className="modal-body"><EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId="me"/></div></section></div></I18nProvider>)
+const citizen={energy:0,exhaustedCycles:2,actionEnergyCosts:{'test-work':2},accountId:'me',name:'Игрок',weapon:null,armor:null} as unknown as Citizen
+createRoot(document.getElementById('app')!).render(<I18nProvider><div className="modal-backdrop"><section className="modal menu"><div className="modal-body"><div id="faint-warning"><ActionEnergy citizen={citizen} action="test-work"/></div><EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId="me"/></div></section></div></I18nProvider>)

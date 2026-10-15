@@ -153,6 +153,7 @@ export const ru: Dictionary = {
     'next.working': '— следующее действие через {seconds} с',
     'task.energyPrice': 'Энергия: {cost}',
     'task.energyLow': 'Не хватает сил: работа будет медленнее',
+    'task.energyFaint': 'После этой работы — обморок на 12 игровых часов. Лучше отдохнуть.',
     'site.assigned': 'В работе: {amount}, свободно: {free}',
     'site.jobBusy': 'Все нужные работы уже заняты.',
     'character.mine': 'Мой персонаж —',

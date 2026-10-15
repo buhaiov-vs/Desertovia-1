@@ -152,6 +152,7 @@ export const en = {
     'next.working': '— next action in {seconds} s',
     'task.energyPrice': 'Energy: {cost}',
     'task.energyLow': 'Not enough energy: work will be slower',
+    'task.energyFaint': 'This work will cause a 12-game-hour faint. Rest first.',
     'site.assigned': 'Assigned: {amount}, free: {free}',
     'site.jobBusy': 'All needed work is already assigned.',
     'character.mine': 'My character —',

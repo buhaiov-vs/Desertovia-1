@@ -52,3 +52,11 @@ test('map placement uses the expanded kingdom and keeps private construction out
   })
   expect(actual).toEqual([true,false,false,true,false])
 })
+
+test('third tired work warns about fainting before starting on a narrow screen',async({page})=>{
+  await page.addInitScript(()=>localStorage.setItem('desertod.language','ru'))
+  await page.setViewportSize({width:320,height:760})
+  await page.goto('/e2e/economy-harness.html')
+  await expect(page.locator('#faint-warning')).toContainText('После этой работы — обморок на 12 игровых часов')
+  expect(await page.locator('#faint-warning').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true)
+})

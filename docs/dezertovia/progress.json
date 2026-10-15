@@ -699,5 +699,29 @@
     "test_payments": 0,
     "test_messages": 0,
     "documentation": "RELEASE_0_5_3.md"
+  },
+  "next_work": {
+    "D-051": {
+      "state": "planned",
+      "document": "ALMIGHTY_DIRECTOR_PLAN.md",
+      "automatic_events_enabled": false
+    },
+    "D-052": {
+      "state": "verified_branch_not_deployed",
+      "branch": "feat/almighty-patchnotes",
+      "deployed": false,
+      "versions": [
+        "0.5.3",
+        "0.5.2",
+        "0.5.1",
+        "0.5"
+      ],
+      "checks": [
+        "frontend lint: exit 0, existing warnings only",
+        "production TypeScript/Vite/PWA build: passed",
+        "Playwright targeted history RU/EN: 2 passed;320px and1440px;light/dark;open/archive/back/focus",
+        "git diff --check and AGENTS/CLAUDE parity: passed"
+      ]
+    }
   }
 }

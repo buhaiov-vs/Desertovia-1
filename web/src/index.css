@@ -2490,3 +2490,16 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 :root[data-ui-theme="dark"] .modal-body > .next-action {
   background: #242c29; color: #e9dfca; border-color: #745638;
 }
+
+/* Release history stays inside the existing scrollable menu, including 320px phones. */
+.version-patch-notes { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.5rem; width:100%; text-align:start; white-space:normal; }
+.version-patch-notes span { font-size:.85em; }
+.patch-notes { min-width:0; overflow-wrap:anywhere; }
+.patch-notes-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.6rem; margin-bottom:.8rem; }
+.patch-notes-header h3 { margin:0; }
+.patch-notes details { border-top:1px solid var(--border, #96764a); padding:.8rem 0; }
+.patch-notes summary { cursor:pointer; min-height:44px; }
+.patch-notes summary strong { margin-inline-start:.3rem; }
+.patch-notes time { display:block; font-size:.85em; margin:.3rem 0 0 1.3rem; }
+.patch-notes ul { padding-inline-start:1.4rem; margin:.5rem 0; }
+.patch-notes li { margin:.6rem 0; line-height:1.45; }

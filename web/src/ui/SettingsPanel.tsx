@@ -1,5 +1,6 @@
 import { GAME_VERSION } from '../version'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { PatchNotes } from './PatchNotes'
 import { api, type Me, type VillageState } from '../api'
 import { LanguageSwitcher, useI18n } from '../i18n'
 import { InviteCard } from './InviteCard'
@@ -18,6 +19,8 @@ interface Props {
 /** Things that are not part of the game: language, notifications, account and invites. */
 export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCode, onAccountChanged }: Props) {
   const { t } = useI18n()
+  const [showPatchNotes, setShowPatchNotes] = useState(false)
+  const versionButton = useRef<HTMLButtonElement>(null)
   const [copied, setCopied] = useState(false)
   const [theme,setTheme]=useState(()=>localStorage.getItem('desertovia.uiTheme')??'auto')
   const [labels,setLabels]=useState(()=>localStorage.getItem('desertovia.buildingLabels')==='true')
@@ -26,8 +29,21 @@ export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCod
     <>
       <section className="card settings-version">
         <h3>{t('settings.version')}</h3>
-        <strong>{t('brand')} {GAME_VERSION}</strong>
+        <button
+          type="button"
+          ref={versionButton}
+          className="version-patch-notes"
+          aria-expanded={showPatchNotes}
+          onClick={() => setShowPatchNotes(!showPatchNotes)}
+        >
+          <strong>{t('brand')} {GAME_VERSION}</strong>
+          <span>{t('settings.patchNotes')} →</span>
+        </button>
       </section>
+      {showPatchNotes ? <PatchNotes onBack={() => {
+        setShowPatchNotes(false)
+        requestAnimationFrame(() => versionButton.current?.focus())
+      }} /> : <>
       <section className="card">
         <h3>{t('settings.language')}</h3>
         <LanguageSwitcher />
@@ -70,6 +86,7 @@ export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCod
       </section>
 
       {isOwner && <InviteCard village={village} inviteCode={inviteCode} onNewCode={onNewInviteCode} />}
+      </>}
     </>
   )
 }

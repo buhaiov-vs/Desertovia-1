@@ -167,3 +167,11 @@ Native Injury/Remedy/CombatRules сохраняются; external duel срок 
 D-026 /DZ-31 PLAN: hospital-level + patient Recovery skill time bonus, bounded,
 snapshot once per admission and shared authoritative bot expiry. Recommendation
 2/4/6% + skill up to5%, cap10%, not approved balance. No code/payment change.
+
+
+## D-051/D-052 — дополнение15.10
+
+| ID | Основа | Изменение | Статус |
+| --- | --- | --- | --- |
+| D-051 | RaidRules/RaidWorker, ChaplainChatWorker, SramoslavService, DZ-24 | Единый директор/каталог/журнал: ALMIGHTY_DIRECTOR_PLAN.md | PLAN, без автомата |
+| D-052 | SettingsPanel, version.ts, modal scroll | PatchNotes, каталог RU/EN и раскрываемая история | BRANCH, без deployment |

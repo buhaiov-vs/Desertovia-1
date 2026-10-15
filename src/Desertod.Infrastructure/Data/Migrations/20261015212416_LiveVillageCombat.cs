@@ -32,6 +32,7 @@ namespace Desertod.Infrastructure.Data.Migrations
                     ThreatBudget = table.Column<double>(type: "double precision", nullable: false),
                     ReadyDefenders = table.Column<int>(type: "integer", nullable: false),
                     AvailableReserves = table.Column<int>(type: "integer", nullable: false),
+                    ScheduledAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     StartsAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     LastTickAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     EndsAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),

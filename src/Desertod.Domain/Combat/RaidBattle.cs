@@ -17,6 +17,8 @@ public sealed class RaidBattle
     public double ThreatBudget { get; set; }
     public int ReadyDefenders { get; set; }
     public int AvailableReserves { get; set; }
+    // Immutable queue order; StartsAt may move when an earlier wave takes longer.
+    public DateTimeOffset ScheduledAt { get; set; }
     public DateTimeOffset StartsAt { get; set; }
     public DateTimeOffset LastTickAt { get; set; }
     public DateTimeOffset EndsAt { get; set; }

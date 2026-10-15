@@ -21,7 +21,7 @@ public sealed class RaidBalanceSimulationTests(ITestOutputHelper output)
     public void Announced_encounters_finish_with_bounded_losses_and_persisted_individual_outcomes(int count,string profile,bool walls)
     {
         var watch=Stopwatch.StartNew();
-        var v=NewVillage();v.Wilds!.Obstacles.Clear();v.Wilds.Ravine.Clear();
+        var v=NewVillage();v.Id=Guid.Parse("6e715c31-5387-4a7d-9c5e-201610150001");v.Wilds=Wilderness.Generate(v.Id);v.Wilds.Obstacles.Clear();v.Wilds.Ravine.Clear();
         v.Structures.Add(new(){Kind=BuildingKind.Hut,PlotId="5,10"});
         v.Structures.Add(new(){Kind=BuildingKind.Hut,PlotId="21,10"});
         var guards=Enumerable.Range(0,count).Select(i=>{

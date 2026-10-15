@@ -7,15 +7,16 @@
 
 | Блок | Статус |
 | --- | --- |
-| COMBAT-01 | in_progress: аудит геометрии и серверного цикла |
-| COMBAT-UI | pending |
-| ENERGY-02 | pending |
-| UI-05 | pending |
-| CYCLE-02 | pending |
-| ENERGY-03 | pending |
-| LAND-01 | pending |
-| STORAGE-UX | pending |
-| Checks | after code package |
+| COMBAT-01 | implemented: отдельные серверные акторы, геометрия, адаптивный состав |
+| COMBAT-UI | implemented: HP, выбор/автоатака, позиция/перехват |
+| ENERGY-02 | implemented: проекция/обновление без перезахода |
+| UI-05 | implemented: слои глаза/карточек/чата |
+| CYCLE-02 | implemented: settled-цикл и медицинская пауза |
+| ENERGY-03 | implemented: общая цена, конкурентное списание |
+| LAND-01 | implemented: пересечение всего участка UI/API |
+| STORAGE-UX | implemented: компактная сводка без смены ёмкостей |
+| AI-SPEECH-01 | implemented: отдельный речевой контракт, guards до обрезки, фильтр старой истории |
+| Checks | final exact CI required; previous source CI passed |
 | Scheduled rollout | Automation confirmed for16.10.2026 07:00 Europe/Oslo; only ready exact CI; no switch before05:00UTC |
 
 План: COMBAT_AND_FIXES_PATCH_PLAN.md + RAID_REWORK_PLAN.md.
@@ -151,3 +152,37 @@ No server changes. All0.7/runtime ready flags remainfalse until the newCI finish
 Final review addition: a palisade completed during the warning is initialized on
 the first combat tick; frozen enemy budget/composition do not increase. Covered
 by the PostgreSQL tick/reload test.8cbfc84CI is superseded by this source follow-up.
+
+
+## Checkpoint6 — serial waves and final verification candidate
+
+Found and fixed a queue-order defect during final review: deferring wave two
+changes its actual StartsAt/raid.StrikesAt, which could put overdue wave three
+first. Added immutable ScheduledAt to the NOT YET INSTALLED LiveVillageCombat
+migration/model; no production migration edited. Active battle has priority;
+otherwise original ScheduledAt/wave/id determines the next battle. At most one
+live battle advances per village tick. Deferred flag changes are committed and
+broadcast even without a movement step. Banner prioritizes active combat over
+old deadlines of queued waves. Added real PostgreSQL three-wave regression,
+including persistent fighter HP between waves, and a browser banner regression.
+
+Large director snapshot (150 citizens, 20 maximum-length chat lines, prior
+proposal history/intent plus all direction/profile options) fits the existing
+36,000-character bridge limit. No external model calls used. Attempt pacing also
+rechecks the global gap for each village, preventing a failed call in one village
+from bypassing limits via the next village in the same worker sweep.
+
+Simulation fixtures now use a deterministic village map seed AND regenerate its
+wilds, then clear only optional obstacles/ravine; actual authored ponds/ridges
+remain and every actor position is checked against server terrain collision.
+Final source verification is in progress; do not install based on earlier CI.
+
+
+Checkpoint6 local results:380Domain PASS on final deterministic geometry fixtures;
+production frontend build PASS; EF no pending model changes. Three-wave API
+regression PASS (fixture takes the same PostgreSQL advisory transaction lock as
+background workers, and reloads the persisted microsecond-precision timestamp).
+Earlier focused batch8other API checks PASS. Prior source848f087 CI38814781348
+completed SUCCESS (380Domain/215API/browser/builds). New exact source CI next;
+prior run is not substituted for it. Private operator suite14PASS including
+UTC gate, CI pin guards and pending-battle-safe rollback behavior.

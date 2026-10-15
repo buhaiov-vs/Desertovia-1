@@ -860,16 +860,28 @@ public sealed partial class GameService(
         var reports = new List<RaidReport>();
         var changed = false;
         var updated = new List<RaidBattle>();
+        var liveIds=due.Where(r=>r.EngineVersion>=2).Select(r=>r.Id).ToArray();
+        var battles=await db.RaidBattles.Where(b=>liveIds.Contains(b.Id)).ToDictionaryAsync(b=>b.Id,cancellationToken);
+        // Active combat always keeps its turn. Waiting waves retain their original schedule,
+        // even after a previous wave pushes their actual start past the next wave's deadline.
+        var allowed=battles.Values.Where(b=>b.FinishedAt is null&&b.Phase!="Cancelled")
+            .OrderBy(b=>b.Phase=="Warning"?1:0).ThenBy(b=>b.ScheduledAt)
+            .ThenBy(b=>due.Single(r=>r.Id==b.Id).Wave).ThenBy(b=>b.Id).FirstOrDefault();
         foreach(var raid in due)
         {
             if(raid.EngineVersion < 2) { reports.Add(RaidRules.Resolve(village,raid,citizens,completedProjects,Random.Shared,now)); continue; }
-            var battle = await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==raid.Id,cancellationToken)
-                ?? throw new InvalidOperationException("Live raid has no persisted battle.");
-            var earlier = village.Raids.Where(r=>r.IsPending&&r.EngineVersion>=2&&(r.StrikesAt<raid.StrikesAt || r.StrikesAt==raid.StrikesAt && r.Wave<raid.Wave)).Any();
-            if(battle.Phase=="Warning"&&earlier){battle.Deferred=true;continue;}
+            if(!battles.TryGetValue(raid.Id,out var battle))
+                throw new InvalidOperationException("Live raid has no persisted battle.");
+            if(battle.Id!=allowed?.Id)
+            {
+                if(battle.Phase=="Warning"&&!battle.Deferred)
+                {battle.Deferred=true;battle.Revision++;changed=true;updated.Add(battle);}
+                continue;
+            }
             if(battle.Deferred)
             {
                 battle.Deferred=false;battle.StartsAt=now;battle.LastTickAt=now;battle.EndsAt=now.AddMinutes(4);raid.StrikesAt=now;
+                battle.Revision++;changed=true;updated.Add(battle);
                 foreach(var unit in battle.Units)unit.NextAttackAt=now.AddSeconds(2);
                 var priorRaid=village.Raids.Where(r=>r.Id!=raid.Id&&r.AnnouncedAt==raid.AnnouncedAt&&r.Wave<raid.Wave).OrderByDescending(r=>r.Wave).FirstOrDefault();
                 if(priorRaid is not null)
@@ -890,7 +902,7 @@ public sealed partial class GameService(
             var advanced = RaidSimulation.Tick(village,raid,battle,citizens,
                 citizens.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now);
             changed |= advanced;
-            if(advanced)updated.Add(battle);
+            if(advanced&&!updated.Contains(battle))updated.Add(battle);
             if(battle.FinishedAt is not null)
                 reports.Add(BattleReport(raid,battle,citizens));
         }

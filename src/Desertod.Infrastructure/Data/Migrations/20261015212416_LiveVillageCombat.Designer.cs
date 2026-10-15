@@ -137,6 +137,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<long>("Revision")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTimeOffset>("ScheduledAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Sector")
                         .IsRequired()
                         .HasColumnType("text");

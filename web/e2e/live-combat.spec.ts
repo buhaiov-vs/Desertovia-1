@@ -62,3 +62,11 @@ test('server collision fixtures still match the authored ponds, mountains and ma
     expect(createHash('sha256').update(Buffer.from(mask)).digest('hex')).toBe(sample.hash)
   }
 })
+
+
+test('the active second wave stays in the banner ahead of an overdue queued third wave',async({page})=>{
+  await page.addInitScript(()=>localStorage.setItem('desertod.language','ru'))
+  await page.goto('/e2e/live-combat-harness.html')
+  await expect(page.locator('#queue-banner')).toContainText('в деревне')
+  await expect(page.locator('#queue-banner')).toContainText('волна 2 из 3')
+})

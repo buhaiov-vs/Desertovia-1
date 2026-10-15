@@ -1,3 +1,17 @@
+# D-069 / 0.7 candidate: implemented, final CI then scheduled release
+
+Full D-068 code batch and AI-SPEECH-01 are implemented. Public PR37 contains
+server individual battles, real terrain/gates/breaches, serial waves and combat
+UI, energy/cycle/boundary/storage fixes. See docs/dezertovia/COMBAT_AND_FIXES_IMPLEMENTATION.md
+for exact code/checkpoints. Bot PR38 merged, tested source3f7038c / CI38811556338
+SUCCESS816 tests; only almighty.py runtime payload, preserving installed budget
+repair3fd0c1c. Previous game CI passed but final game source needs exact CI.
+LIVE game remains0.6.1/61d726c. Automatic release scheduled16.10.2026 07:00
+Europe/Oslo =05:00UTC, NEVER earlier. Private ops candidate may be prepared now;
+do not create deploy/live-combat-request.json until the deadline. Release only
+ready exact pins with successful CI, backups, independent preservation check.
+No artificial player messages/raids/payments, no progress or stat resets.
+
 # D-069: реализация разрешена; установка не раньше07:00 Осло
 
 Владелец15.10.2026 разрешил весь код и тесты пакета D-068. Реализовать в

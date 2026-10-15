@@ -171,6 +171,52 @@ public sealed class LiveRaidApiTests(DesertodApiFactory factory)
         await service.RaidVillageAsync(villageId,default);Assert.Equal(renown,(await players.LoadCitizenAsync(worker.Id)).Renown);
     }
     [Fact]
+    public async Task Three_overdue_waves_stay_serial_when_the_second_start_moves_past_the_third_schedule()
+    {
+        var v=await players.FoundVillageAsync("Serial waves");var worker=await players.JoinAsync(v);
+        await players.ArrangeCitizenAsync(worker.Id,(c,now)=>{c.CurrentTaskId=GameCatalog.KeepWatch;c.CycleStartedAt=now.AddHours(-1);c.CycleEndsAt=now.AddHours(1);c.CycleSettled=false;});
+        await OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+"/undead",new{enemy="Skeleton",size="Large"}));
+        var villageId=(await players.LoadCitizenAsync(worker.Id)).VillageId;
+        Guid[] waveIds;DateTimeOffset thirdSchedule;double thirdX;
+        // Fixture edits share the production database lock with real background workers.
+        await using(var db=await Db())
+        {
+            await using var transaction=await db.Database.BeginTransactionAsync();
+            var lockKey=villageId.ToString();
+            await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))");
+            var city=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);
+            var raids=city.Raids.OrderBy(r=>r.Wave).ToArray();waveIds=raids.Select(r=>r.Id).ToArray();
+            Assert.Equal(3,raids.Length);
+            for(var i=0;i<raids.Length;i++)
+            {
+                var battle=await db.RaidBattles.SingleAsync(b=>b.Id==raids[i].Id);
+                battle.ScheduledAt=battle.StartsAt=raids[i].StrikesAt=factory.Clock.GetUtcNow().AddMinutes(-4+i);
+                battle.LastTickAt=i==0?factory.Clock.GetUtcNow().AddSeconds(-1):battle.StartsAt;
+                battle.EndsAt=factory.Clock.GetUtcNow().AddMinutes(4);
+                foreach(var unit in battle.Units){unit.Attack=0;if(i==0){unit.Health=0;unit.State="Dead";}}
+                if(i==0)battle.Fighters.Add(new(){CitizenId=worker.Id,X=12.5,Y=13.5,Health=17,MaximumHealth=44,Active=true,Guard=true});
+            }
+            RaidRules.UpdateNextRaidAt(city);await db.SaveChangesAsync();
+            var third=await db.RaidBattles.SingleAsync(b=>b.Id==waveIds[2]);await db.Entry(third).ReloadAsync();thirdSchedule=third.ScheduledAt;thirdX=third.Units[0].X;
+            await transaction.CommitAsync();
+        }
+        var service=factory.Services.GetRequiredService<GameService>();
+        await service.RaidVillageAsync(villageId,default); // Finish wave one; reserve both waiting waves.
+        await service.RaidVillageAsync(villageId,default); // Start two later than three's original deadline.
+        for(var i=0;i<3;i++){factory.Clock.Advance(TimeSpan.FromSeconds(1));await service.RaidVillageAsync(villageId,default);}
+        await using(var db=await Db())
+        {
+            var second=await db.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==waveIds[1]);
+            var third=await db.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==waveIds[2]);
+            Assert.NotEqual("Warning",second.Phase);Assert.Null(second.FinishedAt);
+            Assert.True(second.StartsAt>third.ScheduledAt);
+            Assert.Equal(17,second.Fighters.Single(f=>f.CitizenId==worker.Id).Health);
+            Assert.Equal("Warning",third.Phase);Assert.True(third.Deferred);Assert.Null(third.FinishedAt);
+            Assert.Equal(thirdSchedule,third.ScheduledAt);Assert.Equal(thirdX,third.Units[0].X);
+            Assert.All(third.Units,u=>Assert.Equal(u.MaximumHealth,u.Health));
+        }
+    }
+    [Fact]
     public void Notification_batches_publish_only_committed_effects()
     {
         var changes=new VillageStateChanges();var count=0;

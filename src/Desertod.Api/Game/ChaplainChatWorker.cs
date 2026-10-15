@@ -56,6 +56,7 @@ public sealed partial class ChaplainChatWorker(IDbContextFactory<DesertodDbConte
                 .ToListAsync(cancellationToken);
             foreach (var village in villages)
             {
+                if(attempts.Count>=HourlyLimit||now-lastAttempt<Gap)return;
                 var recentSince = now.AddMinutes(-10);
                 var recent = await db.ChatMessages.AsNoTracking().Where(m => m.VillageId == village.Id && m.SentAt >= recentSince)
                     .OrderByDescending(m => m.SentAt).Take(50).ToListAsync(cancellationToken);

@@ -60,7 +60,8 @@ export function RaidBanner({
 }) {
   const i18n = useI18n()
   const { t } = i18n
-  const raid = comingRaids(village.raids, now)[0]
+  const fighting=village.battles?.find(b=>!b.finishedAt&&b.phase!=='Warning'&&b.phase!=='Cancelled')
+  const raid = (fighting&&village.raids.find(r=>r.id===fighting.id)) || comingRaids(village.raids, now)[0]
   if (!raid) return null
   const battle=village.battles?.find(b=>b.id===raid.id)
   const active=!!battle&&battle.phase!=='Warning'&&!battle.finishedAt

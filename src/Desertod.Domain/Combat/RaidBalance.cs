@@ -76,7 +76,7 @@ public static class RaidBalance
         var chosen=sector is null?choices[seed%choices.Count]:choices.FirstOrDefault(s=>s.Sector==sector)
             ??throw new GameRuleException("raid.noApproach","The selected approach is no longer reachable.");
         var battle=new RaidBattle{Id=raid.Id,VillageId=village.Id,Sector=chosen.Sector,Seed=seed,
-            StartsAt=raid.StrikesAt,LastTickAt=raid.StrikesAt,EndsAt=raid.StrikesAt.AddMinutes(4),
+            ScheduledAt=raid.StrikesAt,StartsAt=raid.StrikesAt,LastTickAt=raid.StrikesAt,EndsAt=raid.StrikesAt.AddMinutes(4),
             ThreatBudget=budget,ReadyDefenders=readiness.Guards,AvailableReserves=readiness.Reserves,
             Composition=composition is "swarm" or "elite" or "mixed"?composition:new[]{"swarm","elite","mixed"}[seed%3],Tactic=seed%2==0?"entry":"breach"};
         var baseCost=EnemyCatalog.Get(raid.Enemy).Power;

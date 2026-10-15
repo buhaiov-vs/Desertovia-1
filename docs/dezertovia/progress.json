@@ -477,5 +477,15 @@
     "data_reset": false,
     "game_code_changed": false,
     "new_game_release": false
+  },
+  "batch_update_plan": {
+    "decision": "D-037",
+    "state": "planned_not_started",
+    "document": "BATCH_UPDATE_PLAN.md",
+    "proposed_blocks": 18,
+    "workflow": "complete_agreed_changes_then_validate_final_code",
+    "full_suite_after_each_small_change": false,
+    "final_required_checks_preserved": true,
+    "default_scope": "repositories_only_no_deployment"
   }
 }

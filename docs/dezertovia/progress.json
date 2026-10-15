@@ -489,6 +489,12 @@
     ],
     "time_zone": "Europe/Kyiv",
     "requires_new_human_chat_for_ambient": true,
-    "deployed": false
+    "deployed": false,
+    "night_tone": [
+      "praise_actual_contribution",
+      "gentle_teasing",
+      "ask_how_the_player_is"
+    ],
+    "player_time_zone_not_assumed": true
   }
 }

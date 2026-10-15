@@ -884,5 +884,25 @@
     },
     "post_install_audit_run": 38798086739,
     "post_install_audit": "no_new_game_errors_no_overdue_unblocked_construction_claims_old_hut_claim_cleared"
+  },
+  "raid_rework_d066": {
+    "state": "planned_not_implemented",
+    "document": "RAID_REWORK_PLAN.md",
+    "implementation_authorized": false,
+    "deployment_authorized": false,
+    "live_unchanged": "0.6.1",
+    "requirements": [
+      "single_director_selected_entry_side",
+      "individual_server_units_hp_attacks",
+      "center_is_rally_reference_not_campfire_objective",
+      "raid_and_plunder_village",
+      "minor_priority_external_buildings",
+      "real_entry_or_fence_breach",
+      "nearest_autoattack_and_clicked_target",
+      "snapshot_based_threat_budget_many_weak_or_few_strong"
+    ],
+    "confirmed_incident_audit": 38799142475,
+    "parameters": "proposals_pending_simulation",
+    "next": "Read plan and latest user instruction; do not implement/deploy from a planning request."
   }
 }

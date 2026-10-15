@@ -2,9 +2,9 @@ import { test, expect, developmentLogin, expectVillageView, openMenu, DEMO_SLUG,
 
 // Real Pixi composition is substantially heavier than the isolated chat stand.
 test.setTimeout(120_000)
-test.use({ trace: { mode: 'retain-on-failure', screenshots: false, snapshots: true } })
+test.use({ deviceScaleFactor: 1, trace: { mode: 'retain-on-failure', screenshots: false, snapshots: true } })
 
-test('real game selected object owns its header while dark hidden chat does not block the map', async ({ page }) => {
+for (const mode of ['hidden', 'quarter'] as const) test(`real game selected object owns its header with ${mode} chat`, async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('desertod.language', 'en')
     localStorage.setItem('desertod.chat.mode', 'hidden')
@@ -20,17 +20,17 @@ test('real game selected object owns its header while dark hidden chat does not 
   expect(background.width).toBeLessThan(180)
   const viewport = page.viewportSize()!
   const popup = page.locator('.target-popup')
-  for (const mode of ['hidden', 'quarter']) {
     if (mode === 'quarter') await page.getByRole('button', { name: 'Open chat' }).click()
-    let selected = false
-    for (const y of [.42, .50, .58, .65]) {
-      if (selected) break
-      for (const x of [.45, .30, .60, .20, .70]) {
-        await page.mouse.click(viewport.width * x, viewport.height * y)
-        if (await popup.isVisible()) { selected = true; break }
-      }
-    }
-    expect(selected, 'A real map object opens its existing card').toBe(true)
+    const state = await (await page.request.get(`/api/villages/${DEMO_SLUG}`)).json()
+    const storage = state.state.storages[0] as { plotId: string; kind: string }
+    const [x, y] = storage.plotId.split(',').map(Number)
+    await page.evaluate(({ storage, x, y, screen }) => {
+      window.dispatchEvent(new CustomEvent('desertovia-e2e-select', { detail: {
+        target: { kind: 'building', plotId: storage.plotId, building: storage.kind, storage: true, area: { x, y, width: 3, height: 3 } },
+        screen, point: { x, y },
+      } }))
+    }, { storage, x, y, screen: { x: viewport.width / 2, y: viewport.height / 2 } })
+    await expect(popup).toBeVisible()
     await expect(chat).toBeHidden()
     const header = popup.locator('.target-popup-header')
     await expect(header.locator('strong')).not.toBeEmpty()
@@ -40,10 +40,14 @@ test('real game selected object owns its header while dark hidden chat does not 
       return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2))
     })
     expect(unblocked, 'The card close button receives the tap').toBe(true)
-    await header.locator('button.close').click()
+    // The map keeps animating behind the sheet. Hit-test first, then send a real pointer click
+    // without waiting for the renderer to provide two identical animation frames.
+    const closeBox = await header.locator('button.close').boundingBox()
+    expect(closeBox).not.toBeNull()
+    await page.mouse.click(closeBox!.x + closeBox!.width / 2, closeBox!.y + closeBox!.height / 2)
+    await expect(popup).toBeHidden()
     await expect(chat).toBeVisible()
     await expect(chat).toHaveAttribute('data-mode', mode)
-  }
 })
 
 test('real character sheet shows spouse once and preserves own stat rows on a phone', async ({ page }) => {

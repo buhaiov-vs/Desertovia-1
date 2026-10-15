@@ -19,6 +19,28 @@ public class ConstructionTests
     }
 
     [Fact]
+    public void Pending_build_does_not_reserve_trees_or_slots_and_approval_rechecks_capacity()
+    {
+        var village = NewVillage();
+        ConstructionRules.Place(village, BuildingKind.LeanTo, 9, 11, Now);
+        ConstructionRules.Place(village, BuildingKind.LeanTo, 21, 12, Now);
+        ConstructionRules.Place(village, BuildingKind.LeanTo, 25, 12, Now);
+        var trees = village.Trees.Select(t => t.FelledAt).ToArray();
+        var order = BuildingOperations.RequestBuild(village, Guid.NewGuid(), BuildingKind.Hospital, 9, 17, Now);
+        Assert.Equal(3, village.Sites.Count);
+        Assert.Equal(trees, village.Trees.Select(t => t.FelledAt).ToArray());
+        Assert.Equal("building.tooManySites", Assert.Throws<GameRuleException>(() => BuildingOperations.Approve(village, order, [], Now)).Code);
+        Assert.Equal("pending", order.Status);
+        ConstructionRules.Cancel(village, "9,11");
+        BuildingOperations.Approve(village, order, [], Now);
+        var hospital = village.Sites.Single(s => s.Kind == BuildingKind.Hospital);
+        Assert.Equal(order.Id, hospital.OrderId);
+        Assert.Equal("working", order.Status);
+        ConstructionRules.Cancel(village, hospital.PlotId);
+        Assert.Equal("cancelled", order.Status);
+    }
+
+    [Fact]
     public void Blueprint_CostsNothing_AndRespectsPlotsAndRequirements()
     {
         var village = NewVillage();

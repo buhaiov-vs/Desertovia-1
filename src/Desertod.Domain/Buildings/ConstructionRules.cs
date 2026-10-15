@@ -14,6 +14,24 @@ public static class ConstructionRules
     /// </summary>
     public static ConstructionSite Place(Village village, BuildingKind kind, int x, int y, DateTimeOffset now, Guid? privateOwner = null)
     {
+        ValidatePlacement(village, kind, x, y, privateOwner);
+        var footprint = WorldMap.Footprint(x, y);
+        var site = new ConstructionSite
+        {
+            Kind = kind,
+            OwnerAccountId = privateOwner,
+            PlotId = WorldMap.PlotAt(x, y),
+            PlacedAt = now,
+            Scale = Math.Pow(BuildingCatalog.RepeatCostGrowth, village.CountOf(kind,privateOwner)),
+            TreesToFell = Forest.Hold(village, footprint, now),
+        };
+        village.Sites.Add(site);
+        return site;
+    }
+
+    /// <summary>Pure validation: pending applications do not occupy land, fell trees or consume a construction slot.</summary>
+    public static void ValidatePlacement(Village village, BuildingKind kind, int x, int y, Guid? privateOwner = null, bool checkCapacity = true)
+    {
         var definition = BuildingCatalog.Get(kind);
         if (kind == BuildingKind.Castle && village.CountOf(kind) > 0)
             throw new GameRuleException("castle.unique", "Only one royal castle can be built.");
@@ -68,24 +86,13 @@ public static class ConstructionRules
         }
 
         var maximumSites = privateOwner is null ? BuildingCatalog.MaximumOpenSites : 1;
-        if (village.Sites.Count(s=>s.OwnerAccountId==privateOwner) >= maximumSites)
+        if (checkCapacity && village.Sites.Count(s=>s.OwnerAccountId==privateOwner) >= maximumSites)
         {
             throw new GameRuleException("building.tooManySites",
                 $"At most {maximumSites} buildings can be under construction at once.",
                 new Dictionary<string, object> { ["maximum"] = maximumSites });
         }
 
-        var site = new ConstructionSite
-        {
-            Kind = kind,
-            OwnerAccountId = privateOwner,
-            PlotId = WorldMap.PlotAt(x, y),
-            PlacedAt = now,
-            Scale = Math.Pow(BuildingCatalog.RepeatCostGrowth, village.CountOf(kind,privateOwner)),
-            TreesToFell = Forest.Hold(village, footprint, now),
-        };
-        village.Sites.Add(site);
-        return site;
     }
 
     public static ConstructionSite PlacePrivate(Village village, Guid owner, BuildingKind kind, int x, int y, DateTimeOffset now) =>
@@ -120,6 +127,8 @@ public static class ConstructionRules
             var storage=village.Storages.SingleOrDefault(b=>b.PlotId==site.PlotId);if(storage is not null)storage.Decommissioning=false;
             var order=village.CivicOrders.SingleOrDefault(o=>o.Id==site.OrderId);if(order is not null)order.Status="cancelled";
         }
+        var application = village.CivicOrders.SingleOrDefault(o => o.Id == site.OrderId);
+        if (application is not null) application.Status = "cancelled";
         village.Sites.Remove(site);
     }
 
@@ -215,6 +224,8 @@ public static class ConstructionRules
         }
 
         if(BuildingOperations.Finish(village,site,now,worker))return site.Kind;
+        var application = village.CivicOrders.SingleOrDefault(o => o.Id == site.OrderId);
+        if (application is not null) application.Status = "completed";
         village.Sites.Remove(site);
         if (site.Definition.Storage is { } storage)
         {

@@ -889,7 +889,7 @@ export const RAIN = {
   forestRegrowth: 2,
 }
 
-export interface CivicOrder { id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
+export interface CivicOrder { buildingKind?:BuildingKind|null; id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
 export interface Housing { plotId:string; beds:number; occupied:number; level:number }
 export interface VillageState {
   kingdomArea?: TileArea

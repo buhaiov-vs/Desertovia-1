@@ -555,14 +555,14 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
             await api.economyAction(slug,{requestId:placing.requestId!,action:'private-build',building:placing.definition.kind,x,y})
             setVillageState((await api.village(slug)).state)
           } else setVillageState(await api.placeBlueprint(slug, placing.definition.kind, x, y))
-          setNotice(i18n.t('build.placed', { building }))
+          setNotice(i18n.t(!placing.private && !tsar ? 'build.requested' : 'build.placed', { building }))
         } catch (exception) {
           setNotice(i18n.error(exception))
         }
         window.setTimeout(() => setNotice(null), 5000)
       },
     }
-  }, [placing, slug, i18n, setVillageState])
+  }, [placing, slug, i18n, setVillageState, tsar])
 
   const pollAction = async (action: () => Promise<VillageState>, after?: () => void) => {
     setPending(true)
@@ -895,7 +895,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
           <div className="placement-banner">
             {placing ? (
               <>
-                {i18n.t('build.placing', { building: i18n.building(placing.definition.kind).name })}
+                {i18n.t(!placing.private && !tsar ? 'build.requestPlacing' : 'build.placing', { building: i18n.building(placing.definition.kind).name })}
                 <button onClick={() => setPlacing(null)}>{i18n.t('build.cancel')}</button>
               </>
             ) : (

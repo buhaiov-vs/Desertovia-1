@@ -158,7 +158,12 @@ public sealed class PlayerFlowTests(DesertodApiFactory factory)
         Assert.True((await appointed.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("isGovernor").GetBoolean());
         Assert.True((await governor.GetFromJsonAsync<JsonElement>($"{path}/me")).GetProperty("isGovernor").GetBoolean());
 
-        Assert.Equal(HttpStatusCode.OK, (await governor.PostAsJsonAsync($"{path}/blueprints", blueprint)).StatusCode);
+        var application = await governor.PostAsJsonAsync($"{path}/blueprints", blueprint);
+        Assert.Equal(HttpStatusCode.OK, application.StatusCode);
+        var requested = await application.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Empty(requested.GetProperty("sites").EnumerateArray());
+        var orderId = requested.GetProperty("civicOrders")[0].GetProperty("id").GetString();
+        Assert.Equal(HttpStatusCode.OK, (await tsar.PostAsJsonAsync($"{path}/civic/{orderId}", new { approve = true })).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await citizen.DeleteAsync($"{path}/blueprints/9,11")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await governor.DeleteAsync($"{path}/blueprints/9,11")).StatusCode);
 

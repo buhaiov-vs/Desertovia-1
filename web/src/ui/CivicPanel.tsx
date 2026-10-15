@@ -19,7 +19,7 @@ export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}
     return building?i18n.building(building.kind).name:storage?i18n.storage(storage.kind):(ru?'Дом':'Home')
   }
   const free=homes.reduce((n,h)=>n+h.beds-h.occupied,0)
-  const orderLabel=(operation:string)=>operation==='housing'?(ru?'Заселение':'Housing'):operation==='upgrade'?(ru?'Улучшение здания':'Building upgrade'):(ru?'Разборка':'Dismantle')
+  const orderLabel=(operation:string)=>operation==='build'?(ru?'Строительство':'Construction'):operation==='housing'?(ru?'Заселение':'Housing'):operation==='upgrade'?(ru?'Улучшение здания':'Building upgrade'):(ru?'Разборка':'Dismantle')
   const homeCards=homes.map(h=><div className="civic-home" key={h.plotId}>
     <strong>{buildingName(h.plotId)} · {h.plotId}</strong>
     <span>{ru?'Уровень':'Level'} {h.level} · {ru?'Занято мест':'Occupied beds'}: {h.occupied}/{h.beds}{citizen?.homePlotId===h.plotId?(ru?' · Мой дом':' · My home'):''}</span>
@@ -40,7 +40,8 @@ export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}
       <details className="civic-applications"><summary>{ru?'Заявки на рассмотрении':'Pending applications'} · {orders.length}</summary>
         {orders.length===0&&<p className="small muted">{ru?'Новых заявок нет':'No pending applications'}</p>}
         {orders.map(o=><article className="civic-order" key={o.id}>
-          <strong>{orderLabel(o.operation)} · {buildingName(o.plotId)}</strong><small>{ru?'Координаты':'Coordinates'}: {o.plotId}</small>
+          <strong>{orderLabel(o.operation)} · {o.operation==='build'&&o.buildingKind?i18n.building(o.buildingKind).name:buildingName(o.plotId)}</strong><small>{ru?'Координаты':'Coordinates'}: {o.plotId}</small>
+          {o.operation==='build'&&<span className="small">{ru?'Заявка посадника. Стройка начнётся только после одобрения царём.':'Governor application. Construction starts only after the Tsar approves.'}</span>}
           {o.operation==='upgrade'&&<span className="small">{ru?'Начать отдельную стройку улучшения. Материалы и работа потребуются после одобрения.':'Start an upgrade construction. Materials and work are required after approval.'}</span>}
           {o.partnerAccountId&&!o.partnerAccepted&&<small>{ru?'Ожидаем согласие супруга':'Waiting for spouse consent'}</small>}
           {(tsar||o.partnerAccountId===actorId&&!o.partnerAccepted)&&<div className="row"><button disabled={busy} onClick={()=>run(()=>api.civicDecision(village.slug,o.id,true))}>{tsar?(ru?'Одобрить':'Approve'):(ru?'Согласиться':'Accept')}</button><button disabled={busy} onClick={()=>run(()=>api.civicDecision(village.slug,o.id,false))}>{ru?'Отклонить':'Reject'}</button></div>}

@@ -1522,6 +1522,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<DateTimeOffset?>("ApprovedAt");
 
+                            b1.Property<string>("BuildingKind");
+
                             b1.Property<DateTimeOffset>("CreatedAt");
 
                             b1.Property<Guid>("Id");

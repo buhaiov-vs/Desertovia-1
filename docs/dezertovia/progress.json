@@ -858,6 +858,14 @@
       "domain_passed": 348,
       "api_passed": 203
     },
-    "bot_ci": 38792441921
+    "bot_ci": 38792441921,
+    "governor_construction_applications": "implemented_all_available_buildings_owner_approval_required",
+    "governor_checks": {
+      "api_pass": 18,
+      "domain_construction_pass": 12,
+      "browser_civic_pass": 3,
+      "lint": "pass",
+      "typecheck": "pass"
+    }
   }
 }

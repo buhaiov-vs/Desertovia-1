@@ -498,25 +498,25 @@ public sealed partial class GameService(
         }, cancellationToken);
     }
 
-    /// <summary>The Tsar or a Governor plans a building. Citizens do all the work.</summary>
-    public Task<VillageStateDto> PlaceBlueprintAsync(
-        string slug,
-        Guid accountId,
-        PlaceBlueprintRequest request,
-        CancellationToken cancellationToken) =>
-        PlaceBlueprintRuleAsync(
-            slug,
-            accountId,
-            "placeBlueprint",
-            $"{request.Kind} at {request.X},{request.Y}",
-            request.Kind,
-            (village, now) => ConstructionRules.Place(village, request.Kind, request.X, request.Y, now),
-            cancellationToken);
-
-    private Task<VillageStateDto> PlaceBlueprintRuleAsync(string slug, Guid accountId, string action, string detail,
-        BuildingKind kind, Action<Village, DateTimeOffset> rule, CancellationToken ct) => kind is BuildingKind.Hospital or BuildingKind.Castle
-        ? RuleAsync(slug, accountId, action, detail, rule, ct)
-        : PlanAsync(slug, accountId, action, detail, rule, ct);
+    /// <summary>The Tsar places directly; a Governor submits a construction application for the Tsar.</summary>
+    public async Task<VillageStateDto> PlaceBlueprintAsync(
+        string slug, Guid accountId, PlaceBlueprintRequest request, CancellationToken cancellationToken) =>
+        await WithVillageAsync(await FindVillageIdAsync(slug, cancellationToken), async db =>
+        {
+            var village = await LoadVillageAsync(db, slug, cancellationToken);
+            var ruler = await RequireRulerAsync(db, village, accountId, cancellationToken);
+            db.AuditActor = accountId;
+            db.AuditOperation = "placeBlueprint:" + request.Kind;
+            var state = await ActAsync(db, village, (city, now) =>
+            {
+                if (city.OwnerAccountId == accountId)
+                    ConstructionRules.Place(city, request.Kind, request.X, request.Y, now);
+                else
+                    BuildingOperations.RequestBuild(city, accountId, request.Kind, request.X, request.Y, now);
+            }, cancellationToken);
+            logger.RulerActed(slug, ruler, "placeBlueprint", $"{request.Kind} at {request.X},{request.Y}");
+            return state;
+        }, cancellationToken);
 
     /// <summary>The Tsar walks to a spot on the land; every viewer sees them go.</summary>
     public Task<VillageStateDto> TsarGoToAsync(string slug, Guid accountId, GoToRequest request, CancellationToken cancellationToken) =>

@@ -495,6 +495,8 @@
       "gentle_teasing",
       "ask_how_the_player_is"
     ],
-    "player_time_zone_not_assumed": true
+    "player_time_zone_not_assumed": true,
+    "time_zone_internal_only": true,
+    "no_geographic_references_in_speech": true
   }
 }

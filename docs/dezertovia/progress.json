@@ -587,5 +587,20 @@
     "balance_state": "proposed_not_applied_or_simulated",
     "latest_request": "save_updated_plan_for_context_compaction",
     "deployment_authorized_for_batch": false
+  },
+  "undead_visual_size": {
+    "decision": "D-040",
+    "state": "code_prepared_not_runtime_verified_or_deployed",
+    "source_branch": "fix/larger-undead",
+    "source_commit": "07d8f66",
+    "document": "ENEMY_SCALE_CHANGE.md",
+    "size_multiplier": 2,
+    "affected": [
+      "Zombie",
+      "Skeleton"
+    ],
+    "batch_block": 18,
+    "validation": "deferred_to_batch_final_phase",
+    "deployed": false
   }
 }

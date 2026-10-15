@@ -1,19 +1,82 @@
-# Cooperative update — implementation log
+# Cooperative update0.5.2 — source and validation record
 
-Branch feat/cooperative-update in game and bot. Repository only; NO deployment, live SQL, real wallet calls or Telegram messages.
+15 Oct2026. Repositories only. NO deployment, live SQL, real wallet operations,
+Telegram messages or resets. Candidate in feat/cooperative-update in both repos.
+Author .NET/EF/PostgreSQL + React/Pixi/SignalR architecture preserved.
 
-Source phase: prepared hospital integrated, outlined sprites and undead scaling imported. Added bridge bank guard and versioned six-phase bridge; fixed resource bins/upgrades; civic orders/demolition; persistent communal housing; read-only reciprocal Telegram marriages; exhaustion/fainting and brewer gate; free ward outcomes; silent contextual chat; dark UI and compact selected-object actions.
+Game source baseline3356a36; prepared hospital45cfccd + selected outline/departure/
+undead changes. Main implementation checkpoint5bc913b; final branch adds review
+fixes, patient layout and tests. Bot baseline8239cf9 retains proxy/tone guard;
+merge154262b + finalc168c01. Bot PR34:
+https://github.com/desertod666/TG-bots/pull/34 (CI test successful, server skipped).
+Game review: https://github.com/desertod666/Desertovia/compare/main...feat/cooperative-update.
 
-Verification phase begins after the coordinated source changes. Builds, EF additive migration and focused regression tests are next. This is not a verified release. Legacy built bridges/projects and storage overflow must survive. Legacy investment unknown => no invented demolition refund.
+## Implemented contract
 
-Worktrees: /workspace/Desertovia-batch, /workspace/TG-bots-batch. Canonical bot base already includes proxy health guard and conversational tone. Do not deploy old hospital feature branch directly.
+| Blocks | Main implementation |
+| --- | --- |
+|1,18| Prepared hospital +52 baked identical-outline PNGs + shared2x undead geometry; no new art project or runtime outline |
+|2–4| BankAccess guard for walking/direct work/exploration; mobile distinguishes fixed Tsar crossing from RopeBridge; RulesVersion2 only for new six-stage bridge |
+|5,6| Building skill gates1 for first bridge,3 later; slow work preserved; useful XP/renown, exact weighted stage pools, supervision snapshots count real progress; unique crew by account |
+|7–9| BuildingOperations/CivicOrders, storage upgrades, wear/repair, safe staged demolition with owner final approval; only known investment refund, no XP for demolition |
+|10,11| Longhouse12/20/28 beds, stable HomePlotId; signed read-only reciprocal bot marriages by Telegram ID, consensual joint housing and owner approval |
+|12,13| Hospital rules/worker/UI/assets; immutable external episodes, paused work, durable payment receipts, bounded once-only free-ward outcomes |
+|14,15| Work-only tired×3, XP25%,3 finished exhausted cycles→12game-hour faint; ordinary regen/walking; qualified vigor brew and4-hour cooldown |
+|16,17| Silent .NET chaplain without fresh human conversation; verified facts and repeat/rate memory; Cyrillic/system fonts, compact selected-object actions, independent UI darkness |
+|D-042| Native wounded transport/helper action,5-minute unclaimed NPC evacuation, camp ward fallback, lying poses and separated patient labels/cards |
 
-Verification checkpoint (15 Oct): domain suite321/321 passing. API first runtime failure (owned Skills projection without owner) fixed using AsNoTracking. API hospital/ruler/work subset27/29 passing before adapting two intentionally changed contracts (AI silence without bridge, fixed heap limit). A subsequent combined frontend/API build collided on generated wwwroot assets; rerun sequentially. Frontend build passed, lint warnings pending review. Bot27 tests passed including deterministic once-only free-ward effect/extension. Additive EF migration generated and manually amended to backfill old JSON and finished bridges. No migration executed on live.
+Map wards show up to4 staggered patient places, always retaining own patient;
+all patients have individual full-name/cause/countdown cards in hospital. No long
+row of overlapping names. Large injury icon remains for field rescue, not ward beds.
+Battle Remedy/wait is separate from existing paid duel treatments. Transport never
+heals, changes the original deadline or removes inventory. Native rescue works
+without enabling the external hospital integration.
 
-NEW USER STEERING during verification: patient must LIE in hospital with visible cause (after duel/battle); add 'carry wounded to hospital' assistance after battle, do not leave on battlefield. Response promises: another player clicks wounded and carries without profession change; carry doesn't heal; after5 real minutes no helper, NPC orderlies take them; temporary aid station by campfire if hospital absent. Implement this before finishing tests. Native InjuredUntil and external Recovery remain distinct.
+## Data preservation
 
-Active local PostgreSQL test container cooperative-postgres port55439, database desertod_e2e, standard local-only dev password. No live network. E2E cooperative-harness+spec added, Vite/tsconfig registrations added, NOT YET run. API session54035 failed at compile due concurrent frontend deleting generated wwwroot files; rerun after frontend done. Domain session33280 passed. Frontend56621 and bot96230 done. Previous API52151 result27/29; fixed expectations in source.
+Additive migrations: CooperativeVillageUpdate (new columns + JSON defaults and
+backfill of completed old bridges), WoundedTransport, SupervisionWorkSnapshot.
+Legacy projects retain RulesVersion0, old costs/progress. Storage goods above new
+caps remain withdrawable; no truncation. Legacy unknown investment yields no
+invented demolition refund. No user progress reset. Removed destructive buttons
+are UI protection: existing author leave/delete API still exists.
 
-No new game implementation commit yet (many staged imports + unstaged changes). Bot has only initial hospital merge154262b committed; further hospital/marriage code/tests uncommitted. Need complete source steering, migration supplemental fields, test API civic new cases, browser320px/desktop, migration legacy roundtrip, push both feat/cooperative-update branches and reviewable PRs. Keep no deployment. Read CURRENT_MASTER_PLAN/BALANCE_PROPOSAL for full18blocks. Independent new out-of-scope commander remains plan-only.
+Migration regression uses a disposable PostgreSQL container: downgrade to the
+pre-package AddExternalRecovery schema, remove new JSON defaults, then upgrade;
+assert completed bridge open, Building3/47XP and Renown123 preserved,70 wood above
+new cap retained/withdrawable. Live migrations were NOT run.
 
-Rescue implementation added: native WoundedAt/HospitalizedAt/claim fields, helper action and typed endpoint, automatic5minute orderlies fallback, early cancellation releases claim, no treatment-time reduction/item loss from transport. External duel patients go straight to ward; native battlefield wounded can be carried. All wounded stay visible offline, lying pose/bed and cause+remaining-time label, patient click opens rescue/treatment actions, hospital patient list includes battle wounds. Migration WoundedTransport additive. Tests added for transport and fallback; verification in progress. New real-time UI changes broadcast by rescue sweep.
+## Local verification after source phase
+
+- Full Domain suite321/321 passed before the final review fixes; final targeted
+  project/cooperation suite28/28 includes4 new cases: weighted exact pool,
+  account-unique crew and useful/idle supervision.
+- Full API suite174/176 initially passed. Two failures were an old far-bank walk
+  expectation and PostgreSQL timestamp precision in a new transport test. Fixed
+  both, with6/6 focused rerun; after final migration/review9/9 targeted cases passed
+  (hospital API, rescue, civic permissions, legacy migration and walking).
+- Bot28 isolated hospital/relationship/proxy/tone tests passed. Bot PR34 full test
+  job successful38706625050, deployment job skipped.
+- Frontend production build and lint passed; existing warning-level React notices
+  remain. A false hook name in the native remedy click handler was corrected.
+- PC/phone UI suite21 cases initially passed;1 CPU/WebGL-heavy phone case timed
+  out in teardown. Isolated rerun passed, alongside hospital receipt/320px cases
+  and real Pixi bed/discharge test (4/4). Not a live-server check.
+- Final phone hospital checks3/3 passed, including pending receipt reuse and
+  four patients on a320px real Pixi canvas. A final visual review increased bed
+  spacing, removed ward injury bubbles and clamped text labels; the resulting
+  targeted phone test passed1/1 after those fixes (16.8s). Image with synthetic
+  patients: [320px ward layout](validation/cooperative-patients-phone.png).
+  Authoritative final CI is recorded in the PR checks.
+
+CI remains required for the final branch (backend, frontend, browser and Docker).
+Do not substitute the earlier SHA/checkpoint results for the final PR status.
+All fake payments and identities are confined to local test harnesses.
+
+## Remaining operational boundaries
+
+Game__HospitalEnabled defaults false. Coordinated bot+game installation and
+configuration are future release work, not part of this source-only task. No
+end-to-end real Telegram charge was performed. Startup balance is specified,
+not calibrated from live telemetry or a guaranteed multi-day construction timer.
+Commander/castle/new catastrophes and real currency exchange remain future work.

@@ -10,7 +10,7 @@ export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}
   return <section className="civic-panel">
     {error&&<p className="error" role="alert">{error}</p>}
     {plotId&&ruler&&<div className="civic-actions"><button disabled={busy} onClick={()=>run(()=>api.civic(village.slug,plotId,'upgrade'))}>Улучшить{tsar?'':' · заявка'}</button>
-      {confirm===plotId?<><span>Разобрать медленно, вернуть 25% вложенных материалов?</span><button disabled={busy} onClick={()=>run(()=>api.civic(village.slug,plotId,'demolish'))}>Подтвердить снос</button><button onClick={()=>setConfirm(null)}>Отмена</button></>:<button disabled={busy} onClick={()=>setConfirm(plotId)}>Снести{tsar?'':' · заявка'}</button>}</div>}
+      {confirm===plotId?<><span>Разобрать медленно? Возврат: 25% учтённых материалов.</span><button disabled={busy} onClick={()=>run(()=>api.civic(village.slug,plotId,'demolish'))}>Подтвердить снос</button><button onClick={()=>setConfirm(null)}>Отмена</button></>:<button disabled={busy} onClick={()=>setConfirm(plotId)}>Снести{tsar?'':' · заявка'}</button>}</div>}
     {!plotId&&<h3>Жильё и заявки</h3>}
     {citizen?.spouseName&&<p>Брак: {citizen.spouseName}</p>}
     {homes.map(h=><div className="civic-home" key={h.plotId}><span>Жильё · уровень {h.level} · {h.occupied}/{h.beds}</span>

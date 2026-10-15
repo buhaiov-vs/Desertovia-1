@@ -40,7 +40,7 @@ public sealed class CooperativeCivicTests(DesertodApiFactory factory)
     [Fact] public async Task Wounded_can_be_carried_once_without_healing_or_losing_items()
     {
         var village=await players.FoundVillageAsync("Rescue Town");var helper=await players.JoinAsync(village,"Rescuer");var patient=await players.JoinAsync(village,"Wounded");
-        var until=factory.Clock.GetUtcNow().AddHours(1);
+        var until=DateTimeOffset.FromUnixTimeMilliseconds(factory.Clock.GetUtcNow().AddHours(1).ToUnixTimeMilliseconds());
         await using(var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync())
         {
             var p=await db.Citizens.SingleAsync(c=>c.Id==patient.Id);p.InjuredUntil=until;p.WoundedAt=factory.Clock.GetUtcNow();

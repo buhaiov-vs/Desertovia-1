@@ -66,6 +66,7 @@ public static class CycleEngine
         var village = context.Village;
         if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge)) village.BridgeOpened=true;
         CheckReady(citizen, now);
+        task=ProjectTask(task,context);
         if(task.Id==RescueRules.TaskId)throw new GameRuleException("rescue.target","Click a wounded citizen to carry them.");
         if (spot is { } picked && !Wilderness.IsWild(task))
         {
@@ -155,6 +156,7 @@ public static class CycleEngine
         var walk = repairYard is { } yard ? WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard) : Walk(citizen, village, task, spot, now);
         Begin(citizen, task.Id, work + walk, WeatherRules.EnergyCost(village, !WeatherRules.IsIndoor(task), now) *
             (task.Effect is TaskEffect.Build or TaskEffect.Repair ? 2 : task.Effect == TaskEffect.Supervise || task.Inputs.Count > 0 ? 1.5 : 1.25), village, now, walk);
+        citizen.SupervisedProgress = task.Effect==TaskEffect.Supervise ? context.Project?.BuildProgress : null;
         citizen.CurrentSiteId = null;
         citizen.CurrentSiteStage = null;
         citizen.Spot = spot;
@@ -303,6 +305,10 @@ public static class CycleEngine
         return report with { TechnologyId = technology.Id, TechnologyDiscovered = discovered };
     }
 
+    private static TaskDefinition ProjectTask(TaskDefinition task,WorkContext context) =>
+        context.Project is {} project && project.DefinitionId!=ProjectCatalog.TsarBridge && task.Effect is TaskEffect.Survey or TaskEffect.Supervise
+            ? task with {SkillLevel=GameCatalog.JourneymanSkill} : task;
+
     private static CycleReport? SettleTask(Citizen citizen, WorkContext context, DateTimeOffset now)
     {
         var task = GameCatalog.FindTask(citizen.CurrentTaskId!);
@@ -311,6 +317,7 @@ public static class CycleEngine
             return null;
         }
 
+        task=ProjectTask(task,context);
         var village = context.Village;
         var project = context.Project is { Status: ProjectStatus.Active } active ? active : null;
         var factor = YieldFactor(citizen, village, task.Primary, task.Secondary, now) * TechnologyRules.YieldMultiplier(village, task.Id)
@@ -470,7 +477,7 @@ public static class CycleEngine
                 }
 
                 TakeFromHandsThenStorage(citizen, village, output.Resource, amount);
-                project!.Record(citizen.Id, key, amount);
+                project!.Record(citizen.Id, key, amount,citizen.AccountId);
                 contributed = amount;
                 break;
             }
@@ -484,7 +491,7 @@ public static class CycleEngine
                 {
                     var limit = task.Effect == TaskEffect.Survey
                         ? project.Remaining(key)
-                        : Math.Max(0, project.BuildLimit - project.BuildProgress - (project.StagedBridge && !project.HasCrew(citizen.Id, context.RecentCitizenCount) ? 1 : 0));
+                        : Math.Max(0, project.BuildLimit - project.BuildProgress - (project.StagedBridge && !project.HasCrew(citizen.AccountId, context.RecentCitizenCount) ? 1 : 0));
                     amount = Min(YieldMath.Whole(task.BaseYield * factor), limit,
                         project.ContributionRoom(citizen.Id, key, context.ActiveCitizenCount));
                 }
@@ -495,14 +502,14 @@ public static class CycleEngine
                     break;
                 }
 
-                project!.Record(citizen.Id, key, amount);
+                project!.Record(citizen.Id, key, amount,citizen.AccountId);
                 contributed = amount;
                 break;
             }
 
             case TaskEffect.Supervise:
-                overflowed = project is null || project.Phase != ProjectPhase.Construction || project.BuildDone || context.BuildersWorking == 0;
-                if (!overflowed && project is not null) { contributed = 1; if (project.StagedBridge) project.RegisterHand(citizen.Id); }
+                overflowed = project is null || project.Phase != ProjectPhase.Construction || project.BuildDone || (citizen.SupervisedProgress is {} baseline ? project.BuildProgress<=baseline : context.BuildersWorking==0);
+                if (!overflowed && project is not null) { contributed = 1; if (project.StagedBridge) project.RegisterHand(citizen.Id,1,citizen.AccountId); }
                 break;
 
             case TaskEffect.Expedition:
@@ -564,6 +571,9 @@ public static class CycleEngine
         }
 
         var hungry = task.Effect != TaskEffect.Unload && Eat(citizen, village, now);
+        if(task.Effect is TaskEffect.Survey or TaskEffect.Build && contributed>0)
+            experienceShare*=Math.Min(1,(double)contributed/Math.Max(1,YieldMath.Whole(task.BaseYield*factor)));
+        if(task.Effect==TaskEffect.Repair && repaired>0)experienceShare*=Math.Min(1,repaired/5.0);
         if (task.RequiredBuilding is {} producedAt && !overflowed && village.Structures.FirstOrDefault(s => s.Kind == producedAt) is {} producer)
         {
             producer.ProductionCycles++;
@@ -662,7 +672,7 @@ public static class CycleEngine
         var hungry = Eat(citizen, village, now);
 
         var report = Finish(citizen, village, job.Id, job.Primary, job.Secondary, job.Skill, SkillRules.Challenge(citizen, job.Skill, 0),
-            job.Id == "dismantle" || overflowed ? 0 : Math.Min(1, (double)amount / Math.Max(1, job.PerCycle)), hungry,
+            job.Id == "dismantle" || overflowed ? 0 : Math.Min(1, (double)amount / Math.Max(1, YieldMath.Whole(job.PerCycle * factor))), hungry,
             produced, carried, 0, overflowed ? 0 : amount, false, overflowed);
         return report with { SiteId = plotId, BuildingCompleted = completed, Lost = lost };
     }

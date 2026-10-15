@@ -90,4 +90,39 @@ public class CooperativeUpdateTests
         Assert.Equal(7,StorageRules.CarryLimit(c,Now));Assert.Equal(.8,c.MedicalWalk(Now));Assert.Equal(10,c.Carried(ResourceKind.Wood));
         Assert.Equal(10,StorageRules.CarryLimit(c,Now.AddHours(5)));Assert.Equal(1,c.MedicalWalk(Now.AddHours(5)));
     }
+    [Fact] public void StageRewardPreservesPoolAndUsefulContributionWeights()
+    {
+        var first=Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var second=Guid.Parse("00000000-0000-0000-0000-000000000002");
+        var third=Guid.Parse("00000000-0000-0000-0000-000000000003");
+        var shares=ProjectRules.PoolShares(new Dictionary<Guid,double>{{first,8},{second,1},{third,1}},5);
+        Assert.Equal(5,shares.Values.Sum());Assert.Equal(4,shares[first]);Assert.Equal(1,shares[second]);Assert.Equal(0,shares[third]);
+        Assert.All(ProjectRules.PoolShares(new Dictionary<Guid,double>{{first,0},{second,0}},5).Values,amount=>Assert.Equal(0,amount));
+    }
+    [Fact] public void RepeatedWorkDoesNotPretendToBeMultipleCrewMembers()
+    {
+        var project=VillageProject.Start(Guid.NewGuid(),ProjectCatalog.Find(ProjectCatalog.TsarBridge)!,Now);
+        var first=Guid.NewGuid();var second=Guid.NewGuid();var third=Guid.NewGuid();
+        project.RegisterHand(first,20);Assert.False(project.HasCrew(first,3));
+        project.RegisterHand(Guid.NewGuid(),2,first);Assert.False(project.HasCrew(first,3));
+        project.RegisterHand(second,2);Assert.False(project.HasCrew(first,3));Assert.True(project.HasCrew(third,3));
+        project.BuildProgress=40;Assert.False(project.HasCrew(third,3));
+    }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SupervisionRewardsActualProgressRatherThanWhoIsStillWorkingAtSettlement(bool useful)
+    {
+        var village=TestWorld.NewVillage();
+        var project=VillageProject.Start(village.Id,ProjectCatalog.Find(ProjectCatalog.TsarBridge)!,Now);
+        project.SurveyProgress=project.Definition.SurveyCycles;
+        var engineer=TestWorld.NewCitizen(village,(Desertod.Domain.Stats.Stat.Intelligence,3)).WithSkill(Skill.Building,1);
+        var context=new WorkContext{Village=village,Project=project,BuildersWorking=1};
+        CycleEngine.Start(engineer,GameCatalog.FindTask("supervise")!,context,Now);
+        if(useful)project.Record(Guid.NewGuid(),VillageProject.BuildKey,2);
+        var report=CycleEngine.Settle(engineer,new WorkContext{Village=village,Project=project,BuildersWorking=0},engineer.CycleEndsAt!.Value)!;
+        Assert.Equal(!useful,report.Overflowed);
+        if(useful){Assert.True(report.SkillExperience>0);Assert.Equal(1,report.ProjectContribution);}
+        else {Assert.Equal(0,report.SkillExperience);Assert.Equal(0,report.ProjectContribution);Assert.Equal(0,report.RenownGained);}
+    }
 }

@@ -118,12 +118,12 @@ public sealed class PlayerFlowTests(DesertodApiFactory factory)
 
         var walked = await tsar.PostAsJsonAsync($"{path}/tsar/goto", new { spot = new { x = -30, y = -20 } });
         Assert.Equal(HttpStatusCode.OK, walked.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await citizen.PostAsJsonAsync($"{path}/me/goto", new { spot = new { x = 40, y = 30 } })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await citizen.PostAsJsonAsync($"{path}/me/goto", new { spot = new { x = 20, y = 30 } })).StatusCode);
 
         var village = await citizen.GetFromJsonAsync<JsonElement>(path);
         var explored = Convert.FromBase64String(village.GetProperty("state").GetProperty("explored").GetString()!);
         Assert.Equal(Domain.World.Exploration.Size, explored.Length);
-        Assert.False(Domain.World.Exploration.IsExplored(explored, 40, 30));
+        Assert.False(Domain.World.Exploration.IsExplored(explored, 20, 30));
 
         var blueprint = await tsar.PostAsJsonAsync($"{path}/blueprints", new { kind = "WoodPile", x = 0, y = 0 });
         Assert.Equal(HttpStatusCode.BadRequest, blueprint.StatusCode);

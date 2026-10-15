@@ -984,7 +984,7 @@ export interface ExternalRecovery {
 export interface HospitalTier { code: string; title: string; minHours: number; maxHours: number; price: number; blocked: string }
 export interface HospitalStatus {
   available: boolean; level: number; balance: number | null; recovery: ExternalRecovery | null
-  tiers: HospitalTier[]; patients: { id: string; name: string; recovery: ExternalRecovery }[]
+  tiers: HospitalTier[]; patients: { id: string; name: string; recovery: ExternalRecovery; appearance?: Appearance|null }[]
 }
 export interface HospitalPayment { patientId: string; code: string; requestId: string; expectedPrice: number; episodeId: string }
 export interface HospitalReceipt { state: string; error: string | null; until: number | null; price: number | null; cutSeconds: number | null }

@@ -30,6 +30,7 @@ public static class HospitalRules
             {
                 var admission = state.Available ? state.AdmittedAt ?? now : now;
                 citizen.RecoveryPausedAt = admission < now ? admission : now;
+                if(citizen.CurrentTaskId=="supervise")citizen.SupervisedProgress=int.MaxValue;
                 // Work completed before this admission may be banked after discharge, never restarted.
             }
         }

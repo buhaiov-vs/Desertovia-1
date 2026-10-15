@@ -2457,3 +2457,13 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 :root[data-ui-theme="dark"] button:not(.primary) { background:#33332a; color:#ecdba9; }
 
 .hospital-bed-patient{font-size:44px;line-height:1.3;text-align:center;background:rgba(80,100,90,.12);border-radius:8px;margin-bottom:8px}
+
+.hospital-bed-patient { position:relative; width:150px; height:76px; margin:12px auto 20px; background:linear-gradient(90deg,#eee2c8 0 25%,#496d66 25%); border:8px solid #65452c; box-shadow:0 4px 0 #33291c,inset 0 0 0 2px #9ba997; }
+.hospital-bed-patient .portrait { position:absolute; width:60px; height:60px; left:35px; top:0; transform:rotate(-90deg); image-rendering:pixelated; }
+
+.hospital-patient-card { display:flex; align-items:center; gap:14px; width:100%; text-align:left; margin-block:8px; padding:12px; }
+.patient-card-info { display:flex; flex:1; flex-direction:column; gap:4px; min-width:0; }
+.patient-card-info strong { overflow-wrap:anywhere; }
+.patient-card-info span,.patient-card-info small { font-size:.9rem; }
+.patient-mini-bed { display:block; position:relative; flex:0 0 64px; height:36px; border:4px solid #65452c; background:linear-gradient(90deg,#eee2c8 0 25%,#496d66 25%); box-shadow:0 3px 0 #33291c; }
+.patient-mini-bed .portrait { position:absolute; width:32px; height:32px; top:-2px; left:14px; transform:rotate(-90deg);image-rendering:pixelated; }

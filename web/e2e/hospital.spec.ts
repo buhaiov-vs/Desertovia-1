@@ -11,6 +11,9 @@ test('hospital fits narrow viewport and confirms account candle price before pay
  const modal=page.getByRole('dialog',{name:'Больница'})
  await expect(modal).toContainText('Свечи у батюшки: 200')
  await expect(modal).toContainText('Работа на паузе')
+ await expect(modal.getByLabel('Пациент лежит на больничной койке')).toBeVisible()
+ await expect(modal.locator('.hospital-bed-patient canvas')).toBeVisible()
+ await expect(modal.getByRole('button',{name:'Пациент Игрок с длинным именем'})).toContainText('На лечении после дуэли')
  expect(await modal.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true)
  for(const button of await modal.locator('button').all()) {
   const bounds=await button.boundingBox();if(!bounds)continue

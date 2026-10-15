@@ -1,3 +1,5 @@
+> D-041/D-042: общий пакет и переноска раненых реализованы в кандидате0.5.2, без выкладки. Актуальные результаты: [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md), продолжение: [SESSION_HANDOFF.md](SESSION_HANDOFF.md). Исторические PLAN/LIVE ниже не переопределяют это состояние.
+
 > D-039: актуальная единая точка входа — [CURRENT_MASTER_PLAN.md](CURRENT_MASTER_PLAN.md).
 > Для продолжения после сжатия: [SESSION_HANDOFF.md](SESSION_HANDOFF.md).
 >18 блоков, предложенные числа, готовые PR/LIVE и порядок «весь код → тесты».

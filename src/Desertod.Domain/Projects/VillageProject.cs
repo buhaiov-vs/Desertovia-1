@@ -32,9 +32,9 @@ public sealed class VillageProject
     public static readonly int[] BridgeEnds = [40, 90, 160, 210, 218];
     public int BridgeStage => Array.FindIndex(BridgeEnds, end => BuildProgress < end) is var i && i >= 0 ? i : 5;
     public bool StagedBridge => RulesVersion >= 2 && DefinitionId == ProjectCatalog.TsarBridge;
-    public void RegisterHand(Guid id) { var key=$"{BridgeStage}:{id}"; if (!BridgeHands.Contains(key)) BridgeHands.Add(key); }
+    public void RegisterHand(Guid id,int amount=1,Guid? accountId=null) { BridgeHands.AddRange(Enumerable.Repeat($"{BridgeStage}:{id}:{accountId??id}",Math.Max(0,amount))); }
     public bool HasCrew(Guid candidate, int active) => BridgeHands.Where(h => h.StartsWith($"{BridgeStage}:"))
-        .Append($"{BridgeStage}:{candidate}").Distinct().Count() >= Math.Min(3, Math.Max(1,active));
+        .Select(h=>h[(h.LastIndexOf(':')+1)..]).Append(candidate.ToString()).Distinct().Count() >= Math.Min(3, Math.Max(1,active));
     public int SurveyProgress { get; set; }
     public int BuildProgress { get; set; }
     public List<ProjectMaterial> Materials { get; set; } = [];
@@ -106,12 +106,12 @@ public sealed class VillageProject
     public int ContributionRoom(Guid citizenId, string key, int activeCitizens) =>
         Math.Max(0, ProjectRules.ContributionCap(Required(key), activeCitizens) - Contributed(citizenId, key));
 
-    public void Record(Guid citizenId, string key, int amount)
+    public void Record(Guid citizenId, string key, int amount, Guid? accountId = null)
     {
         switch (key)
         {
             case SurveyKey: SurveyProgress += amount; break;
-            case BuildKey: if (StagedBridge && amount > 0) RegisterHand(citizenId); BuildProgress += amount; break;
+            case BuildKey: if (StagedBridge && amount > 0) RegisterHand(citizenId,amount,accountId); BuildProgress += amount; break;
             default:
                 Materials.Single(m => m.Kind.ToString() == key).Delivered += amount;
                 break;

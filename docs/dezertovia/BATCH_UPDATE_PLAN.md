@@ -1,3 +1,5 @@
+> Актуальный статус D-041/D-042: пакет реализован в feat/cooperative-update, кандидат0.5.2; итоговая проверка/PR, без deployment. Ниже сохранена исходная спецификация. Фактические результаты — [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md).
+
 > D-039: актуальная единая точка входа — [CURRENT_MASTER_PLAN.md](CURRENT_MASTER_PLAN.md).
 > Для продолжения после сжатия: [SESSION_HANDOFF.md](SESSION_HANDOFF.md).
 >18 блоков, предложенные числа, готовые PR/LIVE и порядок «весь код → тесты».

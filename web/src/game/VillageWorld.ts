@@ -152,6 +152,7 @@ interface Walker {
   /** Wounded until then (wall clock, milliseconds): keeps still, tinted, with a red cross over the head. */
   injuredUntil: number
   bed:Graphics
+  wardVisible:boolean
   inHospital:boolean
   treatmentCause:string
   normalSubtitle:string
@@ -261,6 +262,8 @@ export class VillageWorld {
   private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
   private buildingLabels: Array<{ text: Text; x: number; y: number }> = []
+  private wardCaption:Text|null=null
+  private wardCaptionAt:TilePoint|null=null
   private buildingName: ((kind: string, storage: boolean) => string) | null = null
   private storageDefinitions = new Map<string, StorageDefinition>()
   private buildingDefinitions = new Map<string, BuildingDefinition>()
@@ -765,6 +768,16 @@ export class VillageWorld {
   setCitizens(citizens: CitizenSummary[], highlightId: string | null) {
     this.citizens = citizens
     this.highlightId = highlightId
+    const admitted=citizens.filter(c=>(c.recovery?.until&&Date.parse(c.recovery.until)>Date.now())||c.hospitalizedAt&&c.injuredUntil&&Date.parse(c.injuredUntil)>Date.now())
+    const visiblePatients=[...admitted].sort((a,b)=>a.id.localeCompare(b.id)).slice(0,4)
+    const ownPatient=admitted.find(c=>c.id===highlightId)
+    if(ownPatient&&!visiblePatients.some(c=>c.id===ownPatient.id))visiblePatients[3]=ownPatient
+    const ward=this.village?.structures.find(s=>s.kind==='Hospital')
+    const wardPlot=ward?this.plot(ward.plotId):null
+    if(!this.wardCaption){this.wardCaption=new Text({text:'',style:{fontFamily:LABEL_FONT,fontSize:11,fontWeight:'700',fill:0xffe9b0,stroke:{color:0x1b1206,width:3}}});this.wardCaption.anchor.set(.5,1);this.screen.addChild(this.wardCaption)}
+    this.wardCaption.text=`${wardPlot?'Больница':'Лазарет'} · На лечении: ${admitted.length}`
+    this.wardCaption.visible=admitted.length>0
+    this.wardCaptionAt={x:(wardPlot?wardPlot.x+1.5:CAMPFIRE.x)*TILE,y:(wardPlot?wardPlot.y:CAMPFIRE.y-1)*TILE-3}
     const seen = new Set<string>([PRIEST_ID, TSAR_ID])
     for (const citizen of citizens) {
       seen.add(citizen.id)
@@ -808,6 +821,8 @@ export class VillageWorld {
       const injured = walker.injuredUntil > Date.now()
       const duel=!!citizen.recovery?.until&&Date.parse(citizen.recovery.until)>Date.now()
       walker.inHospital=duel||!!citizen.hospitalizedAt&&injured
+      walker.wardVisible=true
+      if(injured){walker.label.style.wordWrap=true;walker.label.style.breakWords=true;walker.label.style.wordWrapWidth=112;walker.label.style.align='center';walker.subtitle.style.wordWrap=true;walker.subtitle.style.wordWrapWidth=120;walker.subtitle.style.align='center'}
       walker.treatmentCause=duel?'после дуэли':'после боя'
       walker.carrierId=citizen.rescueByCitizenId??null
       walker.pickupAt=citizen.rescuePatientId&&citizen.cycleStartedAt&&citizen.cycleEndsAt?
@@ -849,10 +864,12 @@ export class VillageWorld {
       if (walker.inHospital) {
         const hospital = this.village?.structures.find(s => s.kind === 'Hospital')
         const plot = hospital ? this.plot(hospital.plotId) : null
-        const patients=citizens.filter(c=>(c.recovery?.until&&Date.parse(c.recovery.until)>Date.now())||c.hospitalizedAt&&c.injuredUntil&&Date.parse(c.injuredUntil)>Date.now()).sort((a,b)=>a.id.localeCompare(b.id))
-        const index=Math.max(0,patients.findIndex(c=>c.id===citizen.id))
-        walker.targetX=((plot?.x??CAMPFIRE.x)+.5+(index%3))*TILE
-        walker.targetY=((plot?.y??CAMPFIRE.y)+2.5+Math.floor(index/3)*.65)*TILE
+        const index=visiblePatients.findIndex(c=>c.id===citizen.id)
+        walker.wardVisible=index>=0
+        // Staggered ward places leave space for a full name and two status lines.
+        const slot=Math.max(0,index)
+        walker.targetX=((plot?.x??CAMPFIRE.x)+(slot%2===0?-1.2:4.2))*TILE
+        walker.targetY=((plot?.y??CAMPFIRE.y)+4.35+Math.floor(slot/2)*5.5+(slot%2)*2.75)*TILE
         walker.x=walker.targetX;walker.y=walker.targetY;walker.staying=true
       }
       this.setIcon(walker, icon?.key ?? '', icon?.tile ?? null)
@@ -1528,7 +1545,7 @@ export class VillageWorld {
       way: [],
       guard: false,
       injuredUntil: 0,
-      bed,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,
+      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,
     }
     this.walkers.set(id, walker)
     return walker
@@ -2011,14 +2028,18 @@ export class VillageWorld {
       let speed = WALK_SPEED
       walker.icon.visible = true
       const hurt = walker.injuredUntil > now
+      walker.sprite.visible=!hurt||!walker.inHospital||walker.wardVisible
+      walker.icon.visible=walker.sprite.visible&&!walker.inHospital
+      walker.label.visible=walker.sprite.visible
       walker.sprite.tint = hurt ? INJURED_TINT : 0xffffff
-      walker.bed.visible=hurt
+      walker.bed.visible=hurt&&walker.sprite.visible
       walker.sprite.rotation=hurt?-Math.PI/2:0
+      if(hurt)walker.sprite.scale.x=1
       walker.sprite.anchor.set(.5,hurt?.5:1)
       if(hurt){
         walker.staying=true;walker.working=false;walker.guard=false;walker.hunt=null;walker.roaming=false
-        walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'} ${walker.treatmentCause} · ${Math.max(1,Math.ceil((walker.injuredUntil-now)/60000))} мин`
-        walker.subtitle.visible=true
+        walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}\n${walker.treatmentCause} · ${Math.max(1,Math.ceil((walker.injuredUntil-now)/60000))} мин`
+        walker.subtitle.visible=walker.sprite.visible
       } else if(walker.treatmentCause){walker.subtitle.text=walker.normalSubtitle;walker.subtitle.visible=!!walker.normalSubtitle;walker.treatmentCause='';walker.inHospital=false;walker.carrierId=null}
       if (!hurt && walker.iconKey === INJURED_ICON) {
         this.setIcon(walker, '', null)
@@ -2098,13 +2119,17 @@ export class VillageWorld {
       if (sortDepth) walker.sprite.zIndex = walker.y + 0.5
       walker.icon.position.set(Math.round(walker.x), Math.round(walker.y - 22))
 
-      const head = this.world.toGlobal({ x: walker.x, y: walker.y - (walker.icon.children.length > 0 ? 29 : 16) })
+      const head = this.world.toGlobal({ x: walker.x, y: walker.y - (walker.icon.visible && walker.icon.children.length > 0 ? 29 : 16) })
       const subtitleHeight = walker.subtitle.visible ? walker.subtitle.height - 2 : 0
-      walker.subtitle.position.set(Math.round(head.x), Math.round(head.y))
-      walker.label.position.set(Math.round(head.x), Math.round(head.y - subtitleHeight))
+      const labelHalfWidth = hurt ? Math.max(walker.label.width, walker.subtitle.width) / 2 + 5 : 0
+      const labelX = hurt && head.x >= 0 && head.x <= this.app.screen.width
+        ? Math.max(labelHalfWidth, Math.min(this.app.screen.width - labelHalfWidth, head.x)) : head.x
+      walker.subtitle.position.set(Math.round(labelX), Math.round(head.y))
+      walker.label.position.set(Math.round(labelX), Math.round(head.y - subtitleHeight - (hurt ? 5 : 0)))
       walker.label.alpha = walker.id === this.highlightId || walker.id === PRIEST_ID || walker.id === TSAR_ID ? 1 : 0.9
       walker.subtitle.alpha = walker.label.alpha
     }
+    if(this.wardCaption&&this.wardCaptionAt){const at=this.world.toGlobal(this.wardCaptionAt);this.wardCaption.position.set(Math.round(at.x),Math.round(at.y))}
     if (this.elapsed - this.fogUpdatedAt >= FOG_SECONDS) {
       this.fogUpdatedAt = this.elapsed
       this.fog.update(this.viewers(), this.nightAmount)

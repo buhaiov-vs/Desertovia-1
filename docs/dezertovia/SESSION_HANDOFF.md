@@ -1,82 +1,61 @@
-# Как продолжить после сжатия контекста
+# Продолжение пакета0.5.2 после сжатия
 
-Дата15.10.2026. Сначала читать CURRENT_MASTER_PLAN.md, затем BALANCE_PROPOSAL.md
-и BATCH_UPDATE_PLAN.md. Это сохраняемый контекст, не новое поручение на запуск.
-Последний запрос владельца — обновить/сохранить план. Код большого пакета НЕ начат.
-Не трактовать завершённый документ как разрешение на реализацию/выпуск.
+15.10.2026. Последнее поручение — выполнить ВЕСЬ пакет, затем проверка.
+Не возвращаться к старому «только план». Сервер НЕ обновлять: код и GitHub.
+Последнее уточнение: не ряд коек; разнесённые ники/причины/таймеры пациентов.
+Читать CURRENT_MASTER_PLAN.md, BALANCE_PROPOSAL.md, IMPLEMENTATION_LOG.md.
 
-## Рабочие репозитории
+## Рабочие ветки
 
-- Публичная игра: desertod666/Desertovia, canonical main. Документы собраны в
-  ветке docs/batch-update-plan, рабочее дерево `/workspace/Desertovia-battle-plan`.
-  Путь исторический: всегда проверять git branch/status, не судить по имени каталога.
-- Бот: desertod666/TG-bots; canonical **claude/telegram-bot-chat-variety-wci5ph**,
-  не main. Выложенные правила беседы source8239cf9, PR33. Рабочее дерево
-  `/workspace/TG-bots-chat-tone`; branch fix/contextual-chat-tone уже merged.
-- Операции Oracle — только существующие private Actions desertod666/bolig-agent.
-  Не использовать housing main для bot/game deployment. Private worktree
-  `/workspace/bolig-player-progress-audit`, branch ops/player-progress-audit.
-  В нём private audit/recovery/release receipts; не копировать в публичную игру.
-- Прямого SSH/VPN здесь не было. Окружение/доступ проверить актуально, не угадывать
-  адреса и не печатать env/токены. При managed cloud читать runtime skill и readiness.
+- Игра: `/workspace/Desertovia-batch`, feat/cooperative-update, canonical main
+  desertod666/Desertovia. Первый commit5bc913b, последующие исправления в этой
+  же ветке. Кандидат0.5.2; live исторически0.5.1/ad88be3, не проверялся заново.
+- Бот: `/workspace/TG-bots-batch`, feat/cooperative-update. Canonical
+  claude/telegram-bot-chat-variety-wci5ph, НЕ main. Commitc168c01, PR34:
+  https://github.com/desertod666/TG-bots/pull/34. CI test PASS, server SKIPPED.
+  Сохранены tone8239cf9 и proxy guard; старую hospital ветку не деплоить.
+- Git author Kyrylo Tieriaiev <tieriaievk@gmail.com>, коммиты English.
+  Нет разрешения merge/deploy/reset/реальных оплат/Telegram-рассылок.
 
-Git author: Kyrylo Tieriaiev <tieriaievk@gmail.com>, коммиты на английском.
-Не force-push чужие ветки; не трогать чужую незакоммиченную работу.
+## Реализовано
 
-## Готовые исходники для выборочной интеграции
+Все18 блоков общего плана: готовая больница/52 обводки/2x undead/кнопки,
+серверный запрет берега, версия нового6-этапного моста, полезные XP/слава,
+износ/ремонт, склады30→60, заявки/снос, жильё12/20/28, read-only браки по TG ID,
+усталость/обморок, напиток, редкий контекстный чат, мобильный UI и ночная тема.
+Дополнительно переноска раненого: RescueRules/GameService.Rescue,5мин санитары,
+полевой лазарет без здания. Срок/вещи не меняет. Боевое снадобье отдельно от
+платных дуэльных тарифов. Карточки всех пациентов с полным ником; на карте
+до4 разнесённых коек, свой всегда среди них.
 
-| Работа | Ветка/путь | Проверенный источник/состояние |
-| --- | --- | --- |
-| Hospital game |feat/hospital, `/workspace/Desertovia-hospital`|PR23,45cfccd;311 Domain+171 API и59 browser; ещё не live |
-| Hospital bot |feat/desertovia-hospital, `/workspace/TG-bots-hospital`|PR32,9da022d;782 Python tests; основан до bot33 — интеграция, не overwrite |
-| Готовые обводки |tools/sprite-outline, `/workspace/Desertovia-outline-tool`|PR18,507e92b;52 готовых PNG, не live |
-| Убрать leave/delete |fix/hide-destructive-city-actions, `/workspace/Desertovia-hide-departure`|PR24; включает также docs отзывов48–52; выбрать нужный diff, не потерять историю |
-| Новый стиль бот-чата |fix/contextual-chat-tone, `/workspace/TG-bots-chat-tone`|PR33 merged8239cf9;778 tests+CI38685463373; bot-only patch уже установлен |
+Миграции additive: CooperativeVillageRules (JSON backfill/старый мост),
+WoundedTransport, SupervisionWorkSnapshot. Legacy overflow разрешено забрать,
+не обрезать; неизвестный старый investment не превращать в придуманный refund.
+Внешняя больница по умолчанию выключена Game__HospitalEnabled=false.
+Обычный native rescue работает независимо от внешнего bridge.
 
-Планы отдельными PR:25 командир,26 осложнения,27 чат,28 мост,29 жильё/снос/браки.
-Их актуальные отдельные документы теперь скопированы в docs/batch-update-plan.
-Это копирование документации, а не merge реализаций/ассетов. HOSPITAL_PLAN.md и
-старые TODO могут описывать прежний этап; CURRENT_MASTER_PLAN имеет приоритет.
+## Проверки и продолжение
 
-## Последние реальные проверки и операции — не повторять как задачи пакета
+Фактические окончательные результаты и ссылки записывать в IMPLEMENTATION_LOG.md,
+не в историю старых этапов. Локально уже проходили321 Domain, большинство176 API
+(две старые проверки исправлены и отдельно прошли),28 bot и телефон/ПК; позже
+добавлены4 domain случая и проверка отсутствия пересечения подписей пациентов.
+Финальные целевые прогоны и CI относятся к итоговой ветке. Полный набор после
+каждой мелочи не повторять; обязательный финальный CI оставить.
 
-- Game live0.5.1/ad88be3. В последний раз15.10 после bot-only выпуска проверен
-  серверный публичный providers endpoint200, Telegram/browser auth включены,
-  development auth выключен. Bot/housing service active. Перепроверить при старте
-  нового deployment; старый health не гарантирует будущую готовность.
-- Bot-only chat tone: report38687429902, install38687482714,
-  post-check38687570637. Только brain.py/town_proxy.py/conversation_tone.py,
-  конфиг/ключи/балансы/.NET release не изменялись. Есть private backup/receipt.
-- Executor public HTTP probe однажды вернул403, server public probe200. Не
-  объявлять это падением игры и не обходить сетевые запреты; разбирать слой ошибки.
-- Восстановление одного профиля и массовый разбан уже выполнены; секретные
-  детали только в private operator repo. Не повторять и не смешивать с лечением.
-- AI audit обнаружил2 auth-fail credentials из33,31 отвечал; модель3.5 Flash
-  возвращала503/429, Flash Lite отвечала. Ключи/порядок моделей НЕ менялись.
-  Новый tone release не означает смену модели или удаление плохих ключей.
+Инструменты: dotnet `/workspace/dotnet/dotnet`, EF `/workspace/desertovia-tools/dotnet-ef`,
+DOTNET_ROOT=/workspace/dotnet и PATH с этим каталогом. Node modules web — symlink
+на основной worktree, не добавлять в git. Bot python `/workspace/TG-bots/.venv/bin/python`.
+Не строить Vite в wwwroot одновременно с .NET build: static assets race.
+WebGL software медленный, не грузить одновременно браузер и backend suite.
 
-## Что делать при следующем «выполняй пакет»
+Браузерный локальный Postgres cooperative-postgres, localhost55439,
+DB desertod_e2e, стандартные локальные dev credentials из playwright.config.ts.
+DESERTOD_E2E_CONNECTION передать с Port=55439. Это НЕ live DB.
+API тесты создают собственные Testcontainers. `gh pr checks --json` в этой
+версии gh не поддерживается; читать `gh pr view --json statusCheckRollup`.
 
-1. Открыть общую таблицу18 блоков и числовой baseline. Сверить refs/status,
-   подготовить интеграционные ветки. Действовать по последнему разрешённому объёму.
-2. Не возвращаться к рисованию интерфейса/спрайтов, не писать новый движок,
-   не отключать функции автора по старым архивным ограничениям.
-3. Делать все правки, писать нужные новые тесты, но общие тестовые запуски только
-   после окончания кода. Не разбивать работу на18 остановок ради новых подтверждений.
-4. После кода пройти финальную матрицу BATCH_UPDATE_PLAN. Любое обнаруженное
-   ограничение описать честно, не маркировать незавершённый блок как done.
-5. Не выкладывать без разрешения; не ждать его для обратимого кода/чтения/проверок.
-
-Если окружение заменено и локальных worktrees нет, восстановить их из указанных
-репозиториев/веток и PR, затем прочитать сохранённые документы. Не полагаться на
-старый memory store инструментов, логи PTY или эту переписку как единственный архив.
-
-
-## Последнее дополнение D-040
-
-Владелец отдельно запросил увеличение маленьких зомби/скелетов. Код подготовлен
-в fix/larger-undead,07d8f66 (только enemies.ts + справка). Масштаб2 запечён в
-GraphicsContext, enemyHeight обновлён; поворот scale.x не сбрасывает размер.
-Карта и данж используют общий drawLook. Не LIVE и не интегрировано в пакет;
-проверки отложены до общей финальной фазы по просьбе владельца. Выборочно перенести
-эту правку в блок18, не рисовать заново и не менять боевые характеристики.
+Публиковать одну ветку/PR на repo. Game CI сам проверяет backend/frontend/e2e/
+Docker без deployment. Bot PR CI test, server job должен оставаться skipped.
+После итоговых проверок обновить progress.json, документы/патчноут, записать
+ссылки на оба PR. Ничего не merge/deploy без следующего поручения владельца.

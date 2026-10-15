@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, type HospitalPayment, type HospitalStatus, type HospitalTier, type VillageState } from '../api'
+import { CharacterPortrait } from './CharacterPortrait'
 import { useI18n } from '../i18n'
 import type { UiKey } from '../i18n/en'
 import dayImage from '../assets/night/hospital.png'
@@ -54,6 +55,13 @@ export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVilla
     } catch { setMessage(t('hospital.pending')) }
     finally { setBusy(false) }
   }
+  const applyRemedy = async () => {
+    if (busy) return
+    setBusy(true)
+    try { await api.heal(slug); await refresh(); onUpdated() }
+    catch (e) { setMessage(i18n.error(e)) }
+    finally { setBusy(false) }
+  }
   const hospital = village.structures.find(s => s.kind === 'Hospital')
   return <div className="modal-backdrop" onPointerDown={e => e.target === e.currentTarget && onClose()}>
     <section className="modal hospital-panel" role="dialog" aria-modal="true" aria-label={t('hospital.title')}>
@@ -68,12 +76,15 @@ export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVilla
           {!citizenId && <option value="">{t('hospital.help')}</option>}
           {status?.patients.filter(p => p.id !== citizenId).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select></label>
-        <section className="card hospital-recovery">{admitted&&<div className="hospital-bed-patient" aria-label="Пациент лежит на больничной койке">🛏️</div>}<strong>{admitted ? recovery?.cause==='battle'?'На лечении после боя':t('hospital.duel') : t('hospital.available')}</strong>
+        <section className="card hospital-recovery">{admitted&&<div className="hospital-bed-patient" aria-label="Пациент лежит на больничной койке">{selected?.appearance?<CharacterPortrait appearance={selected.appearance} scale={3}/>:<span>🛏️</span>}</div>}<strong>{admitted ? recovery?.cause==='battle'?'На лечении после боя':t('hospital.duel') : t('hospital.available')}</strong>
           {admitted && <><p className="hospital-countdown">{t('hospital.until', { time: remaining(recovery?.until, now) })}</p>
           <p className="small">{t('hospital.pause')}</p><p className="small muted">{t('hospital.bonus', { hospital: recovery?.hospitalPercent ?? 0, skill: recovery?.skillPercent ?? 0 })}</p></>}
         </section>
         {message && <p role="status" className="warning">{message}</p>}
-        {payment ? <button className="primary" disabled={busy} onClick={() => void submit(payment)}>{t(busy ? 'hospital.wait' : 'hospital.retry')}</button>
+        {admitted && recovery?.cause === 'battle' ? <section className="card">
+          <p>Ранение после боя лечится снадобьем или проходит со временем. Переноска не меняет срок.</p>
+          {patientId === citizenId && <button disabled={busy} onClick={() => void applyRemedy()}>Использовать снадобье</button>}
+        </section> : payment ? <button className="primary" disabled={busy} onClick={() => void submit(payment)}>{t(busy ? 'hospital.wait' : 'hospital.retry')}</button>
           : confirmation ? <section className="card" aria-label={t('hospital.confirm', { price: confirmation.price })}>
             <strong>{t('hospital.confirm', { price: confirmation.price })}</strong><p className="small">{t('hospital.tiers')}</p>
             <div className="hospital-actions"><button className="primary" disabled={busy || !patientId || !recovery?.episodeId} onClick={() => {
@@ -83,9 +94,13 @@ export function HospitalPanel({ slug, actorId, citizenId, tsar, village, onVilla
             disabled={!status.available || !admitted || busy || !!tier.blocked || (status.balance ?? 0) < tier.price} onClick={() => setConfirmation(tier)}>
             <strong>{tier.title}</strong><span>{t('hospital.effect', { min: tier.minHours, max: tier.maxHours })}</span><span>{tier.price} 🕯</span>
           </button>)}</div>}
-        <details><summary>{t('hospital.patients', { count: status?.patients.length ?? 0 })}</summary>
-          {status?.patients.map(p => <p key={p.id}>{p.name} · на лечении {p.recovery.cause==='battle'?'после боя':'после дуэли'} · {remaining(p.recovery.until, now)}</p>)}
-        </details>
+        <section className="hospital-patients"><h3>{t('hospital.patients', { count: status?.patients.length ?? 0 })}</h3>
+          {status?.patients.map(p => <button type="button" className="hospital-patient-card" disabled={busy||!!payment} key={p.id} aria-label={`Пациент ${p.name}`}
+            onClick={()=>{setPatientId(p.id);setConfirmation(null)}}>
+            <span className="patient-mini-bed">{p.appearance?<CharacterPortrait appearance={p.appearance} scale={2}/>:<span>🛏️</span>}</span>
+            <span className="patient-card-info"><strong>{p.name}</strong><span>На лечении {p.recovery.cause==='battle'?'после боя':'после дуэли'}</span><small>До выписки: {remaining(p.recovery.until, now)}</small></span>
+          </button>)}
+        </section>
         {tsar && hospital && (status?.level ?? 3) < 3 && !village.sites.some(s => s.plotId === hospital.plotId) &&
           <button disabled={busy} onClick={async () => { setBusy(true); try { onVillage(await api.hospitalUpgrade(slug, hospital.plotId)); await refresh() } catch(e) { setMessage(i18n.error(e)) } finally { setBusy(false) } }}>
             {t('hospital.upgrade', { level: (status?.level ?? 0) + 1 })}</button>}

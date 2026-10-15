@@ -480,7 +480,7 @@
   },
   "batch_update_plan": {
     "decision": "D-037",
-    "state": "planned_not_started",
+    "state": "implemented_in_candidate_final_verification",
     "document": "BATCH_UPDATE_PLAN.md",
     "proposed_blocks": 18,
     "workflow": "complete_agreed_changes_then_validate_final_code",
@@ -490,7 +490,7 @@
   },
   "batch_balance_proposal": {
     "decision": "D-038",
-    "state": "proposed_not_applied_or_simulated",
+    "state": "implemented_in_candidate_final_verification",
     "document": "BALANCE_PROPOSAL.md",
     "bridge_work_units": 230,
     "communal_housing_beds": [
@@ -506,93 +506,93 @@
     "deployed": false
   },
   "current_master_plan": {
-    "decision": "D-039",
-    "state": "implementation_verification",
+    "decision": "D-041/D-042",
+    "state": "locally_verified_final_ci_in_pr",
     "document": "CURRENT_MASTER_PLAN.md",
     "resume_document": "SESSION_HANDOFF.md",
     "implementation_checklist": [
       {
         "block": 1,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 2,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 3,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 4,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 5,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 6,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 7,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 8,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 9,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 10,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 11,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 12,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 13,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 14,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 15,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 16,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 17,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       },
       {
         "block": 18,
-        "state": "not_started_in_batch"
+        "state": "implemented_local_validation_final_ci_in_pr"
       }
     ],
-    "balance_state": "proposed_not_applied_or_simulated",
-    "latest_request": "execute_full_plan_without_deployment",
+    "balance_state": "implemented_candidate_not_live_balanced",
+    "latest_request": "full_plan_with_readable_patients_and_wounded_transport_no_deploy",
     "deployment_authorized_for_batch": false,
     "implementation_branch": "feat/cooperative-update",
     "hospital_rescue": "implemented_in_verification_no_deploy"
   },
   "undead_visual_size": {
     "decision": "D-040",
-    "state": "code_prepared_not_runtime_verified_or_deployed",
+    "state": "integrated_candidate_not_deployed",
     "source_branch": "fix/larger-undead",
     "source_commit": "07d8f66",
     "document": "ENEMY_SCALE_CHANGE.md",
@@ -602,7 +602,18 @@
       "Skeleton"
     ],
     "batch_block": 18,
-    "validation": "deferred_to_batch_final_phase",
+    "validation": "renderer_build_and_existing_combat_regression_no_stats_change",
     "deployed": false
+  },
+  "candidate_update": {
+    "version": "0.5.2",
+    "recorded_on": "2026-10-15",
+    "branch": "feat/cooperative-update",
+    "state": "locally_verified_final_ci_in_pr",
+    "deployed": false,
+    "data_reset": false,
+    "bot_pr": 34,
+    "hospital_transport": true,
+    "patient_layout": "staggered_map_beds_and_individual_full_name_cards"
   }
 }

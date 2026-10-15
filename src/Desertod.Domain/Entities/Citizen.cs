@@ -40,6 +40,7 @@ public sealed class Citizen
     public DateTimeOffset? WoundedAt { get; set; }
     public DateTimeOffset? HospitalizedAt { get; set; }
     public Guid? RescueByCitizenId { get; set; }
+    public int? SupervisedProgress { get; set; }
     public Guid? RescuePatientId { get; set; }
     public int ExhaustedCycles { get; set; }
     public DateTimeOffset? ExhaustedUntil { get; set; }

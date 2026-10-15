@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Desertod.Api.Game;
 
 public sealed record HospitalHealRequest(Guid PatientId, string Code, string RequestId, int ExpectedPrice, string EpisodeId);
-public sealed record HospitalPatientDto(Guid Id, string Name, ExternalRecovery? Recovery);
+public sealed record HospitalPatientDto(Guid Id, string Name, ExternalRecovery? Recovery, Appearance? Appearance = null);
 public sealed record HospitalDto(bool Available, int Level, int? Balance, ExternalRecovery? Recovery,
     IReadOnlyList<HospitalTier> Tiers, IReadOnlyList<HospitalPatientDto> Patients);
 
@@ -144,7 +144,7 @@ public sealed partial class GameService
             var state = reply?.Patients.FirstOrDefault(p => p.Id == uid?.ToString());
             return new HospitalDto(reply is not null, HospitalRules.Level(village), reply?.Balance, me?.Recovery,
                 state?.Tiers ?? reply?.Patients.FirstOrDefault()?.Tiers ?? [], citizens.Where(c => HospitalRules.IsAdmitted(c, time.GetUtcNow()) || c.InjuredUntil>time.GetUtcNow())
-                    .Select(c => new HospitalPatientDto(c.Id, c.Name, HospitalRules.IsAdmitted(c,time.GetUtcNow()) ? c.Recovery : new ExternalRecovery{Cause="battle",Until=c.InjuredUntil,Available=true})).ToList());
+                    .Select(c => new HospitalPatientDto(c.Id, c.Name, HospitalRules.IsAdmitted(c,time.GetUtcNow()) ? c.Recovery : new ExternalRecovery{Cause="battle",Until=c.InjuredUntil,Available=true},c.Appearance)).ToList());
         }, ct);
     }
 

@@ -1020,10 +1020,13 @@ public sealed partial class GameService(
             while (project.RewardedStages < finished)
             {
                 var index = project.RewardedStages - 1;
-                var ids = index < 0 ? project.Contributions.Where(c => c.Key == VillageProject.SurveyKey).Select(c=>c.CitizenId).ToArray()
-                    : project.BridgeHands.Where(h=>h.StartsWith($"{index}:")).Select(h=>Guid.Parse(h[(h.IndexOf(':')+1)..])).ToArray();
-                var recipients = await db.Citizens.Where(c=>ids.Contains(c.Id)).OrderBy(c=>c.Id).ToListAsync(cancellationToken);
-                for (var i=0; i<recipients.Count; i++) recipients[i].Renown += 5/recipients.Count + (i < 5%recipients.Count ? 1 : 0);
+                var weights=index<0 ? project.Contributions.Where(c=>c.Key==VillageProject.SurveyKey).ToDictionary(c=>c.CitizenId,c=>(double)c.Amount)
+                    : project.BridgeHands.Where(h=>h.StartsWith($"{index}:")).GroupBy(h=>Guid.Parse(h.Split(':')[1])).ToDictionary(g=>g.Key,g=>(double)g.Count());
+                var ids=weights.Keys.ToArray();
+                var recipients = await db.Citizens.Where(c=>ids.Contains(c.Id)).ToListAsync(cancellationToken);
+                var eligible=weights.Where(kv=>recipients.Any(c=>c.Id==kv.Key)).ToDictionary(kv=>kv.Key,kv=>kv.Value);
+                var shares=ProjectRules.PoolShares(eligible,5);
+                foreach(var recipient in recipients)recipient.Renown+=shares.GetValueOrDefault(recipient.Id);
                 project.RewardedStages++;
             }
         }
@@ -1170,7 +1173,7 @@ public sealed partial class GameService(
                 c.Id,
                 IsActive = c.Status == CitizenStatus.Active,
                 c.CycleStartedAt,
-                IsWorking = !c.CycleSettled && c.CycleEndsAt > now,
+                IsWorking = !c.CycleSettled && c.CycleEndsAt > now && c.RecoveryPausedAt == null && !(c.InjuredUntil > now) && !(c.ExhaustedUntil > now),
                 c.CurrentTaskId,
                 c.Stats.Intelligence,
                 c.Skills,

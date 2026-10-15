@@ -41,14 +41,19 @@ public static class ProjectRules
         }
 
         var shares = contributors.Keys.ToDictionary(id => id, project.ShareOf);
-        var total = shares.Values.Sum();
         var renown = new Dictionary<Guid, int>();
-        var exact = shares.Select(kv => new { Id = kv.Key, Value = total <= 0 ? 0 : reward.RenownPool * kv.Value / total }).ToList();
-        var allocation = exact.ToDictionary(x => x.Id, x => (int)Math.Floor(x.Value));
-        var remainder = total <= 0 ? 0 : reward.RenownPool - allocation.Values.Sum();
-        foreach (var item in exact.OrderByDescending(x => x.Value - Math.Floor(x.Value)).ThenBy(x => x.Id).Take(remainder)) allocation[item.Id]++;
-        foreach (var (id, amount) in allocation) { contributors[id].Renown += amount; renown[id] = amount; }
+        foreach (var (id, amount) in PoolShares(shares,reward.RenownPool)) { contributors[id].Renown += amount; renown[id] = amount; }
 
         return new ProjectCompletion(project.DefinitionId, project.Definition.Name, renown);
+    }
+
+    public static IReadOnlyDictionary<Guid,int> PoolShares(IReadOnlyDictionary<Guid,double> weights,int pool)
+    {
+        var total=weights.Values.Sum();
+        var exact=weights.Select(kv=>new{Id=kv.Key,Value=total<=0?0:pool*kv.Value/total}).ToList();
+        var result=exact.ToDictionary(x=>x.Id,x=>(int)Math.Floor(x.Value));
+        var remainder=total<=0?0:pool-result.Values.Sum();
+        foreach(var item in exact.OrderByDescending(x=>x.Value-Math.Floor(x.Value)).ThenBy(x=>x.Id).Take(remainder))result[item.Id]++;
+        return result;
     }
 }

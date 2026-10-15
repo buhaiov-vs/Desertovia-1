@@ -56,7 +56,7 @@ public static class BuildingOperations
         var structure=village.Structures.SingleOrDefault(s=>s.PlotId==order.PlotId);
         var storage=village.Storages.SingleOrDefault(s=>s.PlotId==order.PlotId);
         var kind=structure?.Kind??(storage is not null?BuildingCatalog.ForStorage(storage.Kind):null)
-            ??throw new GameRuleException("building.notBuilt","This building no longer exists.");
+            ??throw new GameRuleException("building.protected","This is a protected civic building.");
         if(WorldMap.PlotPosition(order.PlotId) is null||kind is BuildingKind.RopeBridge or BuildingKind.Hospital)
             throw new GameRuleException("building.protected","This is a protected building or crossing.");
         if(citizens.Any(c=>!c.CycleSettled&&(c.CurrentSiteId==order.PlotId ||

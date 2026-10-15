@@ -629,6 +629,28 @@
       "game_code_changed_for_this_request": false,
       "deployed_for_this_request": false,
       "live_account_investigated": false
+    },
+    "D-047": {
+      "recorded_on": "2026-10-15",
+      "status": "diagnosed_fix_planned",
+      "report": "FEEDBACK_TRIAGE_2026_10_15.md",
+      "feedback_records_read": 77,
+      "new_records_since_last_digest": [
+        53,
+        77
+      ],
+      "confirmed_source_issues": [
+        "UI-01",
+        "UI-02",
+        "UI-03",
+        "UI-04",
+        "BUILD-01"
+      ],
+      "needs_reproduction": [
+        "ENERGY-01"
+      ],
+      "game_code_changed_for_this_request": false,
+      "deployed_for_this_request": false
     }
   }
 }

@@ -89,6 +89,12 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
         Assert.Equal(4,first.Inventory.Sum(x=>x.Amount)+second.Inventory.Sum(x=>x.Amount));
         Assert.Equal(80,first.Inventory.Sum(x=>x.CostBasis)+second.Inventory.Sum(x=>x.CostBasis));
         Assert.False(seller.TaxEnabled);Assert.Equal(0,seller.TaxPreview);
+        await using var db=await Db();var city=await db.Villages.AsNoTracking().SingleAsync(x=>x.Slug==v.Slug);
+        var moves=await db.LedgerEntries.Where(x=>x.VillageId==city.Id&&x.Asset=="Planks"&&
+            (x.Operation=="list"||x.Operation=="buy-lot")).ToListAsync();
+        Assert.Contains(moves,x=>x.Location=="market:"+lotId&&x.Delta==4);
+        Assert.Contains(moves,x=>x.Location=="market:"+lotId&&x.Delta==-4);
+        Assert.All(moves.GroupBy(x=>x.Operation),group=>Assert.Equal(0,group.Sum(x=>x.Delta)));
     }
 
     [Fact]

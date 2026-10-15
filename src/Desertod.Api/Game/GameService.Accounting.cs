@@ -33,6 +33,11 @@ public sealed partial class GameService
             foreach (var good in citizen.Load) Add(good.Kind.ToString(), "hands:" + citizen.AccountId, citizen.AccountId, good.Amount);
             foreach (var good in citizen.PersonalGoods) Add(good.Kind.ToString(), "personal:" + citizen.AccountId, citizen.AccountId, good.Amount);
         }
+        // Reserved lots still own physical goods: listing and buying are transfers, not production or loss.
+        var lots = await db.MarketLots.AsNoTracking().Where(l => l.VillageId == villageId && l.Status == "open")
+            .Select(l => new { l.Id, l.SellerAccountId, l.Resource, l.Amount }).ToListAsync(ct);
+        foreach (var lot in lots)
+            Add(lot.Resource.ToString(), "market:" + lot.Id, lot.SellerAccountId, lot.Amount);
         return new(true, goods);
     }
 

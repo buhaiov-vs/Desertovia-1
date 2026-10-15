@@ -794,7 +794,9 @@
         "browser_skipped": 1
       },
       "personal_consumables_domain_passed": 32,
-      "personal_consumables_api_passed": 10
+      "personal_consumables_api_passed": 10,
+      "final_corrections_targeted_api_passed": 2,
+      "final_corrections": "market reserve included in material ledger; privacy test isolated from shared public top-50 limit"
     }
   }
 }

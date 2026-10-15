@@ -53,6 +53,7 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
     const [scope,...parts] = value.split(':'); const plot=parts.join(':')
     if(scope==='personal')return text('личное имущество','personal goods')
     if(scope==='hands')return text('ноша','load')
+    if(scope==='market')return text('резерв рынка','market reserve')
     const target=[...(village.structures??[]),...(village.sites??[])].find(b=>b.plotId===plot)
     const storage=(village.storages??[]).find(b=>b.plotId===plot)
     return target?`${i18n.building(target.kind).name} · ${plot}`:storage?`${i18n.storage(storage.kind)} · ${plot}`:value==='wallet'?text('кошелёк','wallet'):value==='treasury'?text('казна','treasury'):value

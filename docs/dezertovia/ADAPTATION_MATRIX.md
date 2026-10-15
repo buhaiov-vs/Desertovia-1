@@ -177,3 +177,10 @@ snapshot once per admission and shared authoritative bot expiry. Recommendation
 | D-052 | SettingsPanel, version.ts, modal scroll | PatchNotes, каталог RU/EN и раскрываемая история | BRANCH, без deployment |
 
 | D-053 | EnemyLayer, VillageWorld, HospitalPanel | Появление по strikesAt, общий formatRecoveryTime с реальной шкалой | VERIFIED BRANCH,5 целевых browser PASS, build/lint PASS; без deploy |
+
+
+## D-059 — исполнение новой очереди
+
+| Источник | Содержание | Статус |
+| --- | --- | --- |
+| TODO_EXECUTION_GUIDE.md | Восемь задач после сверки TODO; файлы, транзакции, совместимость, критерии готовности и 6.1 SOL Высокое для всего объёма | PLAN/DOCS, runtime не менялся; без выкладки по D-058 |

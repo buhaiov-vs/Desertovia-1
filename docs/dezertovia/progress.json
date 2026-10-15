@@ -762,6 +762,13 @@
       "game_pr": 33,
       "bot_pr": 35,
       "live_unchanged": true
+    },
+    "D-059": {
+      "state": "instruction_prepared_no_runtime_changes",
+      "record": "TODO_EXECUTION_GUIDE.md",
+      "scope": "eight TODO priorities; execution packets A-D",
+      "recommended_reasoning": "high for all eight points, explicitly requested by owner",
+      "deployment": "paused_by_D-058"
     }
   }
 }

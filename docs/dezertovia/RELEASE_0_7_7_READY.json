@@ -1,0 +1,47 @@
+{
+  "version": "0.7.7",
+  "decision": "D-087",
+  "state": "ready_scheduled_not_installed",
+  "source_ready": true,
+  "installed": false,
+  "not_before_utc": "2026-10-17T05:30:00+00:00",
+  "scheduled_local": "2026-10-17 07:30 Europe/Oslo",
+  "live_baseline_sha": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d",
+  "game_sha": "44b4e426cdfdd9bb72621a9febeb624130a8d6e2",
+  "game_ci": {
+    "id": 38979407726,
+    "head_sha": "44b4e426cdfdd9bb72621a9febeb624130a8d6e2",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/desertod666/Desertovia/actions/runs/38979407726",
+    "run_attempt": 1,
+    "repository": "desertod666/Desertovia"
+  },
+  "game_merge_sha": "6540b982f753c5ca8c99eb9e986428b0b55fd546",
+  "bot_sha": "d462e634df7ac49efd45b1ab3bc09e49fd11796b",
+  "bot_ci": {
+    "id": 38980131645,
+    "head_sha": "d462e634df7ac49efd45b1ab3bc09e49fd11796b",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/desertod666/TG-bots/actions/runs/38980131645",
+    "run_attempt": 1,
+    "repository": "desertod666/TG-bots"
+  },
+  "bot_merge_sha": "422cb81573cc51e79053aee285be269ef7c069db",
+  "checks": {
+    "domain": 439,
+    "api": 251,
+    "browser_passed": 167,
+    "browser_normal_skip": 1,
+    "bot": 890,
+    "operator": 24,
+    "frontend": "pass",
+    "docker": "pass",
+    "local_numbering_sql": "pass"
+  },
+  "reviewed_at_utc": "2026-10-16T23:23:03.527026+00:00",
+  "live_preflight_pending": true,
+  "installation_run": null,
+  "independent_check_run": null
+}

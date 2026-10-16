@@ -1,3 +1,17 @@
+# D-087:0.7.7 READY, scheduled17Oct2026 07:30Oslo; NOT INSTALLED
+
+Source44b4e426cdfdd9bb72621a9febeb624130a8d6e2, CI38979407726 SUCCESS439Domain+
+251API+167browser/1normal skip,frontend/DockerPASS; PR51 merged6540b98 identicaltree.
+Botd462e634/CI38980131645 SUCCESS890tests/serverSKIPPED; canonicalPR49 merged422cb81
+identicaltree.24operator guards and local numbering SQLPASS. Read
+ docs/dezertovia/RELEASE_0_7_7.md and PLAYER_FEEDBACK_0_7_7.md. Private ready
+candidate/operator in bolig-agent ops/almighty-release. Earliest installation
+17Oct2026 05:30UTC=07:30Europe/Oslo, one-time task scheduled. LIVE remains0.7.6/d0f88e2.
+No post077 request yet. Fresh exact CI/baseline/services/hash preflight, actual
+backups and separate independent check still required. Preserve progress/keys/
+Propose/budget/quarantine; no old request replay, broad deploy, forced raids,
+messages, payments, model probes or resets. Earlier INPROGRESS/HOLD are history.
+
 # D-087: feedback fixes 0.7.7 IN PROGRESS, scheduled no earlier 17Oct2026 05:30UTC
 
 Owner authorized implementation/testing and deployment at07:30Oslo17Oct.

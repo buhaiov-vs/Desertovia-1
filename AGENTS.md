@@ -1,3 +1,11 @@
+# D-074: queue capacity fix and read-only director diagnosis
+
+Read docs/dezertovia/CIVIC_REQUEST_CAPACITY.md. Implemented in fix/civic-request-capacity.
+Requests use active sites+pending applications, public3/private1; no legacy deletion.
+Civic error text localized. No new deployment yet; LIVE0.7.1/e5de51e unchanged.
+Director audit38875853709: enabled/Propose, recent none decisions,2budget skips,
+no service failure. Hourly owner digest is an idea, not new active messages.
+
 # D-073 /0.7.1 INSTALLED16.10.2026 и независимо проверен
 
 Владелец явно разрешил исправление Telegram заявок и выпуск0.7.1 сейчас;

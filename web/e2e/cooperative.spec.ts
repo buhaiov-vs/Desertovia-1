@@ -26,19 +26,26 @@ test('dark interface is independent and demolition asks for confirmation',async(
  await page.screenshot({path:'test-results/cooperative-dark.png',fullPage:true})
 })
 
-test('governor can request hospital and castle while slots are full; owner sees the building in approval',async({page})=>{
+test('full construction queue blocks governor applications with a clear Russian warning',async({page})=>{
  await page.setViewportSize({width:390,height:844})
- await page.goto('/e2e/cooperative-harness.html?build=1')
- await expect(page.getByText('Стройплощадки заняты.',{exact:false})).toBeVisible()
+ for(const query of ['build=1','build=1&pending=1']){
+ await page.goto('/e2e/cooperative-harness.html?'+query)
+ await expect(page.getByText('Очередь строительства полна.',{exact:false})).toBeVisible()
  const hospital=page.locator('.task-card').filter({has:page.locator('.task-name',{hasText:'Больница'})})
  const castle=page.locator('.task-card').filter({has:page.locator('.task-name',{hasText:/замок/i})})
- await expect(hospital).toBeEnabled();await expect(castle).toBeEnabled()
- await hospital.click();await expect(page.locator('output')).toHaveText('Hospital')
- await castle.click();await expect(page.locator('output')).toHaveText('Castle')
+ await expect(hospital).toBeDisabled();await expect(castle).toBeDisabled()
+ await expect(page.locator('output')).toBeEmpty()
  await page.locator('.civic-applications summary').click()
  await expect(page.locator('.civic-order')).toContainText('Строительство · Больница')
  await expect(page.getByRole('button',{name:'Одобрить',exact:true})).toHaveCount(0)
+ }
+})
+
+test('civic errors are translated instead of showing the English server message',async({page})=>{
+ await page.goto('/e2e/cooperative-harness.html?busy=1')
  await page.getByRole('button',{name:'Стать царём'}).click()
- await expect(hospital).toBeDisabled();await expect(castle).toBeDisabled()
- await expect(page.getByRole('button',{name:'Одобрить',exact:true})).toBeVisible()
+ await page.locator('.civic-applications summary').click()
+ await page.getByRole('button',{name:'Одобрить',exact:true}).click()
+ await expect(page.getByRole('alert')).toHaveText('Сначала завершите текущую стройку.')
+ await expect(page.getByText('Finish the existing work first.',{exact:true})).toHaveCount(0)
 })

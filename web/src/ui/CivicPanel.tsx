@@ -6,7 +6,7 @@ import { api, type VillageState, type Citizen } from '../api'
 export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}:{village:VillageState;tsar:boolean;ruler:boolean;actorId:string;citizen?:Citizen|null;onVillage:(v:VillageState)=>void;plotId?:string}) {
   const i18n=useI18n(), ru=i18n.language==='ru'
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[confirm,setConfirm]=useState<string|null>(null)
-  const run=async(action:()=>Promise<VillageState>)=>{if(busy)return;setBusy(true);setError('');try{onVillage(await action());setConfirm(null)}catch(e){setError(e instanceof Error?e.message:'Не удалось выполнить действие')}finally{setBusy(false)}}
+  const run=async(action:()=>Promise<VillageState>)=>{if(busy)return;setBusy(true);setError('');try{onVillage(await action());setConfirm(null)}catch(e){setError(i18n.error(e))}finally{setBusy(false)}}
   const privateBuilding = [...(village.structures??[]),...(village.storages??[])].find(b=>b.plotId===plotId)?.ownerAccountId
   const selectedBuilding=village.structures?.find(s=>s.plotId===plotId)
   const selectedStorage=village.storages?.find(s=>s.plotId===plotId)

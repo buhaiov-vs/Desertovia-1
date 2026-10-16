@@ -49,6 +49,7 @@ public static class BuildingOperations
         var plot = WorldMap.PlotAt(x, y);
         if (village.CivicOrders.Any(o => o.PlotId == plot && o.Status is "pending" or "working"))
             throw new GameRuleException("building.orderExists", "An application already exists for this plot.");
+        RequireRequestCapacity(village, null);
         var order = new CivicOrder { PlotId = plot, Operation = "build", BuildingKind = kind, RequestedBy = actor, CreatedAt = now };
         village.CivicOrders.Add(order);
         return order;
@@ -69,8 +70,22 @@ public static class BuildingOperations
         if (operation == "upgrade" && !(structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse, Level: < 3 }
             || storage is not null && StorageLimits.Upgrade(storage.Kind) is not null))
             throw new GameRuleException("building.maxLevel", "This building cannot be upgraded further.");
+        if (actor != village.OwnerAccountId) RequireRequestCapacity(village, privateOwner);
         var order=new CivicOrder{PlotId=plot,Operation=operation,RequestedBy=actor,CreatedAt=now};
         village.CivicOrders.Add(order);return order;
+    }
+
+    private static void RequireRequestCapacity(Village village, Guid? owner)
+    {
+        // Заявки занимают место в очереди, но не создают площадку и не расходуют материалы.
+        Guid? OrderOwner(CivicOrder order) => order.Operation == "build" ? null :
+            village.Structures.SingleOrDefault(s => s.PlotId == order.PlotId)?.OwnerAccountId
+            ?? village.Storages.SingleOrDefault(s => s.PlotId == order.PlotId)?.OwnerAccountId;
+        var pending = village.CivicOrders.Count(o => o.Status == "pending"
+            && o.Operation is "build" or "upgrade" or "demolish" && OrderOwner(o) == owner);
+        var maximum = owner is null ? BuildingCatalog.MaximumOpenSites : 1;
+        if (village.Sites.Count(s => s.OwnerAccountId == owner) + pending >= maximum)
+            throw new GameRuleException("building.requestQueueFull", "The construction queue is full. You cannot submit an application.");
     }
 
     public static void Approve(Village village,CivicOrder order,IReadOnlyList<Citizen> citizens,DateTimeOffset now)

@@ -1,3 +1,6 @@
+> **D-071 ·0.7.1 VERIFIED, repository only:** [CI и состав](RELEASE_0_7_1.md).
+> LIVE0.7/0540a2a сохранён; новая установка не выполнена. Старые LIVE/pending ниже исторические.
+
 > **D-064 · LIVE0.6.1:** [итог выпуска](RELEASE_0_6_1.md). Установка и независимая проверка успешны;111→111 профилей,0 потерь. Все прежние candidate/hold ниже исторические.
 
 > D-041/D-042: первоначальная матрица ниже историческая. Реализованный пакет0.5.2 и пути всех18 блоков: [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md). Сервер не обновлён.
@@ -199,15 +202,15 @@ snapshot once per admission and shared authoritative bot expiry. Recommendation
 | Всевышний | PR33 + signed bot PR35 | Агрегаты учёта, DB route regression, прежние возможности сохранены | BRANCH; production flag не менялся |
 
 
-## D-071 — пакет0.7.1 (IMPLEMENTED, validation in progress, not deployed)
+## D-071 — пакет0.7.1 (VERIFIED candidate, not deployed)
 
 | Замечание | Адаптация существующей основы | Проверка |
 | --- | --- | --- |
-| COMBAT-02D | Terminal Cancelled + штатное завершение фактического участия/состояния | Domain PASS; API/browser pending |
-| COMBAT-02B | Account-bound Voivode + persistent RaidFighter + target/move intents | Domain PASS; API/browser pending |
-| COMBAT-02A | Visible persisted shoreline end caps, existing damage unchanged | Domain PASS; browser pending |
-| LAND-02 | Ownership/approval metadata, slow site-demolish, durable salvage claims | Domain PASS; API pending |
-| UI-06/02C | Content-sized civic cards, centered SVG close control | Build PASS; browser pending |
-| UI-07 | Dcoin icon, personal wallet HUD, direct wallet, honest test candles | Build PASS; browser pending |
+| COMBAT-02D | Terminal Cancelled + штатное завершение фактического участия/состояния | Domain PASS; API/browser CI PASS |
+| COMBAT-02B | Account-bound Voivode + persistent RaidFighter + target/move intents | Domain PASS; API/browser CI PASS |
+| COMBAT-02A | Visible persisted shoreline end caps, existing damage unchanged | Domain PASS; browser CI PASS |
+| LAND-02 | Ownership/approval metadata, slow site-demolish, durable salvage claims | Domain PASS; API CI PASS |
+| UI-06/02C | Content-sized civic cards, centered SVG close control | Build PASS; browser CI PASS |
+| UI-07 | Dcoin icon, personal wallet HUD, direct wallet, honest test candles | Build PASS; browser CI PASS |
 
 Не переписывать Dungeon, не сносить старые площадки, не менять реальные свечи.

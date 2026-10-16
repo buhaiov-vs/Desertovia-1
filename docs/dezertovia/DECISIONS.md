@@ -1,3 +1,6 @@
+> **D-071 verification:** 573af93ccb2892b7e07c48529f8c387b63237cab, CI38864253995 SUCCESS;
+> 387 Domain + 224 API + 125 browser PASS / 1 штатный skip; lint/build/Docker PASS. [Receipt](RELEASE_0_7_1.md). Repository-only, LIVE unchanged.
+
 # Решения и открытые вопросы
 
 ## Приоритет решений

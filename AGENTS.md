@@ -1,3 +1,14 @@
+# D-086: late-fight contention after0.7.5, implementation in progress
+
+Owner actual0.7.5 report: early smooth then late stutter. Simulation median2ms,
+lock max3015ms; not server CPU proof. Attack click force-refreshes all residents
+under global lock; narrow to actor only while preserving fresh medical authority.
+Yield work settlement lock after each individually committed resident. Add bounded
+operation wait/hold aggregates so future captures attribute holders/waiters.
+Branchfix/combat-lock-contention, planned0.7.6, LIVE0.7.5/374323f unchanged.
+Read docs/dezertovia/COMBAT_LOCK_CONTENTION_0_7_6.md; testing/CI/rollout pending.
+No forced raids/messages/payments/model probes/resets or older request replay.
+
 #0.7.5 INSTALLED and independently verified16Oct2026
 
 LIVEgame374323f8c3ef519694497371716e611d3396ee43, CI38963553875 SUCCESS424Domain+

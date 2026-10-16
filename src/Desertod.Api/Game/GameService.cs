@@ -47,7 +47,8 @@ public sealed partial class GameService(
     private const string BuildTaskId = "build";
 
     /// <summary>Citizens settled under one hold of the village lock; each takes several queries.</summary>
-    private const int SettlementChunkSize = 10;
+    // Each cycle already has its own transaction. Yield between residents so combat is not queued behind ten transactions.
+    private const int SettlementChunkSize = 1;
 
     /// <summary>Taken by <c>GET /api/villages/public</c>, so no village may use it.</summary>
     private const string PublicListSlug = "public";
@@ -1445,11 +1446,11 @@ public sealed partial class GameService(
     /// <summary>Runs a change to the village while no other change to it runs in this process.</summary>
     private async Task<T> WithVillageAsync<T>(Guid villageId, Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken, [System.Runtime.CompilerServices.CallerMemberName] string operation = "change")
     {
-        using var _ = await AcquireLockAsync(villageId, cancellationToken);
+        using var _ = await AcquireLockAsync(villageId, cancellationToken, operation);
         return await WithRetryAsync(action, cancellationToken, villageId, operation);
     }
 
-    private async Task<IDisposable> AcquireLockAsync(Guid villageId, CancellationToken cancellationToken)
+    private async Task<IDisposable> AcquireLockAsync(Guid villageId, CancellationToken cancellationToken, [System.Runtime.CompilerServices.CallerMemberName] string operation = "change")
     {
         var started = time.GetTimestamp();
         var releaser = await locks.AcquireAsync(villageId, cancellationToken);
@@ -1460,7 +1461,20 @@ public sealed partial class GameService(
             logger.SlowLock((long)waited.TotalMilliseconds, villageId);
         }
 
-        return releaser;
+        return new TimedVillageLease(releaser, villageId, operation, time, waited.TotalMilliseconds);
+    }
+
+    private sealed class TimedVillageLease(IDisposable lease, Guid village, string operation, TimeProvider clock, double waitedMs) : IDisposable
+    {
+        private readonly long started=clock.GetTimestamp();
+        private int disposed;
+        public void Dispose()
+        {
+            if(Interlocked.Exchange(ref disposed,1)!=0)return;
+            var held=clock.GetElapsedTime(started).TotalMilliseconds;
+            lease.Dispose();
+            CombatDiagnostics.Operation(village,operation,clock.GetUtcNow(),waitedMs,held);
+        }
     }
 
     private async Task<T> WithRetryAsync<T>(Func<DesertodDbContext, Task<T>> action, CancellationToken cancellationToken, Guid? villageId = null, string operation = "change")

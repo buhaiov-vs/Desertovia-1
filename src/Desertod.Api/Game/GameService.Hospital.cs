@@ -29,10 +29,12 @@ public sealed partial class GameService
     }
 
     private async Task<HospitalStatusReply?> SyncHospitalAsync(DesertodDbContext db, Guid villageId,
-        CancellationToken ct, bool force = false, Guid? actorAccount = null)
+        CancellationToken ct, bool force = false, Guid? actorAccount = null, bool actorOnly = false)
     {
         if (!hospitalBridge.Enabled) return null;
-        var citizens = await db.Citizens.Where(c => c.VillageId == villageId && c.Status == CitizenStatus.Active).ToListAsync(ct);
+        // A combat click needs fresh clinical authority for its actor, not a forced village-wide sweep.
+        var citizens = await db.Citizens.Where(c => c.VillageId == villageId && c.Status == CitizenStatus.Active
+            && (!actorOnly || c.AccountId == actorAccount)).ToListAsync(ct);
         var village = await db.Villages.SingleAsync(v => v.Id == villageId, ct);
         var now = time.GetUtcNow();
         var ids = await db.ExternalLogins.Where(l => l.Provider == "telegram" && citizens.Select(c => c.AccountId).Contains(l.AccountId))
@@ -97,7 +99,7 @@ public sealed partial class GameService
                 logger.LogWarning("Hospital bridge unavailable; external recovery remains conservative.");
             }
         }
-        if (linked.Any(c => c.MarriageCheckedAt is null || now-c.MarriageCheckedAt >= TimeSpan.FromSeconds(60)))
+        if (!actorOnly && linked.Any(c => c.MarriageCheckedAt is null || now-c.MarriageCheckedAt >= TimeSpan.FromSeconds(60)))
         {
             try
             {

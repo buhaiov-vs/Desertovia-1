@@ -18,3 +18,11 @@ test('wall health packets skip world rebuilds until a breach or gate geometry ch
  const result=await page.evaluate(()=>(window as unknown as {patientTest:{wallCheck:()=>{damageUpdates:number;breachUpdates:number;gateUpdates:number}}}).patientTest.wallCheck())
  expect(result).toEqual({damageUpdates:0,breachUpdates:1,gateUpdates:1})
 })
+
+
+test('working avatars cross the river by the bridge instead of walking directly across water',async({page})=>{
+ await page.request.post('/auth/dev-login',{data:{name:uniqueName('work-path')}})
+ await page.goto('/e2e/patients-harness.html');await page.waitForFunction(()=>!!(window as unknown as {patientTest:unknown}).patientTest)
+ const result=await page.evaluate(()=>(window as unknown as {patientTest:{workPathCheck:()=>{points:number;unsafe:number;usesBridge:boolean}}}).patientTest.workPathCheck())
+ expect(result.points).toBeGreaterThan(0);expect(result.unsafe).toBe(0);expect(result.usesBridge).toBe(true)
+})

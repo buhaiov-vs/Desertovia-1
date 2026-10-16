@@ -27,6 +27,7 @@ public static class ConstructionRules
             TreesToFell = Forest.Hold(village, footprint, now),
         };
         village.Sites.Add(site);
+        BuildingNumbers.Ensure(village);
         return site;
     }
 
@@ -112,6 +113,7 @@ public static class ConstructionRules
         var site = new ConstructionSite { Kind = BuildingKind.Hospital, PlotId = plotId,
             TargetLevel = hospital.Level + 1, Scale = Math.Pow(2, hospital.Level), PlacedAt = now };
         village.Sites.Add(site);
+        BuildingNumbers.Ensure(village);
         return site;
     }
 
@@ -235,6 +237,7 @@ public static class ConstructionRules
         if (site.Definition.Storage is { } storage)
         {
             var built=StorageBuilding.Create(storage, site.PlotId, now);
+            built.Number = site.Number;
             built.OwnerAccountId = site.OwnerAccountId;
             BuildingOperations.AddInvestment(site,built.Investment);
             village.Storages.Add(built);
@@ -249,6 +252,7 @@ public static class ConstructionRules
             else
             {
                 var built=new Structure { Kind = site.Kind, PlotId = site.PlotId, BuiltAt = now, OwnerAccountId = site.OwnerAccountId };
+                built.Number = site.Number;
                 built.OwnerAccountId = site.OwnerAccountId;
                 BuildingOperations.AddInvestment(site,built.Investment);
                 village.Structures.Add(built);

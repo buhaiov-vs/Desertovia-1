@@ -10,6 +10,23 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.7',date:'2026-10-17',
+    title:{ru:'Питание, жильё и адресная работа',en:'Meals, homes and selected work targets'},
+    changes:{
+      ru:['Здания получили постоянные порядковые номера вместо координат в названиях.',
+        'Персонаж ест свою еду из рук и личного запаса при личной и общественной работе. В инвентаре голодного персонажа есть кнопка «Поесть».',
+        'Ремонт восстанавливает 10% и чинит выбранное здание. Выбранный склад принимает груз без отправки в другой; остаток остаётся в руках.',
+        'Владелец может заселиться в собственный готовый дом без заявки царю. В карточке видны владелец и дата постройки.',
+        'Окно результата работы больше не переключает карту на 8 кадров/с. Рабочие маршруты и прогулки обходят воду.',
+        'Перед добычей видно назначение продукции; в работах указаны обе развиваемые характеристики. Личные материалы можно бесплатно отдать в общий запас.'],
+      en:['Buildings have persistent sequential numbers instead of coordinates in their displayed names.',
+        'Own food in hands and personal inventory is used during both private and public work. Hungry residents can eat from Inventory.',
+        'Repair restores 10% of the selected building. A selected storage receives the load without redirecting it; overflow remains carried.',
+        'Owners can move into their own completed homes without royal approval. Home cards show the owner and completion date.',
+        'The work-result panel no longer throttles the visible map to 8 FPS. Work and roaming routes avoid water.',
+        'Gathering explains the output destination, work lists both trained stats, and personal materials can be donated to communal stock.']}
+  },
+  {
     version:'0.7.6',date:'2026-10-16',
     title:{ru:'Очередь операций во время боя',en:'Combat operation contention'},
     changes:{

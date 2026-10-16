@@ -462,7 +462,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
       return
     }
     const task = catalog?.tasks.find((t) => t.id === finished.taskId)
-    if (task) void start(task, againAt(task))
+    if (task) void start(task, againAt(task), finished.targetPlotId ?? undefined)
   }
 
   /** The same spot again, unless the picked camp tree has fallen; then the nearest tree is chopped. */
@@ -494,6 +494,13 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
     } finally {
       setPending(false)
     }
+  }
+
+  const eat = async () => {
+    setPending(true)
+    try { applyCitizen(await api.eat(slug)) }
+    catch (exception) { setError(i18n.error(exception)) }
+    finally { setPending(false) }
   }
 
   const drink = async () => {
@@ -782,7 +789,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         citizens={shownCitizens}
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
-        obscured={monasteryOpen || walletOpen || chatFull || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
+        obscured={monasteryOpen || walletOpen || chatFull || (panel !== 'none' && panel !== 'done') || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
         selectedEnemyId={enemyPick?.unitId??null}
@@ -1072,6 +1079,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
               error={error}
               onCarry={carry}
               onDrop={drop}
+              onEat={eat}
               onTake={takeFromStorage}
               onClose={() => setPanel('none')}
             />

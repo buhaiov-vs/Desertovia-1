@@ -1,3 +1,12 @@
+# D-087: feedback fixes 0.7.7 IN PROGRESS, scheduled no earlier 17Oct2026 05:30UTC
+
+Owner authorized implementation/testing and deployment at07:30Oslo17Oct.
+Read docs/dezertovia/PLAYER_FEEDBACK_0_7_7.md. Stable building numbers, food,
+targeted repair10%, selected storage, own housing, destination/stat labels,
+free donation. Preserve coordinates/ownership/progress/resources/medical rules.
+LIVE remains0.7.6/d0f88e2. No old rollout replay; exact CI/fresh preflight/backups
+and independent check required. No installation before05:30UTC.
+
 #0.7.6 INSTALLED and independently verified16Oct2026
 
 LIVEgame d0f88e2e92d83e8c30a7566fb21c916a51023b1d, CI38969100973 SUCCESS424Domain+

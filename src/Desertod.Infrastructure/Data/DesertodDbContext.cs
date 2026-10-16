@@ -18,6 +18,8 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
 
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+        foreach (var entry in ChangeTracker.Entries<Village>().Where(e => e.State != EntityState.Deleted).ToArray())
+            Desertod.Domain.Buildings.BuildingNumbers.Ensure(entry.Entity);
         var count = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         SuccessfulSaves++;
         return count;
@@ -232,6 +234,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
         modelBuilder.Entity<Citizen>(citizen =>
         {
             citizen.HasKey(c => c.Id);
+            citizen.Property(c => c.CurrentTargetPlotId).HasMaxLength(32);
             citizen.HasIndex(c => new { c.VillageId, c.AccountId }).IsUnique();
             citizen.HasIndex(c => new { c.CycleSettled, c.CycleEndsAt });
             citizen.HasIndex(c => c.IsCarrying);

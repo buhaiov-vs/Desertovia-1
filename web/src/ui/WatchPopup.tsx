@@ -1,3 +1,4 @@
+import { buildingNumber } from './buildingLabel'
 import { api } from '../api'
 import { SiteActions } from './SiteActions'
 import type { ReactNode } from 'react'
@@ -98,7 +99,7 @@ export function WatchPopup({
     target.kind === 'project'
       ? i18n.project(target.projectId).name
       : target.kind === 'site' || target.kind === 'building'
-        ? i18n.building(target.building).name
+        ? `${i18n.building(target.building).name} ${buildingNumber(village,target.plotId)}`
         : target.kind === 'animal'
           ? i18n.animal(target.prey)
           : ''

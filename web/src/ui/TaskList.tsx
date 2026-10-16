@@ -153,7 +153,7 @@ export function TaskCard({
           {isCurrent && citizen.state === 'AwaitingRenewal' ? t('task.again', { task: name }) : name}
         </span>
         <span className="task-meta">
-          {i18n.role(role.id)} · {t('task.gives', { stat: i18n.stat(task.primary) })} ·{' '}
+          {i18n.role(role.id)} · {t('task.gives', { stat: [task.primary, ...(task.secondary === task.primary ? [] : [task.secondary])].map(stat => i18n.stat(stat)).join(', ') })} ·{' '}
           {t('task.trains', { skill: i18n.skill(task.skill) })}
           {outcome && ` · ${outcome}`}
           {inputs && ` · ${t('task.uses', { inputs })}`}

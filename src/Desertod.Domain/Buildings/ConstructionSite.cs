@@ -11,6 +11,7 @@ public sealed class ConstructionSite
     public List<Desertod.Domain.Storage.StoredGood> Salvage { get; set; } = [];
 
     /// <summary>Unique within a village; identifies the site.</summary>
+    public int Number { get; set; }
     public required string PlotId { get; set; }
 
     public int Damage { get; set; }
@@ -167,6 +168,7 @@ public sealed class Structure
 {
     public BuildingKind Kind { get; set; }
     public Guid? OwnerAccountId { get; set; }
+    public int Number { get; set; }
     public required string PlotId { get; set; }
     public int Level { get; set; } = 1;
     public bool Decommissioning { get; set; }

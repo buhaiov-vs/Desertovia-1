@@ -170,7 +170,7 @@ public static class GameCatalog
             None, None, WorldMap.Camp, WorkSeconds: GuardShiftSeconds),
         new("rescue-wounded", "Carry the wounded to hospital", "laborer", 0, Stat.Endurance, Stat.Strength, Skill.Hauling, TaskEffect.Resources, 0,
             None, None, WorldMap.Camp, WorkSeconds: Craft),
-        new("repair", "Repair buildings", "laborer", 0, Stat.Strength, Stat.Dexterity, Skill.Building, TaskEffect.Repair, 5,
+        new("repair", "Repair buildings", "laborer", 0, Stat.Strength, Stat.Dexterity, Skill.Building, TaskEffect.Repair, 10,
             None, [Amount(ResourceKind.Wood, 2), Amount(ResourceKind.Stone, 1)], WorldMap.Camp, WorkSeconds: Craft),
         new("make-poultice", "Make poultices", "laborer", 0, Stat.Intelligence, Stat.Dexterity, Skill.Gathering, TaskEffect.Resources, 0,
             [Amount(ResourceKind.Remedy, 1)], [Amount(ResourceKind.Food, 2)], "berries", WorkSeconds: Craft, RequiredTechnology: TechnologyCatalog.HerbLore),

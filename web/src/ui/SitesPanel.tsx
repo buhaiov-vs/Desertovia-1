@@ -91,7 +91,7 @@ export function SiteCard({
   return (
     <section className="card site">
       <div className="site-head">
-        <strong>{i18n.building(site.kind).name}</strong>
+        <strong>{i18n.building(site.kind).name}{site.number ? ` №${site.number}` : ''}</strong>
         <span className="muted small">
           {t('site.stage', { number: site.stage + 1, total: site.stages.length, stage: i18n.stage(stage.id) })}
         </span>

@@ -9,7 +9,7 @@ export function SiteActions({site,actorId,tsar,onAction}:{site:Site;actorId?:str
   const canManage=own||tsar&&(!site.ownerAccountId||site.boundaryConflict)
   const run=async(operation:string)=>{if(busy)return;setBusy(true);setError('');try{await onAction(operation);setConfirm(false)}catch(e){setError(i18n.error(e))}finally{setBusy(false)}}
   return <section className="site-management">
-    <p className="small">{site.ownerAccountId?(ru?'Личная стройка':'Private construction'):(ru?'Общественная стройка':'Communal construction')} · {site.plotId}<br/>
+    <p className="small">{site.ownerAccountId?(ru?'Личная стройка':'Private construction'):(ru?'Общественная стройка':'Communal construction')}{site.number ? ` №${site.number}` : ''}<br/>
       {ru?'Владелец / заявитель':'Owner / applicant'}: {site.ownerName??(ru?'не записан в старой версии':'not recorded in the old version')}
       {site.placedAt&&<><br/>{new Date(site.placedAt).toLocaleString(i18n.language)}</>}</p>
     {site.boundaryConflict&&<p className="warning small">{ru?'Старая личная площадка пересекает территорию царства. Решение принимает царь.':'A legacy private site overlaps the kingdom. The Tsar decides its status.'}</p>}

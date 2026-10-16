@@ -12,6 +12,7 @@ public sealed class StorageBuilding
     public Guid? OwnerAccountId { get; set; }
 
     /// <summary>Unique within a village; identifies the building.</summary>
+    public int Number { get; set; }
     public required string PlotId { get; set; }
 
     public DateTimeOffset BuiltAt { get; set; }

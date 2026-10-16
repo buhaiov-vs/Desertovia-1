@@ -1,3 +1,4 @@
+import { buildingNumber } from './buildingLabel'
 import { currentEnergy } from '../energy'
 import { EconomyPanel } from './EconomyPanel'
 import type { BuildingDefinition, Catalog, Citizen, StorageKind, VillageState } from '../api'
@@ -17,6 +18,7 @@ export function InventoryPanel({
   error,
   onCarry,
   onDrop,
+  onEat,
   onTake,
   onClose,
   onPrivatePlace,
@@ -29,12 +31,14 @@ export function InventoryPanel({
   error: string | null
   onCarry: () => void
   onDrop: () => void
+  onEat?: () => void
   onTake: (plotId: string, resource: string, amount: number) => void
   onPrivatePlace?: (building:BuildingDefinition)=>void
   onClose: () => void
 }) {
   const i18n = useI18n()
   const { t } = i18n
+  const ownFood=(citizen?.load.find(g=>g.resource==='Food')?.amount??0)+(citizen?.personalGoods?.find(g=>g.kind==='Food')?.amount??0)
   const energy = citizen ? currentEnergy(citizen, now) : 0
   const upgrades:Partial<Record<StorageKind,StorageKind>>={WoodPile:'Woodyard',StonePile:'StoneYard',DryingRack:'Granary'}
   const publicStores=village.storages.filter(s=>!s.ownerAccountId)
@@ -55,7 +59,8 @@ export function InventoryPanel({
         </header>
         <div className="modal-body">
           {citizen && <EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId={citizen.accountId} onPrivatePlace={onPrivatePlace}/>}
-          {error && <p className="error">{error}</p>}
+          {citizen?.isHungry&&onEat&&<button disabled={pending||ownFood===0||citizen.state==='Paused'} onClick={onEat}>{i18n.language==='ru'?'Поесть':'Eat'}{ownFood===0?(i18n.language==='ru'?' · Нет еды при себе':' · No food carried'):''}</button>}
+      {error && <p className="error">{error}</p>}
           {citizen && (
             <section className="card">
               <h3>
@@ -111,7 +116,7 @@ export function InventoryPanel({
                 const suitable=publicStores.filter(s=>accepts(s.kind,resource.kind))
                 const room=resource.capacity===null?null:Math.max(0,resource.capacity-resource.amount)
                 return <li key={resource.kind}><strong>{i18n.resource(resource.kind)}</strong>: {room===null?'∞':i18n.amount(room)} {i18n.language==='ru'?'свободно':'free'}
-                  {suitable.length===0?<span className="warning"> · {i18n.language==='ru'?'нет подходящего склада':'no suitable storage'}</span>:<span> · {suitable.map((s,index)=><span key={s.plotId}>{index>0?', ':''}<a href={`#store-${s.plotId}`}>{i18n.storage(s.kind)} ({s.plotId})</a></span>)}</span>}
+                  {suitable.length===0?<span className="warning"> · {i18n.language==='ru'?'нет подходящего склада':'no suitable storage'}</span>:<span> · {suitable.map((s,index)=><span key={s.plotId}>{index>0?', ':''}<a href={`#store-${s.plotId}`}>{i18n.storage(s.kind)} {buildingNumber(village,s.plotId)}</a></span>)}</span>}
                   {room===0&&suitable.length>0&&<span className="warning"> · {i18n.language==='ru'?'лимит заполнен':'capacity reached'}</span>}
                 </li>
               })}</ul>
@@ -122,7 +127,7 @@ export function InventoryPanel({
             <ul className="storage-list">
               {publicStores.map((storage) => (
                 <li key={storage.plotId} id={`store-${storage.plotId}`}>
-                  <details><summary><strong>{i18n.storage(storage.kind)}</strong> · {storage.plotId} <span className="muted small"> · {storage.goods.reduce((n,g)=>n+g.amount,0)}{storage.totalLimit?`/${storage.totalLimit}`:''}</span></summary>
+                  <details><summary><strong>{i18n.storage(storage.kind)}</strong> {buildingNumber(village,storage.plotId)} <span className="muted small"> · {storage.goods.reduce((n,g)=>n+g.amount,0)}{storage.totalLimit?`/${storage.totalLimit}`:''}</span></summary>
                   <StorageCard
                     storage={storage}
                     catalog={catalog}

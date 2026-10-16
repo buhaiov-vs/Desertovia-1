@@ -82,6 +82,9 @@ public sealed class Citizen
     /// <summary>Arrows in the quiver; a bow is no use without them.</summary>
     public int Arrows { get; set; }
 
+    /// <summary>Explicit repair or unloading destination, persisted for the whole paid cycle.</summary>
+    public string? CurrentTargetPlotId { get; set; }
+
     public string? CurrentTaskId { get; set; }
     public DateTimeOffset? CycleStartedAt { get; set; }
     public DateTimeOffset? CycleEndsAt { get; set; }

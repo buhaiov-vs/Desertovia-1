@@ -51,6 +51,7 @@ public sealed record CycleReport(
 {
     /// <summary>Part of <see cref="Produced"/> that fit neither in storage nor in the citizen's hands.</summary>
     public IReadOnlyList<ResourceAmount> Lost { get; init; } = [];
+    public string? TargetPlotId { get; init; }
 }
 
 public static class CycleEngine
@@ -84,7 +85,7 @@ public static class CycleEngine
             ? (citizen.CyclePrivateOutput && citizen.Spot is {} previousSpot
                 ? village.Structures.SingleOrDefault(b=>b.OwnerAccountId==citizen.AccountId && b.Kind==task.RequiredBuilding && !b.Decommissioning && WorldMap.Yard(b.PlotId)==previousSpot) : null)
             : village.Structures.SingleOrDefault(b=>b.PlotId==workplacePlotId && b.Kind==task.RequiredBuilding && !b.Decommissioning);
-        if (workplacePlotId is not null && (selectedWorkplace is null || selectedWorkplace.OwnerAccountId is {} owner && owner != citizen.AccountId))
+        if (workplacePlotId is not null && task.Effect is not (TaskEffect.Repair or TaskEffect.Unload) && (selectedWorkplace is null || selectedWorkplace.OwnerAccountId is {} owner && owner != citizen.AccountId))
             throw new GameRuleException("building.private", "Choose an available workplace belonging to you or the kingdom.");
         var privateWorkplace = selectedWorkplace?.OwnerAccountId == citizen.AccountId || task.RequiredBuilding is {} needed && !village.Has(needed)
             && village.Structures.Any(b => b.Kind == needed && b.OwnerAccountId == citizen.AccountId && !b.Decommissioning && b.RuinedAt is null && b.Damage<100);
@@ -141,12 +142,26 @@ public static class CycleEngine
         }
         CheckPrey(village, task, now);
         var repairAt = task.Effect == TaskEffect.Repair
-            ? CombatRules.MostDamaged(village) ?? throw new GameRuleException("repair.nothing", "No building needs repair.")
+            ? workplacePlotId ?? CombatRules.MostDamaged(village, citizen.AccountId) ?? throw new GameRuleException("repair.nothing", "No building needs repair.")
             : null;
         if (GoldVein.IsDug(task) && GoldVein.IsEmpty(village))
         {
             throw new GameRuleException("task.veinEmpty", "The gold vein is empty.", new Dictionary<string, object> { ["taskId"] = task.Id });
         }
+
+        if (repairAt is not null)
+        {
+            if (CombatRules.DamageOf(village, repairAt) <= 0)
+                throw new GameRuleException("repair.nothing", "No building needs repair.");
+            var repairOwner = village.Structures.FirstOrDefault(s => s.PlotId == repairAt)?.OwnerAccountId
+                ?? village.Storages.FirstOrDefault(s => s.PlotId == repairAt)?.OwnerAccountId
+                ?? village.Sites.FirstOrDefault(s => s.PlotId == repairAt)?.OwnerAccountId;
+            if (repairOwner is not null && repairOwner != citizen.AccountId)
+                throw new GameRuleException("building.private", "This building belongs to another player.");
+            privateWorkplace = repairOwner == citizen.AccountId;
+        }
+        if (task.Effect == TaskEffect.Unload && workplacePlotId is not null)
+            StorageRules.UnloadTarget(citizen, village, workplacePlotId);
 
         var privateOutput = privateWorkplace || spot is {} personalSpot && !KingdomRules.Area(village).Contains(personalSpot.ToTile());
         citizen.CyclePrivateOutput = privateOutput;
@@ -164,7 +179,8 @@ public static class CycleEngine
         }
 
         var repairYard = repairAt is null ? (TilePoint?)null : CombatRules.RepairYard(village,repairAt);
-        if ((spot ?? repairYard ?? NaturalPlace(task)) is { } destination)
+        var unloadYard = task.Effect == TaskEffect.Unload && workplacePlotId is not null ? WorldMap.Yard(workplacePlotId) : (TilePoint?)null;
+        if ((spot ?? repairYard ?? unloadYard ?? NaturalPlace(task)) is { } destination)
         {
             citizen.SetOut(destination, village, now);
         }
@@ -173,7 +189,7 @@ public static class CycleEngine
         if (task.Effect is TaskEffect.Build or TaskEffect.Repair or TaskEffect.Supervise && DayCycle.IsNight(now)) work *= 1.25;
         if (task.RequiredBuilding is {} used && village.Structures.FirstOrDefault(s => s.Kind == used && (citizen.CyclePrivateOutput ? s.OwnerAccountId == citizen.AccountId : s.OwnerAccountId == null)) is {} worn)
             work *= worn.Damage > 75 ? 1.25 : worn.Damage > 50 ? 1.1 : 1;
-        var walk = repairYard is { } yard ? WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard) : Walk(citizen, village, task, spot, now);
+        var walk = (repairYard ?? unloadYard) is { } yard ? WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard) : Walk(citizen, village, task, spot, now);
         Begin(citizen, task.Id, work + walk, WorkEnergy.TaskCost(village, task, now), village, now, walk);
         if (projectKey is not null && context.Project is { } acceptedProject)
         {
@@ -185,7 +201,8 @@ public static class CycleEngine
         citizen.SupervisedProgress = task.Effect==TaskEffect.Supervise ? context.Project?.BuildProgress : null;
         citizen.CurrentSiteId = null;
         citizen.CurrentSiteStage = null;
-        citizen.Spot = spot ?? repairYard;
+        citizen.Spot = spot ?? repairYard ?? unloadYard;
+        citizen.CurrentTargetPlotId = task.Effect == TaskEffect.Repair ? repairAt : task.Effect == TaskEffect.Unload ? workplacePlotId : null;
         if (IsArmed(task))
         {
             CombatRules.Arm(citizen, village);
@@ -402,7 +419,7 @@ public static class CycleEngine
                 break;
 
             case TaskEffect.Repair:
-                repaired = CombatRules.Repair(village, 5);
+                repaired = CombatRules.Repair(village, (int)task.BaseYield, citizen.CurrentTargetPlotId);
                 contributed = repaired > 0 ? 1 : 0;
                 overflowed = repaired == 0;
                 break;
@@ -461,7 +478,7 @@ public static class CycleEngine
             }
 
             case TaskEffect.Unload:
-                produced.AddRange(StorageRules.Unload(citizen, village));
+                produced.AddRange(StorageRules.Unload(citizen, village, citizen.CurrentTargetPlotId));
                 overflowed = citizen.Load.Count > 0;
                 experienceShare = UnloadExperienceMultiplier;
                 break;
@@ -612,7 +629,7 @@ public static class CycleEngine
         var hungry = task.Effect != TaskEffect.Unload && Eat(citizen, village, now);
         if(task.Effect is TaskEffect.Survey or TaskEffect.Build && contributed>0)
             experienceShare*=Math.Min(1,(double)contributed/Math.Max(1,YieldMath.Whole(task.BaseYield*factor)));
-        if(task.Effect==TaskEffect.Repair && repaired>0)experienceShare*=Math.Min(1,repaired/5.0);
+        if(task.Effect==TaskEffect.Repair && repaired>0)experienceShare*=Math.Min(1,repaired/(double)task.BaseYield);
         if (task.RequiredBuilding is {} producedAt && !overflowed && village.Structures.FirstOrDefault(s => s.Kind == producedAt && (citizen.CyclePrivateOutput ? s.OwnerAccountId == citizen.AccountId : s.OwnerAccountId == null)) is {} producer)
         {
             producer.ProductionCycles++;
@@ -621,7 +638,7 @@ public static class CycleEngine
         var report = Finish(citizen, village, task.Id, task.Primary, task.Secondary, task.Skill,
             SkillRules.Challenge(citizen, task.Skill, task.SkillLevel), experienceShare, hungry,
             produced, carried, moraleGained, contributed, rareFind, overflowed);
-        return report with { Fight = fight, Repaired = repaired, Lost = lost };
+        return report with { Fight = fight, Repaired = repaired, Lost = lost, TargetPlotId = citizen.CurrentTargetPlotId };
     }
 
     /// <summary>
@@ -807,7 +824,7 @@ public static class CycleEngine
 
     /// <summary>
     /// Every <see cref="GameRules.CyclesPerMeal"/> finished cycles a citizen eats one food, from their hands first,
-    /// then from storage. A hungry citizen tries again after every cycle. Returns true while the citizen is hungry.
+    /// then from personal inventory, then from public storage for public work. A hungry citizen tries again after every cycle. Returns true while the citizen is hungry.
     /// </summary>
     private static bool Eat(Citizen citizen, Village village, DateTimeOffset now)
     {
@@ -817,28 +834,7 @@ public static class CycleEngine
             return false;
         }
 
-        var eaten = citizen.CyclePrivateOutput
-            ? (PersonalInventory.Amount(citizen, ResourceKind.Food) > 0 ? 1 : 0)
-            : citizen.TakeFromLoad(ResourceKind.Food, 1);
-        if (citizen.CyclePrivateOutput && eaten > 0) PersonalInventory.Remove(citizen, ResourceKind.Food, 1);
-        if (eaten == 0 && !citizen.CyclePrivateOutput)
-        {
-            eaten = village.Take(ResourceKind.Food, 1);
-        }
-
-        var hungry = eaten == 0;
-        if (!hungry)
-        {
-            citizen.CyclesSinceMeal = 0;
-        }
-
-        if (hungry != citizen.IsHungry)
-        {
-            citizen.FlushEnergy(now, village);
-            citizen.IsHungry = hungry;
-        }
-
-        return hungry;
+        return !FoodRules.Eat(citizen, village, now, allowPublic: !citizen.CyclePrivateOutput);
     }
 
     /// <summary>Stat factor with tiredness, morale and streak.</summary>
@@ -898,6 +894,7 @@ public static class CycleEngine
 
         citizen.ReservedSiteWork = null;
         citizen.ReservedProjectId = null;
+        citizen.CurrentTargetPlotId = null;
         citizen.CurrentTaskId = taskId;
         citizen.CurrentTechnologyId = null;
         citizen.Spot = null;

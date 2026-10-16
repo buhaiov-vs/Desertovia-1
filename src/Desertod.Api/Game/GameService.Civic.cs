@@ -48,12 +48,26 @@ public sealed partial class GameService
             else if (request.Operation == "housing")
             {
                 if (citizen is null) throw new UnauthorizedAccessException();
-                if (village.CivicOrders.Any(o => o.RequestedBy == actor && o.Operation == "housing" && o.Status == "pending"))
-                    throw new GameRuleException("housing.pending", "You already have a housing application.");
-                if (request.PartnerAccountId is {} partner && citizen.SpouseAccountId != partner)
-                    throw new GameRuleException("housing.notSpouse", "Joint housing is available only with your confirmed spouse.");
-                village.CivicOrders.Add(new CivicOrder { PlotId=request.PlotId, Operation="housing", RequestedBy=actor,
-                    PartnerAccountId=request.PartnerAccountId, CreatedAt=now });
+                var home = village.Structures.SingleOrDefault(s => s.PlotId == request.PlotId && ShelterRules.Beds(s) > 0)
+                    ?? throw new GameRuleException("housing.notFound", "Select a completed residential building.");
+                if (home.OwnerAccountId is {} homeOwner && homeOwner != actor)
+                    throw new GameRuleException("housing.private", "This home belongs to another resident.");
+                if (home.OwnerAccountId == actor && request.PartnerAccountId is null)
+                {
+                    ShelterRules.Move(village, people, [citizen], request.PlotId, now);
+                    foreach (var old in village.CivicOrders.Where(o => o.RequestedBy == actor && o.Operation == "housing" && o.Status == "pending"))
+                        old.Status = "cancelled";
+                    db.AuditActor = actor; db.AuditOperation = "housing-own:" + request.PlotId;
+                }
+                else
+                {
+                    if (village.CivicOrders.Any(o => o.RequestedBy == actor && o.Operation == "housing" && o.Status == "pending"))
+                        throw new GameRuleException("housing.pending", "You already have a housing application.");
+                    if (request.PartnerAccountId is {} partner && citizen.SpouseAccountId != partner)
+                        throw new GameRuleException("housing.notSpouse", "Joint housing is available only with your confirmed spouse.");
+                    village.CivicOrders.Add(new CivicOrder { PlotId=request.PlotId, Operation="housing", RequestedBy=actor,
+                        PartnerAccountId=request.PartnerAccountId, CreatedAt=now });
+                }
             }
             else
             {

@@ -1,3 +1,4 @@
+import { buildingNumber } from './buildingLabel'
 import { SiteActions } from './SiteActions'
 import { useState } from 'react'
 import {
@@ -56,6 +57,7 @@ function damageOf(village: VillageState, plotId: string) {
   return (
     village.structures.find((structure) => structure.plotId === plotId)?.damage ??
     village.storages.find((storage) => storage.plotId === plotId)?.damage ??
+    village.sites.find((site) => site.plotId === plotId)?.damage ??
     0
   )
 }
@@ -63,7 +65,7 @@ function damageOf(village: VillageState, plotId: string) {
 function tasksFor(target: WorldTarget, catalog: Catalog, village: VillageState): Task[] {
   switch (target.kind) {
     case 'site':
-      return []
+      return damageOf(village,target.plotId)>0 ? catalog.tasks.filter(task=>task.effect==='Repair') : []
     case 'animal':
       return catalog.tasks.filter((task) => task.hunt?.prey === target.prey)
     case 'campfire':
@@ -75,7 +77,7 @@ function tasksFor(target: WorldTarget, catalog: Catalog, village: VillageState):
       return catalog.tasks.filter(
         (task) =>
           task.requiredBuilding === target.building ||
-          (target.storage && task.id === CARRY_TO_STORAGE) ||
+          (target.storage && !village.storages.find(s=>s.plotId===target.plotId)?.ownerAccountId && task.id === CARRY_TO_STORAGE) ||
           (damaged && task.effect === 'Repair'),
       )
     }
@@ -86,11 +88,11 @@ function tasksFor(target: WorldTarget, catalog: Catalog, village: VillageState):
   }
 }
 
-function titleOf(target: WorldTarget, catalog: Catalog, citizen: Citizen, i18n: Translator) {
+function titleOf(target: WorldTarget, catalog: Catalog, citizen: Citizen, i18n: Translator, village: VillageState) {
   switch (target.kind) {
     case 'site':
     case 'building':
-      return i18n.building(target.building).name
+      return `${i18n.building(target.building).name} ${buildingNumber(village, target.plotId)}`
     case 'project':
       return i18n.project(target.projectId).name
     case 'campfire':
@@ -178,17 +180,19 @@ export function TargetPopup({
   const built = new Set<string>([...builtKinds(village, catalog), ...village.structures.filter(s=>s.ownerAccountId===citizen.accountId).map(s=>s.kind), ...village.completedProjects])
   const wildWood =
     target.kind === 'tree' && !inForestArea(Math.floor(target.spot.x), Math.floor(target.spot.y))
+  const home=target.kind==='building'?village.housing?.find(h=>h.plotId===target.plotId):undefined
   const damage = target.kind === 'building' ? damageOf(village, target.plotId) : 0
 
   return (
-    <div className={`target-popup ${phone ? 'sheet' : ''}`} style={popupStyle(screen, phone)} role="dialog" aria-label={titleOf(target, catalog, citizen, i18n)}>
+    <div className={`target-popup ${phone ? 'sheet' : ''}`} style={popupStyle(screen, phone)} role="dialog" aria-label={titleOf(target, catalog, citizen, i18n, village)}>
       <header className="target-popup-header">
-        <strong>{titleOf(target, catalog, citizen, i18n)}</strong>
+        <strong>{titleOf(target, catalog, citizen, i18n, village)}</strong>
         <button className="close" onClick={onClose} title={`${t('close')} (Esc)`}>
           ✕
         </button>
       </header>
       <div className="target-popup-body">
+        {home?.ownerAccountId&&<section className="small"><p>{i18n.language==='ru'?'Владелец':'Owner'}: {home.ownerName??'—'}{home.builtAt&&` · ${new Date(home.builtAt).toLocaleDateString(i18n.language)}`}</p><p>{i18n.language==='ru'?'Занято мест':'Occupied beds'}: {home.occupied}/{home.beds}</p>{home.ownerAccountId===citizen.accountId&&citizen.homePlotId!==home.plotId&&<button disabled={pending||home.occupied>=home.beds} onClick={()=>void operate('housing')}>{i18n.language==='ru'?'Заселиться':'Move in'}</button>}</section>}
         {operationError&&<p className="error">{operationError}</p>}
         {target.kind==='building'&&ruler&&!village.structures.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&!village.storages.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&<div className="civic-actions"><button disabled={pending} onClick={()=>void operate('upgrade')}>Улучшить</button>
           {confirm?<><span>Подтвердить медленную разборку?</span><button onClick={()=>void operate('demolish')}>Снести</button><button onClick={()=>setConfirm(false)}>Отмена</button></>:<button onClick={()=>setConfirm(true)}>Снести</button>}</div>}
@@ -206,6 +210,7 @@ export function TargetPopup({
           <SiteCard site={site} catalog={catalog} village={village} citizen={citizen} disabled={disabled} onStartJob={onStartJob} />
         )}
         {beds.length > 0 && <FieldsCard beds={beds} now={now} raining={village.weather.raining} />}
+        {storage?.ownerAccountId&&<p className="small muted">{i18n.language==='ru'?'Пополнить личный склад можно из личного имущества в кошельке.':'Deposit personal goods through your wallet’s private warehouse controls.'}</p>}
         {storage && (
           <StorageCard
             storage={storage}
@@ -213,6 +218,12 @@ export function TargetPopup({
             take={{ citizen, disabled, onTake: (resource, amount) => onTake(storage.plotId, resource, amount) }}
           />
         )}
+        {tasks.some(task=>task.outputs.length>0)&&(target.kind==='building'||'spot' in target)&&<p className="small muted">{(() => {
+          const area=village.kingdomArea??catalog.buildArea, tile='spot' in target?{x:Math.floor(target.spot.x),y:Math.floor(target.spot.y)}:{x:area.x,y:area.y}
+          const privateBuilding=target.kind==='building'&&village.structures.some(s=>s.plotId===target.plotId&&s.ownerAccountId===citizen.accountId)
+          const personal=privateBuilding||tile.x<area.x||tile.y<area.y||tile.x>=area.x+area.width||tile.y>=area.y+area.height
+          return personal?(i18n.language==='ru'?'Добыча → личный запас':'Output → personal inventory'):(i18n.language==='ru'?'Добыча → общий запас':'Output → communal stock')
+        })()}</p>}
         {tasks.length > 0 && (
           <TaskList
             tasks={tasks}
@@ -225,7 +236,7 @@ export function TargetPopup({
             fields={village.fields}
             resources={village.resources}
             disabled={disabled}
-            onStart={(task) => onStart(task, spotFor(target, task), target.kind === 'building' && task.requiredBuilding === target.building ? target.plotId : undefined)}
+            onStart={(task) => onStart(task, spotFor(target, task), (target.kind === 'building'||target.kind==='site') && (task.requiredBuilding === target.building || task.effect === 'Repair' || task.id === CARRY_TO_STORAGE) ? target.plotId : undefined)}
           />
         )}
         {!site && !storage && tasks.length === 0 && <p className="small muted">{t('target.nothing')}</p>}

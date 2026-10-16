@@ -1,3 +1,6 @@
+> **D-087 /0.7.7 IN PROGRESS:** [план выбранных правок и номеров зданий](PLAYER_FEEDBACK_0_7_7.md).
+> Установка не раньше17.10.2026 07:30Осло; текущий сервер0.7.6.
+
 > **LIVE0.7.6:** [combat contention release and actual checks](RELEASE_0_7_6.md).
 > Exact d0f88e2, independentcheck38970711893PASS;119profiles/121bindings preserved.
 > Next ordinary real-phone battle: compare operation hold/wait maxima and frame

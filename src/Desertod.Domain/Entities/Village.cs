@@ -50,6 +50,8 @@ public sealed class Village
     /// <summary>Gold dug from the vein on the far bank; the vein is empty at <see cref="Rules.GoldVein.Size"/>.</summary>
     public int GoldVeinMined { get; set; }
 
+    public int BuildingSequence { get; set; }
+
     public List<StorageBuilding> Storages { get; set; } = [];
 
     /// <summary>Finished buildings that are not storage: shelters and workplaces.</summary>

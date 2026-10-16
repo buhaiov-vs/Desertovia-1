@@ -702,6 +702,29 @@ public sealed partial class GameService(
         }, cancellationToken);
     }
 
+    public async Task<CitizenDto> EatAsync(string slug, Guid accountId, CancellationToken cancellationToken)
+    {
+        var key = await RequireCitizenAsync(slug, accountId, cancellationToken);
+        return await WithVillageAsync(key.VillageId, async db =>
+        {
+            await SyncHospitalAsync(db, key.VillageId, cancellationToken);
+            var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            var now = time.GetUtcNow();
+            HospitalRules.RequireReady(citizen, now);
+            var village = await db.Villages.SingleAsync(v => v.Id == key.VillageId, cancellationToken);
+            if (citizen.Status != CitizenStatus.Active || citizen.DungeonRunId is not null || citizen.ExhaustedUntil > now)
+                throw new GameRuleException("inventory.unavailable", "Wait until recovery or the expedition is finished.");
+            if (!citizen.IsHungry) throw new GameRuleException("food.notHungry", "You are already fed.");
+            if (!FoodRules.Eat(citizen, village, now, allowPublic: false))
+                throw new GameRuleException("food.missing", "There is no food in your hands or personal inventory.");
+            db.AuditActor = accountId; db.AuditOperation = "eat";
+            await db.SaveChangesAsync(cancellationToken);
+            await notifier.CitizenUpdated(slug, citizen.ToSummaryDto(now));
+            changes.Mark(village.Id);
+            return citizen.ToDto(village, now);
+        }, cancellationToken);
+    }
+
     /// <summary>The citizen drinks a vigor drink; see <see cref="VigorDrinks.Drink"/>.</summary>
     public async Task<CitizenDto> DrinkAsync(string slug, Guid accountId, CancellationToken cancellationToken)
     {
@@ -1414,7 +1437,7 @@ public sealed partial class GameService(
             .OrderByDescending(r => r.OpenedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var siteOwners=village.Sites.Select(s=>s.OwnerAccountId??s.PlacedByAccountId).Where(id=>id!=null).ToArray();
+        var siteOwners=village.Sites.Select(s=>s.OwnerAccountId??s.PlacedByAccountId).Concat(village.Structures.Select(s=>s.OwnerAccountId)).Where(id=>id!=null).Distinct().ToArray();
         var ownerNames=await db.Accounts.Where(a=>siteOwners.Contains(a.Id)).ToDictionaryAsync(a=>a.Id,a=>a.DisplayName,cancellationToken);
         var state=village.ToStateDto(context.Work, context.CompletedInOrder, electorate, quests, tsar, trips, dungeon, now);
         return state with
@@ -1429,7 +1452,8 @@ public sealed partial class GameService(
             Relocations=village.Structures.Where(h=>ShelterRules.Beds(h)>0).Select(h=>new RelocationDto(h.PlotId,
                 residents.Count(c=>c.HomePlotId==h.PlotId),ShelterRules.Relocation(village,residents,h.PlotId).Count)).ToArray(),
             Housing = village.Structures.Where(s => ShelterRules.Beds(s) > 0).Select(s => new HousingDto(s.PlotId, ShelterRules.Beds(s),
-                residents.Count(c => c.HomePlotId == s.PlotId), s.Level)).ToArray(),
+                residents.Count(c => c.HomePlotId == s.PlotId), s.Level, s.Number, s.OwnerAccountId,
+                s.OwnerAccountId is {} ownerId ? residents.FirstOrDefault(c=>c.AccountId==ownerId)?.Name ?? ownerNames.GetValueOrDefault(ownerId) : null, s.BuiltAt)).ToArray(),
             BridgeOpened = village.BridgeOpened,BridgeDamage=village.BridgeDamage,BridgeRuinedAt=village.BridgeRuinedAt,
             Project = context.Work.Project is {StagedBridge:true} bridge ? bridge.ToDto(context.Work) with
             { BridgeStage=bridge.BridgeStage, StageName=!bridge.SurveyDone ? "Разметка" : new[]{"Основания","Опоры","Пролёт","Настил","Приёмка","Мост открыт"}[bridge.BridgeStage] } : context.Work.Project?.ToDto(context.Work)

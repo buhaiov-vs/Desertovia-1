@@ -79,7 +79,7 @@ export function BuildPanel({
             return (
               <li key={site.plotId}>
                 <div className="site-head">
-                  <strong>{i18n.building(site.kind).name}</strong>
+                  <strong>{i18n.building(site.kind).name}{site.number ? ` №${site.number}` : ''}</strong>
                   {stage && definition && (
                     <span className="muted small">
                       {t('site.stage', { number: site.stage + 1, total: definition.stages.length, stage: i18n.stage(stage.id) })}

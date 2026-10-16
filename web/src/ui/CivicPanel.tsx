@@ -11,6 +11,8 @@ export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}
   const selectedBuilding=village.structures?.find(s=>s.plotId===plotId)
   const selectedStorage=village.storages?.find(s=>s.plotId===plotId)
   const canUpgrade=!!(selectedBuilding&&['Castle','Longhouse'].includes(selectedBuilding.kind)&&(selectedBuilding.level??1)<3) || !!(selectedStorage&&['WoodPile','StonePile','DryingRack'].includes(selectedStorage.kind))
+  const hospitalUpgrade=selectedBuilding?.kind==='Hospital'&&(selectedBuilding.level??1)<3
+  const upgradeAtMaximum=!!(selectedBuilding&&['Castle','Longhouse','Hospital'].includes(selectedBuilding.kind)&&(selectedBuilding.level??1)>=3) || !!(selectedStorage&&['Woodyard','StoneYard','Granary'].includes(selectedStorage.kind))
   const homes=(village.housing??[]).filter(h=>(!plotId||h.plotId===plotId)&&!(village.structures??[]).some(s=>s.plotId===h.plotId&&s.ownerAccountId&&s.ownerAccountId!==actorId))
   const orders=(village.civicOrders??[]).filter(o=>o.status==='pending' && (tsar||ruler||o.requestedBy===actorId||o.partnerAccountId===actorId))
   const buildingName=(plot:string)=>{
@@ -29,8 +31,9 @@ export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}
   return <section className="civic-panel">
     {error&&<p className="error" role="alert">{error}</p>}
     {privateBuilding&&<p>Личная постройка</p>}
-    {plotId&&ruler&&!privateBuilding&&<div className="civic-actions"><button disabled={busy||!canUpgrade} onClick={()=>run(()=>api.civic(village.slug,plotId,'upgrade'))}>Улучшить{tsar?'':' · заявка'}</button>
+    {plotId&&ruler&&!privateBuilding&&<div className="civic-actions"><button disabled={busy||!canUpgrade} onClick={()=>run(()=>api.civic(village.slug,plotId,'upgrade'))}>{canUpgrade?(ru?(tsar?'Улучшить':'Улучшить · заявка'):(tsar?'Upgrade':'Request upgrade')):hospitalUpgrade?(ru?'В карточке больницы':'In the hospital card'):upgradeAtMaximum?(ru?'Максимальный уровень':'Maximum level'):(ru?'Нет улучшений':'No upgrades')}</button>
       {confirm===plotId?<><span>Разобрать медленно? Возврат: 25% учтённых материалов.</span><button disabled={busy} onClick={()=>run(()=>api.civic(village.slug,plotId,'demolish'))}>Подтвердить снос</button><button onClick={()=>setConfirm(null)}>Отмена</button></>:<button disabled={busy} onClick={()=>setConfirm(plotId)}>Снести{tsar?'':' · заявка'}</button>}</div>}
+    {plotId&&ruler&&!privateBuilding&&(selectedBuilding||selectedStorage)&&!canUpgrade&&<p className="small muted">{ru?(hospitalUpgrade?'Царь может улучшить больницу в её карточке.':upgradeAtMaximum?'Достигнут максимальный уровень улучшения.':'Для этого типа здания улучшение не предусмотрено.'):(hospitalUpgrade?'The Tsar can upgrade the hospital from its hospital card.':upgradeAtMaximum?'The building has reached its maximum upgrade level.':'No upgrade is available for this building type.')}</p>}
     {citizen?.spouseName&&<p>{ru?'Брак':'Spouse'}: {citizen.spouseName}</p>}
     {plotId?homeCards:<>
       <details className="civic-housing"><summary>{ru?'Жильё':'Housing'} · {homes.length} · {ru?'Свободно мест':'Free beds'}: {free}</summary>

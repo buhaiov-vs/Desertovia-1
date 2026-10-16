@@ -69,10 +69,21 @@ public static class BuildingOperations
         var storage = village.Storages.SingleOrDefault(s=>s.PlotId==plot);
         if (operation == "upgrade" && !(structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse, Level: < 3 }
             || storage is not null && StorageLimits.Upgrade(storage.Kind) is not null))
-            throw new GameRuleException("building.maxLevel", "This building cannot be upgraded further.");
+            throw UpgradeUnavailable(structure, storage);
         if (actor != village.OwnerAccountId) RequireRequestCapacity(village, privateOwner);
         var order=new CivicOrder{PlotId=plot,Operation=operation,RequestedBy=actor,CreatedAt=now};
         village.CivicOrders.Add(order);return order;
+    }
+
+    private static GameRuleException UpgradeUnavailable(Structure? structure, StorageBuilding? storage)
+    {
+        if (structure is {Kind: BuildingKind.Hospital, Level: < 3})
+            return new("building.hospitalUpgrade", "The Tsar can upgrade the hospital from its hospital card.");
+        var atMaximum = structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse or BuildingKind.Hospital, Level: >= 3 }
+            || storage is { Kind: StorageKind.Woodyard or StorageKind.StoneYard or StorageKind.Granary };
+        return atMaximum
+            ? new("building.maxLevel", "The building has reached its maximum upgrade level.")
+            : new("building.upgradeUnsupported", "No upgrade is available for this building type.");
     }
 
     private static void RequireRequestCapacity(Village village, Guid? owner)
@@ -135,7 +146,7 @@ public static class BuildingOperations
         else if(storage is not null&&StorageLimits.Upgrade(storage.Kind) is not null) site.Operation="storage-upgrade";
         else if(structure is {Kind:BuildingKind.Longhouse,Level:<3})
         {site.Operation="housing-upgrade";site.TargetLevel=structure.Level+1;}
-        else throw new GameRuleException("building.maxLevel","This building cannot be upgraded further.");
+        else throw UpgradeUnavailable(structure, storage);
         village.Sites.Add(site);order.Status="working";order.ApprovedAt=now;
         ShelterRules.Assign(village,citizens,now);
     }

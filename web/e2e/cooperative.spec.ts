@@ -49,3 +49,20 @@ test('civic errors are translated instead of showing the English server message'
  await expect(page.getByRole('alert')).toHaveText('Сначала завершите текущую стройку.')
  await expect(page.getByText('Finish the existing work first.',{exact:true})).toHaveCount(0)
 })
+
+test('unavailable upgrades explain maximum level or unsupported building in Russian',async({page})=>{
+ for(const [reason,label,message] of [
+  ['maximum','Максимальный уровень','Достигнут максимальный уровень улучшения.'],
+  ['unsupported','Нет улучшений','Для этого типа здания улучшение не предусмотрено.'],
+  ['hospital','В карточке больницы','Царь может улучшить больницу в её карточке.'],
+ ]){
+  await page.goto('/e2e/cooperative-harness.html?upgradeError='+reason)
+  await expect(page.getByRole('button',{name:label,exact:true})).toBeDisabled()
+  await expect(page.getByText(message,{exact:true})).toBeVisible()
+  await page.getByRole('button',{name:'Стать царём'}).click()
+  await page.locator('.civic-applications summary').click()
+  await page.getByRole('button',{name:'Одобрить',exact:true}).click()
+  await expect(page.getByRole('alert')).toHaveText(message)
+  await expect(page.getByText('This building cannot be upgraded further.',{exact:true})).toHaveCount(0)
+ }
+})

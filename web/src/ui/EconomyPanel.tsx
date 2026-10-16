@@ -54,6 +54,7 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
   const choices = village.resources.filter(r => r.kind !== 'ResearchPoints')
   const location = (value: string) => {
     const [scope,...parts] = value.split(':'); const plot=parts.join(':')
+    if(scope==='village')return text('общий запас','communal stock')
     if(scope==='personal')return text('личное имущество','personal goods')
     if(scope==='recovery'||scope==='private-recovery')return text('материалы после разборки','recovered construction materials')
     if(scope==='hands')return text('ноша','load')
@@ -62,7 +63,7 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
     const storage=(village.storages??[]).find(b=>b.plotId===plot)
     return target?`${i18n.building(target.kind).name} · ${buildingNumber(village,plot)}`:storage?`${i18n.storage(storage.kind)} · ${buildingNumber(village,plot)}`:value==='wallet'?text('кошелёк','wallet'):value==='treasury'?text('казна','treasury'):value
   }
-  const verb = (s: string) => ({opening: text('Начальный остаток','Opening balance'), wage: text('Оплата работы','Work pay'), 'work-completed': text('Полезная работа','Useful work'), 'buy-stock': text('Покупка у царства','Kingdom purchase'), trade: text('Торговля','Trade'), 'energy-drink': text('Энергетик батюшки','Chaplain energy drink'), 'exchange-burn': text('Обмен Dcoin','Dcoin exchange'), exchange: text('Тестовые свечи','Test candles'), transfer: text('Передача','Transfer'), list: text('Резерв лота','Lot reserved')})[s] ?? text('Изменение запаса','Stock change')
+  const verb = (s: string) => ({opening: text('Начальный остаток','Opening balance'), wage: text('Оплата работы','Work pay'), 'work-completed': text('Полезная работа','Useful work'), 'buy-stock': text('Покупка у царства','Kingdom purchase'), 'donate-stock': text('Дар царству','Donation to kingdom'), trade: text('Торговля','Trade'), 'energy-drink': text('Энергетик батюшки','Chaplain energy drink'), 'exchange-burn': text('Обмен Dcoin','Dcoin exchange'), exchange: text('Тестовые свечи','Test candles'), transfer: text('Передача','Transfer'), list: text('Резерв лота','Lot reserved')})[s] ?? text('Изменение запаса','Stock change')
   return <details className="card economy-panel" open={open} onToggle={e => setOpen(e.currentTarget.open)}>
     <summary>{text('Кошелёк, имущество и рынок','Wallet, possessions and market')}</summary>
     {open && <>

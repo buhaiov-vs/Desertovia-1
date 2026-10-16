@@ -1403,7 +1403,7 @@ export const en = {
     'raid.notUndead': 'Only the undead answer the Tsar’s call.',
     'raid.undeadComing': 'The dead are already on their way. Wait until the last wave is fought.',
     'raid.noUndead': 'No undead are on their way.',
-    'storage.targetFull': 'The selected storage has no room for your load. Choose another storage.',
+    'storage.targetFull': 'There is no room for these goods. Free space in a suitable storage.',
     'food.notHungry': 'You are already fed.',
     'food.missing': 'There is no food in your hands or personal inventory.',
     'repair.nothing': 'Every building is whole. Nothing to repair.',

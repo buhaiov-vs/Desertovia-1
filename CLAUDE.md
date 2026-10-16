@@ -1,3 +1,20 @@
+# D-069 / 0.7 INSTALLED16.10.2026 и независимо проверен
+
+LIVEgame0540a2a006d2c72b580b37f74387f1e53e68f9eb, version0.7/engine2.
+Preflight38853486600 PASS; install38853561064 PASS; independentcheck38853958496 PASS.
+APIhealthy05:04:48UTC, check05:05:31UTC, не раньше разрешённых05:00UTC=07:00Oslo.
+113→113профилей,0потерь привязок/славы/навыков/характеристик;22миграции.
+PG/SQLite/config/snapshot backups созданы. Telegram/health/routes PASS,
+Hospital/Almighty true, Propose сохранён. Новый клиентский GamePage загружается.
+Bot ONLYalmighty.py из3f7038c, SHA256748acaf68f5e1a739b2e0cb7e284e6206b0e5fcd69227deab7e81f1e23d1867f;
+установленный AI-budgetfix сохранён, старые app/town_proxy/llm не копировались.
+Synthetic messages/model probes/payments/forcedraids0. Не запускать старые deploy.
+Оба game CI38817618664/38851717640 SUCCESS; bot38811556338 attempt2 SUCCESS816tests,
+operator15PASS. READY/HOLD ниже — история, не текущее состояние.
+Public release record: docs/dezertovia/RELEASE_0_7.md; private result:
+deploy/LIVE_COMBAT_RELEASE_0_7_RESULT.json. Если exact source уже на сервере,
+только check с существующим snapshot, повторная установка не нужна.
+
 # D-069 — повторные проверки16.10 PASS, выпуск ещё не выполнен
 
 По запросу «Перед выкладкой проверь не раз всё» повторный full CI38851717640

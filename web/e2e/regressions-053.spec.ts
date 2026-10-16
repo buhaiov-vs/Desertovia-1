@@ -33,6 +33,19 @@ test('personal HUD matches the resource cards on the real map and leaves navigat
   await expect(page.locator('.battle-controls')).toHaveCount(0)
   await expect(page.locator('.hud-poll-actions')).toHaveCount(0)
   await page.screenshot({path:test.info().outputPath('owner-real-map.png')})
+  const me=await(await page.request.get(`/api/villages/${DEMO_SLUG}/me`)).json()
+  const data=await(await page.request.get(`/api/villages/${DEMO_SLUG}`)).json()
+  const at=new Date().toISOString()
+  data.state.battles=[{id:'fd8ac776-f3f9-4981-812b-cfa1df02b26b',villageId:data.state.id,engineVersion:2,phase:'Fighting',sector:'north',tactic:'entry',composition:'swarm',threatBudget:20,readyDefenders:1,availableReserves:0,startsAt:at,lastTickAt:at,endsAt:new Date(Date.now()+600000).toISOString(),finishedAt:null,revision:999999,deferred:false,units:[],events:[],
+    fighters:[{citizenId:me.id,x:15.5,y:13.5,health:26,maximumHealth:40,damageDealt:0,kills:0,renownEarned:0,wounded:false,guard:true,active:true,mode:'intercept',targetUnitId:null,nextAttackAt:at,weapon:null,armor:null,arrows:0,isTsar:false,accountId:null,healReadyAt:null}]}]
+  await page.route(`**/api/villages/${DEMO_SLUG}`,route=>route.fulfill({json:data}))
+  await page.reload();await expectVillageView(page)
+  const actions=page.getByRole('group',{name:'Действия в бою'});await expect(actions).toBeVisible()
+  await expect(page.locator('.hud-needs')).toHaveCount(0);await expect(page.locator('.hud-left .hud-status')).toBeHidden()
+  const actionBox=await actions.boundingBox(),navBox=await page.locator('.hud-buttons').boundingBox()
+  expect(actionBox!.y+actionBox!.height).toBeLessThanOrEqual(navBox!.y)
+  await expect(page.getByRole('progressbar',{name:'Моё здоровье',exact:true})).toHaveAttribute('value','26')
+  await page.screenshot({path:test.info().outputPath('owner-real-map-battle.png')})
 })
 
 for (const mode of ['hidden', 'quarter'] as const) test(`real game selected object owns its header with ${mode} chat`, async ({ page }) => {

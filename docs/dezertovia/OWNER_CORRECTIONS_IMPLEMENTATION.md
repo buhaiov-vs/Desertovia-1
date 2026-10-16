@@ -13,6 +13,11 @@ The owner authorized code and tests. No rollout request or production event is c
   no numeric value and explains this on tap, rather than inventing full health.
   Owner rejected the first isolated stand appearance; it is superseded by shared styling.
   Permanent build/vote buttons and the duplicate menu footer are removed.
+  Manual map review also caught peaceful needs/status overlapping combat actions.
+  During personal active combat these peaceful footer blocks are hidden; navigation
+  remains available and character-menu food/housing information is preserved.
+  The real-map regression now verifies combat action/navigation separation as well
+  as the shared vitals style, rather than relying on a Tsar-only isolated stand.
 - Enemy selection sends one authoritative attack order, without mounting an enemy card.
   Combat-only retreat physically walks to reachable ground, remains vulnerable and
   stays withdrawn until explicit re-entry. Re-entry and queued waves preserve HP.

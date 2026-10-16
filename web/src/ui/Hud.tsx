@@ -103,6 +103,7 @@ export function BottomBar({
   onDrink,
   remedies,
   onHeal,
+  inCombat=false,
 }: {
   citizen: Citizen | null | undefined
   catalog: Catalog
@@ -127,12 +128,13 @@ export function BottomBar({
   /** Remedies in the citizen's hands and in village storage. */
   remedies: number
   onHeal: () => void
+  inCombat?: boolean
 }) {
   const { t } = useI18n()
   return (
     <div className="hud-bottom">
       <div className="hud-left">
-        {!tsar && citizen && (
+        {!tsar && citizen && !inCombat && (
           <CitizenNeeds
             citizen={citizen}
             catalog={catalog}
@@ -146,7 +148,7 @@ export function BottomBar({
           />
         )}
         <div className="hud-status">
-          {!tsar && citizen ? (
+          {inCombat?null:!tsar && citizen ? (
             <>
               <NextAction citizen={citizen} catalog={catalog} now={now} compact pending={pending} onCancel={onCancelTask} />
               {hasResult && citizen.state === 'AwaitingRenewal' && (

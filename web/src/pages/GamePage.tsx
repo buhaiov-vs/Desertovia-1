@@ -768,6 +768,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
 
   if (!live.state || !catalog) return <div className="splash">{i18n.t('loading')}</div>
   const village = live.state
+  const inCombat=!!village.battles?.some(b=>!b.finishedAt&&b.phase!=='Warning'&&b.fighters.some(f=>(tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id)&&f.active&&f.health>0&&!f.wounded&&f.mode!=='withdrawn'))
   const shownNight = nightOverride ?? village.weather.night
   // Switching back to what the sky shows hands the light back to the clock.
   const dayNight = catalog.devTools
@@ -966,6 +967,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         <ServerClock offsetMs={serverOffset}>
           {(now) => (
             <BottomBar
+              inCombat={inCombat}
               citizen={citizen}
               catalog={catalog}
               structures={village.structures}

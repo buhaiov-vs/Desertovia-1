@@ -1,6 +1,6 @@
 import { combatDiagnostics } from './combatDiagnostics'
 import { sameStaticVillage } from './combatSnapshot'
-import { receiveFighterSample, fighterPositionAt, type FighterSample } from './fighterSamples'
+import { receiveFighterSample, fighterPositionAt, fighterIsMoving, type FighterSample } from './fighterSamples'
 import { playerNamesVisible, PREFERENCES_EVENT } from '../gamePreferences'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
@@ -2209,7 +2209,7 @@ export class VillageWorld {
       const dy = goal.y - walker.y
       const distance = Math.hypot(dx, dy)
       const sample=this.fighterSamples.get(walker.id)
-      const moving = combatant&&sample?performance.now()-sample.at<1000&&Math.hypot(sample.x-sample.fromX,sample.y-sample.fromY)>.01:distance>0.5
+      const moving = combatant&&sample?fighterIsMoving(sample,performance.now()):distance>0.5
       if (moving&&!combatant) {
         const step = Math.min(distance, speed * seconds)
         walker.x += (dx / distance) * step
@@ -2227,9 +2227,10 @@ export class VillageWorld {
       const strikeAt=combatant?.nextAttackAt?Date.parse(combatant.nextAttackAt)-(combatant.weapon==='Bow'?2500:2000):0
       const strike=combatant&&!moving?Math.sin(Math.max(0,Math.min(1,(now-strikeAt)/240))*Math.PI)*3:0
       const bob = strike>0?-strike:moving ? Math.abs(Math.sin(walker.phase)) * -1.5 : walker.working ? Math.max(0, Math.sin(walker.phase)) * -1.5 : 0
-      walker.sprite.position.set(Math.round(walker.x), Math.round(walker.y + bob))
+      // Slow fighters need subpixel world motion; Pixi still aligns the final screen pixels.
+      walker.sprite.position.set(combatant?walker.x:Math.round(walker.x), combatant?walker.y+bob:Math.round(walker.y + bob))
       if (sortDepth) walker.sprite.zIndex = walker.y + 0.5
-      walker.icon.position.set(Math.round(walker.x), Math.round(walker.y - 22))
+      walker.icon.position.set(combatant?walker.x:Math.round(walker.x), combatant?walker.y-22:Math.round(walker.y - 22))
 
       const head = this.world.toGlobal({ x: walker.x, y: walker.y - (walker.icon.visible && walker.icon.children.length > 0 ? 29 : 16) })
       const subtitleHeight = walker.subtitle.visible ? walker.subtitle.height - 2 : 0

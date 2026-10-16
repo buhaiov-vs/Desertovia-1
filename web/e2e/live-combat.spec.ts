@@ -4,7 +4,7 @@ import { test, expect } from './fixtures.ts'
 type RaidBattle={revision:number;units:{id:string;x:number;y:number;health:number;state:string;diedAt:string|null}[];[key:string]:unknown}
 type Citizen={energy:number;maximumEnergy:number;energyPerHour:number;serverNow:string}
 
-type Stand={terrain:(seed:number,wilds:unknown)=>number[];initial:RaidBattle;orders:{target:string|null;mode:string}[];update:(b:RaidBattle,time?:number)=>{children:number;positions:number[][];rotations:number[]};pick:(x:number,y:number)=>unknown;mergeBattles:(a:RaidBattle[],b:RaidBattle[])=>RaidBattle[];currentEnergy:(c:Citizen,now:number)=>number}
+type Stand={terrain:(seed:number,wilds:unknown)=>number[];initial:RaidBattle;orders:{target:string|null;mode:string}[];update:(b:RaidBattle,time?:number)=>{children:number;positions:number[][];rotations:number[]};rendered:(id:string)=>{x:number;y:number};pick:(x:number,y:number)=>unknown;mergeBattles:(a:RaidBattle[],b:RaidBattle[])=>RaidBattle[];currentEnergy:(c:Citizen,now:number)=>number}
 
 test('live renderer shows every actual enemy, individual deaths and authoritative positions',async({page})=>{
   await page.goto('/e2e/live-combat-harness.html');await page.waitForFunction(()=>!!(window as unknown as {combatStand:unknown}).combatStand)
@@ -15,8 +15,9 @@ test('live renderer shows every actual enemy, individual deaths and authoritativ
     b.units[0].health=0;b.units[0].state='Dead';b.units[0].diedAt='2026-10-15T12:00:02Z'
     b.units[1].x+=1;b.revision++
     const changed=s.update(b)
+    const drawn=s.rendered('enemy-1')
     return {count:start.children,changed:changed.children,dead:changed.rotations.filter(n=>Math.abs(n-Math.PI/2)<.01).length,
-      picked:s.pick(b.units[1].x*16,b.units[1].y*16),headPick:s.pick(b.units[1].x*16,b.units[1].y*16-24),positionsChanged:JSON.stringify(start.positions)!==JSON.stringify(changed.positions)}
+      picked:s.pick(drawn.x,drawn.y),headPick:s.pick(drawn.x,drawn.y-24),positionsChanged:JSON.stringify(start.positions)!==JSON.stringify(changed.positions)}
   })
   expect(result.count).toBe(26) // 12 enemy actor/bar pairs and the guard health bar pair.
   expect(result.changed).toBe(26);expect(result.dead).toBe(1);expect(result.positionsChanged).toBe(true)
@@ -100,7 +101,9 @@ test('health-only and stale packets preserve the movement timeline while discont
     const health=s.receiveFighterSample(moved,'battle',3,11,10,1500)
     const stale=s.receiveFighterSample(health,'battle',2,10,10,1600)
     const jump=s.receiveFighterSample(stale,'battle',4,20,20,1700)
-    return {half,afterHealth:s.fighterPositionAt(health,1500),afterStale:s.fighterPositionAt(stale,1750),end:s.fighterPositionAt(stale,2200),jump:s.fighterPositionAt(jump,1700)}
+    return {half,afterHealth:s.fighterPositionAt(health,1500),afterStale:s.fighterPositionAt(stale,1750),end:s.fighterPositionAt(stale,3000),jump:s.fighterPositionAt(jump,1700)}
   })
-  expect(result).toEqual({half:{x:10.5,y:10},afterHealth:{x:10.5,y:10},afterStale:{x:10.75,y:10},end:{x:11,y:10},jump:{x:20,y:20}})
+  expect(result.afterHealth).toEqual(result.half)
+  expect(result.afterStale.x).toBeGreaterThan(result.half.x);expect(result.afterStale.x).toBeLessThan(11)
+  expect(result.end).toEqual({x:11,y:10});expect(result.jump).toEqual({x:20,y:20})
 })

@@ -10,6 +10,15 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.5',date:'2026-10-16',
+    title:{ru:'Плавное движение в бою',en:'Smooth combat movement'},
+    changes:{
+      ru:['Убрано округление координат бойцов до целых пикселей карты: медленное движение больше не разбивается на крупные шаги.',
+        'Переходы между серверными координатами учитывают неравномерную доставку обновлений. Игроки, враги и полосы здоровья используют общее сглаживание без выхода за подтверждённую позицию.'],
+      en:['Fighter coordinates keep subpixel precision, avoiding large steps during slow movement.',
+        'Movement pacing accounts for uneven snapshot delivery. Players, enemies and health bars share interpolation without extrapolating beyond confirmed positions.']}
+  },
+  {
     version:'0.7.4',date:'2026-10-16',
     title:{ru:'Свободный бой и диагностика',en:'Free combat and diagnostics'},
     changes:{

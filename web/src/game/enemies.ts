@@ -1,3 +1,4 @@
+import {receiveFighterSample,fighterPositionAt,fighterIsMoving,type FighterSample} from './fighterSamples'
 import { Container, Graphics, GraphicsContext } from 'pixi.js'
 import type { EnemyKind, Raid, RaidBattle } from '../api'
 import { TILE } from './sheets'
@@ -293,10 +294,19 @@ export class EnemyLayer {
   private raids: Raid[] = []
   private battles:RaidBattle[] = []
   private liveViews=new Map<string,{actor:Graphics;bar:Graphics;health:number;hitAt:number;barKey:string;
-    fromX:number;fromY:number;targetX:number;targetY:number;elapsed:number}>()
+    facing:number}>()
+  private liveSamples=new Map<string,FighterSample>()
   private selectedUnit:string|null=null
   select(id:string|null){this.selectedUnit=id}
-  setBattles(battles:RaidBattle[]){this.battles=battles}
+  setBattles(battles:RaidBattle[]){
+    this.battles=battles
+    const at=performance.now(),seen=new Set<string>()
+    for(const b of battles){
+      for(const u of b.units){seen.add(u.id);this.liveSamples.set(u.id,receiveFighterSample(this.liveSamples.get(u.id),b.id,b.revision,u.x,u.y,at))}
+      for(const f of b.fighters){const id='guard:'+(f.isTsar?f.accountId:f.citizenId);seen.add(id);this.liveSamples.set(id,receiveFighterSample(this.liveSamples.get(id),b.id,b.revision,f.x,f.y,at))}
+    }
+    for(const id of this.liveSamples.keys())if(!seen.has(id))this.liveSamples.delete(id)
+  }
   pick(x:number,y:number):{battleId:string;unitId:string}|null{
     for(const battle of this.battles){
       if(['Warning','Cancelled','Finished'].includes(battle.phase))continue
@@ -311,31 +321,26 @@ export class EnemyLayer {
     }
     return null
   }
-  private updateLive(seconds:number,now:number,sortDepth:boolean){
+  private updateLive(now:number,sortDepth:boolean){
     const shown=new Set<string>()
     const draw=(id:string,x:number,y:number,hp:number,max:number,kind:EnemyKind|null,variant:string,dead:boolean,attackAt=0,deathAt=0)=>{
       shown.add(id)
       let view=this.liveViews.get(id)
       if(!view){
         view={actor:kind?new Graphics(this.context(kind)):new Graphics(),bar:new Graphics(),health:hp,hitAt:0,barKey:'',
-          fromX:x*TILE,fromY:y*TILE,targetX:x*TILE,targetY:y*TILE,elapsed:1}
+          facing:1}
         view.actor.position.set(x*TILE,y*TILE);this.layer.addChild(view.actor,view.bar);this.liveViews.set(id,view)
       }
-      // Server positions arrive once a second. Spread movement across that interval,
-      // instead of rushing to each snapshot and standing still for the rest of the tick.
-      if(view.targetX!==x*TILE||view.targetY!==y*TILE){
-        view.fromX=view.actor.x;view.fromY=view.actor.y;view.targetX=x*TILE;view.targetY=y*TILE;view.elapsed=0
-        if(Math.hypot(view.fromX-view.targetX,view.fromY-view.targetY)>TILE*4)view.elapsed=1
-      }
-      view.elapsed=Math.min(1,view.elapsed+seconds)
-      const beforeX=view.actor.x,gap=Math.hypot(view.targetX-view.fromX,view.targetY-view.fromY)
-      view.actor.x=view.fromX+(view.targetX-view.fromX)*view.elapsed
-      view.actor.y=view.fromY+(view.targetY-view.fromY)*view.elapsed
+      const at=performance.now(),sample=this.liveSamples.get(id)
+      const position=sample?fighterPositionAt(sample,at):{x,y}
+      const beforeX=view.actor.x,moving=!!sample&&fighterIsMoving(sample,at)
+      view.actor.position.set(position.x*TILE,position.y*TILE)
+      if(Math.abs(view.actor.x-beforeX)>.0001)view.facing=view.actor.x<beforeX?-1:1
       const size=variant==='strong'?1.35:variant==='weak' ? .85 : 1
-      view.actor.scale.set((x*TILE<beforeX-.1?-1:1)*size,size)
+      view.actor.scale.set(view.facing*size,size)
       const strike=Math.max(0,Math.min(1,(now-attackAt)/240))
       view.actor.rotation=dead?Math.PI/2:Math.sin(strike*Math.PI)*.15
-      if(!dead&&gap>.2&&view.elapsed<1)view.actor.y-=Math.abs(Math.sin(now/90))*LOOKS[kind??'Skeleton'].hop
+      if(!dead&&moving)view.actor.y-=Math.abs(Math.sin(now/90))*LOOKS[kind??'Skeleton'].hop
       if(hp<view.health)view.hitAt=now
       view.health=hp;view.actor.tint=now-view.hitAt<180?0xff7777:0xffffff
       view.actor.alpha=dead?Math.max(0,1-(now-deathAt)/10000):1
@@ -401,7 +406,7 @@ export class EnemyLayer {
   }
 
   update(seconds: number, now: number, sortDepth: boolean) {
-    this.updateLive(seconds,now,sortDepth)
+    this.updateLive(now,sortDepth)
     const shown = new Set<string>()
     for (const raid of this.raids) {
       if ((raid.engineVersion??0)>=2)continue

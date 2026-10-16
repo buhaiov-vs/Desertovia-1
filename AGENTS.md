@@ -1,3 +1,18 @@
+# D-085: movement-only stutter after0.7.4; client pacing fix in progress
+
+Owner reports map/buttons smooth, fighting avatars stutter. Two owner-provided
+0.7.4 diagnostics: packet gaps1502/1609.5ms, frame updatep95~4–6ms; second capture
+has early frame spikes117ms and world updatep95~41ms. Server full report peak
+simulation23.7ms, lock512.8ms; read-only real-battle audit38960868199, no mutations.
+Reproduced in actual renderer: slow fighter changes drawn coordinate only9of48
+frames because world pixels are rounded; fixed1000ms tween ends before late
+snapshots. Workfix/combat-motion-cadence, candidate0.7.5: keep subpixel actor
+positions, common bounded jitter-aware pacing for avatars/enemies/healthbars;
+ignore wall damage-only packets until geometry changes. No extrapolation, no
+server/combat/medical/economic changes. Local26browser tests, TypeScript/lint/build PASS; exact CI and fresh rollout pending.
+LIVE remains0.7.4/74adbe8 until exactCI/fresh rollout/independentcheck. No old
+request replay/forced raids/messages/payments/model probes or profile resets.
+
 #0.7.4 INSTALLED16Oct2026; independent verificationPASS
 
 Owner requested no guard/post/camp bindings and combat diagnostics; prior server

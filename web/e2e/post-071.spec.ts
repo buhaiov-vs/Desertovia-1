@@ -39,6 +39,7 @@ test('phone wallet shares the weather row instead of adding a full HUD row',asyn
   const box=await balances.boundingBox(),weather=await page.locator('.weather-chip').boundingBox()
   expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(width)
   expect(Math.abs(box!.y-weather!.y)).toBeLessThan(3)
+  for(const amount of await page.locator('.hud-resource-amount').all())expect(await amount.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true)
   await page.screenshot({path:test.info().outputPath(`wallet-${width}.png`)})
  }
 })

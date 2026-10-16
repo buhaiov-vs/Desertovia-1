@@ -2569,7 +2569,7 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 @media(max-width:720px){
  .hud-resources{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
  .hud-resources>.resource-chip{justify-content:center;min-width:0;font-size:.75rem;padding:1px 2px}
- .hud-resources .resource-hint{gap:2px;max-width:100%;min-width:0}
+ .hud-resources button.resource-hint{gap:2px;max-width:100%;min-width:0}
  .hud-resource-icon{width:16px;height:16px}.hud-resource-icon>.tile-icon{transform:scale(.666667);transform-origin:top left;flex:none}
  .hud-state-row{grid-column:1/-1;flex-wrap:nowrap;gap:3px;justify-content:flex-start;align-items:stretch;min-width:0}
  .hud-state-row>.resource-chip{font-size:.75rem;white-space:nowrap;flex:none;padding:1px 3px}

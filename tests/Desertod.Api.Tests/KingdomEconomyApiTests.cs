@@ -215,7 +215,7 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
         var battle=await db.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==raid.Id);
         Assert.Equal(option.Sector,battle.Sector);Assert.Equal(option.Composition,battle.Composition);
         Assert.Equal(raid.Count,battle.Units.Count);Assert.NotEmpty(battle.Units);
-        await AssertRuleBrokenAsync(await residents[0].Client.PutAsJsonAsync(v.Path+"/me/defense",new{mode=option.Sector}),"defense.removed");
+        await Players.AssertRuleBrokenAsync(await residents[0].Client.PutAsJsonAsync(v.Path+"/me/defense",new{mode=option.Sector}),"defense.removed");
         var resident=await players.LoadCitizenAsync(residents[0].Id);Assert.Null(resident.DefenseSector);Assert.Null(resident.DefenseReadyAt);
     }
 

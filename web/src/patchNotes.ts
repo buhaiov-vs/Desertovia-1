@@ -10,6 +10,16 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.6',date:'2026-10-16',
+    title:{ru:'Очередь операций во время боя',en:'Combat operation contention'},
+    changes:{
+      ru:['Приказ атаки проверяет лечение самого атакующего, не запрашивая принудительно состояние всей деревни. Свежие травмы и недоступность медицинского сервиса по-прежнему запрещают атаку.',
+        'Зачёт работ освобождает общую очередь после каждого жителя. В диагностике боя видны длительность удержания и ожидания блокировки по серверным операциям.'],
+      en:['Attack orders refresh only the acting player’s clinical state. New injuries and unavailable clinical authority still block combat.',
+        'Work settlement releases the village lock between residents. Combat diagnostics attribute lock wait and hold times to server operations.'],
+    },
+  },
+  {
     version:'0.7.5',date:'2026-10-16',
     title:{ru:'Плавное движение в бою',en:'Smooth combat movement'},
     changes:{

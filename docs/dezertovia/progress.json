@@ -1321,5 +1321,14 @@
       "login_bindings_preserved": 121
     },
     "do_not_reinstall": true
+  },
+  "combat_lock_contention": {
+    "version": "0.7.6",
+    "implemented": true,
+    "ready": false,
+    "deployed": false,
+    "status": "validating",
+    "simulation_median_ms": 2.006,
+    "lock_max_ms": 3014.9555
   }
 }

@@ -639,3 +639,5 @@ POST_0_7_IMPLEMENTATION.md. Сначала весь пакет, затем об�
 
 
 D-085 release verification16Oct2026: exact374323f fullCI38963553875 PASS424Domain/239API/155browser+1skip; bot380d8ea CI38963592945PASS887/serverSKIPPED. Actualpreflight38965661962/install38965752003/independentcheck38966145677PASS20:59:15UTC.119profiles/121bindings preserved,0progresslosses; backups/configs/quarantine/Propose/budget retained. LIVE0.7.5. Next natural phone battle capture still needed; no forced raid or player probes. See RELEASE_0_7_5.md.
+
+D-086: owner reports0.7.5 still stutters late in real battle. Narrow attack clinical refresh to actor without weakening fresh restrictions; one work settlement per village lock lease; bounded holder/waiter operation metrics. No new combat balance/interpolation changes. Implemented, tests/exactCI/fresh rollout pending; LIVE0.7.5. Details COMBAT_LOCK_CONTENTION_0_7_6.md.

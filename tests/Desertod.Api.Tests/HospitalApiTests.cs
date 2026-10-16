@@ -14,9 +14,11 @@ public sealed class TestHospitalBridge : IHospitalBridge
     public bool Enabled { get; set; }
     public bool Fail { get; set; }
     public Dictionary<long, HospitalPatient> States { get; } = [];
+    public System.Collections.Concurrent.ConcurrentQueue<long[]> StatusRequests { get; } = new();
     public (long Actor, long Patient, HospitalHealRequest Request)? Payment { get; set; }
     public Task<HospitalStatusReply> StatusAsync(long actor, IReadOnlyList<HospitalPatientRequest> patients, CancellationToken ct)
     {
+        StatusRequests.Enqueue(patients.Select(p=>p.Id).ToArray());
         if (Fail) throw new HttpRequestException();
         IReadOnlyList<HospitalTier> tiers = [new("candle", "Candle", 1, 2, 50, "")];
         return Task.FromResult(new HospitalStatusReply(patients.Select(p => States.GetValueOrDefault(p.Id)
@@ -28,7 +30,7 @@ public sealed class TestHospitalBridge : IHospitalBridge
         States.Remove(patient);
         return Task.FromResult(new HospitalTreatmentReply("completed", null, null, request.ExpectedPrice, 3600));
     }
-    public void Reset() { Enabled=false;Fail=false;States.Clear();Payment=null; }
+    public void Reset() { Enabled=false;Fail=false;States.Clear();Payment=null;StatusRequests.Clear(); }
 }
 
 [Collection(ApiCollection.Name)]

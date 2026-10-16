@@ -1241,6 +1241,8 @@
       "earlier_report_groups_for_regression_review": 16,
       "siege_castle_monastery_remain_in_overall_plan": true,
       "live_retested_in_this_review": false
-    }
+    },
+    "implementation_plan": "DETAILED_OWNER_FIX_PLAN_0_7_2.md",
+    "implementation_plan_status": "documented_not_implemented"
   }
 }

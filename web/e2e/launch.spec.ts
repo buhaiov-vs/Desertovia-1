@@ -1,5 +1,6 @@
 import { test, expect, developmentLogin, DEMO_SLUG, uniqueName, expectVillageView } from './fixtures.ts'
 test('our single world opens directly after login and hides city selection', async ({ page }) => {
+  await page.addInitScript(()=>localStorage.setItem('desertod.language','en'))
   await page.route('**/auth/providers', async route => {
     const response = await route.fetch()
     await route.fulfill({ response, json: { ...await response.json(), primaryVillage: DEMO_SLUG } })

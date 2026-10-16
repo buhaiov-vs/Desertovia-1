@@ -8,6 +8,9 @@ The owner authorized code and tests. No rollout request or production event is c
 
 - Own HP/stamina use the existing resource-card background, border and radius.
   Weather, morale and vitals share one status row and height; no separate full-width row.
+  D-083: only heart/lightning and bars remain, with numbers on tap. No Healthy label.
+  Outside combat the engine has no permanent HP field: the unavailable track has
+  no numeric value and explains this on tap, rather than inventing full health.
   Owner rejected the first isolated stand appearance; it is superseded by shared styling.
   Permanent build/vote buttons and the duplicate menu footer are removed.
 - Enemy selection sends one authoritative attack order, without mounting an enemy card.
@@ -61,7 +64,10 @@ its isolated rerun passed, and the full repeat must succeed before readiness.
   bridge staying closed when work starts, and an intact second workshop remaining usable.
 - Final local API run: 235 PASS, including old JSON migration and cancellation of future waves after castle defeat.
 - EF pending-model check: PASS, no model differences.
-- Isolated revised HUD: 5 PASS at 360/390/430/1440px, including disabled healing.
+- Icon-only revised HUD: 5 PASS at 360/390/430/1440px, including disabled healing,
+  no inline Healthy/numbers, and exact HP on tap. Actual Russian phone map PASS.
+- Primary root login, hard reload and legacy route: PASS. The readiness fixture
+  now waits for all visible loading indicators rather than assuming exactly one.
 - Earlier browser build: 44 PASS / 10 failed in an incomplete new harness fixture.
   The fixture is corrected; those failures are not described as a successful run.
 - Real-map shared-style check PASS on phone; direct enemy-selection attack check PASS.

@@ -36,7 +36,6 @@ export function TopBar({
   const energy = useEnergy(citizen)
   const fighter=village.battles?.filter(b=>!b.finishedAt&&b.phase!=='Warning').flatMap(b=>b.fighters).find(f=>f.isTsar?f.accountId===accountId:f.citizenId===citizen?.id)
   const ru=i18n.language==='ru'
-  const healthState=citizen&&isInjured(citizen,Date.now())||village.tsar?.injuredUntil&&Date.parse(village.tsar.injuredUntil)>Date.now()&&!citizen?(ru?'На лечении':'Recovering'):(ru?'Здоров':'Healthy')
   return (
     <div className="hud-top">
       <div className="hud-top-spacer" />
@@ -57,8 +56,8 @@ export function TopBar({
           <span className="morale-icon" aria-hidden>☺</span><Hint text={t('hint.morale',{value:Math.round(village.morale*100),minimum:i18n.amount(catalog.rules.moraleMinimum*100),maximum:i18n.amount(catalog.rules.moraleMaximum*100)})}>{Math.round(village.morale*100)}</Hint>
         </span>
         {(citizen||accountId)&&<div className="resource-chip personal-vitals" aria-label={ru?'Мои здоровье и силы':'My health and stamina'}>
-          <div className="vital-line"><span aria-hidden>♥</span><span className="vital-value">{fighter?`${Math.ceil(fighter.health)}/${Math.ceil(fighter.maximumHealth)}`:healthState}</span>{fighter&&<progress className="hp" value={fighter.health} max={fighter.maximumHealth} aria-label={ru?'Моё здоровье':'My health'}/>}</div>
-          {citizen&&<div className="vital-line"><span aria-hidden>⚡</span><span className="vital-value">{Math.floor(energy)}/{Math.floor(citizen.maximumEnergy)}</span><progress className="stamina" value={energy} max={citizen.maximumEnergy} aria-label={ru?'Мои силы':'My stamina'}/></div>}
+          <Hint className="vital-line" label={ru?'Показать HP':'Show HP'} text={fighter?`HP: ${Math.ceil(fighter.health)}/${Math.ceil(fighter.maximumHealth)}`:ru?'Боевые HP доступны после вступления в бой.':'Combat HP are available after joining a battle.'}><span aria-hidden>♥</span>{fighter?<progress className="hp" value={fighter.health} max={fighter.maximumHealth} aria-label={ru?'Моё здоровье':'My health'}/>:<span className="vital-empty" aria-hidden/>}</Hint>
+          {citizen&&<Hint className="vital-line" label={ru?'Показать силы':'Show stamina'} text={`${ru?'Силы':'Stamina'}: ${Math.floor(energy)}/${Math.floor(citizen.maximumEnergy)}`}><span aria-hidden>⚡</span><progress className="stamina" value={energy} max={citizen.maximumEnergy} aria-label={ru?'Мои силы':'My stamina'}/></Hint>}
         </div>}
         <WeatherChip village={village} catalog={catalog} citizen={citizen} citizens={citizens} onForecast={onForecast} />
         {wallet}

@@ -18,7 +18,7 @@ function Stand(){
  const [remedies,setRemedies]=useState(0),[active,setActive]=useState(true),[current,setCurrent]=useState(fighter),[error,setError]=useState('')
  api.battleOrder=async(_slug,_id,_target,mode,_destination,requestId)=>{orders.push({mode,requestId});if(mode==='heal'){setCurrent({...current,health:34,healReadyAt:new Date(now+60000).toISOString()});setRemedies(n=>n-1)}else setActive(false)}
  Object.assign(window,{ownerStand:{orders}})
- const state={...village,battles:[{...battle,fighters:[current]}]}
+ const state={...village,battles:[{...battle,finishedAt:active?null:new Date(now).toISOString(),fighters:[current]}]}
  return <I18nProvider><div className="game-root" style={{background:'#7a9b58'}}><div className="hud"><TopBar village={state} catalog={catalog} citizen={citizen} accountId="account" citizens={new Map()} onForecast={async()=>{}} wallet={<WalletHud slug="test" onOpen={()=>{}}/>}/><BottomBar catalog={catalog} citizen={null} structures={[]} now={now} phone={innerWidth<720} tsar ruler hasResult={false} pending={false} poll={{label:'Начать голосование',onClick:()=>{}}} onMenu={()=>{}} onInventory={()=>{}} onShowResult={()=>{}} onCancelTask={()=>{}} drinks={0} onDrink={()=>{}} remedies={0} onHeal={()=>{}}/></div>{active&&<PersonalBattlePanel slug="test" battle={battle} fighter={current} remedies={remedies} now={now} onError={setError}/>}
  <div style={{position:'absolute',left:0,bottom:160}}><button onClick={()=>setRemedies(1)}>Дать лекарство на стенде</button><button onClick={()=>setActive(false)}>Завершить бой на стенде</button></div><p>{error}</p></div></I18nProvider>
 }

@@ -14,7 +14,10 @@ test('combat medicine is natively disabled without stock, becomes available and 
 })
 for(const width of [360,390,430,1440])test(`own HP and stamina fit the shared top row at ${width}px without permanent construction buttons`,async({page})=>{
  await page.setViewportSize({width,height:900});await page.goto('/e2e/owner-controls-harness.html')
- const vitals=page.getByLabel('Мои здоровье и силы');await expect(vitals).toBeVisible();await expect(vitals).toContainText('26/40');await expect(vitals).toContainText('24/40')
+ const vitals=page.getByLabel('Мои здоровье и силы');await expect(vitals).toBeVisible()
+ await expect(vitals.getByRole('progressbar',{name:'Моё здоровье'})).toHaveAttribute('value','26');await expect(vitals.getByRole('progressbar',{name:'Мои силы'})).toHaveAttribute('value','24')
+ await expect(vitals).not.toContainText(/Здоров|На лечении|26\/40|24\/40/)
+ await vitals.getByRole('button',{name:'Показать HP'}).click();await expect(page.getByRole('tooltip')).toContainText('26/40');await page.keyboard.press('Escape')
  await expect(page.getByRole('button',{name:'Начать голосование',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Строить',exact:true})).toHaveCount(0)
  const boxes=await page.locator('.hud-state-row > *').evaluateAll(els=>els.map(el=>{const b=el.getBoundingClientRect();return {left:b.left,right:b.right,top:b.top,bottom:b.bottom}}))
  for(const b of boxes){expect(b.left).toBeGreaterThanOrEqual(0);expect(b.right).toBeLessThanOrEqual(width+1)}

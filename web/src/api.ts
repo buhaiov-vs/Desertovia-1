@@ -349,7 +349,7 @@ export interface ArmorDefinition {
 }
 
 export type RaidSource = 'Night' | 'Undead'
-export type RaidOutcome = 'Pending' | 'Repelled' | 'Lost'
+export type RaidOutcome = 'Pending' | 'Repelled' | 'Lost' | 'Cancelled'
 
 /** An attack on the way, or a fought one kept for the record. */
 export interface Fortification { id:string; x:number; y:number; gate:boolean; open:boolean; damage:number }
@@ -359,6 +359,7 @@ export interface RaidUnit {
   diedAt:string|null; exitedAt:string|null; nextAttackAt?:string;
 }
 export interface RaidFighter {
+  isTsar?:boolean; accountId?:string|null;
   citizenId:string; x:number; y:number; health:number; maximumHealth:number; damageDealt:number; kills:number;
   weapon?:string|null; armor?:string|null; arrows?:number; renownEarned?:number; nextAttackAt?:string; wounded:boolean; guard:boolean; active:boolean; mode:'hold'|'intercept'; targetUnitId:string|null;
 }
@@ -768,6 +769,7 @@ export interface SiteStage {
 }
 
 export interface Site {
+  placedByAccountId?:string|null; ownerName?:string|null; placedAt?:string; boundaryConflict?:boolean; boundaryApproved?:boolean; hasWork?:boolean; operation?:string|null; publicDemolition?:boolean;
   ownerAccountId?: string|null
   targetLevel?: number
   kind: BuildingKind
@@ -986,6 +988,7 @@ export interface Wilds {
 }
 
 export interface Tsar {
+  injuredUntil?:string|null
   name: string
   /** Null until the owner creates their character. */
   appearance: Appearance | null
@@ -1383,6 +1386,7 @@ export interface EconomyRequest {
   requestId: string; action: string; resource?: string; amount?: number; price?: number; target?: string; x?: number; y?: number; building?: string
 }
 export interface EconomyView {
+  siteRecoveries?:{id:string;plotId:string;personal:boolean;goods:{resource:string;amount:number}[]}[]
   energyDrinkReadyAt: string | null
   stockPrices: Record<string,number>
   privateProperty: {plotId:string;kind:string;level:number;site:boolean;hasWork:boolean}[]
@@ -1397,9 +1401,11 @@ export interface EconomyView {
 }
 export const api = {
   economy: (slug: string, before?: string, asset?: string) => request<EconomyView>('GET', `/api/villages/${encodeURIComponent(slug)}/economy?${new URLSearchParams({...before ? {before} : {}, ...asset ? {asset} : {}})}`),
-  economyAction: (slug: string, body: EconomyRequest) => request<EconomyView>('POST', `/api/villages/${encodeURIComponent(slug)}/economy`, body),
-  battleOrder: (slug:string,battleId:string,targetUnitId:string|null,mode:'hold'|'intercept'='intercept') =>
-    request<void>('PUT',`/api/villages/${encodeURIComponent(slug)}/battles/${battleId}/order`,{targetUnitId,mode}),
+  economyAction: (slug: string, body: EconomyRequest) => request<EconomyView>('POST', `/api/villages/${encodeURIComponent(slug)}/economy`, body).then(result=>{
+    window.dispatchEvent(new CustomEvent('desertovia-wallet-changed',{detail:{slug,coins:result.coins,testCandles:result.testCandles}}));return result
+  }),
+  battleOrder: (slug:string,battleId:string,targetUnitId:string|null,mode:'hold'|'intercept'='intercept',destination?:TilePoint) =>
+    request<void>('PUT',`/api/villages/${encodeURIComponent(slug)}/battles/${battleId}/order`,{targetUnitId,mode,destination}),
   gateOrder: (slug:string,open:boolean) => request<void>('PUT',`/api/villages/${encodeURIComponent(slug)}/gate`,{open}),
   defenseSector: (slug: string, sector: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/me/defense`, { mode: sector }),
   almighty: (slug: string) => request<AlmightyView>('GET', `/api/villages/${encodeURIComponent(slug)}/director`),

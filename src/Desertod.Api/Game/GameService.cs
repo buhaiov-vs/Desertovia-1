@@ -510,7 +510,7 @@ public sealed partial class GameService(
             var state = await ActAsync(db, village, (city, now) =>
             {
                 if (city.OwnerAccountId == accountId)
-                    ConstructionRules.Place(city, request.Kind, request.X, request.Y, now);
+                    ConstructionRules.Place(city, request.Kind, request.X, request.Y, now).PlacedByAccountId=accountId;
                 else
                     BuildingOperations.RequestBuild(city, accountId, request.Kind, request.X, request.Y, now);
             }, cancellationToken);
@@ -522,8 +522,18 @@ public sealed partial class GameService(
     public Task<VillageStateDto> TsarGoToAsync(string slug, Guid accountId, GoToRequest request, CancellationToken cancellationToken) =>
         RuleAsync(slug, accountId, "goTo", request.Spot.ToString(), (village, now) => village.TsarGoTo(request.Spot, now), cancellationToken);
 
-    public Task<VillageStateDto> CancelBlueprintAsync(string slug, Guid accountId, string plotId, CancellationToken cancellationToken) =>
-        PlanAsync(slug, accountId, "cancelBlueprint", plotId, (village, _) => ConstructionRules.Cancel(village, plotId), cancellationToken);
+    public async Task<VillageStateDto> CancelBlueprintAsync(string slug, Guid accountId, string plotId, CancellationToken cancellationToken) =>
+        await WithVillageAsync(await FindVillageIdAsync(slug,cancellationToken),async db=>
+        {
+            var village=await LoadVillageAsync(db,slug,cancellationToken);
+            var site=ConstructionRules.FindSite(village,plotId);
+            if(site.OwnerAccountId is {} owner && owner!=accountId)throw new UnauthorizedAccessException();
+            if(site.OwnerAccountId is null)await RequireRulerAsync(db,village,accountId,cancellationToken);
+            db.AuditActor=accountId;db.AuditOperation="cancelBlueprint:"+plotId;
+            ConstructionRules.Cancel(village,plotId);
+            await db.SaveChangesAsync(cancellationToken);changes.Mark(village.Id);
+            return await BuildStateAsync(db,village,time.GetUtcNow(),cancellationToken);
+        },cancellationToken);
 
     /// <summary>The Tsar writes a subtitle under a citizen's name on the map.</summary>
     public Task<CitizenSummaryDto> SetSubtitleAsync(
@@ -759,13 +769,21 @@ public sealed partial class GameService(
             var village=await LoadVillageAsync(db,slug,cancellationToken);
             if(village.OwnerAccountId!=accountId)throw new UnauthorizedAccessException();
             var now=time.GetUtcNow();
-            if(village.Raids.Any(r=>r.IsPending&&r.Source==RaidSource.Undead&&r.EngineVersion>=2&&r.StrikesAt<=now))
-                throw new GameRuleException("raid.alreadyFighting","An active battle cannot be cancelled.");
-            var ids=village.Raids.Where(r=>r.IsPending&&r.Source==RaidSource.Undead).Select(r=>r.Id).ToArray();
-            RaidRules.CancelUndead(village);
-            foreach(var battle in await db.RaidBattles.Where(b=>ids.Contains(b.Id)&&b.FinishedAt==null).ToListAsync(cancellationToken))
-            {battle.Phase="Cancelled";battle.FinishedAt=now;battle.Revision++;}
+            db.AuditActor=accountId; db.AuditOperation="cancel-undead";
+            var pending=village.Raids.Where(r=>r.IsPending&&r.Source==RaidSource.Undead).ToArray();
+            var ids=pending.Select(r=>r.Id).ToArray();
+            var people=await db.Citizens.Where(c=>c.VillageId==village.Id).ToListAsync(cancellationToken);
+            var battles=await db.RaidBattles.Where(b=>ids.Contains(b.Id)&&b.FinishedAt==null).ToListAsync(cancellationToken);
+            foreach(var raid in pending)
+            {
+                var battle=battles.SingleOrDefault(b=>b.Id==raid.Id);
+                if(battle is not null) RaidSimulation.Cancel(village,raid,battle,people,now);
+                else {raid.Outcome=RaidOutcome.Cancelled;raid.ResolvedAt=now;}
+            }
+            RaidRules.UpdateNextRaidAt(village);
             await db.SaveChangesAsync(cancellationToken);changes.Mark(village.Id);
+            foreach(var battle in battles) await notifier.BattleUpdated(village.Slug,battle,village.Fortifications);
+            foreach(var person in people) await notifier.CitizenUpdated(village.Slug,person.ToSummaryDto(now));
             return await BuildStateAsync(db,village,now,cancellationToken);
         },cancellationToken);
 
@@ -1350,7 +1368,7 @@ public sealed partial class GameService(
             .Where(a => a.Id == village.OwnerAccountId)
             .Select(a => new { a.DisplayName, a.Character })
             .SingleAsync(cancellationToken);
-        var tsar = new TsarDto(owner.Character?.Name ?? owner.DisplayName, owner.Character?.Appearance, village.TsarSpot);
+        var tsar = new TsarDto(owner.Character?.Name ?? owner.DisplayName, owner.Character?.Appearance, village.TsarSpot, village.TsarInjuredUntil);
         var trips = await LoadTripsAsync(db, village.Id, cancellationToken);
         var shownSince = now - DungeonRules.ShownAfterEnd;
         var dungeon = await db.DungeonRuns.AsNoTracking()
@@ -1358,8 +1376,13 @@ public sealed partial class GameService(
             .OrderByDescending(r => r.OpenedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return village.ToStateDto(context.Work, context.CompletedInOrder, electorate, quests, tsar, trips, dungeon, now) with
+        var siteOwners=village.Sites.Select(s=>s.OwnerAccountId??s.PlacedByAccountId).Where(id=>id!=null).ToArray();
+        var ownerNames=await db.Accounts.Where(a=>siteOwners.Contains(a.Id)).ToDictionaryAsync(a=>a.Id,a=>a.DisplayName,cancellationToken);
+        var state=village.ToStateDto(context.Work, context.CompletedInOrder, electorate, quests, tsar, trips, dungeon, now);
+        return state with
         {
+            Sites=state.Sites.Select(s=>s with {OwnerName=(s.OwnerAccountId??s.PlacedByAccountId) is {} id
+                ? residents.FirstOrDefault(c=>c.AccountId==id)?.Name??ownerNames.GetValueOrDefault(id):null}).ToArray(),
             Battles = (await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==village.Id && (b.FinishedAt==null || b.FinishedAt>=now.AddSeconds(-15))).OrderBy(b=>b.StartsAt).ToListAsync(cancellationToken)).Select(b=>b.ToBattleDto()).ToArray(),
             Fortifications = village.Fortifications,
             KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),

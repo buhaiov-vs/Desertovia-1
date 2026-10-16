@@ -1,3 +1,4 @@
+import { SiteActions } from './SiteActions'
 import { useState } from 'react'
 import {
   builtKinds,
@@ -191,6 +192,7 @@ export function TargetPopup({
         {operationError&&<p className="error">{operationError}</p>}
         {target.kind==='building'&&ruler&&!village.structures.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&!village.storages.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&<div className="civic-actions"><button disabled={pending} onClick={()=>void operate('upgrade')}>Улучшить</button>
           {confirm?<><span>Подтвердить медленную разборку?</span><button onClick={()=>void operate('demolish')}>Снести</button><button onClick={()=>setConfirm(false)}>Отмена</button></>:<button onClick={()=>setConfirm(true)}>Снести</button>}</div>}
+        {site&&<SiteActions site={site} actorId={citizen.accountId} tsar={false} onAction={operation=>onCivic(site.plotId,operation)}/>}
         {blockedBank&&<p className="warning">Сначала постройте Царский мост.</p>}
         {working && <p className="small muted">{t('target.busy')}</p>}
         {error && <p className="error">{error}</p>}

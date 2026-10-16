@@ -678,9 +678,9 @@ export const ru: Dictionary = {
     'outcome.repairNothing': 'все постройки целы',
     'raid.coming': 'Нападение: {enemy} × {count} через {time}!',
     'raid.wave': 'волна {wave} из {waves}',
-    'raid.defenders': 'В дозоре: {count}',
+    'raid.defenders': 'Защитников: {count}',
     'raid.hint': 'Встаньте в дозор или обход, чтобы защищать город в миг нападения. Отдыхающих могут ранить.',
-    'raid.guard': 'В дозор',
+    'raid.guard': 'Встать на защиту',
     'raid.repelled': 'Нападение отбито! Повержено: {enemy} × {killed}.',
     'raid.lost': 'Враги ворвались: {enemy}!',
     'raid.stolen': 'Украдено: {goods}',
@@ -692,6 +692,7 @@ export const ru: Dictionary = {
     'raid.history': 'Последние нападения',
     'raid.none': 'Нападений пока не было.',
     'raid.result.Repelled': 'отбито',
+    'raid.result.Cancelled': 'Нежить усыплена царём',
     'raid.result.Lost': 'проиграно',
     'notify.raidTitle': 'Нападение: {enemy}!',
     'notify.raidBody': 'Ударят через {minutes} мин. Встаньте в дозор, чтобы защитить город.',
@@ -975,6 +976,7 @@ export const ru: Dictionary = {
   },
 
   stages: {
+    dismantle: 'Разборка',
     dismantle:'Разборка', upgrade:'Улучшение склада', expand:'Расширение жилья',
     ground: 'Площадка',
     foundation: 'Основание',
@@ -994,6 +996,7 @@ export const ru: Dictionary = {
   },
 
   jobs: {
+    dismantle: 'Аккуратно разобрать',
     dismantle:'Разбирать осторожно',
     'bring-sticks': 'Носить хворост',
     'bring-logs': 'Носить брёвна',
@@ -1238,8 +1241,8 @@ export const ru: Dictionary = {
     "economy.reusedRequest": "Этот запрос уже использован для другой операции.",
     "economy.amount": "Количество: от 1 до 100. Цена — положительное целое число.",
     "economy.citizen": "Для этого действия нужен персонаж в городе.",
-    "economy.candles": "Не хватает тестовых свечей. Их можно получить за дезкоины через обмен.",
-    "economy.funds": "Не хватает дезкоинов. Заработай полезной работой или торговлей.",
+    "economy.candles": "Не хватает тестовых свечей. Их можно получить за Dcoin через обмен.",
+    "economy.funds": "Не хватает Dcoin. Заработай полезной работой или торговлей.",
     "economy.limit": "Достигнут предел игрового кошелька.",
     "economy.action": "Такое действие недоступно. Обнови меню.",
     "market.limit": "У тебя уже 10 открытых лотов.",

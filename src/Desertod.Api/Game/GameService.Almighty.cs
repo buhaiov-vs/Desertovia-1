@@ -126,7 +126,7 @@ public sealed partial class GameService
                     fortifications = new {standing=village.Fortifications.Count(f=>f.Blocks),
                         gates=village.Fortifications.Where(f=>f.Gate).Select(f=>new{f.X,f.Y,f.Open,f.Damage}),
                         weaknesses=village.Fortifications.Where(f=>f.Damage>0).OrderByDescending(f=>f.Damage).Take(8).Select(f=>new{f.X,f.Y,f.Damage})},
-                    recentBattles = await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==villageId&&b.FinishedAt!=null).OrderByDescending(b=>b.FinishedAt).Take(3).Select(b=>new{b.Sector,b.Composition,b.DamageDone,b.ReadyDefenders,b.ThreatBudget}).ToListAsync(ct),
+                    recentBattles = await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==villageId&&b.FinishedAt!=null&&b.Phase!="Cancelled").OrderByDescending(b=>b.FinishedAt).Take(3).Select(b=>new{b.Sector,b.Composition,b.DamageDone,b.ReadyDefenders,b.ThreatBudget}).ToListAsync(ct),
                     uncertainty = "Готовность определяет ограниченный бюджет при объявлении. Отдельные HP, атаки по расстоянию; геометрия и подготовка влияют на исход. Новая подготовка не усиливает объявленных врагов." },
                 defenseSectors = await db.Citizens.Where(c => c.VillageId == villageId && c.DefenseSector != null).Select(c => new { c.DefenseSector, c.DefenseReadyAt }).ToListAsync(ct),
                 economyAccuracy = "Складские остатки, не прибыль. Учёт операций только с даты startedAt; внутренние переносы не доход. Начальные остатки не заработок. Налоги/реальные свечи не менять.",

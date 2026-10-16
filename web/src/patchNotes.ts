@@ -10,6 +10,26 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.1',date:'2026-10-16',
+    title:{ru:'Управление обороной и удобство карты',en:'Defense controls and map usability'},
+    changes:{
+      ru:['Царь может лично вступить в бой как Воевода. Выбор врага задаёт атаку, приказ движения позволяет отойти.',
+        '«Усыпить нежить» останавливает текущую атаку и ожидающие волны. Уже полученные ранения и повреждения сохраняются.',
+        'Забор доведён до фактического берега. Старые повреждения и положение ворот сохраняются.',
+        'Карточка стройплощадки показывает владельца и дату. Добавлены разборка начатой площадки и согласование старого конфликтного участка царём.',
+        'Возврат материалов после разборки хранится до получения владельцем в кошельке.',
+        'Исправлены пустые отступы в заявках и положение крестика карточки противника.',
+        'На карте видны личные Dcoin и тестовые свечи. Нажатие открывает кошелёк; суммы и цены не изменены.'],
+      en:['The Tsar can join defense as the Voivode. Select an enemy to attack, or order movement to withdraw.',
+        'Putting undead to sleep stops the active attack and queued waves while preserving existing injuries and damage.',
+        'The palisade reaches the actual river bank without resetting damage or gates.',
+        'Construction cards show ownership and placement date, with unfinished-site dismantling and explicit approval of legacy conflicting plots.',
+        'Recovered materials remain available to their original owner in the wallet until collected.',
+        'Fixed excessive application spacing and the enemy card close control.',
+        'Personal Dcoin and clearly marked test candles are visible on the map with direct wallet access. Balances and prices are unchanged.']
+    }
+  },
+  {
     version:'0.7',date:'2026-10-16',
     title:{ru:'Живая оборона деревни',en:'Live village defense'},
     changes:{

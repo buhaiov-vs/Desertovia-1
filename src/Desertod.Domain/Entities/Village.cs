@@ -54,6 +54,7 @@ public sealed class Village
     public List<Structure> Structures { get; set; } = [];
 
     public List<ConstructionSite> Sites { get; set; } = [];
+    public List<SiteRecovery> SiteRecoveries { get; set; } = [];
     public bool BridgeOpened { get; set; }
     public List<CivicOrder> CivicOrders { get; set; } = [];
 
@@ -95,6 +96,7 @@ public sealed class Village
 
     /// <summary>The Tsar's last walk; the land along it is seen as they get there.</summary>
     public Trip? TsarTrip { get; set; }
+    public DateTimeOffset? TsarInjuredUntil { get; set; }
 
     /// <summary>Land the tribe has seen, shared by all its players; see <see cref="Exploration"/>.</summary>
     public byte[] Explored { get; set; } = [];

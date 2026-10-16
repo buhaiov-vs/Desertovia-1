@@ -62,7 +62,7 @@ export default defineConfig(({ command }) => {
     build: {
       outDir: '../src/Desertod.Api/wwwroot',
       emptyOutDir: true,
-      ...(process.env.DESERTOD_E2E_HARNESS ? { rolldownOptions: { input: { main: resolve('index.html'), liveCombat: resolve('e2e/live-combat-harness.html'), lighting: resolve('e2e/harness.html'), chat: resolve('e2e/chat-harness.html'), hospital: resolve('e2e/hospital-harness.html'), cooperative: resolve('e2e/cooperative-harness.html'), patients: resolve('e2e/patients-harness.html'), raidTiming: resolve('e2e/raid-timing-harness.html'), almighty: resolve('e2e/almighty-harness.html'), economy: resolve('e2e/economy-harness.html'), mobileMenu: resolve('e2e/mobile-menu-harness.html') } } } : {}),
+      ...(process.env.DESERTOD_E2E_HARNESS ? { rolldownOptions: { input: { main: resolve('index.html'), post071: resolve('e2e/post-071-harness.html'), liveCombat: resolve('e2e/live-combat-harness.html'), lighting: resolve('e2e/harness.html'), chat: resolve('e2e/chat-harness.html'), hospital: resolve('e2e/hospital-harness.html'), cooperative: resolve('e2e/cooperative-harness.html'), patients: resolve('e2e/patients-harness.html'), raidTiming: resolve('e2e/raid-timing-harness.html'), almighty: resolve('e2e/almighty-harness.html'), economy: resolve('e2e/economy-harness.html'), mobileMenu: resolve('e2e/mobile-menu-harness.html') } } } : {}),
     },
   }
 })

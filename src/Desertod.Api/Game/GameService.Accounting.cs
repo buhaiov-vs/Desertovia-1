@@ -26,6 +26,10 @@ public sealed partial class GameService
             foreach (var progress in site.Progress)
                 if (BuildingCatalog.FindJob(progress.JobId) is { Resource: {} resource, Kind: JobKind.Haul })
                     Add(resource.ToString(), (site.OwnerAccountId is null ? "site:" : "private-site:") + site.PlotId, site.OwnerAccountId, progress.Done);
+        foreach(var site in village.Sites)
+            foreach(var good in site.Salvage)Add(good.Kind.ToString(),(site.OwnerAccountId is null?"site:":"private-site:")+site.PlotId,site.OwnerAccountId,good.Amount);
+        foreach(var recovery in village.SiteRecoveries)
+            foreach(var good in recovery.Goods)Add(good.Kind.ToString(),(recovery.OwnerAccountId is null?"recovery:":"private-recovery:")+recovery.Id,recovery.OwnerAccountId,good.Amount);
         var citizens = await db.Citizens.AsNoTracking().Where(c => c.VillageId == villageId)
             .Select(c => new { c.AccountId, c.Load, c.PersonalGoods }).ToListAsync(ct);
         foreach (var citizen in citizens)

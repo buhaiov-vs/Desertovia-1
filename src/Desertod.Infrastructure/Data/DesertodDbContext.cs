@@ -57,7 +57,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             battle.HasOne<Desertod.Domain.Entities.Village>().WithMany().HasForeignKey(b=>b.VillageId).OnDelete(DeleteBehavior.Cascade);
             battle.HasIndex(b=>new { b.VillageId, b.FinishedAt });
             battle.OwnsMany(b=>b.Units, unit=> { unit.ToJson(); unit.Ignore(u=>u.Position); unit.Ignore(u=>u.Alive); });
-            battle.OwnsMany(b=>b.Fighters, fighter=> { fighter.ToJson(); fighter.Ignore(f=>f.Position); fighter.Property(f=>f.Weapon).HasConversion<string>(); fighter.Property(f=>f.Armor).HasConversion<string>(); });
+            battle.OwnsMany(b=>b.Fighters, fighter=> { fighter.ToJson(); fighter.Ignore(f=>f.Position); fighter.Ignore(f=>f.ActorId); fighter.Property(f=>f.Weapon).HasConversion<string>(); fighter.Property(f=>f.Armor).HasConversion<string>(); });
             battle.OwnsMany(b=>b.Damage, damage=>damage.ToJson());
             battle.OwnsMany(b=>b.Events, events=>events.ToJson());
         });
@@ -155,6 +155,12 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 site.Ignore(s => s.HasWork);
                 site.OwnsMany(s => s.Progress);
                 site.OwnsMany(s => s.Hands);
+                site.OwnsMany(s => s.Salvage, good => good.Property(g=>g.Kind).HasConversion<string>());
+            });
+            village.OwnsMany(v=>v.SiteRecoveries, recovery=>
+            {
+                recovery.ToJson();
+                recovery.OwnsMany(r=>r.Goods, good=>good.Property(g=>g.Kind).HasConversion<string>());
             });
             village.OwnsMany(v => v.Wildlife, herd =>
             {

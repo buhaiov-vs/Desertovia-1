@@ -191,6 +191,11 @@ public sealed partial class GameService
             {
                 village.EnsureCamp(now);
                 DungeonRules.March(run, village, citizens, now);
+                var battles=await db.RaidBattles.Where(b=>b.VillageId==village.Id&&b.FinishedAt==null).ToListAsync(cancellationToken);
+                foreach(var battle in battles)
+                    foreach(var fighter in battle.Fighters.Where(f=>f.IsTsar&&f.AccountId==village.OwnerAccountId))
+                    {fighter.Active=false;fighter.TargetUnitId=null;fighter.DestinationX=null;fighter.DestinationY=null;battle.Revision++;}
+
             }
             else if (run.Phase == DungeonPhase.Marching && run.MarchEndsAt <= now)
             {

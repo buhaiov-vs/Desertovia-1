@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { api, createOperationId, plotPosition, type BuildingDefinition, type Catalog, type Citizen, type EconomyRequest, type EconomyView, type VillageState } from '../api'
 import { useI18n } from '../i18n'
 import { EnergyDrinkCard } from './EnergyDrinkShop'
+import { DcoinIcon } from './DcoinIcon'
 import { ResourceIcon } from './TileIcon'
 
 /** Extends the existing City/Inventory menu. The server owns money, stock and request receipts. */
-export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePlace }: {village: VillageState; catalog: Catalog; citizen?: Citizen|null; accountId?: string; onPrivatePlace?: (building:BuildingDefinition)=>void}) {
+export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePlace, initialOpen=false }: {village: VillageState; catalog: Catalog; citizen?: Citizen|null; accountId?: string; initialOpen?:boolean; onPrivatePlace?: (building:BuildingDefinition)=>void}) {
   const i18n = useI18n(), ru = i18n.language === 'ru'
   const text = (r: string, e: string) => ru ? r : e
-  const [open, setOpen] = useState(false), [view, setView] = useState<EconomyView|null>(null)
+  const [open, setOpen] = useState(initialOpen), [view, setView] = useState<EconomyView|null>(null)
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
   const [resource, setResource] = useState('Wood'), [amount, setAmount] = useState('1'), [price, setPrice] = useState('10')
   const [recipient, setRecipient] = useState(''), [filter, setFilter] = useState('')
@@ -53,20 +54,21 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
   const location = (value: string) => {
     const [scope,...parts] = value.split(':'); const plot=parts.join(':')
     if(scope==='personal')return text('личное имущество','personal goods')
+    if(scope==='recovery'||scope==='private-recovery')return text('материалы после разборки','recovered construction materials')
     if(scope==='hands')return text('ноша','load')
     if(scope==='market')return text('резерв рынка','market reserve')
     const target=[...(village.structures??[]),...(village.sites??[])].find(b=>b.plotId===plot)
     const storage=(village.storages??[]).find(b=>b.plotId===plot)
     return target?`${i18n.building(target.kind).name} · ${plot}`:storage?`${i18n.storage(storage.kind)} · ${plot}`:value==='wallet'?text('кошелёк','wallet'):value==='treasury'?text('казна','treasury'):value
   }
-  const verb = (s: string) => ({opening: text('Начальный остаток','Opening balance'), wage: text('Оплата работы','Work pay'), 'work-completed': text('Полезная работа','Useful work'), 'buy-stock': text('Покупка у царства','Kingdom purchase'), trade: text('Торговля','Trade'), 'energy-drink': text('Энергетик батюшки','Chaplain energy drink'), 'exchange-burn': text('Обмен ДЗК','DZK exchange'), exchange: text('Тестовые свечи','Test candles'), transfer: text('Передача','Transfer'), list: text('Резерв лота','Lot reserved')})[s] ?? text('Изменение запаса','Stock change')
-  return <details className="card economy-panel" onToggle={e => setOpen(e.currentTarget.open)}>
+  const verb = (s: string) => ({opening: text('Начальный остаток','Opening balance'), wage: text('Оплата работы','Work pay'), 'work-completed': text('Полезная работа','Useful work'), 'buy-stock': text('Покупка у царства','Kingdom purchase'), trade: text('Торговля','Trade'), 'energy-drink': text('Энергетик батюшки','Chaplain energy drink'), 'exchange-burn': text('Обмен Dcoin','Dcoin exchange'), exchange: text('Тестовые свечи','Test candles'), transfer: text('Передача','Transfer'), list: text('Резерв лота','Lot reserved')})[s] ?? text('Изменение запаса','Stock change')
+  return <details className="card economy-panel" open={open} onToggle={e => setOpen(e.currentTarget.open)}>
     <summary>{text('Кошелёк, имущество и рынок','Wallet, possessions and market')}</summary>
     {open && <>
       {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status">{notice}</p>}
       {!view ? <p>{i18n.t('loading')}</p> : <>
-        <div className="economy-balances"><strong>🪙 {view.coins} {text('ДЗК','DZK')}</strong><span>🕯 {view.testCandles} {text('тестовых свечей','test candles')}</span></div>
-        <p className="small muted">{text('Полезная работа','Useful work')}: {view.workPay} · {text('Стройка и ремонт','Construction and repair')}: {view.constructionPay} {text('ДЗК. Личная стройка не оплачивается царством.','DZK. Private construction earns no kingdom wages.')}</p>
+        <div className="economy-balances"><strong><DcoinIcon/> {view.coins} {text('Dcoin','Dcoin')}</strong><span>🕯 {view.testCandles} {text('тестовых свечей','test candles')}</span></div>
+        <p className="small muted">{text('Полезная работа','Useful work')}: {view.workPay} · {text('Стройка и ремонт','Construction and repair')}: {view.constructionPay} {text('Dcoin. Личная стройка не оплачивается царством.','Dcoin. Private construction earns no kingdom wages.')}</p>
         {citizen && <EnergyDrinkCard view={view} citizen={citizen} busy={busy} onBuy={currency=>void act({action:'energy-drink-'+currency})}/>}
         <details><summary>{text('Моё имущество и передача','My possessions and transfers')}</summary>
           <p className="small">{text('Личное имущество хранится отдельно от общей ноши и склада. До 100 каждого материала.','Personal goods are separate from communal loads and storage. Up to 100 of each material.')}</p>
@@ -77,23 +79,23 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
         {citizen && <section className="economy-controls">
           <label>{text('Материал','Material')}<select value={resource} onChange={e=>setResource(e.target.value)}>{choices.map(r=><option key={r.kind} value={r.kind}>{i18n.resource(r.kind)}</option>)}</select></label>
           <label>{text('Количество','Amount')}<input inputMode="numeric" type="text" value={amount} onChange={e=>setAmount(e.target.value)} aria-invalid={!validAmount}/></label>
-          <button disabled={busy||!validAmount} onClick={()=>void act({action:'buy-stock',resource,amount:units,price:unitPrice(resource)})}>{text('Купить у царства','Buy from kingdom')} · {validAmount ? unitPrice(resource)*units : '—'} {text('ДЗК','DZK')}</button>
+          <button disabled={busy||!validAmount} onClick={()=>void act({action:'buy-stock',resource,amount:units,price:unitPrice(resource)})}>{text('Купить у царства','Buy from kingdom')} · {validAmount ? unitPrice(resource)*units : '—'} {text('Dcoin','Dcoin')}</button>
           <label>{text('Получатель','Recipient')}<select value={recipient} onChange={e=>setRecipient(e.target.value)}><option value="">{text('Выбрать жителя','Choose a resident')}</option>{view.residents.filter(r=>r.accountId!==own).map(r=><option key={r.accountId} value={r.accountId}>{r.name}</option>)}</select></label>
           <button disabled={busy||!validAmount||!recipient} onClick={()=>void act({action:'transfer',resource,amount:units,target:recipient})}>{text('Передать личное','Give personal goods')}</button>
-          <label>{text('Цена всего лота в ДЗК','Total lot price in DZK')}<input inputMode="numeric" value={price} onChange={e=>setPrice(e.target.value)} aria-invalid={!validPrice}/></label>
+          <label>{text('Цена всего лота в Dcoin','Total lot price in Dcoin')}<input inputMode="numeric" value={price} onChange={e=>setPrice(e.target.value)} aria-invalid={!validPrice}/></label>
           <button disabled={busy||!validAmount||!validPrice} onClick={()=>void act({action:'list',resource,amount:units,price:Number(price)})}>{text('Выставить личное на рынок','List personal goods')}</button>
         </section>}
         <details><summary>{text('Рынок','Market')}</summary>
           {view.lots.length===0 && <p className="muted">{text('Лотов пока нет','No lots yet')}</p>}
-          {view.lots.map(l=><article className="economy-lot" key={l.id}><ResourceIcon kind={l.resource} scale={2}/><div><strong>{i18n.resource(l.resource)} × {l.amount}</strong><span>{l.price} {text('ДЗК','DZK')} · {l.seller}</span></div>
+          {view.lots.map(l=><article className="economy-lot" key={l.id}><ResourceIcon kind={l.resource} scale={2}/><div><strong>{i18n.resource(l.resource)} × {l.amount}</strong><span>{l.price} {text('Dcoin','Dcoin')} · {l.seller}</span></div>
             {l.status==='open' ? <button disabled={busy||(!citizen&&l.sellerAccountId!==own)} onClick={()=>void act({action:l.sellerAccountId===own?'cancel-lot':'buy-lot',target:l.id})}>{l.sellerAccountId===own?text('Снять','Cancel'):text('Купить','Buy')}</button> : <span>{l.status==='sold'?text('Продано','Sold'):text('Снят','Cancelled')}</span>}</article>)}
         </details>
         <details><summary>{text('Обмен и налог','Exchange and tax')}</summary>
-          <p>{view.exchangeRate} {text('ДЗК → 1 тестовая свеча','DZK → 1 test candle')}. {text('Осталось лично','Personal remaining')}: {Math.max(0,view.dailyExchangeLimit-view.exchangedToday)} · {text('Фонд царства сегодня','Kingdom remaining today')}: {view.kingdomCandleRoom}.</p>
+          <p>{view.exchangeRate} {text('Dcoin → 1 тестовая свеча','Dcoin → 1 test candle')}. {text('Осталось лично','Personal remaining')}: {Math.max(0,view.dailyExchangeLimit-view.exchangedToday)} · {text('Фонд царства сегодня','Kingdom remaining today')}: {view.kingdomCandleRoom}.</p>
           <button disabled={busy||view.coins<view.exchangeRate||view.exchangedToday>=view.dailyExchangeLimit||view.kingdomCandleRoom<1} onClick={()=>void act({action:'exchange',amount:1})}>{text('Обменять на 1 тестовую свечу','Exchange for 1 test candle')}</button>
           <p className="small">{text('Сброс лимита','Limit resets')}: {new Date(view.dayResetsAt).toLocaleString(i18n.language)}. {text('Свечи аккаунта батюшки не начисляются.','No chaplain account candles are credited.')}</p>
           <p>{text('Заработок за сутки','Work income today')}: {view.earnedToday} · {text('Торговая прибыль','Trading profit')}: {view.profitToday}.</p>
-          <p>{text('Расчёт прогрессивного налога','Progressive tax preview')}: {view.taxPreview} {text('ДЗК · списание выключено','DZK · no deduction')}. {text('Первые 200 не облагаются, затем 10%, 20%, 30% только на превышение порогов 200/500/1000.','First 200 exempt; marginal 10%, 20%, 30% above 200/500/1000.')}</p>
+          <p>{text('Расчёт прогрессивного налога','Progressive tax preview')}: {view.taxPreview} {text('Dcoin · списание выключено','DZK · no deduction')}. {text('Первые 200 не облагаются, затем 10%, 20%, 30% только на превышение порогов 200/500/1000.','First 200 exempt; marginal 10%, 20%, 30% above 200/500/1000.')}</p>
         </details>
         {citizen && <details><summary>{text('Личная стройка за царством','Private construction outside the kingdom')}</summary>
           <p className="small">{text('Только твои материалы, без общего склада и казённой зарплаты. Участок должен быть разведан и доступен.','Your own materials only, with no communal supplies or wages. The plot must be explored and reachable.')}</p>
@@ -110,10 +112,11 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
             {view.privateStorages.filter(s=>s.plotId===warehouse).flatMap(s=>s.goods.map(g=><button key={g.resource} disabled={busy} onClick={async()=>{if(locked.current)return;locked.current=true;setBusy(true);try{await api.takeFromStorage(village.slug,s.plotId,g.resource,1)}catch(e){setError(i18n.error(e))}finally{locked.current=false;setBusy(false);void refresh()}}}>{text('Взять','Take')} {i18n.resource(g.resource)} · {g.amount}</button>))}
           </div>}
         </details>}
+        {(view.siteRecoveries?.length??0)>0&&<section className="card"><h3>{text('Материалы после разборки','Recovered materials')}</h3>{view.siteRecoveries!.map(r=><div key={r.id} className="economy-lot"><span>{r.plotId} · {r.personal?text('Личные','Personal'):text('Общие','Communal')}<br/>{r.goods.map(g=>`${i18n.resource(g.resource)} × ${g.amount}`).join(', ')}</span><button disabled={busy} onClick={()=>void act({action:'claim-site-recovery',target:r.id})}>{text('Забрать','Collect')}</button></div>)}<p className="small muted">{text('Если места не хватает, материалы останутся здесь.','Materials stay here if there is not enough room.')}</p></section>}
         <details><summary>{text('Журнал царства','Kingdom journal')}</summary>
-          <p className="small muted">{text('Учёт с','Recorded since')} {new Date(view.startedAt).toLocaleString(i18n.language)} · {text('Казна','Treasury')}: {view.treasury} {text('ДЗК','DZK')}.</p>
-          <label>{text('Фильтр','Filter')}<select value={filter} onChange={e=>{setHistoryCursor(undefined);setFilter(e.target.value)}}><option value="">{text('Все операции','All entries')}</option><option value="DZK">{text('Дезкоины','Dezcoins')}</option>{choices.map(r=><option value={r.kind} key={r.kind}>{i18n.resource(r.kind)}</option>)}</select></label>
-          <ol className="economy-journal">{view.journal.map(row=><li key={row.id}><time>{new Date(row.at).toLocaleTimeString(i18n.language,{hour:'2-digit',minute:'2-digit'})}</time> <strong>{row.delta>0?'+':''}{row.delta}</strong> {row.asset==='DZK'?text('ДЗК','DZK'):row.asset==='TEST_CANDLE'?text('тестовых свечей','test candles'):row.asset.startsWith('work:')?text('вклад','contribution'):i18n.resource(row.asset)}<br/><small>{verb(row.operation)} · {row.actor??text('Царство','Kingdom')} · {location(row.location)}</small></li>)}</ol>
+          <p className="small muted">{text('Учёт с','Recorded since')} {new Date(view.startedAt).toLocaleString(i18n.language)} · {text('Казна','Treasury')}: {view.treasury} {text('Dcoin','Dcoin')}.</p>
+          <label>{text('Фильтр','Filter')}<select value={filter} onChange={e=>{setHistoryCursor(undefined);setFilter(e.target.value)}}><option value="">{text('Все операции','All entries')}</option><option value="DZK">{text('Dcoin','Dcoin')}</option>{choices.map(r=><option value={r.kind} key={r.kind}>{i18n.resource(r.kind)}</option>)}</select></label>
+          <ol className="economy-journal">{view.journal.map(row=><li key={row.id}><time>{new Date(row.at).toLocaleTimeString(i18n.language,{hour:'2-digit',minute:'2-digit'})}</time> <strong>{row.delta>0?'+':''}{row.delta}</strong> {row.asset==='DZK'?text('Dcoin','Dcoin'):row.asset==='TEST_CANDLE'?text('тестовых свечей','test candles'):row.asset.startsWith('work:')?text('вклад','contribution'):i18n.resource(row.asset)}<br/><small>{verb(row.operation)} · {row.actor??text('Царство','Kingdom')} · {location(row.location)}</small></li>)}</ol>
           {view.nextJournalBefore&&<button disabled={busy} onClick={()=>setHistoryCursor(view.nextJournalBefore!)}>{text('Раньше','Older entries')}</button>}
           {historyCursor&&<button onClick={()=>setHistoryCursor(undefined)}>{text('К новым записям','Latest entries')}</button>}
         </details>

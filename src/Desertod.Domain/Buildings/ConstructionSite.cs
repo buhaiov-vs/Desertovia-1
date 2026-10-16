@@ -5,6 +5,10 @@ public sealed class ConstructionSite
 {
     public BuildingKind Kind { get; set; }
     public Guid? OwnerAccountId { get; set; }
+    public Guid? PlacedByAccountId { get; set; }
+    public bool BoundaryApproved { get; set; }
+    public bool PublicDemolition { get; set; }
+    public List<Desertod.Domain.Storage.StoredGood> Salvage { get; set; } = [];
 
     /// <summary>Unique within a village; identifies the site.</summary>
     public required string PlotId { get; set; }

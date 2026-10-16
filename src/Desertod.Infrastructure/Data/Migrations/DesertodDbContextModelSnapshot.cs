@@ -879,6 +879,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .HasMaxLength(48)
                         .HasColumnType("character varying(48)");
 
+                    b.Property<DateTimeOffset?>("TsarInjuredUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<double?>("TsarSpotX")
                         .HasColumnType("double precision");
 
@@ -1174,6 +1177,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<int>("__synthesizedOrdinal")
                                 .ValueGeneratedOnAdd();
 
+                            b1.Property<Guid?>("AccountId");
+
                             b1.Property<bool>("Active");
 
                             b1.Property<string>("Armor");
@@ -1184,9 +1189,15 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<double>("DamageDealt");
 
+                            b1.Property<double?>("DestinationX");
+
+                            b1.Property<double?>("DestinationY");
+
                             b1.Property<bool>("Guard");
 
                             b1.Property<double>("Health");
+
+                            b1.Property<bool>("IsTsar");
 
                             b1.Property<int>("Kills");
 
@@ -1818,6 +1829,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<int>("__synthesizedOrdinal")
                                 .ValueGeneratedOnAdd();
 
+                            b1.Property<bool>("BoundaryApproved");
+
                             b1.Property<string>("Kind")
                                 .IsRequired();
 
@@ -1831,8 +1844,12 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<DateTimeOffset>("PlacedAt");
 
+                            b1.Property<Guid?>("PlacedByAccountId");
+
                             b1.Property<string>("PlotId")
                                 .IsRequired();
+
+                            b1.Property<bool>("PublicDemolition");
 
                             b1.Property<double>("Scale");
 
@@ -1852,6 +1869,28 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("VillageId");
+
+                            b1.OwnsMany("Desertod.Domain.Storage.StoredGood", "Salvage", b2 =>
+                                {
+                                    b2.Property<Guid>("ConstructionSiteVillageId");
+
+                                    b2.Property<int>("ConstructionSite__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("Amount");
+
+                                    b2.Property<string>("Kind")
+                                        .IsRequired();
+
+                                    b2.HasKey("ConstructionSiteVillageId", "ConstructionSite__synthesizedOrdinal", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("ConstructionSiteVillageId", "ConstructionSite__synthesizedOrdinal");
+                                });
 
                             b1.OwnsMany("Desertod.Domain.Buildings.JobProgress", "Progress", b2 =>
                                 {
@@ -1901,6 +1940,60 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Navigation("Hands");
 
                             b1.Navigation("Progress");
+
+                            b1.Navigation("Salvage");
+                        });
+
+                    b.OwnsMany("Desertod.Domain.Buildings.SiteRecovery", "SiteRecoveries", b1 =>
+                        {
+                            b1.Property<Guid>("VillageId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<DateTimeOffset>("CreatedAt");
+
+                            b1.Property<Guid>("Id");
+
+                            b1.Property<Guid?>("OwnerAccountId");
+
+                            b1.Property<string>("PlotId")
+                                .IsRequired();
+
+                            b1.HasKey("VillageId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Villages");
+
+                            b1
+                                .ToJson("SiteRecoveries")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VillageId");
+
+                            b1.OwnsMany("Desertod.Domain.Storage.StoredGood", "Goods", b2 =>
+                                {
+                                    b2.Property<Guid>("SiteRecoveryVillageId");
+
+                                    b2.Property<int>("SiteRecovery__synthesizedOrdinal");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("Amount");
+
+                                    b2.Property<string>("Kind")
+                                        .IsRequired();
+
+                                    b2.HasKey("SiteRecoveryVillageId", "SiteRecovery__synthesizedOrdinal", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("SiteRecoveryVillageId", "SiteRecovery__synthesizedOrdinal");
+                                });
+
+                            b1.Navigation("Goods");
                         });
 
                     b.OwnsMany("Desertod.Domain.Buildings.Structure", "Structures", b1 =>
@@ -2578,6 +2671,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Navigation("Raids");
 
                     b.Navigation("Research");
+
+                    b.Navigation("SiteRecoveries");
 
                     b.Navigation("Sites");
 

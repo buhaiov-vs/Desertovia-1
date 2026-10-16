@@ -678,9 +678,9 @@ export const en = {
     'outcome.repairNothing': 'every building is whole',
     'raid.coming': '{count} × {enemy} attack in {time}!',
     'raid.wave': 'wave {wave} of {waves}',
-    'raid.defenders': 'Guards on watch: {count}',
+    'raid.defenders': 'Defenders: {count}',
     'raid.hint': 'Keep watch or patrol so you are defending when they strike. Citizens at rest may get wounded.',
-    'raid.guard': 'Keep watch',
+    'raid.guard': 'Join defense',
     'raid.repelled': 'Raid repelled! {killed} × {enemy} slain.',
     'raid.lost': '{enemy} raiders broke in!',
     'raid.stolen': 'Stolen: {goods}',
@@ -692,6 +692,7 @@ export const en = {
     'raid.history': 'Last raids',
     'raid.none': 'No raids yet.',
     'raid.result.Repelled': 'repelled',
+    'raid.result.Cancelled': 'Undead put to sleep by the Tsar',
     'raid.result.Lost': 'lost',
     'notify.raidTitle': 'Raid: {enemy}!',
     'notify.raidBody': 'They strike in {minutes} min. Keep watch to defend the village.',
@@ -977,6 +978,7 @@ export const en = {
   } as Record<string, { name: string; description: string }>,
 
   stages: {
+    dismantle: 'Dismantling',
     dismantle:'Dismantling', upgrade:'Storage upgrade', expand:'Housing expansion',
     ground: 'Ground',
     foundation: 'Foundation',
@@ -996,6 +998,7 @@ export const en = {
   } as Record<string, string>,
 
   jobs: {
+    dismantle: 'Dismantle carefully',
     dismantle:'Dismantle carefully',
     'bring-sticks': 'Bring sticks',
     'bring-logs': 'Bring logs',
@@ -1241,8 +1244,8 @@ export const en = {
     "economy.reusedRequest": "This request was already used for another operation.",
     "economy.amount": "Amount: 1 to 100. Price must be a positive whole number.",
     "economy.citizen": "A resident character is required for this action.",
-    "economy.candles": "Not enough test candles. Exchange dezcoins for them first.",
-    "economy.funds": "Not enough dezcoins. Earn them through useful work or trade.",
+    "economy.candles": "Not enough test candles. Exchange Dcoin for them first.",
+    "economy.funds": "Not enough Dcoin. Earn them through useful work or trade.",
     "economy.limit": "The game wallet limit has been reached.",
     "economy.action": "This action is unavailable. Refresh the menu.",
     "market.limit": "You already have ten open lots.",

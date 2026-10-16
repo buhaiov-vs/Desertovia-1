@@ -16,6 +16,7 @@ public enum RaidOutcome
     Pending,
     Repelled,
     Lost,
+    Cancelled,
 }
 
 /// <summary>How many of the undead the Tsar calls: more of them, in more waves.</summary>

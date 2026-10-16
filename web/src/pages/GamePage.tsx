@@ -1,3 +1,4 @@
+import { WalletDialog, WalletHud } from '../ui/WalletHud'
 import { BattleControls } from '../ui/BattleControls'
 import { createOperationId } from '../api'
 import { HospitalPanel } from '../ui/HospitalPanel'
@@ -101,6 +102,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const i18n = useI18n()
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [ownCitizen, setCitizen] = useState<Citizen | null | undefined>(undefined)
+  const [walletOpen,setWalletOpen]=useState(false)
   const [placing, setPlacing] = useState<{ definition: BuildingDefinition; private?:boolean; requestId?:string } | null>(null)
   /** Citizen the Tsar clicked: appoints them Governor or writes their subtitle. */
   const [subtitleFor, setSubtitleFor] = useState<string | null>(null)
@@ -679,6 +681,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         const watched = target !== null && villageRef.current !== null && watchable(target, villageRef.current)
         setPicked(watched ? { target, screen } : null)
         if (watched || blocked(TSAR_ID, point)) return
+        const active=villageRef.current?.battles?.find(b=>!b.finishedAt&&b.fighters.some(f=>f.isTsar&&f.accountId===me.id&&f.active&&f.health>0))
+        if(active){void api.battleOrder(slug,active.id,null,'intercept',point).catch(e=>setNotice(i18n.error(e)));return}
         api.tsarGoTo(slug, point).then(setVillageState, (exception) => {
           setNotice(i18n.error(exception))
           window.setTimeout(() => setNotice(null), 5000)
@@ -691,6 +695,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
       if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
       setError(null)
       setPicked(target ? { target, screen } : null)
+      const battle=villageRef.current?.battles?.find(b=>!b.finishedAt&&b.fighters.some(f=>!f.isTsar&&f.citizenId===ownId&&f.guard&&f.active&&f.health>0))
+      if(!target&&battle){void api.battleOrder(slug,battle.id,null,'intercept',point).catch(e=>setNotice(i18n.error(e)));return}
       // Empty ground: "come here". A citizen busy with a task stays at work.
       if (target || working || blocked(ownId, point)) return
       api.goTo(slug, point).then(applyCitizen, (exception) => {
@@ -698,7 +704,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         window.setTimeout(() => setNotice(null), 5000)
       })
     }
-  }, [tsar, canWork, working, ownId, slug, applyCitizen, setVillageState, i18n])
+  }, [tsar, canWork, working, ownId, slug, applyCitizen, setVillageState, i18n, me.id])
   // Only the isolated E2E build exposes deterministic selection setup. Vite removes
   // this listener from production; tests still exercise the real popup/chat composition.
   useEffect(() => {
@@ -762,15 +768,15 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         citizens={shownCitizens}
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
-        obscured={chatFull || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
+        obscured={walletOpen || chatFull || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
         selectedEnemyId={enemyPick?.unitId??null}
         onEnemyPick={(battleId,unitId)=>{
           setEnemyPick({battleId,unitId});setPicked(null)
           const battle=village.battles?.find(b=>b.id===battleId)
-          const fighter=battle?.fighters.find(f=>f.citizenId===citizen?.id&&f.guard&&f.active&&f.health>0)
-          if(fighter)void api.battleOrder(slug,battleId,unitId,fighter.mode).catch(e=>{setNotice(i18n.error(e));window.setTimeout(()=>setNotice(null),5000)})
+          const fighter=battle?.fighters.find(f=>(tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id)&&f.guard&&f.active&&f.health>0)
+          if(fighter||tsar)void api.battleOrder(slug,battleId,unitId,fighter?.mode??'intercept').catch(e=>{setNotice(i18n.error(e));window.setTimeout(()=>setNotice(null),5000)})
         }}
         onCitizenPick={pickCitizen}
         onWorldPick={pickWorld}
@@ -778,13 +784,13 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         selection={showPicked || showWatched ? picked.target.area : null}
       />
 
-      {!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&!subtitleFor&&!inviteFor&&enemyPick&&(()=>{
+      {!walletOpen&&!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&!subtitleFor&&!inviteFor&&enemyPick&&(()=>{
         const battle=village.battles?.find(b=>b.id===enemyPick.battleId)
         const unit=battle?.units.find(u=>u.id===enemyPick.unitId)
-        return battle&&unit?<BattleControls key={unit.id} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} onClose={()=>setEnemyPick(null)}/>:null
+        return battle&&unit?<BattleControls key={unit.id} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} tsar={tsar} accountId={me.id} onDefend={()=>{const task=catalog.tasks.find(t=>t.id===KEEP_WATCH);if(task)void start(task)}} onClose={()=>setEnemyPick(null)}/>:null
       })()}
 
-      {!chatFull && <button
+      {!walletOpen&&!chatFull && <button
         className="ui-toggle"
         onClick={toggleUi}
         title={i18n.t(uiHidden ? 'hud.showInterface' : 'hud.hideInterface')}
@@ -854,6 +860,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
           citizen={citizen}
           citizens={live.citizens}
           onForecast={async (rain) => setVillageState(await api.forecast(slug, rain))}
+          wallet={(tsar||citizen)?<WalletHud slug={slug} onOpen={()=>{setWalletOpen(true);setEnemyPick(null)}}/>:null}
         />
         <ServerClock offsetMs={serverOffset}>
           {(now) => (
@@ -901,7 +908,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
           key={slug}
           mentionCandidates={citizens.filter(c=>!live.away.has(c.id)).map(c=>({id:c.id,name:c.name}))}
           incoming={live.chatArrivals}
-          interrupted={enemyPick!==null || showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
+          interrupted={walletOpen || enemyPick!==null || showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}
@@ -1037,6 +1044,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
           )}
         </ServerClock>
       )}
+
+      {walletOpen&&<WalletDialog village={village} catalog={catalog} citizen={citizen} accountId={me.id} onClose={()=>setWalletOpen(false)} onPrivatePlace={definition=>{setWalletOpen(false);setPlacing({definition,private:true,requestId:createOperationId()})}}/>}
 
       {panel === 'inventory' && (
         <ServerClock offsetMs={serverOffset}>

@@ -1,3 +1,23 @@
+#0.7.6 INSTALLED and independently verified16Oct2026
+
+LIVEgame d0f88e2e92d83e8c30a7566fb21c916a51023b1d, CI38969100973 SUCCESS424Domain+
+244API+155browser/1normal skip,frontend/DockerPASS. PublicPR50 mergee62f516,
+tree identical to tested source. Botmetadata891d1a8 CI38969173093 SUCCESS887tests/
+serverSKIPPED, canonicalPR48 merge14e6dd5.20operator guards and4readonly parser
+checksPASS. Freshpreflight38970195603, install38970339155 and independentcheck
+38970711893 SUCCESS2026-10-16T21:38:28.7746706Z.119→119profiles,0progresslosses,
+121accounts/loginbindings,25migrations,24frontendchunks,feedback0.7.6PASS.
+PG/SQLite/code/config/profile backups saved;14protected botmodules/configs/
+quarantine/Propose/budget preserved. No forced raids/messages/payments/model probes
+or resets. Combat clicks now force medical refresh only for their own actor;
+new injury/unavailability restrictions retained. Settlement yields after each
+individually committed resident. Bounded internal-operation wait/hold metrics.
+Old behavior4expected regression failures; fixed244API PASS locally and in CI.
+Owner0.7.5 late stutter report showed lockmax3015ms/simulation median2ms. New
+natural real-phone battle capture still required; not a claim all jitter gone.
+See docs/dezertovia/RELEASE_0_7_6.md. Do not replay/reinstall older requests.
+Earlier READY/HOLD/NOTLIVE records are history.
+
 # D-086: late-fight contention after0.7.5, implementation in progress
 
 Owner actual0.7.5 report: early smooth then late stutter. Simulation median2ms,

@@ -1,4 +1,4 @@
-#0.7.6 server contention: implemented, NOT LIVE
+#0.7.6 server contention: INSTALLED AND INDEPENDENTLY VERIFIED
 
 Owner reports0.7.5 starts smoothly then stutters toward end of real battle.
 Actual uploaded0.7.5 diagnostic confirms exact374323f,89server samples,
@@ -22,11 +22,12 @@ transactions. No changes to combat speed/damage/balance or client interpolation.
 Add bounded, combat-only operation aggregates (internal method names, counts,
 maximum/total wait/hold; max32keys per trace). Preserve old diagnostic fields.
 
-Local focused tests and full exact CI pending. Fresh reviewed rollout required;
-LIVE remains0.7.5. No oldrequest replay/private main/forced raids/player messages/
+Local244API and exactCI38969100973 PASS424Domain+244API+155browser/1skip;
+frontend/DockerPASS. Fresh preflight38970195603/install38970339155/independentcheck
+38970711893 PASS. LIVE0.7.6; see RELEASE_0_7_6.md. No oldrequest replay/private main/forced raids/player messages/
 model probes/payments/progress resets. Backups/preservation/Propose/quarantine
 remain mandatory; next ordinary real-phone battle still needed after release.
 
 Red regression replay of old all-resident refresh +10resident lease:4of5new
 tests fail as expected (wrong medical batch; one lease instead of3). Original
-implementations restored after replay. Updated full API suite running.
+implementations restored after replay. Updated full244API suitePASS locally and in CI.

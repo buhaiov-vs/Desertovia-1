@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-16",
-  "phase": "released_0_7_5_independently_verified",
+  "phase": "released_0_7_6_independently_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -17,7 +17,8 @@
     "release_0_7_2": "04c395052a106562b8e00b6c73a8a5b119b1aea5",
     "release_0_7_3": "672d72e167dd477f925df6394ecc5b188d3924ff",
     "release_0_7_4": "74adbe8c1d778f0751a755a4b36dbefe6f16a405",
-    "release_0_7_5": "374323f8c3ef519694497371716e611d3396ee43"
+    "release_0_7_5": "374323f8c3ef519694497371716e611d3396ee43",
+    "release_0_7_6": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -1325,10 +1326,26 @@
   "combat_lock_contention": {
     "version": "0.7.6",
     "implemented": true,
-    "ready": false,
-    "deployed": false,
-    "status": "validating",
+    "ready": true,
+    "deployed": true,
+    "status": "installed_independently_verified",
     "simulation_median_ms": 2.006,
-    "lock_max_ms": 3014.9555
+    "lock_max_ms": 3014.9555,
+    "game_sha": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d",
+    "game_ci": 38969100973,
+    "bot_sha": "891d1a839bed94de648d5abcf6d9176878cc89b1",
+    "bot_ci": 38969173093,
+    "preflight_run": 38970195603,
+    "install_run": 38970339155,
+    "independent_check_run": 38970711893,
+    "checked_at": "2026-10-16T21:38:28.7746706Z",
+    "preservation": {
+      "profiles_before": 119,
+      "profiles_after": 119,
+      "lost_profiles_or_progress": 0,
+      "accounts_preserved": 121,
+      "login_bindings_preserved": 121
+    },
+    "do_not_reinstall": true
   }
 }

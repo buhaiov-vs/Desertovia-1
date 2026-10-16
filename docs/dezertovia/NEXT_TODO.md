@@ -1,3 +1,9 @@
+> **LIVE0.7.6:** [combat contention release and actual checks](RELEASE_0_7_6.md).
+> Exact d0f88e2, independentcheck38970711893PASS;119profiles/121bindings preserved.
+> Next ordinary real-phone battle: compare operation hold/wait maxima and frame
+> timing in a fresh diagnostic export. Do not infer CPU saturation from backlog
+> or count repeated stage values as distinct waits. No forced production raid.
+
 > **LIVE0.7.5:** [combat motion release and actual checks](RELEASE_0_7_5.md).
 > Exact374323f, independentcheck38966145677PASS,119profiles/121bindings preserved.
 > Next: measure motion in an ordinary battle on real phones with a fresh0.7.5

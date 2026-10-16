@@ -220,3 +220,19 @@ New release record RELEASE_0_7.md supersedes checkpoint readiness. Private ops
 candidate ready after this exactCI; no trigger before05:00UTC. Automation updated
 with exact source/CI/one-file bot payload, guide, report/deploy/independent-check
 steps and scheduled16Oct07:00Europe/Oslo. Server installation has NOT happened.
+
+
+## Повторная проверка16октября до выкладки
+
+По дополнительному требованию владельца весь игровой CI прогнан ещё раз на
+ТОМ ЖЕ runtime0540a2a. [Повторный CI38851717640](https://github.com/desertod666/Desertovia/actions/runs/38851717640)
+SUCCESS:380Domain+217API+121browser PASS/1штатныйskip, lint/build/DockerPASS.
+Bot CI38811556338 attempt2 SUCCESS наТОМ ЖЕ3f7038c:816tests; server jobSKIPPED.
+Оператор выпуска15PASS, включая запрет build/install при провале второго CI.
+Candidate снова ready=true, оба game CI обязательны. Контрольная сумма bot
+payload/миграция/отсутствие runtime-расхождений main проверены повторно.
+
+Read-only LIVE перед выпуском:HTTP200,61d726c, Telegram logintrue/devfalse.
+Установка ещё НЕ выполнялась. Фактические backups/проверка baseline — в07:00Oslo,
+после обновления отдельный preservation check. В приватном operator guide см.
+deploy/PREDEPLOY_RECHECK_0_7.md; trigger до05:00UTC отсутствует.

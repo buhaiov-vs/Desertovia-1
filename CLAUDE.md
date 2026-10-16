@@ -1,3 +1,14 @@
+# D-069 — повторные проверки16.10 PASS, выпуск ещё не выполнен
+
+По запросу «Перед выкладкой проверь не раз всё» повторный full CI38851717640
+наТОМ ЖЕ0540a2a SUCCESS380Domain+217API+121browser/1skip, buildsPASS.
+BotCI38811556338 attempt2 на3f7038c SUCCESS816tests, serverjobSKIPPED.
+Оператор15PASS и требует predeploy_ci38851717640 вместе с первичным38817618664.
+Подробности в docs/dezertovia/RELEASE_0_7.md и приватном PREDEPLOY_RECHECK_0_7.md.
+Candidate.ready=true после второго успеха; LIVE61d726c не менялся. Выпуск только
+16.10.2026 07:00Europe/Oslo=05:00UTC; actual backups/report/deploy/independent
+preservation check обязательны. Не выдавать проверки за фактическую установку.
+
 # D-069: 0.7 READY, scheduled16.10.2026 07:00 Europe/Oslo
 
 Full code/checks completed. Public PR37 MERGED3e757dae87a4f3984b26f71104c7994abb0b06a9,

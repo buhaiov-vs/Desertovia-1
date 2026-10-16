@@ -69,7 +69,7 @@ public sealed class Post071ApiTests(DesertodApiFactory factory)
         {
             await AssertRuleBrokenAsync(await v.Tsar.PutAsJsonAsync(v.Path+$"/battles/{battle}/order",new{mode="intercept"}),"hospital.unavailable");
             factory.Hospital.States.Remove(uid);
-            await OkJsonAsync(await v.Tsar.PutAsJsonAsync(v.Path+$"/battles/{battle}/order",new{mode="intercept"}));
+            Assert.Equal(HttpStatusCode.OK,(await v.Tsar.PutAsJsonAsync(v.Path+$"/battles/{battle}/order",new{mode="intercept"})).StatusCode);
         }
         finally {factory.Hospital.Reset();}
     }

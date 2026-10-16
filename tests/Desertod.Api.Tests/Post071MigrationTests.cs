@@ -26,16 +26,19 @@ public sealed class Post071MigrationTests
             Progress=[new(){Stage=2,JobId="bring-logs",Done=9}]});
         var battle=new RaidBattle{Id=Guid.NewGuid(),VillageId=v.Id,Sector="north",Phase="Warning",StartsAt=now,LastTickAt=now,EndsAt=now.AddMinutes(5),
             Fighters=[new(){CitizenId=person.Id,Health=31,MaximumHealth=40,Guard=true,Active=true}]};
+        v.CivicOrders.Add(new(){PlotId="9,11",Operation="build",BuildingKind=BuildingKind.Hospital,RequestedBy=account.Id,CreatedAt=now});
         db.Villages.Add(v);db.Citizens.Add(person);db.RaidBattles.Add(battle);await db.SaveChangesAsync();
         var stats=JsonSerializer.Serialize(person.Stats);db.ChangeTracker.Clear();
         await db.GetService<IMigrator>().MigrateAsync("20261015212416_LiveVillageCombat");
         await db.Database.ExecuteSqlRawAsync("""
             UPDATE "Villages" SET "Sites"=(SELECT jsonb_agg(s-ARRAY['PlacedByAccountId','BoundaryApproved','PublicDemolition','Salvage']) FROM jsonb_array_elements("Sites") s);
+            UPDATE "Villages" SET "CivicOrders"=(SELECT jsonb_agg(o-ARRAY['NoticeState','NoticeAt']) FROM jsonb_array_elements("CivicOrders") o);
             UPDATE "RaidBattles" SET "Fighters"=(SELECT jsonb_agg(f-ARRAY['AccountId','IsTsar','DestinationX','DestinationY']) FROM jsonb_array_elements("Fighters") f);
             """);
         await db.Database.MigrateAsync();db.ChangeTracker.Clear();
         var restored=await db.Villages.AsNoTracking().SingleAsync();var site=Assert.Single(restored.Sites);
         Assert.Equal(account.Id,site.OwnerAccountId);Assert.Equal(9,Assert.Single(site.Progress).Done);Assert.Empty(site.Salvage);Assert.False(site.PublicDemolition);Assert.Empty(restored.SiteRecoveries);
+        var order=Assert.Single(restored.CivicOrders);Assert.Equal("Queued",order.NoticeState);Assert.Equal(account.Id,order.RequestedBy);Assert.Equal(BuildingKind.Hospital,order.BuildingKind);Assert.Equal("pending",order.Status);
         var saved=await db.Citizens.AsNoTracking().SingleAsync();Assert.Equal(account.Id,saved.AccountId);Assert.Equal(37,saved.Renown);Assert.Equal(stats,JsonSerializer.Serialize(saved.Stats));
         var fighter=Assert.Single((await db.RaidBattles.AsNoTracking().SingleAsync()).Fighters);Assert.False(fighter.IsTsar);Assert.Null(fighter.AccountId);Assert.Equal(person.Id,fighter.CitizenId);Assert.Equal(31,fighter.Health);
     }

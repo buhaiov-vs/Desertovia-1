@@ -66,13 +66,30 @@ public sealed partial class GameService
             return await BuildStateAsync(db, village, now, ct);
         }, ct);
 
-    public async Task<VillageStateDto> CivicDecisionAsync(string slug, Guid actor, Guid id, CivicDecision decision, CancellationToken ct) =>
+    public Task<VillageStateDto> CivicDecisionAsync(string slug, Guid actor, Guid id, CivicDecision decision, CancellationToken ct) =>
+        CivicDecisionCoreAsync(slug, actor, id, decision, null, ct);
+
+    public Task<VillageStateDto> CivicTelegramDecisionAsync(string slug, string telegram, Guid id, bool approve, CancellationToken ct) =>
+        CivicDecisionCoreAsync(slug, Guid.Empty, id, new(approve), telegram, ct);
+
+    private async Task<VillageStateDto> CivicDecisionCoreAsync(string slug, Guid actor, Guid id, CivicDecision decision, string? telegram, CancellationToken ct) =>
         await WithVillageAsync(await FindVillageIdAsync(slug, ct), async db =>
         {
             await SyncHospitalAsync(db, await FindVillageIdAsync(slug,ct), ct);
             var village = await LoadVillageAsync(db, slug, ct);
             var order = village.CivicOrders.SingleOrDefault(o => o.Id == id) ?? throw new NotFoundException("building.orderMissing", "Application not found.");
-            if (order.Status != "pending") throw new GameRuleException("building.orderProcessed", "This application was already processed.");
+            if (telegram is not null)
+            {
+                var ownerTelegram = await db.ExternalLogins.Where(l => l.AccountId == village.OwnerAccountId && l.Provider == "telegram")
+                    .Select(l => l.ProviderUserId).SingleOrDefaultAsync(ct);
+                if (telegram != ownerTelegram || order.Operation is not ("build" or "upgrade" or "demolish")) throw new UnauthorizedAccessException();
+                actor = village.OwnerAccountId;
+            }
+            if (order.Status != "pending")
+            {
+                if (telegram is not null) return await BuildStateAsync(db, village, time.GetUtcNow(), ct);
+                throw new GameRuleException("building.orderProcessed", "This application was already processed.");
+            }
             var now=time.GetUtcNow();
             if (order.PartnerAccountId == actor && village.OwnerAccountId != actor)
             {

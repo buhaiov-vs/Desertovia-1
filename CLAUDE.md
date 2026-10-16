@@ -1,3 +1,21 @@
+# D-073:0.7.1 deployment authorized16Oct
+
+Owner requested missing construction notices fixed AND0.7.1 installed now.
+This supersedes D-071/D-072 repository-only holds for the combined release.
+Read docs/dezertovia/CIVIC_TELEGRAM_0_7_1.md. New exact CI/payload/operator/backups/independent preservation
+check required; never replay old0.7 trigger. No progress resets or synthetic
+player messages. Actual pending civic notices to owner are authorized.
+
+# D-072: идентификация автора отзыва, repository only
+
+Владелец16.10 просит добавлять к багу/репорту батюшке автора и игровой код.
+В feat/feedback-game-identity добавлен read-only /api/feedback/identity:
+Telegram ID → существующий AccountId/CitizenId, прежняя bridge-авторизация.
+См. docs/dezertovia/FEEDBACK_GAME_IDENTITY.md и парную bot-ветку. Без привязки
+по нику, без изменения профилей/прогресса/свечей. Новая установка не разрешена.
+Проверенный0.7.1/573af93 ниже — отдельный кандидат; новые изменения пока в ветке.
+LIVE0.7/0540a2a не менялся. Номер за эту правку не повышаем.
+
 # D-071:0.7.1 проверен в репозитории, НЕ установлен
 
 Exact source573af93ccb2892b7e07c48529f8c387b63237cab, CI38864253995 SUCCESS:

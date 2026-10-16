@@ -979,5 +979,13 @@
     "live_source_unchanged": "0540a2a006d2c72b580b37f74387f1e53e68f9eb"
   },
   "live_version": "0.7",
-  "candidate_version": "0.7.1"
+  "candidate_version": "0.7.1",
+  "feedback_identity": {
+    "decision": "D-072",
+    "state": "implemented_branch_not_deployed",
+    "branch": "feat/feedback-game-identity",
+    "bot_required": true,
+    "schema_changes": false,
+    "runtime_changed": false
+  }
 }

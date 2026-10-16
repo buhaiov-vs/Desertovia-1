@@ -17,6 +17,8 @@ public sealed class CivicOrder
     public string Status { get; set; } = "pending";
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ApprovedAt { get; set; }
+    public string NoticeState { get; set; } = "Queued";
+    public DateTimeOffset? NoticeAt { get; set; }
 }
 
 public static class BuildingOperations

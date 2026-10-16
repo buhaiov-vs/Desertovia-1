@@ -70,6 +70,8 @@ builder.Services.AddSingleton<ChatService>();
 builder.Services.AddSingleton<IAlmightyBridge, AlmightyBridge>();
 builder.Services.AddSingleton<AlmightyService>();
 builder.Services.AddHostedService<AlmightyWorker>();
+builder.Services.AddSingleton<CivicNotificationService>();
+builder.Services.AddHostedService<CivicNotificationWorker>();
 builder.Services.AddSingleton<SramoslavService>();
 builder.Services.AddSingleton<ChaplainChatWorker>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<ChaplainChatWorker>());

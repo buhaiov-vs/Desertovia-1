@@ -7,6 +7,14 @@ public static class GameEndpoints
 {
     public static void MapGameEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapFeedbackIdentityEndpoints();
+        app.MapPost("/api/civic/vote", async (CivicTelegramVote vote, HttpContext http,
+            Microsoft.Extensions.Options.IOptions<TelegramOptions> options, GameService game, IConfiguration config, CancellationToken ct) => {
+            if (!AlmightyService.Trusted(http, options)) return Results.Unauthorized();
+            if (string.IsNullOrWhiteSpace(config["Hosting:PrimaryVillage"]) || vote.Slug != config["Hosting:PrimaryVillage"]) return Results.Forbid();
+            await game.CivicTelegramDecisionAsync(vote.Slug, vote.OwnerId, vote.OrderId, vote.Approve, ct);
+            return Results.Ok(new { result = "Решение сохранено. Текущее состояние заявки — в городе." });
+        });
         app.MapPost("/api/director/vote", async (AlmightyTelegramVote vote, HttpContext http,
             Microsoft.Extensions.Options.IOptions<TelegramOptions> options, GameService game, CancellationToken ct) => {
             if (!AlmightyService.Trusted(http, options)) return Results.Unauthorized();

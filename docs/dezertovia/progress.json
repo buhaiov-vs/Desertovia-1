@@ -1223,6 +1223,16 @@
       "COMBAT-07"
     ],
     "runtime_changed": false,
-    "new_deployment": false
+    "new_deployment": false,
+    "hud_layout": {
+      "status": "owner_approved_design_not_implemented",
+      "desktop": "top HUD left of weather and wallet, two stacked thin bars with exact values",
+      "phone": "existing top status row between weather and wallet",
+      "hp_color": "red",
+      "stamina_color": "yellow-green",
+      "no_additional_hud_row": true,
+      "mockup_values": "demonstration_only",
+      "combat_controls": "retreat and treatment only during personal active combat; no medicine means dark disabled treatment with reason"
+    }
   }
 }

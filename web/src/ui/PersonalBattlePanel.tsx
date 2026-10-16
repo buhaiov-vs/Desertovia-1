@@ -16,8 +16,8 @@ export function PersonalBattlePanel({slug,battle,fighter,remedies,now,onError}:{
     try{await api.battleOrder(slug,battle.id,null,mode,undefined,mode==='heal'?healRequest.current!:undefined);healRequest.current=null}
     catch(e){onError(i18n.error(e))}finally{setBusy(false)}
   }
-  return <div className="hud-status personal-battle-panel" role="group" aria-label={ru?'Действия в бою':'Combat actions'}>
+  return <div className="personal-battle-panel" role="group" aria-label={ru?'Действия в бою':'Combat actions'}>
     <button disabled={busy||retreating} onClick={()=>void act('retreat')}>{retreating?(ru?'Отступаю…':'Withdrawing…'):(ru?'Отступить':'Retreat')}</button>
-    <button disabled={busy||!!reason} onClick={()=>void act('heal')} title={reason||undefined}>{ru?'Лечение':'Heal'}{reason?` · ${reason}`:''}</button>
+    <button disabled={busy||!!reason} onClick={()=>void act('heal')} title={reason||undefined}><span>{ru?'Лечение':'Heal'}</span>{reason&&<small>{reason}</small>}</button>
   </div>
 }

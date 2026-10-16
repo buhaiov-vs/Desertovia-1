@@ -794,13 +794,6 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         selection={showPicked || showWatched ? picked.target.area : null}
       />
 
-      {!walletOpen&&!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&(()=>{
-        const battle=village.battles?.find(b=>!b.finishedAt&&b.phase!=='Warning'&&b.fighters.some(f=>tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id))
-        const fighter=battle?.fighters.find(f=>tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id)
-        const remedies=(village.resources.find(r=>r.kind==='Remedy')?.amount??0)+(tsar?0:(citizen?.load.find(g=>g.resource==='Remedy')?.amount??0)+(citizen?.personalGoods?.find(g=>g.kind==='Remedy')?.amount??0))
-        return battle&&fighter?<ServerClock offsetMs={serverOffset}>{now=><PersonalBattlePanel slug={slug} battle={battle} fighter={fighter} remedies={remedies} now={now} onError={setNotice}/>}</ServerClock>:null
-      })()}
-
       {!walletOpen&&!chatFull && <button
         className="ui-toggle"
         onClick={toggleUi}
@@ -918,6 +911,12 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
           )}
         </div>
         <ChatPanel
+          actions={!walletOpen&&!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&(()=>{
+            const battle=village.battles?.find(b=>!b.finishedAt&&b.phase!=='Warning'&&b.fighters.some(f=>tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id))
+            const fighter=battle?.fighters.find(f=>tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id)
+            const remedies=(village.resources.find(r=>r.kind==='Remedy')?.amount??0)+(tsar?0:(citizen?.load.find(g=>g.resource==='Remedy')?.amount??0)+(citizen?.personalGoods?.find(g=>g.kind==='Remedy')?.amount??0))
+            return battle&&fighter?<ServerClock offsetMs={serverOffset}>{now=><PersonalBattlePanel slug={slug} battle={battle} fighter={fighter} remedies={remedies} now={now} onError={setNotice}/>}</ServerClock>:null
+          })()}
           key={slug}
           mentionCandidates={citizens.filter(c=>!live.away.has(c.id)).map(c=>({id:c.id,name:c.name}))}
           incoming={live.chatArrivals}

@@ -87,3 +87,13 @@ its isolated rerun passed, and the full repeat must succeed before readiness.
 No physical-phone FPS measurement has been made. No universal lag-free claim.
 Director economic/tax executors and owner digests remain their own open backlog.
 All new checks use local data/mocks, no real messages, paid probes or production raids.
+
+## Latest owner layout correction
+
+Combat actions now share the collapsed Chat launcher row: Chat / Retreat / Heal,
+all 44px high, natural button widths and no separate full-width frame. The disabled
+medicine reason fits on a small second line inside the button. The peaceful needs
+footer is hidden during active personal combat. The row remains in the chat's
+normal phone layout and left-hand desktop position, clear of navigation. Real-map
+checks exercise hidden/quarter chat, equal button heights and unobstructed hit
+targets. Final exact CI and phone/desktop screenshots follow this source revision.

@@ -19,6 +19,11 @@ for(const width of [360,390,430,1440])test(`own HP and stamina fit the shared to
  await expect(vitals).not.toContainText(/Здоров|На лечении|26\/40|24\/40/)
  await vitals.getByRole('button',{name:'Показать HP'}).click();await expect(page.getByRole('tooltip')).toContainText('26/40');await page.keyboard.press('Escape')
  await expect(page.getByRole('button',{name:'Начать голосование',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Строить',exact:true})).toHaveCount(0)
+ const launch=await page.locator('.chat-launch').boundingBox()
+ for(const button of await page.locator('.personal-battle-panel button').all()){
+   const box=await button.boundingBox();expect(box!.height).toBe(44);expect(box!.height).toBe(launch!.height);expect(box!.y).toBe(launch!.y)
+   expect(box!.x+box!.width).toBeLessThanOrEqual(width)
+ }
  const boxes=await page.locator('.hud-state-row > *').evaluateAll(els=>els.map(el=>{const b=el.getBoundingClientRect();return {left:b.left,right:b.right,top:b.top,bottom:b.bottom}}))
  for(const b of boxes){expect(b.left).toBeGreaterThanOrEqual(0);expect(b.right).toBeLessThanOrEqual(width+1)}
  for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){const a=boxes[i],b=boxes[j];expect(Math.min(a.right,b.right)<=Math.max(a.left,b.left)+1||Math.min(a.bottom,b.bottom)<=Math.max(a.top,b.top)+1).toBe(true)}

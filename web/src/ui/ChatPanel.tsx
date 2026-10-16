@@ -1,5 +1,5 @@
 import { useGamePopups } from '../gamePreferences'
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { CHAT_MESSAGE_MAXIMUM, type ChatMessage } from '../api'
 import { type FeedEntry } from '../hooks'
 import { useI18n } from '../i18n'
@@ -29,11 +29,13 @@ export function ChatPanel({
   incoming = EMPTY_INCOMING,
   onModeChange,
   interrupted = false,
+  actions,
 }: {
   mentionCandidates?: {id:string;name:string}[]
   incoming?: ChatMessage[]
   onModeChange?: (mode: ChatMode) => void
   interrupted?: boolean
+  actions?: ReactNode
   feed: FeedEntry[]
   messages: ChatMessage[]
   /** The Tsar or a citizen of this village; only they read and write the chat. */
@@ -208,9 +210,13 @@ export function ChatPanel({
           <strong>{message.authorName}</strong><span>{message.text}</span>
         </button>)}
       </div>}
-      {collapsed ? <button ref={launch} className="chat-launch" aria-label={t('chat.open')} aria-expanded={false} onClick={()=>changeMode('quarter')}>
+      <div className="chat-action-row">
+      {collapsed && <button ref={launch} className="chat-launch" aria-label={t('chat.open')} aria-expanded={false} onClick={()=>changeMode('quarter')}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z"/></svg> <span className="chat-heading">{t('chat.title')}</span>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
-      </button> : <div className="chat-head">
+      </button>}
+      {actions}
+      </div>
+      {!collapsed && <div className="chat-head">
         <div className="chat-heading"><strong>{t('chat.title')}</strong></div>{unread>0&&<span className="hud-card-count">{unread>99?'99+':unread}</span>}
         <button className={`chip${showActivities?' active':''}`} aria-pressed={showActivities} title={t('chat.activitiesTitle')} onClick={toggleActivities}>{t('chat.activities')}</button>
         <button className="chat-control" aria-label={t(mode==='full'?'chat.quarter':'chat.full')} title={t(mode==='full'?'chat.quarter':'chat.full')} onClick={()=>changeMode(mode==='full'?'quarter':'full')}>

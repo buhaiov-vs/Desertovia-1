@@ -41,10 +41,24 @@ test('personal HUD matches the resource cards on the real map and leaves navigat
   await page.route(`**/api/villages/${DEMO_SLUG}`,route=>route.fulfill({json:data}))
   await page.reload();await expectVillageView(page)
   const actions=page.getByRole('group',{name:'Действия в бою'});await expect(actions).toBeVisible()
-  await expect(page.locator('.hud-needs')).toHaveCount(0);await expect(page.locator('.hud-left .hud-status')).toBeHidden()
+  await expect(page.locator('.hud-needs')).toHaveCount(0);await expect(page.locator('.hud-left .hud-status:not(.personal-battle-panel)')).toBeHidden()
   const actionBox=await actions.boundingBox(),navBox=await page.locator('.hud-buttons').boundingBox()
-  expect(actionBox!.y+actionBox!.height).toBeLessThanOrEqual(navBox!.y)
+  expect(Math.min(actionBox!.x+actionBox!.width,navBox!.x+navBox!.width)<=Math.max(actionBox!.x,navBox!.x)||Math.min(actionBox!.y+actionBox!.height,navBox!.y+navBox!.height)<=Math.max(actionBox!.y,navBox!.y)).toBe(true)
   await expect(page.getByRole('progressbar',{name:'Моё здоровье',exact:true})).toHaveAttribute('value','26')
+  const clearOfChat=async()=>{
+    const a=await actions.boundingBox(),chat=page.locator('.chat-panel')
+    const collapsed=await chat.getAttribute('data-mode')==='hidden'
+    const c=await page.locator(collapsed?'.chat-launch':'.chat-head').boundingBox()
+    expect(Math.min(a!.x+a!.width,c!.x+c!.width)<=Math.max(a!.x,c!.x)||Math.min(a!.y+a!.height,c!.y+c!.height)<=Math.max(a!.y,c!.y)).toBe(true)
+    for(const button of await actions.locator('button').all()){
+      const r=await button.boundingBox();expect(r!.height).toBe(44)
+      expect(r!.x).toBeGreaterThanOrEqual(0);expect(r!.x+r!.width).toBeLessThanOrEqual(page.viewportSize()!.width)
+      if(collapsed){expect(r!.y).toBe(c!.y);expect(r!.height).toBe(c!.height)}
+      expect(await button.evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))})).toBe(true)
+    }
+  }
+  await clearOfChat();await page.locator('.chat-launch').click();await expect(page.locator('.chat-panel')).toHaveAttribute('data-mode','quarter');await clearOfChat()
+  await page.locator('.chat-control').last().click();await expect(page.locator('.chat-panel')).toHaveAttribute('data-mode','hidden');await clearOfChat()
   await page.screenshot({path:test.info().outputPath('owner-real-map-battle.png')})
 })
 

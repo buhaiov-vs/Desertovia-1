@@ -133,7 +133,7 @@ export function BottomBar({
   const { t } = useI18n()
   return (
     <div className="hud-bottom">
-      <div className="hud-left">
+      {!inCombat && <div className="hud-left">
         {!tsar && citizen && !inCombat && (
           <CitizenNeeds
             citizen={citizen}
@@ -163,7 +163,7 @@ export function BottomBar({
             </button>
           ) : null}
         </div>
-      </div>
+      </div>}
       <div className="hud-buttons" style={{ '--hud-button-count': tabsFor(tsar, ruler).filter(tab => tab !== 'settings').length + 1 } as CSSProperties}>
         {phone ? (
           // Settings stay reachable from the tab row inside the menu, keeping the phone bar short.

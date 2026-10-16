@@ -61,7 +61,18 @@ public sealed record SiteJobDto(string JobId, int Done, int Required, int Room, 
 /// <param name="Hands">Different citizens who already worked on the stage.</param>
 public sealed record SiteStageDto(string Id, int CrewNeeded, int Hands, IReadOnlyList<SiteJobDto> Jobs);
 
-public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages, int TargetLevel = 1) { public Guid? OwnerAccountId { get; init; } }
+public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages, int TargetLevel = 1)
+{
+    public Guid? OwnerAccountId { get; init; }
+    public Guid? PlacedByAccountId { get; init; }
+    public string? OwnerName { get; init; }
+    public DateTimeOffset PlacedAt { get; init; }
+    public bool BoundaryConflict { get; init; }
+    public bool BoundaryApproved { get; init; }
+    public bool HasWork { get; init; }
+    public string? Operation { get; init; }
+    public bool PublicDemolition { get; init; }
+}
 
 /// <param name="Count">Animals now; the map shows a share of them, the Tsar never sees the number.</param>
 public sealed record HerdDto(AnimalKind Kind, int Count, int Capacity, string Habitat);
@@ -191,7 +202,7 @@ public sealed record HousingDto(string PlotId, int Beds, int Occupied, int Level
 
 /// <param name="Appearance">Null until the owner creates their character.</param>
 /// <param name="Spot">Where the Tsar walked to; null while they stand at the campfire.</param>
-public sealed record TsarDto(string Name, Appearance? Appearance, TilePoint? Spot);
+public sealed record TsarDto(string Name, Appearance? Appearance, TilePoint? Spot, DateTimeOffset? InjuredUntil = null);
 
 /// <param name="Objectives">Rulers' objectives (planning) carry no numbers; citizen objectives carry progress.</param>
 public sealed record QuestDto(Guid Id, QuestKind Kind, ResourceKind? Resource, DateTimeOffset StartedAt, IReadOnlyList<QuestObjective> Objectives);
@@ -598,7 +609,9 @@ public static class DtoMapper
                             : site.Remaining(index, job.JobId),
                         context?.ReservedWork(site.PlotId, index, job.JobId, site.Remaining(index, job.JobId)) ?? 0))
                     .ToList()))
-            .ToList(), site.TargetLevel) { OwnerAccountId = site.OwnerAccountId };
+            .ToList(), site.TargetLevel) { OwnerAccountId = site.OwnerAccountId,PlacedByAccountId=site.PlacedByAccountId,
+                PlacedAt=site.PlacedAt, BoundaryConflict=SiteManagement.LegacyConflict(site), BoundaryApproved=site.BoundaryApproved,
+                HasWork=site.HasWork,Operation=site.Operation,PublicDemolition=site.PublicDemolition };
 
     public static ProjectDto ToDto(this VillageProject project, WorkContext context)
     {

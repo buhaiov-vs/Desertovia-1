@@ -209,7 +209,8 @@ public static class CycleEngine
     /// <summary>Starts a job on a construction site: hauling material there, or working on the current stage.</summary>
     public static void StartJob(Citizen citizen, string plotId, int stage, string jobId, WorkContext context, DateTimeOffset now)
     {
-        citizen.CyclePrivateOutput = context.Village.Sites.SingleOrDefault(s => s.PlotId == plotId)?.OwnerAccountId is not null;
+        var selectedSite = context.Village.Sites.SingleOrDefault(s => s.PlotId == plotId);
+        citizen.CyclePrivateOutput = selectedSite?.OwnerAccountId is not null && !selectedSite.PublicDemolition;
         var village = context.Village;
         if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge)) village.BridgeOpened=true;
         CheckReady(citizen, now);

@@ -64,6 +64,11 @@ public sealed class RaidUnit
 public sealed class RaidFighter
 {
     public Guid CitizenId { get; set; }
+    public Guid? AccountId { get; set; }
+    public bool IsTsar { get; set; }
+    public Guid ActorId => IsTsar ? AccountId ?? Guid.Empty : CitizenId;
+    public double? DestinationX { get; set; }
+    public double? DestinationY { get; set; }
     public double X { get; set; }
     public double Y { get; set; }
     public double Health { get; set; }

@@ -5,10 +5,12 @@ using Desertod.Domain.Projects;
 using Desertod.Domain.Rules;
 using Desertod.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Desertod.Domain.World;
+using Desertod.Domain.Dungeons;
 
 namespace Desertod.Api.Game;
 
-public sealed record BattleOrder(Guid? TargetUnitId = null, string Mode = "intercept");
+public sealed record BattleOrder(Guid? TargetUnitId = null, string Mode = "intercept", TilePoint? Destination = null);
 public sealed record GateOrder(bool Open);
 
 public sealed partial class GameService
@@ -25,16 +27,20 @@ public sealed partial class GameService
     private static void CarryFighters(RaidBattle previous,RaidBattle next,DateTimeOffset now)
     {
         foreach(var f in previous.Fighters)
-            next.Fighters.Add(new(){CitizenId=f.CitizenId,X=f.X,Y=f.Y,Health=f.Health,MaximumHealth=f.MaximumHealth,
-                Mode=f.Mode,Guard=f.Guard,Wounded=f.Wounded,NextAttackAt=now.AddSeconds(1)});
+        {
+            // A queued order must never create a second actor or restore spent health.
+            next.Fighters.RemoveAll(x=>x.IsTsar==f.IsTsar&&x.ActorId==f.ActorId);
+            next.Fighters.Add(new(){CitizenId=f.CitizenId,AccountId=f.AccountId,IsTsar=f.IsTsar,X=f.X,Y=f.Y,Health=f.Health,MaximumHealth=f.MaximumHealth,
+                Mode=f.Mode,Guard=f.Guard,Active=f.Active,Wounded=f.Wounded,NextAttackAt=now.AddSeconds(1)});
+        }
     }
 
     private static RaidReport BattleReport(Raid raid,RaidBattle battle,IReadOnlyList<Citizen> people) => new(
         raid.Id,raid.Source,raid.Enemy,raid.Count,raid.Wave,raid.Waves,raid.StrikesAt,raid.Outcome==RaidOutcome.Repelled,
         raid.Killed,0,0,
-        battle.Fighters.Where(f=>f.DamageDealt>0).Select(f=>new RaidDefenderReport(f.CitizenId,
+        battle.Fighters.Where(f=>!f.IsTsar&&f.DamageDealt>0).Select(f=>new RaidDefenderReport(f.CitizenId,
             people.FirstOrDefault(c=>c.Id==f.CitizenId)?.Name??"",f.Wounded,f.RenownEarned,BattleBroken(f,people))).ToArray(),
-        battle.Fighters.Where(f=>f.Wounded&&f.DamageDealt==0).Select(f=>new RaidVictimReport(f.CitizenId,
+        battle.Fighters.Where(f=>!f.IsTsar&&f.Wounded&&f.DamageDealt==0).Select(f=>new RaidVictimReport(f.CitizenId,
             people.FirstOrDefault(c=>c.Id==f.CitizenId)?.Name??"")).ToArray(),
         raid.Loot.Select(g=>new Desertod.Domain.Catalog.ResourceAmount(g.Kind,g.Amount)).ToArray(),
         raid.Stolen.Select(g=>new Desertod.Domain.Catalog.ResourceAmount(g.Kind,g.Amount)).ToArray(),
@@ -50,22 +56,67 @@ public sealed partial class GameService
     public async Task SetBattleOrderAsync(string slug,Guid actor,Guid battleId,BattleOrder order,CancellationToken ct)
     {
         if(order.Mode is not ("hold" or "intercept"))throw new GameRuleException("defense.mode","Unknown defense mode.");
-        var key=await RequireCitizenAsync(slug,actor,ct);
-        await WithVillageAsync(key.VillageId,async db=>
+        var villageId=await FindVillageIdAsync(slug,ct);
+        await WithVillageAsync(villageId,async db=>
         {
-            var citizen=await db.Citizens.SingleAsync(c=>c.Id==key.Id,ct);
-            var now=time.GetUtcNow();HospitalRules.RequireReady(citizen,now);
-            if(CombatRules.IsInjured(citizen,now))throw new GameRuleException("citizen.injured","A wounded guard cannot attack.");
-            if(RaidRules.GuardTask(citizen,now) is null)throw new GameRuleException("defense.guard","Start guard duty first.");
-            var battle=await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==battleId&&b.VillageId==key.VillageId&&b.FinishedAt==null,ct)
+            var village=await LoadVillageAsync(db,slug,ct);
+            var citizen=await db.Citizens.SingleOrDefaultAsync(c=>c.VillageId==villageId&&c.AccountId==actor,ct);
+            var tsar=village.OwnerAccountId==actor;
+            if(!tsar&&citizen is null)throw new UnauthorizedAccessException();
+            var now=time.GetUtcNow();
+            await SyncHospitalAsync(db,villageId,ct,true,actor);
+            if(HasHospitalRestriction(actor))throw new GameRuleException("hospital.unavailable","Wait until recovery.");
+            if(citizen is not null)HospitalRules.RequireReady(citizen,now);
+            var battle=await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==battleId&&b.VillageId==villageId&&b.FinishedAt==null,ct)
                 ??throw new GameRuleException("raid.finished","This battle has finished.");
-            var fighter=battle.Fighters.SingleOrDefault(f=>f.CitizenId==citizen.Id)
-                ??throw new GameRuleException("defense.arriving","The guard is arriving. Try again shortly.");
-            if(fighter.Health<=0)throw new GameRuleException("defense.wounded","A wounded guard cannot attack.");
+            var queue=await db.RaidBattles.Where(b=>b.VillageId==villageId&&b.FinishedAt==null).ToListAsync(ct);
+            if(battle.Phase=="Warning"&&queue.Any(b=>b.Id!=battle.Id&&(b.Phase!="Warning"||b.ScheduledAt<battle.ScheduledAt)))
+                throw new GameRuleException("raid.queued","Wait for the current wave before issuing orders to the next one.");
             if(order.TargetUnitId is {} target && !battle.Units.Any(u=>u.Id==target&&u.Alive))
                 throw new GameRuleException("raid.targetGone","This enemy is no longer available.");
-            fighter.Mode=order.Mode;fighter.TargetUnitId=order.TargetUnitId;battle.Revision++;
-            await db.SaveChangesAsync(ct);changes.Mark(key.VillageId);return true;
+            var nav=new RaidNavigation(village);
+            if(order.Destination is {} destination && (!double.IsFinite(destination.X)||!double.IsFinite(destination.Y)
+                ||!nav.Pass((int)Math.Floor(destination.X),(int)Math.Floor(destination.Y))))
+                throw new GameRuleException("walk.blocked","Choose reachable ground.");
+            RaidFighter? fighter;
+            if(tsar)
+            {
+                if(village.TsarInjuredUntil>now)throw new GameRuleException("defense.wounded","The Tsar is recovering.");
+                if(citizen is not null && (citizen.DungeonRunId is not null || CombatRules.IsInjured(citizen,now)
+                    ||citizen.ExhaustedUntil>now || !citizen.CycleSettled))
+                    throw new GameRuleException("defense.busy","Finish the current work or recovery first.");
+                var runs=await db.DungeonRuns.Where(r=>r.VillageId==villageId&&r.Phase!=DungeonPhase.Ended).ToListAsync(ct);
+                if(runs.Any(r=>r.Heroes.Any(h=>h.AccountId==actor&&!h.Settled)))
+                    throw new GameRuleException("dungeon.busy","Return from the dungeon first.");
+                fighter=battle.Fighters.SingleOrDefault(f=>f.IsTsar&&f.AccountId==actor);
+                if(fighter is null)
+                {
+                    var p=nav.NearestFree(village.TsarTrip?.PositionAt(now)??village.TsarSpot??WorldMap.Places[WorldMap.Camp]);
+                    fighter=new(){IsTsar=true,AccountId=actor,X=p.X,Y=p.Y,Health=HeroClassCatalog.VoivodeHealth,
+                        MaximumHealth=HeroClassCatalog.VoivodeHealth,Guard=true,Active=true,NextAttackAt=now.AddSeconds(1)};
+                    battle.Fighters.Add(fighter);village.TsarTrip=null;village.TsarSpot=p;
+                }
+                if(citizen is not null)foreach(var duplicate in battle.Fighters.Where(f=>!f.IsTsar&&f.CitizenId==citizen.Id))duplicate.Active=false;
+            }
+            else
+            {
+                if(CombatRules.IsInjured(citizen!,now))throw new GameRuleException("citizen.injured","A wounded guard cannot attack.");
+                if(RaidRules.GuardTask(citizen!,now) is null)throw new GameRuleException("defense.guard","Start guard duty first.");
+                fighter=battle.Fighters.SingleOrDefault(f=>!f.IsTsar&&f.CitizenId==citizen!.Id);
+                if(fighter is null)
+                {
+                    var p=nav.NearestFree(citizen!.Spot??citizen.IdleSpot??WorldMap.Places[WorldMap.Camp]);
+                    fighter=new(){CitizenId=citizen.Id,X=p.X,Y=p.Y,Health=32+citizen.Stats.Endurance*4,
+                        MaximumHealth=32+citizen.Stats.Endurance*4,Guard=true,Active=true,NextAttackAt=now.AddSeconds(1)};
+                    battle.Fighters.Add(fighter);
+                }
+            }
+            if(fighter.Health<=0)throw new GameRuleException("defense.wounded","Wait until this encounter is over and recover.");
+            fighter.Active=true;fighter.Mode=order.Mode;fighter.TargetUnitId=order.Destination is null?order.TargetUnitId:null;
+            fighter.DestinationX=order.Destination?.X;fighter.DestinationY=order.Destination?.Y;battle.Revision++;
+            db.AuditActor=actor;db.AuditOperation="battle-order";
+            await db.SaveChangesAsync(ct);changes.Mark(villageId);
+            await notifier.BattleUpdated(slug,battle,village.Fortifications);return true;
         },ct);
     }
 

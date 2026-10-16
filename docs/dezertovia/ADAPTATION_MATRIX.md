@@ -197,3 +197,17 @@ snapshot once per admission and shared authoritative bot expiry. Recommendation
 | Учёт/инвентарь/торговля | Village transaction/Storage/Citizen/InventoryPanel | Ledger/wallet/receipts/PersonalGoods/market/test exchange | BRANCH, локально проверено; налог preview |
 | Чат/мобильный UX | ChatService/ChatPanel/Settings/прежняя карта | stable mentions, popup preference, компактный статус, map placement | BRANCH, целевой browser PASS |
 | Всевышний | PR33 + signed bot PR35 | Агрегаты учёта, DB route regression, прежние возможности сохранены | BRANCH; production flag не менялся |
+
+
+## D-071 — пакет0.7.1 (IMPLEMENTED, validation in progress, not deployed)
+
+| Замечание | Адаптация существующей основы | Проверка |
+| --- | --- | --- |
+| COMBAT-02D | Terminal Cancelled + штатное завершение фактического участия/состояния | Domain PASS; API/browser pending |
+| COMBAT-02B | Account-bound Voivode + persistent RaidFighter + target/move intents | Domain PASS; API/browser pending |
+| COMBAT-02A | Visible persisted shoreline end caps, existing damage unchanged | Domain PASS; browser pending |
+| LAND-02 | Ownership/approval metadata, slow site-demolish, durable salvage claims | Domain PASS; API pending |
+| UI-06/02C | Content-sized civic cards, centered SVG close control | Build PASS; browser pending |
+| UI-07 | Dcoin icon, personal wallet HUD, direct wallet, honest test candles | Build PASS; browser pending |
+
+Не переписывать Dungeon, не сносить старые площадки, не менять реальные свечи.

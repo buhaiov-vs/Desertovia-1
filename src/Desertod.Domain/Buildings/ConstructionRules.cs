@@ -20,6 +20,7 @@ public static class ConstructionRules
         {
             Kind = kind,
             OwnerAccountId = privateOwner,
+            PlacedByAccountId = privateOwner,
             PlotId = WorldMap.PlotAt(x, y),
             PlacedAt = now,
             Scale = Math.Pow(BuildingCatalog.RepeatCostGrowth, village.CountOf(kind,privateOwner)),
@@ -116,6 +117,7 @@ public static class ConstructionRules
     public static void Cancel(Village village, string plotId)
     {
         var site = FindSite(village, plotId);
+        if(site.Operation=="site-demolish")throw new GameRuleException("building.cannotCancel","Finish dismantling this site.");
         if (site.HasWork)
         {
             throw new GameRuleException("building.cannotCancel", "Citizens have already worked on this site.");
@@ -141,7 +143,7 @@ public static class ConstructionRules
     public static JobDefinition CheckJob(Village village, Citizen citizen, string plotId, int stage, string jobId, int recentCitizens)
     {
         var site = FindSite(village, plotId);
-        if (site.OwnerAccountId is {} owner && citizen.AccountId != owner)
+        if (site.OwnerAccountId is {} owner && !site.PublicDemolition && citizen.AccountId != owner)
             throw new GameRuleException("building.private", "Only the owner can work on this private site.");
         var job = BuildingCatalog.FindJob(jobId)
                   ?? throw new GameRuleException("site.unknownJob", $"Unknown job \"{jobId}\".", new Dictionary<string, object> { ["jobId"] = jobId });

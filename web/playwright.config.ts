@@ -6,8 +6,8 @@ import { join } from 'node:path'
  * Browser smoke tests. They start their own backend and Vite preview on separate ports with a separate database
  * (`desertod_e2e` on the docker compose PostgreSQL), so a running development setup is left alone.
  */
-const API_PORT = 5181
-const WEB_PORT = 5191
+const API_PORT = Number(process.env.DESERTOD_E2E_API_PORT ?? 5181)
+const WEB_PORT = Number(process.env.DESERTOD_E2E_WEB_PORT ?? 5191)
 const connection =
   process.env.DESERTOD_E2E_CONNECTION ??
   'Host=localhost;Port=5432;Database=desertod_e2e;Username=desertod;Password=desertod'

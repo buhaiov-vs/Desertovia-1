@@ -166,7 +166,7 @@ export function UndeadPanel({
           {history.map((raid) => (
             <li key={raid.id}>
               {new Date(raid.resolvedAt!).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })} —{' '}
-              {i18n.enemy(raid.enemy)} × {raid.count}: {t(`raid.result.${raid.outcome as 'Repelled' | 'Lost'}`)}
+              {i18n.enemy(raid.enemy)} × {raid.count}: {t(`raid.result.${raid.outcome as 'Repelled' | 'Lost' | 'Cancelled'}`)}
               {raid.stolen.length > 0 && ` · ${t('raid.stolen', { goods: i18n.goods(raid.stolen) })}`}
               {raid.loot.length > 0 && ` · ${t('raid.loot', { goods: i18n.goods(raid.loot) })}`}
               {raid.injured > 0 && ` · ✚ ${raid.injured}`}

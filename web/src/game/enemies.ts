@@ -347,7 +347,7 @@ export class EnemyLayer {
         if(u.exitedAt||u.diedAt&&now-Date.parse(u.diedAt)>10000)continue
         draw(u.id,u.x,u.y,u.health,u.maximumHealth,kind,u.variant,u.health<=0,['Fighting','Breaching','Raiding'].includes(u.state)&&u.nextAttackAt?Date.parse(u.nextAttackAt)-3000:0,u.diedAt?Date.parse(u.diedAt):now)
       }
-      for(const f of battle.fighters)if(!battle.finishedAt&&f.active&&f.health>0)draw('guard:'+f.citizenId,f.x,f.y,f.health,f.maximumHealth,null,'regular',false)
+      for(const f of battle.fighters)if(!battle.finishedAt&&f.active&&f.health>0)draw('guard:'+(f.isTsar?f.accountId:f.citizenId),f.x,f.y,f.health,f.maximumHealth,null,'regular',false)
     }
     for(const [id,view] of this.liveViews)if(!shown.has(id)){view.actor.destroy();view.bar.destroy();this.liveViews.delete(id)}
   }

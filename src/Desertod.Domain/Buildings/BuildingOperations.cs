@@ -28,7 +28,7 @@ public static class BuildingOperations
         if(site.Operation=="castle-upgrade") return original with { Stages = original.Stages.Select(stage => stage with {
             Jobs = stage.Jobs.Select(job => BuildingCatalog.FindJob(job.JobId)?.Kind == JobKind.Labor
                 ? job with { Amount = checked(job.Amount * (1 << (site.TargetLevel - 1))) } : job).ToArray() }).ToArray() };
-        if(site.Operation=="demolish") return original with { Stages=[new("dismantle","Dismantling",1,[new("dismantle",site.OperationWork)])] };
+        if(site.Operation is "demolish" or "site-demolish") return original with { Stages=[new("dismantle","Dismantling",1,[new("dismantle",site.OperationWork)])] };
         if(site.Operation=="storage-upgrade") return original with { Stages=[new("upgrade","Storage upgrade",3,
             [Haul("bring-logs",60),Haul("bring-stones",40),Haul("bring-planks",20),new("raise-posts",24)])] };
         if(site.Operation=="housing-upgrade")
@@ -79,6 +79,7 @@ public static class BuildingOperations
             var kindToBuild = order.BuildingKind ?? throw new GameRuleException("building.notAvailable", "Select a building.");
             var plot = WorldMap.PlotPosition(order.PlotId) ?? throw new GameRuleException("building.cannotBuildHere", "Select a valid plot.");
             var blueprint = ConstructionRules.Place(village, kindToBuild, (int)plot.X, (int)plot.Y, now);
+            blueprint.PlacedByAccountId=order.RequestedBy;
             blueprint.OrderId = order.Id;
             order.Status = "working";
             order.ApprovedAt = now;
@@ -125,6 +126,14 @@ public static class BuildingOperations
     public static bool Finish(Village village,ConstructionSite site,DateTimeOffset now,Citizen? worker=null)
     {
         if(site.Operation is null)return false;
+        if(site.Operation=="site-demolish")
+        {
+            if(site.Salvage.Count>0) village.SiteRecoveries.Add(new(){PlotId=site.PlotId,OwnerAccountId=site.OwnerAccountId,
+                CreatedAt=now,Goods=site.Salvage.Select(g=>new StoredGood{Kind=g.Kind,Amount=g.Amount}).ToList()});
+            var oldOrder=village.CivicOrders.SingleOrDefault(o=>o.Id==site.OrderId);
+            if(oldOrder is not null)oldOrder.Status="cancelled";
+            village.Sites.Remove(site);return true;
+        }
         var structure=village.Structures.SingleOrDefault(s=>s.PlotId==site.PlotId);
         var storage=village.Storages.SingleOrDefault(s=>s.PlotId==site.PlotId);
         if(site.Operation=="demolish")

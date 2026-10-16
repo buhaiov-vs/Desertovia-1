@@ -107,8 +107,9 @@ public sealed class RulingVillageTests(DesertodApiFactory factory)
 
         var sentBack = await OkJsonAsync(await village.Tsar.DeleteAsync(undead));
 
-        Assert.Empty(sentBack.GetProperty("raids").EnumerateArray());
-        await AssertRuleBrokenAsync(await village.Tsar.DeleteAsync(undead), "raid.noUndead");
+        Assert.Equal(2,sentBack.GetProperty("raids").GetArrayLength());
+        Assert.All(sentBack.GetProperty("raids").EnumerateArray(),raid=>Assert.Equal("Cancelled",raid.GetProperty("outcome").GetString()));
+        await OkJsonAsync(await village.Tsar.DeleteAsync(undead));
     }
 
     [Fact]

@@ -23,7 +23,11 @@ public sealed record EconomyView(long Coins, long TestCandles, long EarnedToday,
     bool TaxEnabled, int ExchangeRate, int DailyExchangeLimit, int ExchangedToday, int KingdomCandleRoom,
     DateTimeOffset DayResetsAt, long Treasury, IReadOnlyList<PersonalGoodDto> Inventory, IReadOnlyList<MarketLotDto> Lots,
     IReadOnlyList<LedgerDto> Journal, Guid? NextJournalBefore, DateTimeOffset StartedAt,
-    int WorkPay, int ConstructionPay, IReadOnlyList<EconomyResident> Residents, IReadOnlyList<PrivateStorageDto> PrivateStorages, IReadOnlyDictionary<ResourceKind, int> StockPrices, IReadOnlyList<PrivatePropertyDto> PrivateProperty, DateTimeOffset? EnergyDrinkReadyAt);
+    int WorkPay, int ConstructionPay, IReadOnlyList<EconomyResident> Residents, IReadOnlyList<PrivateStorageDto> PrivateStorages, IReadOnlyDictionary<ResourceKind, int> StockPrices, IReadOnlyList<PrivatePropertyDto> PrivateProperty, DateTimeOffset? EnergyDrinkReadyAt)
+{
+    public IReadOnlyList<SiteRecoveryDto> SiteRecoveries { get; init; } = [];
+}
+public sealed record SiteRecoveryDto(Guid Id,string PlotId,bool Personal,IReadOnlyList<ResourceAmount> Goods);
 public sealed record PrivatePropertyDto(string PlotId, BuildingKind Kind, int Level, bool Site, bool HasWork);
 public sealed record EconomyResident(Guid AccountId, string Name);
 public sealed record PrivateStorageDto(string PlotId, StorageKind Kind, IReadOnlyList<ResourceAmount> Goods);
@@ -127,6 +131,27 @@ public sealed partial class GameService
             db.AuditActor = account; db.AuditOperation = request.Action;
             switch (request.Action)
             {
+                case "claim-site-recovery":
+                {
+                    var recovery=village.SiteRecoveries.SingleOrDefault(r=>r.Id==request.Target);
+                    if(recovery is null) break; // An already collected receipt cannot mint another refund.
+                    if(recovery.OwnerAccountId is {} owner)
+                    {
+                        if(owner!=account)throw new UnauthorizedAccessException();
+                        var recipient=Own();
+                        foreach(var good in recovery.Goods)
+                            if(PersonalInventory.Room(recipient,good.Kind)<good.Amount)throw new GameRuleException("inventory.full","Make room for the recovered materials.");
+                        foreach(var good in recovery.Goods)PersonalInventory.Add(recipient,good.Kind,good.Amount,0);
+                    }
+                    else
+                    {
+                        if(village.OwnerAccountId!=account)Own();
+                        foreach(var good in recovery.Goods)
+                            if(village.Store(good.Kind,good.Amount)!=good.Amount)throw new GameRuleException("building.returnSpace","Make room in communal storage first.");
+                    }
+                    village.SiteRecoveries.Remove(recovery);
+                    break;
+                }
                 case "energy-drink-coins":
                 case "energy-drink-candles":
                 {
@@ -295,8 +320,8 @@ public sealed partial class GameService
         }
         // Personal possessions and wallet details are visible only to their owner, even in the public journal.
         query = village.OwnerAccountId == account
-            ? query.Where(x => !x.Location.StartsWith("personal:") && !x.Location.StartsWith("private-storage:") && !x.Location.StartsWith("private-site:"))
-            : query.Where(x => x.AccountId == null || x.AccountId == account || x.Asset != "DZK" && x.Asset != "TEST_CANDLE" && !x.Location.StartsWith("personal:") && !x.Location.StartsWith("private-storage:") && !x.Location.StartsWith("private-site:"));
+            ? query.Where(x => !x.Location.StartsWith("personal:") && !x.Location.StartsWith("private-storage:") && !x.Location.StartsWith("private-site:") && !x.Location.StartsWith("private-recovery:"))
+            : query.Where(x => x.AccountId == null || x.AccountId == account || x.Asset != "DZK" && x.Asset != "TEST_CANDLE" && !x.Location.StartsWith("personal:") && !x.Location.StartsWith("private-storage:") && !x.Location.StartsWith("private-site:") && !x.Location.StartsWith("private-recovery:"));
         var rows = await query.OrderByDescending(x => x.At).ThenByDescending(x => x.Id).Take(51).ToListAsync(ct);
         var names = await db.Accounts.Where(a => rows.Select(x => x.AccountId).Contains(a.Id)).Select(a => new { a.Id, a.DisplayName }).ToDictionaryAsync(a => a.Id, a => a.DisplayName, ct);
         var journal = rows.Take(50).Select(x => new LedgerDto(x.Id, x.At, x.Operation, x.Asset, x.Location, x.Delta,
@@ -320,6 +345,8 @@ public sealed partial class GameService
             Enum.GetValues<ResourceKind>().Where(StorageCatalog.IsGood).ToDictionary(k=>k,EconomyRules.StorePrice),
             village.Structures.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,s.Kind,s.Level,false,false))
                 .Concat(village.Storages.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,BuildingCatalog.ForStorage(s.Kind)??BuildingKind.Heap,1,false,false)))
-                .Concat(village.Sites.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,s.Kind,s.TargetLevel,true,s.HasWork))).ToArray(), citizen is null ? null : VigorDrinks.EnergyDrinkReadyAt(citizen));
+                .Concat(village.Sites.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,s.Kind,s.TargetLevel,true,s.HasWork||s.Operation!=null))).ToArray(), citizen is null ? null : VigorDrinks.EnergyDrinkReadyAt(citizen))
+        { SiteRecoveries=village.SiteRecoveries.Where(r=>r.OwnerAccountId is null||r.OwnerAccountId==account)
+            .Select(r=>new SiteRecoveryDto(r.Id,r.PlotId,r.OwnerAccountId is not null,r.Goods.Select(g=>new ResourceAmount(g.Kind,g.Amount)).ToArray())).ToArray() };
     }
 }

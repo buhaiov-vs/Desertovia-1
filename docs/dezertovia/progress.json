@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "recorded_on": "2026-10-15",
-  "phase": "release_0_6_1_verified",
+  "recorded_on": "2026-10-16",
+  "phase": "candidate_0_7_1_validation",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -10,7 +10,8 @@
     "latest_upstream_inspected": "e23bc943bac17e55d4d5a0b0805d07d53de02108",
     "release_0_5_3": "a980d8daeb2d3ff10609df7894444d57c8992c74",
     "release_0_6": "143bf9ad569d2bc01d43356c8fc21467c59e544a",
-    "release_0_6_1": "61d726c184315d54c3d2c86b4984954bf818e31b"
+    "release_0_6_1": "61d726c184315d54c3d2c86b4984954bf818e31b",
+    "release_0_7": "0540a2a006d2c72b580b37f74387f1e53e68f9eb"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -957,5 +958,14 @@
     "runtime_changed": false,
     "version_assigned": false,
     "next": "Follow unified plan and latest user instruction; no new implementation or rollout has occurred."
+  },
+  "patch_0_7_1": {
+    "decision": "D-071",
+    "branch": "feat/post-0.7-fixes",
+    "plan": "POST_0_7_FIX_PLAN.md",
+    "implementation": "POST_0_7_IMPLEMENTATION.md",
+    "runtime_changed": false,
+    "domain_tests_passed": 387,
+    "api_browser_validation": "in_progress"
   }
 }

@@ -3,6 +3,7 @@ using Desertod.Domain.Buildings;
 using Desertod.Domain.Entities;
 using Desertod.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Desertod.Domain.Rules;
 namespace Desertod.Api.Game;
 
 public sealed record CivicRequest(string PlotId, string Operation, Guid? PartnerAccountId = null);
@@ -18,7 +19,33 @@ public sealed partial class GameService
             var citizen = people.SingleOrDefault(c => c.AccountId == actor);
             if (citizen is null && village.OwnerAccountId != actor) throw new UnauthorizedAccessException();
             var now = time.GetUtcNow();
-            if (request.Operation == "housing")
+            if (request.Operation is "site-demolish" or "site-approve" or "site-cancel")
+            {
+                var site=ConstructionRules.FindSite(village,request.PlotId);
+                if(!(site.OwnerAccountId==actor || village.OwnerAccountId==actor&&(site.OwnerAccountId is null||SiteManagement.LegacyConflict(site))))
+                    throw new UnauthorizedAccessException();
+                if(request.Operation=="site-cancel")ConstructionRules.Cancel(village,site.PlotId);
+                else if(request.Operation=="site-approve")
+                {
+                    if(village.OwnerAccountId!=actor || !SiteManagement.LegacyConflict(site))throw new UnauthorizedAccessException();
+                    site.BoundaryApproved=true;
+                }
+                else
+                {
+                    var workers=await db.Citizens.Where(c=>c.VillageId==village.Id&&c.CurrentSiteId==site.PlotId).ToListAsync(ct);
+                    foreach(var worker in workers.Where(c=>!c.CycleSettled
+                        &&c.RecoveryPausedAt is null&&c.CycleEndsAt<=now).ToArray())
+                    {
+                        var context=(await LoadContextAsync(db,village,worker.Id,now,ct)).Work;
+                        var report=CycleEngine.Settle(worker,context,now);
+                        await AfterSettleAsync(db,village,report,now,ct);
+                    }
+                    if(!village.Sites.Contains(site))throw new GameRuleException("site.stageDone","This building is finished. Refresh its card.");
+                    SiteManagement.BeginDismantle(village,site,actor,workers);
+                }
+                db.AuditActor=actor;db.AuditOperation=request.Operation+":"+request.PlotId;
+            }
+            else if (request.Operation == "housing")
             {
                 if (citizen is null) throw new UnauthorizedAccessException();
                 if (village.CivicOrders.Any(o => o.RequestedBy == actor && o.Operation == "housing" && o.Status == "pending"))
@@ -35,6 +62,7 @@ public sealed partial class GameService
                 if (village.OwnerAccountId == actor) BuildingOperations.Approve(village, order, people, now);
             }
             await db.SaveChangesAsync(ct); changes.Mark(village.Id);
+            foreach(var person in people)await notifier.CitizenUpdated(slug,person.ToSummaryDto(now));
             return await BuildStateAsync(db, village, now, ct);
         }, ct);
 

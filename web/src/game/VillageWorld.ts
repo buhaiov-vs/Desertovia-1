@@ -563,6 +563,9 @@ export class VillageWorld {
     }
     walker.sprite.texture = texture
     walker.label.text = tsar.name
+    walker.injuredUntil = tsar.injuredUntil ? Date.parse(tsar.injuredUntil) : 0
+    walker.normalSubtitle=this.tsarTitle
+    if(walker.injuredUntil>Date.now()){walker.inHospital=true;walker.wardVisible=true;walker.treatmentCause='После боя'}
     walker.staying = true
     this.walkTo(walker, spot)
   }
@@ -1427,6 +1430,8 @@ export class VillageWorld {
         if (index < standing) add(this.tileSprite(piece.tile, piece.x, piece.y))
         else if (palisadeActive && index % 4 === 0) add(this.tileSprite(town(47), piece.x, piece.y))
       })
+      for(const wall of state.fortifications??[])if(wall.x>=28&&wall.damage<100&&!wall.gate)
+        add(this.tileSprite(PALISADE.pieces.find(p=>p.y===wall.y)?.tile??town(56),wall.x,wall.y))
       if (palisadeActive) add(this.tileSprite(town(83), PALISADE.yard.x - 1, PALISADE.yard.y - 1))
       for(const gate of state.fortifications??[])if(gate.gate&&!gate.open&&gate.damage<100)add(this.tileSprite(town(56),gate.x,gate.y))
     }
@@ -2144,7 +2149,7 @@ export class VillageWorld {
         walker.way=[];speed=WALK_SPEED*.5
       }
       const combatant=this.village?.battles?.filter(b=>!b.finishedAt&&!['Warning','Cancelled'].includes(b.phase))
-        .flatMap(b=>b.fighters).find(f=>f.citizenId===walker.id&&f.active&&f.health>0)
+        .flatMap(b=>b.fighters).find(f=>(f.isTsar?walker.id===TSAR_ID:f.citizenId===walker.id)&&f.active&&f.health>0)
       if(combatant&&!hurt){
         walker.targetX=combatant.x*TILE;walker.targetY=combatant.y*TILE;walker.way=[]
         walker.staying=true;walker.roaming=false

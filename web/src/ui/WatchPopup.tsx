@@ -1,3 +1,5 @@
+import { api } from '../api'
+import { SiteActions } from './SiteActions'
 import type { ReactNode } from 'react'
 import { CivicPanel } from './CivicPanel'
 import type { Catalog, CitizenSummary, Site, SiteStage, VillageState } from '../api'
@@ -110,6 +112,7 @@ export function WatchPopup({
         </button>
       </header>
       <div className="target-popup-body">
+        {site&&<SiteActions site={site} actorId={actorId} tsar={tsar} onAction={async operation=>onVillage(await api.civic(village.slug,site.plotId,operation))}/>}
         {target.kind==='building'&&ruler&&<CivicPanel village={village} tsar={tsar} ruler={ruler} actorId={actorId} onVillage={onVillage} plotId={target.plotId} />}
         {target.kind === 'site' &&
           (site ? (

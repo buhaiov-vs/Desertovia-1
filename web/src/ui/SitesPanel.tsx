@@ -26,7 +26,7 @@ export function SitesPanel({
   if (village.sites.length === 0) return <p className="muted small">{t('site.none')}</p>
   return (
     <div className="sites">
-      {village.sites.filter(s=>!s.ownerAccountId||s.ownerAccountId===citizen.accountId).map((site) => (
+      {village.sites.filter(s=>!s.ownerAccountId||s.ownerAccountId===citizen.accountId||s.publicDemolition).map((site) => (
         <SiteCard
           key={site.plotId}
           site={site}
@@ -82,7 +82,7 @@ export function SiteCard({
       citizen={citizen}
       village={village}
       disabled={disabled}
-      privateSite={!!site.ownerAccountId}
+      privateSite={!!site.ownerAccountId&&!site.publicDemolition}
       onStart={() => onStartJob({ plotId: site.plotId, stage: stageIndex, jobId: job.jobId })}
     />
   )
@@ -92,7 +92,7 @@ export function SiteCard({
       <div className="site-head">
         <strong>{i18n.building(site.kind).name}</strong>
         <span className="muted small">
-          {t('site.stage', { number: site.stage + 1, total: definition.stages.length, stage: i18n.stage(stageDefinition.id) })}
+          {t('site.stage', { number: site.stage + 1, total: site.stages.length, stage: i18n.stage(stage.id) })}
         </span>
         <span className={`small ${stage.hands >= stage.crewNeeded ? 'highlight' : ''}`} title={t('site.crewHint', { needed: stage.crewNeeded })}>
           {t('site.hands', { hands: stage.hands, needed: stage.crewNeeded })}

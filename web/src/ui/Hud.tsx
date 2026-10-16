@@ -20,12 +20,14 @@ export function TopBar({
   citizen,
   citizens,
   onForecast,
+  wallet,
 }: {
   village: VillageState
   catalog: Catalog
   citizen: Citizen | null | undefined
   citizens: Map<string, CitizenSummary>
   onForecast: (rain: boolean) => Promise<void>
+  wallet?: ReactNode
 }) {
   const i18n = useI18n()
   const { t } = i18n
@@ -60,6 +62,7 @@ export function TopBar({
         </span>
         <WeatherChip village={village} catalog={catalog} citizen={citizen} citizens={citizens} onForecast={onForecast} />
       </div>
+      {wallet}
     </div>
   )
 }

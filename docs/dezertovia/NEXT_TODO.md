@@ -1,3 +1,8 @@
+> **D-073 /0.7.1 INSTALLED:** [фактический выпуск](RELEASE_0_7_1.md).
+> PR44+45 и парный botPR39 установлены. CI и отдельный preservation check PASS.
+> Заявки посадников снова в Telegram, отзывы с проверенным кодом автора.
+> Все прежние repository-only/ready записи ниже — история подготовки.
+
 > **D-071 ·0.7.1 проверен, НЕ установлен:** [результат](RELEASE_0_7_1.md).
 > 387 Domain + 224 API + 125 browser PASS / 1 штатный skip; lint/build/Docker PASS. LIVE0.7 остаётся; прежние PLAN/pending ниже исторические.
 

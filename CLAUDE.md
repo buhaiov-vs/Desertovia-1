@@ -1,3 +1,32 @@
+# D-073 /0.7.1 INSTALLED16.10.2026 и независимо проверен
+
+Владелец явно разрешил исправление Telegram заявок и выпуск0.7.1 сейчас;
+D-071/D-072 repository-only hold для данного пакета снят этим поручением.
+LIVEgamee5de51ed04ff8f3b5cff1c5befb2032fa42635da, bot payload source7458b6bed439c19ce8be56db799911e1281f80d1.
+Preflight38873012466 PASS; install38873092159 PASS; separate check38873661537 PASS.
+Install verification2026-10-16T08:25:08.3536159Z, independent check2026-10-16T08:26:14.6780507Z.
+116→116профилей,0потерь навыков/характеристик/славы;
+118аккаунтов и118ExternalLogins сохранены,24миграции.
+PG/SQLite/обаconfig/snapshot backups созданы. Hospital/Almighty true, Propose сохранён.
+Game CI38871373656 SUCCESS387Domain+229API+125browser/1skip, frontend/DockerPASS;
+botCI38871375837 SUCCESS828tests/client/runner, serverSKIPPED; operator22PASS.
+PR45 mergedacfd0c3, botPR39 mergedcd653bd; runtime деревья равны tested source.
+
+Настоящие заявки build/upgrade/demolish царю в личку, worker15с, до решения
+не создаёт площадку. Bot OWNER_IDS + точная Telegram-привязка владельца,
+повторное одобрение идемпотентно, обычные требования стройки проверяются снова.
+Старая очередь27заявок принята; separate check подтвердил4реальные Telegram
+квитанции Sent. Остальная очередь рассылалась постепенно; housing не входит.
+Отчёты батюшке теперь сохраняют автора и код аккаунта только в личных карточках.
+Установлены вместе7bot-файлов: app/db/feedback/feedback_identity/feedback_report/
+almighty/civic_notifications. Установленный AI-budgetfix и town_proxy/llm/ai_budget
+проверены по hashes и сохранены. Свечи/ключи/вещи/стройки/лечение не сбрасывать.
+Нет синтетических сообщений, модельных проб, платежей или тестовых волн.
+
+Новый операторpost071_release.py / post071-candidate.json, не старый rollout0.7.
+Существующий exact source повторно НЕ устанавливать, только проверка со снимками.
+Фактический факт — INSTALLED; старые ready/hold/candidate ниже являются историей.
+
 # D-073:0.7.1 deployment authorized16Oct
 
 Owner requested missing construction notices fixed AND0.7.1 installed now.

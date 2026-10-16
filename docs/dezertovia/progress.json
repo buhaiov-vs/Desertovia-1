@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-16",
-  "phase": "candidate_0_7_1_verified_not_deployed",
+  "phase": "released_0_7_1_independently_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -12,7 +12,8 @@
     "release_0_6": "143bf9ad569d2bc01d43356c8fc21467c59e544a",
     "release_0_6_1": "61d726c184315d54c3d2c86b4984954bf818e31b",
     "release_0_7": "0540a2a006d2c72b580b37f74387f1e53e68f9eb",
-    "candidate_0_7_1": "573af93ccb2892b7e07c48529f8c387b63237cab"
+    "candidate_0_7_1": "573af93ccb2892b7e07c48529f8c387b63237cab",
+    "release_0_7_1": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -961,31 +962,98 @@
     "next": "Follow unified plan and latest user instruction; no new implementation or rollout has occurred."
   },
   "patch_0_7_1": {
-    "decision": "D-071",
+    "decision": "D-073",
     "branch": "feat/post-0.7-fixes",
     "plan": "POST_0_7_FIX_PLAN.md",
     "implementation": "POST_0_7_IMPLEMENTATION.md",
-    "runtime_changed": false,
+    "runtime_changed": true,
     "domain_tests_passed": 387,
     "api_browser_validation": "success",
-    "state": "verified_repository_only",
-    "source": "573af93ccb2892b7e07c48529f8c387b63237cab",
-    "ci_run": 38864253995,
+    "state": "released_and_independently_verified",
+    "source": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
+    "ci_run": 38871373656,
     "ci_conclusion": "success",
-    "api_tests_passed": 224,
+    "api_tests_passed": 229,
     "browser_tests_passed": 125,
     "browser_tests_skipped": 1,
-    "deployed": false,
-    "live_source_unchanged": "0540a2a006d2c72b580b37f74387f1e53e68f9eb"
+    "deployed": true
   },
-  "live_version": "0.7",
-  "candidate_version": "0.7.1",
+  "live_version": "0.7.1",
+  "candidate_version": null,
   "feedback_identity": {
     "decision": "D-072",
-    "state": "implemented_branch_not_deployed",
+    "state": "released",
     "branch": "feat/feedback-game-identity",
     "bot_required": true,
     "schema_changes": false,
-    "runtime_changed": false
+    "runtime_changed": true
+  },
+  "civic_telegram": {
+    "decision": "D-073",
+    "state": "released",
+    "interval_seconds": 15,
+    "telegram_receipts_at_check": 4,
+    "synthetic_messages": 0
+  },
+  "release_0_7_1_receipt": {
+    "preflight_run": 38873012466,
+    "install": {
+      "phase": "post071_verified",
+      "version": "0.7.1",
+      "game_sha": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
+      "bot_sha": "7458b6bed439c19ce8be56db799911e1281f80d1",
+      "progress": {
+        "profiles_before": 116,
+        "profiles_after": 116,
+        "lost_profiles_or_progress": 0,
+        "accounts_preserved": 118,
+        "login_bindings_preserved": 118
+      },
+      "migrations": 24,
+      "director_mode": "Propose",
+      "pending_notice_states": [
+        {
+          "state": "Queued",
+          "count": 27
+        }
+      ],
+      "telegram_civic_deliveries_confirmed": 0,
+      "synthetic_messages": 0,
+      "test_payments": 0,
+      "forced_raids": 0,
+      "run_id": 38873092159,
+      "verified_at_utc": "2026-10-16T08:25:08.3536159Z"
+    },
+    "check": {
+      "phase": "post071_verified",
+      "version": "0.7.1",
+      "game_sha": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
+      "bot_sha": "7458b6bed439c19ce8be56db799911e1281f80d1",
+      "progress": {
+        "profiles_before": 116,
+        "profiles_after": 116,
+        "lost_profiles_or_progress": 0,
+        "accounts_preserved": 118,
+        "login_bindings_preserved": 118
+      },
+      "migrations": 24,
+      "director_mode": "Propose",
+      "pending_notice_states": [
+        {
+          "state": "Queued",
+          "count": 23
+        },
+        {
+          "state": "Sent",
+          "count": 3
+        }
+      ],
+      "telegram_civic_deliveries_confirmed": 4,
+      "synthetic_messages": 0,
+      "test_payments": 0,
+      "forced_raids": 0,
+      "run_id": 38873661537,
+      "verified_at_utc": "2026-10-16T08:26:14.6780507Z"
+    }
   }
 }

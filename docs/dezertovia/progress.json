@@ -1290,5 +1290,19 @@
       "login_bindings_preserved": 121
     },
     "do_not_reinstall": true
+  },
+  "combat_motion": {
+    "version": "0.7.5",
+    "branch": "fix/combat-motion-cadence",
+    "implemented": true,
+    "ready": false,
+    "deployed": false,
+    "status": "local_verified_waiting_exact_ci",
+    "baseline_distinct_positions": 9,
+    "baseline_frames": 48,
+    "local_browser_passed": 26,
+    "fixed_distinct_positions": 48,
+    "late_frames_moving": 30,
+    "healthbar_drift": 0
   }
 }

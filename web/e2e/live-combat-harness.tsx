@@ -42,6 +42,7 @@ Object.assign(window,{combatStand:{
   Graphics.prototype.clear=clear
   return {stableUpdates,changedUpdates:updates-stableUpdates,elapsed}
  },
+ rendered:(id:string)=>{const actor=(enemies as unknown as {liveViews:Map<string,{actor:Container}>}).liveViews.get(id)!.actor;return {x:actor.x,y:actor.y}},
  pick:(x:number,y:number)=>enemies.pick(x,y),
 }})
 function Stand(){

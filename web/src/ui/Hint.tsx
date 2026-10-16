@@ -21,7 +21,7 @@ export function useSinglePopup(open: boolean, close: () => void) {
  * A game term the player can click or tap to read how it works.
  * One hint is open at a time; a click elsewhere or Escape closes it.
  */
-export function Hint({ text, children, className }: { text: ReactNode; children: ReactNode; className?: string }) {
+export function Hint({ text, children, className, label }: { text: ReactNode; children: ReactNode; className?: string; label?: string }) {
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState<CSSProperties>({ visibility: 'hidden' })
   const termRef = useRef<HTMLButtonElement>(null)
@@ -74,6 +74,7 @@ export function Hint({ text, children, className }: { text: ReactNode; children:
         ref={termRef}
         type="button"
         className={`hint-term${open ? ' open' : ''}${className ? ` ${className}` : ''}`}
+        aria-label={label}
         aria-expanded={open}
         aria-describedby={open ? id : undefined}
         onClick={(event) => {

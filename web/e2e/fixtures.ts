@@ -44,7 +44,7 @@ export async function developmentLogin(page: Page, name: string, characterName =
 }
 
 export async function expectVillageView(page: Page) {
-  await expect(page.locator('.splash')).toBeHidden()
+  await expect(page.locator('.splash:visible')).toHaveCount(0)
   await expect(page.locator('canvas').first()).toBeVisible()
   await expect(page.locator('.hud-resources')).toBeVisible()
   await expect(page.locator('.hud-buttons')).toBeVisible()

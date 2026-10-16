@@ -4,6 +4,64 @@ import { test, expect, developmentLogin, expectVillageView, openMenu, DEMO_SLUG,
 test.setTimeout(120_000)
 test.use({ deviceScaleFactor: 1, trace: { mode: 'retain-on-failure', screenshots: false, snapshots: true } })
 
+test('real map enemy selection sends an attack immediately without opening an enemy card',async({page})=>{
+  await page.addInitScript(()=>localStorage.setItem('desertod.language','en'))
+  await page.goto(`/v/${DEMO_SLUG}`);await developmentLogin(page,uniqueName('tap-attack'));await expectVillageView(page)
+  const battleId='78cad270-8fc4-4890-b763-552395a33911',unitId='b6b920ff-b572-48fd-8f97-37df982b56a7'
+  const orders:unknown[]=[]
+  await page.route(`**/api/villages/${DEMO_SLUG}/battles/${battleId}/order`,async route=>{
+    orders.push(route.request().postDataJSON());await route.fulfill({json:{}})
+  })
+  await page.evaluate(({battleId,unitId})=>window.dispatchEvent(new CustomEvent('desertovia-e2e-enemy',{detail:{battleId,unitId}})),{battleId,unitId})
+  await expect.poll(()=>orders).toEqual([{targetUnitId:unitId,mode:'intercept'}])
+  await expect(page.locator('.battle-controls')).toHaveCount(0)
+  await expect(page.getByRole('button',{name:'Attack',exact:true})).toHaveCount(0)
+})
+
+test('personal HUD matches the resource cards on the real map and leaves navigation uncluttered',async({page})=>{
+  await page.addInitScript(()=>{if(!localStorage.getItem('desertod.language'))localStorage.setItem('desertod.language','en');localStorage.setItem('desertod.chat.mode','hidden')})
+  await page.goto(`/v/${DEMO_SLUG}`);await developmentLogin(page,uniqueName('hud-map'));await expectVillageView(page)
+  await page.evaluate(()=>localStorage.setItem('desertod.language','ru'));await page.reload();await expectVillageView(page)
+  const vitals=page.getByLabel('Мои здоровье и силы');await expect(vitals).toBeVisible()
+  const appearance=await vitals.evaluate(el=>{
+    const card=el.closest('.hud-resources')!.querySelector('.resource-chip')!,weather=el.parentElement!.querySelector('.weather')!
+    const a=getComputedStyle(el),b=getComputedStyle(card)
+    return {background:a.backgroundColor,cardBackground:b.backgroundColor,border:a.border,borderCard:b.border,radius:a.borderRadius,cardRadius:b.borderRadius,height:el.getBoundingClientRect().height,weatherHeight:weather.getBoundingClientRect().height}
+  })
+  expect(appearance.background).toBe(appearance.cardBackground);expect(appearance.border).toBe(appearance.borderCard);expect(appearance.radius).toBe(appearance.cardRadius)
+  expect(appearance.height).toBe(appearance.weatherHeight)
+  await expect(page.locator('.battle-controls')).toHaveCount(0)
+  await expect(page.locator('.hud-poll-actions')).toHaveCount(0)
+  await page.screenshot({path:test.info().outputPath('owner-real-map.png')})
+  const me=await(await page.request.get(`/api/villages/${DEMO_SLUG}/me`)).json()
+  const data=await(await page.request.get(`/api/villages/${DEMO_SLUG}`)).json()
+  const at=new Date().toISOString()
+  data.state.battles=[{id:'fd8ac776-f3f9-4981-812b-cfa1df02b26b',villageId:data.state.id,engineVersion:2,phase:'Fighting',sector:'north',tactic:'entry',composition:'swarm',threatBudget:20,readyDefenders:1,availableReserves:0,startsAt:at,lastTickAt:at,endsAt:new Date(Date.now()+600000).toISOString(),finishedAt:null,revision:999999,deferred:false,units:[],events:[],
+    fighters:[{citizenId:me.id,x:15.5,y:13.5,health:26,maximumHealth:40,damageDealt:0,kills:0,renownEarned:0,wounded:false,guard:true,active:true,mode:'intercept',targetUnitId:null,nextAttackAt:at,weapon:null,armor:null,arrows:0,isTsar:false,accountId:null,healReadyAt:null}]}]
+  await page.route(`**/api/villages/${DEMO_SLUG}`,route=>route.fulfill({json:data}))
+  await page.reload();await expectVillageView(page)
+  const actions=page.getByRole('group',{name:'Действия в бою'});await expect(actions).toBeVisible()
+  await expect(page.locator('.hud-needs')).toHaveCount(0);await expect(page.locator('.hud-left .hud-status:not(.personal-battle-panel)')).toBeHidden()
+  const actionBox=await actions.boundingBox(),navBox=await page.locator('.hud-buttons').boundingBox()
+  expect(Math.min(actionBox!.x+actionBox!.width,navBox!.x+navBox!.width)<=Math.max(actionBox!.x,navBox!.x)||Math.min(actionBox!.y+actionBox!.height,navBox!.y+navBox!.height)<=Math.max(actionBox!.y,navBox!.y)).toBe(true)
+  await expect(page.getByRole('progressbar',{name:'Моё здоровье',exact:true})).toHaveAttribute('value','26')
+  const clearOfChat=async()=>{
+    const a=await actions.boundingBox(),chat=page.locator('.chat-panel')
+    const collapsed=await chat.getAttribute('data-mode')==='hidden'
+    const c=await page.locator(collapsed?'.chat-launch':'.chat-head').boundingBox()
+    expect(Math.min(a!.x+a!.width,c!.x+c!.width)<=Math.max(a!.x,c!.x)||Math.min(a!.y+a!.height,c!.y+c!.height)<=Math.max(a!.y,c!.y)).toBe(true)
+    for(const button of await actions.locator('button').all()){
+      const r=await button.boundingBox();expect(r!.height).toBe(44)
+      expect(r!.x).toBeGreaterThanOrEqual(0);expect(r!.x+r!.width).toBeLessThanOrEqual(page.viewportSize()!.width)
+      if(collapsed){expect(r!.y).toBe(c!.y);expect(r!.height).toBe(c!.height)}
+      expect(await button.evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))})).toBe(true)
+    }
+  }
+  await clearOfChat();await page.locator('.chat-launch').click();await expect(page.locator('.chat-panel')).toHaveAttribute('data-mode','quarter');await clearOfChat()
+  await page.locator('.chat-control').last().click();await expect(page.locator('.chat-panel')).toHaveAttribute('data-mode','hidden');await clearOfChat()
+  await page.screenshot({path:test.info().outputPath('owner-real-map-battle.png')})
+})
+
 for (const mode of ['hidden', 'quarter'] as const) test(`real game selected object owns its header with ${mode} chat`, async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('desertod.language', 'en')

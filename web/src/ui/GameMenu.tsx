@@ -52,6 +52,7 @@ export interface MenuProps {
   tab: MenuTab
   onTab: (tab: MenuTab) => void
   onHospital: () => void
+  onMonastery?:()=>void
   onClose: () => void
   village: VillageState
   population: { total: number; online: number }
@@ -144,7 +145,7 @@ export function GameMenu(props: MenuProps) {
               </button>
             ))}
           </nav>
-          <button className="close" onClick={onClose} title={`${t('close')} (Esc)`}>
+          <button className="close" onClick={onClose} aria-label={t('close')} title={`${t('close')} (Esc)`}>
             ✕
           </button>
         </header>
@@ -153,7 +154,8 @@ export function GameMenu(props: MenuProps) {
           {tab === 'village' && (ruler || citizen && catalog.tasks.some(t => t.id === citizen.taskId && t.effect === 'Guard')) && <DefensePanel slug={props.slug} village={village} ruler={ruler} canDeploy={!!citizen&&catalog.tasks.some(t=>t.id===citizen.taskId&&t.effect==='Guard')}/>}
           {tab === 'village' && tsar && <AlmightyPanel slug={props.slug}/>}
           {tab === 'village' && (tsar || citizen) && <EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId={props.me.id} onPrivatePlace={props.onPrivatePlace}/>}
-          {tab === 'village' && <button onClick={props.onHospital}>🏥 Больница</button>}
+          {tab==='village'&&(village.bridgeDamage??0)>0&&<p className="error small">{i18n.language==='ru'?'Царский мост повреждён. Восстановление — работа «Ремонт зданий» в заданиях.':'The royal bridge is damaged. Use Repair buildings in Tasks to restore it.'} {village.bridgeDamage}/100</p>}
+          {tab === 'village' && <div className="row"><button onClick={props.onHospital}>🏥 Больница</button>{props.onMonastery&&<button onClick={props.onMonastery}>{i18n.language==='ru'?'Монастырь за рекой':'Monastery across the river'}</button>}</div>}
           {tab === 'village' && <section className="card village-population" title={t('chat.populationHelp')}>
             {t('chat.population', props.population)} · ☺ {Math.round(village.morale*100)}% · 👑 {village.castleLevel??0}/3
           </section>}
@@ -360,9 +362,6 @@ export function GameMenu(props: MenuProps) {
             ) : (
               <JoinPrompt {...props} />
             ))}
-        </div>
-        <div className="menu-actions">
-          <button onClick={onClose}>{i18n.language === 'ru' ? 'Вернуться к карте' : 'Back to map'}</button>
         </div>
         <footer className="modal-footer muted small">{t('menu.hint')}</footer>
       </div>

@@ -1,0 +1,99 @@
+# Owner correction package · D-081 · candidate 0.7.3
+
+Status: implementation branch, validation in progress, NOT INSTALLED.
+Live remains 0.7.2 / 04c395052a106562b8e00b6c73a8a5b119b1aea5.
+The owner authorized code and tests. No rollout request or production event is created.
+
+## Implemented behavior
+
+- Own HP/stamina use the existing resource-card background, border and radius.
+  Weather, morale and vitals share one status row and height; no separate full-width row.
+  D-083: only heart/lightning and bars remain, with numbers on tap. No Healthy label.
+  Outside combat the engine has no permanent HP field: the unavailable track has
+  no numeric value and explains this on tap, rather than inventing full health.
+  Owner rejected the first isolated stand appearance; it is superseded by shared styling.
+  Permanent build/vote buttons and the duplicate menu footer are removed.
+  Manual map review also caught peaceful needs/status overlapping combat actions.
+  During personal active combat these peaceful footer blocks are hidden; navigation
+  remains available and character-menu food/housing information is preserved.
+  The real-map regression now verifies combat action/navigation separation as well
+  as the shared vitals style, rather than relying on a Tsar-only isolated stand.
+- Enemy selection sends one authoritative attack order, without mounting an enemy card.
+  Combat-only retreat physically walks to reachable ground, remains vulnerable and
+  stays withdrawn until explicit re-entry. Re-entry and queued waves preserve HP.
+  Healing consumes one eligible remedy for 20% max HP, capped, with 60s cooldown
+  and persisted request receipts. Disabled dark buttons expose the actual reason.
+- Combatants interpolate consecutive battle revisions without civilian path catch-up.
+  Large discontinuities snap; status-only and stale packets preserve the interpolation
+  clock instead of jumping to its endpoint. Server positions and geometry remain authoritative.
+- Voluntary demolition calculates actual suitable replacement beds, reserves distinct
+  slots and moves residents. Another owner's private beds and ruins do not count.
+  The same bounded reasons/counts reach the game and private Telegram cards;
+  working applications can refresh to completed without repeating the operation.
+- Real attacks target construction sites as well as finished structures/storage.
+  Collapse retains site contributions, stored goods, level, research and player stats,
+  releases construction claims and makes ruins nonfunctional until paid repair.
+  Existing repair work costs 2 wood + 1 stone per cycle and repairs up to 5 damage.
+  Legacy completed-project flags cannot reopen a ruined bridge. Intact alternative
+  public workshops remain usable when another workshop is ruined.
+  The 180 damage event cap is retained. Patients keep their recovery deadlines in
+  a field infirmary if their hospital collapses. The royal bridge closes on collapse.
+- New-world creation explicitly places a level-one castle at 14,9. Old-world loading
+  and migration do not create/move castles or houses. Losing the castle persists a
+  settlement defeat, ends this defense and cancels future waves without fake kills.
+  Repairing the castle clears defeat; basic shelter, healing and recovery remain.
+- The neutral monastery has a real arrival/bridge/knowledge checked exchange:
+  10 wood + 6 food -> 1 remedy, once per account per village per 6h, with durable
+  receipt and ledger. Residents use personal inventory, the Tsar uses public stock.
+  Decorative cells do not provide beds and are not village siege buildings.
+- The configured primary world opens directly at the app root. Old village/dungeon
+  routes remain available. Multi-world configuration still uses world selection.
+
+## Preservation and migration
+
+20261016161632_OwnerCombatSiege adds nullable defeat/bridge ruin metadata,
+BridgeDamage default 0, and only the required numeric Damage default in old site
+JSON. It does not reset profiles, identity, skills, health, materials or injuries.
+Existing worlds keep their actual castle location. A proposed relocation for an
+existing production world still requires a concrete read-only map review; this
+package deliberately does not perform that move.
+
+The bot runtime change is confined to civic_notifications.py. No donation, voice,
+moderation, AI-budget, director or payment implementation is changed.
+The earlier unrelated audio test failure is recorded in local validation history;
+its isolated rerun passed, and the full repeat must succeed before readiness.
+
+## Validation record
+
+- Domain: 419 PASS, including low-damage castle defeat/no fake kills, a ruined
+  bridge staying closed when work starts, and an intact second workshop remaining usable.
+- Final local API run: 235 PASS, including old JSON migration and cancellation of future waves after castle defeat.
+- EF pending-model check: PASS, no model differences.
+- Icon-only revised HUD: 5 PASS at 360/390/430/1440px, including disabled healing,
+  no inline Healthy/numbers, and exact HP on tap. Actual Russian phone map PASS.
+- Primary root login, hard reload and legacy route: PASS. The readiness fixture
+  now waits for all visible loading indicators rather than assuming exactly one.
+- Earlier browser build: 44 PASS / 10 failed in an incomplete new harness fixture.
+  The fixture is corrected; those failures are not described as a successful run.
+- Real-map shared-style check PASS on phone; direct enemy-selection attack check PASS.
+  Initial attack probe ran before local backend readiness (502); fresh isolated retry PASS.
+  Phone/desktop actual map checks PASS. TypeScript, lint and production build PASS.
+  Final full browser CI is pending.
+- Bot civic focused: 8 PASS; full repeat: 887 PASS. Exact bot CI38935078896
+  SUCCESS on e4269ef7b53c41a4d9b3f53a0e7e5b5f58139257: 887 tests/client/runner, server SKIPPED.
+- Targeted movement regression PASS: health-only/stale packets, halfway position,
+  bounded endpoint and large discontinuity. Final exact game CI pending.
+
+No physical-phone FPS measurement has been made. No universal lag-free claim.
+Director economic/tax executors and owner digests remain their own open backlog.
+All new checks use local data/mocks, no real messages, paid probes or production raids.
+
+## Latest owner layout correction
+
+Combat actions now share the collapsed Chat launcher row: Chat / Retreat / Heal,
+all 44px high, natural button widths and no separate full-width frame. The disabled
+medicine reason fits on a small second line inside the button. The peaceful needs
+footer is hidden during active personal combat. The row remains in the chat's
+normal phone layout and left-hand desktop position, clear of navigation. Real-map
+checks exercise hidden/quarter chat, equal button heights and unobstructed hit
+targets. Final exact CI and phone/desktop screenshots follow this source revision.

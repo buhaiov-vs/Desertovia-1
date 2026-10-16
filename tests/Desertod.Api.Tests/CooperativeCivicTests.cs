@@ -37,6 +37,11 @@ public sealed class CooperativeCivicTests(DesertodApiFactory factory)
     public async Task Governor_requests_any_building_without_starting_work_and_only_Tsar_approves(string kind)
     {
         var village = await players.FoundVillageAsync("Construction approval");
+        if(kind=="Castle")
+        {
+            await using var legacy=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+            var city=await legacy.Villages.SingleAsync(x=>x.Slug==village.Slug);city.Structures.RemoveAll(s=>s.Kind==BuildingKind.Castle);await legacy.SaveChangesAsync();
+        }
         var governor = await players.JoinAsync(village, "Planner");
         var citizen = await players.JoinAsync(village, "Worker");
         await OkJsonAsync(await village.Tsar.PutAsJsonAsync(village.Path + $"/citizens/{governor.Id}/governor", new { isGovernor = true }));

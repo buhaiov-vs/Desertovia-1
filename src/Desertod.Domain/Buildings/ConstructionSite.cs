@@ -13,6 +13,8 @@ public sealed class ConstructionSite
     /// <summary>Unique within a village; identifies the site.</summary>
     public required string PlotId { get; set; }
 
+    public int Damage { get; set; }
+    public DateTimeOffset? RuinedAt { get; set; }
     public int TargetLevel { get; set; } = 1;
     public string? Operation { get; set; }
     public Guid? OrderId { get; set; }
@@ -168,6 +170,7 @@ public sealed class Structure
     public required string PlotId { get; set; }
     public int Level { get; set; } = 1;
     public bool Decommissioning { get; set; }
+    public DateTimeOffset? RuinedAt { get; set; }
     public int ProductionCycles { get; set; }
     public List<Desertod.Domain.Storage.StoredGood> Investment { get; set; } = [];
     public DateTimeOffset BuiltAt { get; set; }

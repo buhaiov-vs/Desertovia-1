@@ -105,6 +105,7 @@ public sealed partial class GameService(
         }
 
         village.Slug = slug;
+        KingdomRules.FoundCastle(village,now);
         db.Villages.Add(village);
         await db.SaveChangesAsync(cancellationToken);
         logger.VillageCreated(accountId, slug);
@@ -810,7 +811,7 @@ public sealed partial class GameService(
             var village = await db.Villages.SingleAsync(v => v.Id == villageId, cancellationToken);
             var now = time.GetUtcNow();
             var resting = await db.AlmightyStates.AnyAsync(s => s.VillageId == villageId && s.Mode != "Off" && s.RestUntil > now, cancellationToken);
-            var planned = resting ? null : RaidRules.PlanNight(village, await CountRecentCitizensAsync(db, villageId, now, cancellationToken), Random.Shared, now);
+            var planned = resting || village.DefeatedAt is not null ? null : RaidRules.PlanNight(village, await CountRecentCitizensAsync(db, villageId, now, cancellationToken), Random.Shared, now);
             if(planned is not null)
             {
                 try{await PrepareBattleAsync(db,village,planned,now,cancellationToken);}
@@ -828,6 +829,7 @@ public sealed partial class GameService(
             }
 
             await BroadcastRaidsAsync(village, raids, now);
+            if(raids.WorldChanged)changes.Mark(villageId);
             if (planned is not null || raids.Reports.Count > 0)
             {
                 changes.Mark(villageId);
@@ -845,7 +847,7 @@ public sealed partial class GameService(
     }
 
     /// <param name="Citizens">Defenders and wounded, to send their new state.</param>
-    private sealed record RaidsFought(IReadOnlyList<RaidReport> Reports, IReadOnlyList<Citizen> Citizens, bool Changed = false, IReadOnlyList<RaidBattle>? Battles = null, IReadOnlyList<Fortification>? Walls = null);
+    private sealed record RaidsFought(IReadOnlyList<RaidReport> Reports, IReadOnlyList<Citizen> Citizens, bool Changed = false, IReadOnlyList<RaidBattle>? Battles = null, IReadOnlyList<Fortification>? Walls = null, bool WorldChanged = false);
 
     /// <summary>
     /// Fights the raids that struck by now, before anything else changes the citizens: who was on watch at the moment of
@@ -875,6 +877,12 @@ public sealed partial class GameService(
         Fortifications.Ensure(village,completedProjects);
         var citizens = await db.Citizens.Where(c => c.VillageId == village.Id).ToListAsync(cancellationToken);
         var injuredBefore = citizens.Where(c=>CombatRules.IsInjured(c,now)).Select(c=>c.Id).ToHashSet();
+        // Only collapse/relocation needs a full world refresh. Per-second movement is
+        // already carried by BattleUpdated and must not retransmit the entire village.
+        var worldBefore=(village.BridgeOpened,village.BridgeRuinedAt,village.DefeatedAt,
+            Ruins:CombatRules.Buildings(village).Count(b=>b.Damage>=100));
+        var peopleBefore=citizens.ToDictionary(c=>c.Id,c=>(c.HomePlotId,c.CurrentSiteId,c.CycleSettled,
+            Ward:c.HospitalizedAt is not null?c.IdleSpot:null));
         var reports = new List<RaidReport>();
         var changed = false;
         var updated = new List<RaidBattle>();
@@ -887,6 +895,13 @@ public sealed partial class GameService(
             .ThenBy(b=>due.Single(r=>r.Id==b.Id).Wave).ThenBy(b=>b.Id).FirstOrDefault();
         foreach(var raid in due)
         {
+            if(raid.Outcome!=RaidOutcome.Pending)continue;
+            if(village.DefeatedAt is not null)
+            {
+                if(battles.TryGetValue(raid.Id,out var defeatedBattle)){RaidSimulation.Cancel(village,raid,defeatedBattle,citizens,now);updated.Add(defeatedBattle);}
+                else{raid.Outcome=RaidOutcome.Cancelled;raid.ResolvedAt=now;}
+                changed=true;continue;
+            }
             if(raid.EngineVersion < 2) { reports.Add(RaidRules.Resolve(village,raid,citizens,completedProjects,Random.Shared,now)); continue; }
             if(!battles.TryGetValue(raid.Id,out var battle))
                 throw new InvalidOperationException("Live raid has no persisted battle.");
@@ -926,8 +941,22 @@ public sealed partial class GameService(
             if(battle.FinishedAt is not null)
                 reports.Add(BattleReport(raid,battle,citizens));
         }
+        if(village.DefeatedAt is not null)
+        {
+            foreach(var pendingRaid in village.Raids.Where(r=>r.Outcome==RaidOutcome.Pending))
+            {
+                var queued=await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==pendingRaid.Id,cancellationToken);
+                if(queued is not null){RaidSimulation.Cancel(village,pendingRaid,queued,citizens,now);updated.Add(queued);}
+                else{pendingRaid.Outcome=RaidOutcome.Cancelled;pendingRaid.ResolvedAt=now;}
+            }
+            RaidRules.UpdateNextRaidAt(village);
+        }
+        var worldAfter=(village.BridgeOpened,village.BridgeRuinedAt,village.DefeatedAt,
+            Ruins:CombatRules.Buildings(village).Count(b=>b.Damage>=100));
         return new RaidsFought(reports,citizens.Where(c=>reports.Any(r=>r.Defenders.Any(d=>d.CitizenId==c.Id)||r.Victims.Any(v=>v.CitizenId==c.Id))
-            || changed && !injuredBefore.Contains(c.Id) && CombatRules.IsInjured(c,now)).ToArray(),changed,updated,village.Fortifications);
+            || changed && (!injuredBefore.Contains(c.Id) && CombatRules.IsInjured(c,now)
+                || peopleBefore[c.Id]!=(c.HomePlotId,c.CurrentSiteId,c.CycleSettled,c.HospitalizedAt is not null?c.IdleSpot:null)))
+            .ToArray(),changed,updated,village.Fortifications,worldBefore!=worldAfter);
     }
 
     private async Task BroadcastRaidsAsync(Village village, RaidsFought raids, DateTimeOffset now)
@@ -1389,9 +1418,12 @@ public sealed partial class GameService(
             Fortifications = village.Fortifications,
             KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),
             CivicOrders = village.CivicOrders,
+            DefeatedAt=village.DefeatedAt,
+            Relocations=village.Structures.Where(h=>ShelterRules.Beds(h)>0).Select(h=>new RelocationDto(h.PlotId,
+                residents.Count(c=>c.HomePlotId==h.PlotId),ShelterRules.Relocation(village,residents,h.PlotId).Count)).ToArray(),
             Housing = village.Structures.Where(s => ShelterRules.Beds(s) > 0).Select(s => new HousingDto(s.PlotId, ShelterRules.Beds(s),
                 residents.Count(c => c.HomePlotId == s.PlotId), s.Level)).ToArray(),
-            BridgeOpened = village.BridgeOpened,
+            BridgeOpened = village.BridgeOpened,BridgeDamage=village.BridgeDamage,BridgeRuinedAt=village.BridgeRuinedAt,
             Project = context.Work.Project is {StagedBridge:true} bridge ? bridge.ToDto(context.Work) with
             { BridgeStage=bridge.BridgeStage, StageName=!bridge.SurveyDone ? "Разметка" : new[]{"Основания","Опоры","Пролёт","Настил","Приёмка","Мост открыт"}[bridge.BridgeStage] } : context.Work.Project?.ToDto(context.Work)
         };

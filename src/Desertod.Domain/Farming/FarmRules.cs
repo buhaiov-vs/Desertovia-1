@@ -160,5 +160,5 @@ public static class FarmRules
         }
     }
 
-    private static IEnumerable<FieldBed> Beds(Village village, Guid? owner = null) => village.Fields.Where(b=>village.Structures.Any(s=>s.PlotId==b.PlotId && s.Kind==BuildingKind.Farm && s.OwnerAccountId==owner && !s.Decommissioning)).OrderBy(b => b.PlotId).ThenBy(b => b.Index);
+    private static IEnumerable<FieldBed> Beds(Village village, Guid? owner = null) => village.Fields.Where(b=>village.Structures.Any(s=>s.PlotId==b.PlotId && s.Kind==BuildingKind.Farm && s.OwnerAccountId==owner && !s.Decommissioning && s.RuinedAt is null && s.Damage<100)).OrderBy(b => b.PlotId).ThenBy(b => b.Index);
 }

@@ -43,11 +43,19 @@ public static class RaidSimulation
                 if(battle.Phase!="Retreating")battle.Event("retreat",battle.Sector,at);
                 battle.Phase="Retreating";
             }
-            foreach(var f in battle.Fighters.Where(f=>f.Active&&f.Guard&&f.Health>0))
-                if(f.IsTsar) ActTsar(village,battle,f,nav,at);
-                else if(citizens.TryGetValue(f.CitizenId,out var c))Guard(village,raid,battle,f,c,citizens,nav,at);
+            foreach(var f in battle.Fighters.Where(f=>f.Active&&f.Health>0))
+                if(f.Mode=="retreating") { BattleActions.StepRetreat(f,nav); if(f.IsTsar)village.TsarSpot=f.Position; else if(citizens.TryGetValue(f.CitizenId,out var withdrawing)){withdrawing.Spot=f.Position;withdrawing.IdleSpot=f.Position;withdrawing.Trip=null;} }
+                else if(f.Guard && f.IsTsar) ActTsar(village,battle,f,nav,at);
+                else if(f.Guard && citizens.TryGetValue(f.CitizenId,out var c))Guard(village,raid,battle,f,c,citizens,nav,at);
             foreach(var unit in battle.Units.Where(u=>u.Alive))
+            {
                 Enemy(village,raid,battle,unit,citizens,nav,at);
+                if(village.DefeatedAt is not null)
+                {
+                    foreach(var survivor in battle.Units.Where(u=>u.Alive)){survivor.ExitedAt=at;survivor.State="Dispersed";}
+                    battle.Event("defeated","castle",at);break;
+                }
+            }
             battle.LastTickAt=at;battle.Revision++;
             if(battle.Units.All(u=>!u.Alive))
             {
@@ -74,10 +82,10 @@ public static class RaidSimulation
             var existing=battle.Fighters.SingleOrDefault(f=>f.CitizenId==c.Id);
             if(existing is not null)
             {
+                if(existing.Mode=="withdrawn"){existing.Active=false;continue;}
+                if(existing.Mode=="retreating"){existing.Active=Available(c,at)&&existing.Health>0;continue;}
                 existing.Guard=guard;existing.Active=Available(c,at)&&(guard||inDanger);
                 existing.Weapon=c.Weapon;existing.Armor=c.Armor;existing.Arrows=c.Arrows;
-                if(existing.Wounded&&Available(c,at))
-                {existing.Health=existing.MaximumHealth;existing.Wounded=false;existing.X=position.X;existing.Y=position.Y;}
                 continue;
             }
             if(!guard&&!inDanger)continue;
@@ -218,14 +226,14 @@ public static class RaidSimulation
         // A minority may raid nearby outbuildings. Others keep advancing; no single-shed decoy for the whole horde.
         var canDistract=index%4==0 || unit.Position.DistanceTo(centre)<7 || unit.TargetKind=="building";
         var building=canDistract ? Targets(village).Where(p=>CombatRules.DamageOf(village,p)<CombatRules.MaximumDamage)
-            .Where(p=>WorldMap.Yard(p).DistanceTo(unit.Position)<(inVillage?6:4))
-            .Where(p=>inVillage||!KingdomRules.Area(village).Overlaps(WorldMap.Footprint(p)!.Value))
+            .Where(p=>RuinRules.TargetYard(p).DistanceTo(unit.Position)<(inVillage?6:4))
+            .Where(p=>inVillage||p==RuinRules.RoyalBridge||!KingdomRules.Area(village).Overlaps(WorldMap.Footprint(p)!.Value))
             .Where(p=>battle.Units.Count(u=>u.Alive&&u.TargetKind=="building"&&u.TargetId==p)<3||unit.TargetId==p)
-            .OrderBy(p=>(unit.TargetKind=="building"&&unit.TargetId==p?-3:0)+WorldMap.Yard(p).DistanceTo(unit.Position)).FirstOrDefault():null;
+            .OrderBy(p=>(unit.TargetKind=="building"&&unit.TargetId==p?-3:0)+RuinRules.TargetYard(p).DistanceTo(unit.Position)).FirstOrDefault():null;
         var goal=centre;
         if(building is not null)
         {
-            goal=WorldMap.Yard(building);unit.TargetKind="building";unit.TargetId=building;
+            goal=building==RuinRules.RoyalBridge?nav.NearestFree(RuinRules.TargetYard(building)):RuinRules.TargetYard(building);unit.TargetKind="building";unit.TargetId=building;
             if(unit.Position.DistanceTo(goal)<1.4 && nav.ClearShot(unit.Position,goal))
             {
                 unit.State="Raiding";battle.Phase="Raiding";
@@ -235,6 +243,7 @@ public static class RaidSimulation
                     enemy.Damage==0?0:Math.Max(1,(int)Math.Round(enemy.Damage*.25*(unit.Variant=="strong"?1.5:1))));
                 var added=damage>0?CombatRules.Damage(village,building,damage):0;
                 battle.DamageDone+=added;
+                if(added>0)RuinRules.Collapse(village,building,people.Values.ToArray(),at,battle.Id);
                 var damaged=battle.Damage.FirstOrDefault(d=>d.PlotId==building);
                 if(damaged is null)battle.Damage.Add(new(){PlotId=building,Amount=added});else damaged.Amount+=added;
                 if(unit.PlunderPlot is null && village.Storages.Any(s=>s.PlotId==building&&s.OwnerAccountId is null))unit.PlunderPlot=building;
@@ -247,8 +256,8 @@ public static class RaidSimulation
         if(unit.Position.DistanceTo(goal)<1 && building is null)
         {
             // At the rally point choose an actual building to raid; the fire itself is never attacked.
-            var p=Targets(village).Where(p=>CombatRules.DamageOf(village,p)<100).OrderBy(p=>WorldMap.Yard(p).DistanceTo(unit.Position)).FirstOrDefault();
-            if(p is not null){goal=WorldMap.Yard(p);unit.TargetKind="building";unit.TargetId=p;}else{unit.State="Retreating";return;}
+            var p=Targets(village).Where(p=>CombatRules.DamageOf(village,p)<100).OrderBy(p=>RuinRules.TargetYard(p).DistanceTo(unit.Position)).FirstOrDefault();
+            if(p is not null){goal=p==RuinRules.RoyalBridge?nav.NearestFree(RuinRules.TargetYard(p)):RuinRules.TargetYard(p);unit.TargetKind="building";unit.TargetId=p;}else{unit.State="Retreating";return;}
         }
         var moved=MoveUnit(battle,nav,unit,goal,1,enemy.Damage>0,battle.Tactic=="breach",out var wall);
         if(wall is not null)BreakWall(unit,wall,battle,enemy,at);
@@ -276,8 +285,8 @@ public static class RaidSimulation
         return moved;
     }
 
-    private static IEnumerable<string> Targets(Village v) => v.Structures.Where(s=>!s.Decommissioning).Select(s=>s.PlotId)
-        .Concat(v.Storages.Where(s=>!s.Decommissioning).Select(s=>s.PlotId));
+    private static IEnumerable<string> Targets(Village v) => v.Structures.Select(s=>s.PlotId)
+        .Concat(v.Storages.Select(s=>s.PlotId)).Concat(v.Sites.Select(s=>s.PlotId)).Concat(v.BridgeOpened||v.BridgeRuinedAt is not null?new[]{RuinRules.RoyalBridge}:[]).Distinct();
 
     private static void BreakWall(RaidUnit unit,Fortification wall,RaidBattle battle,EnemyDefinition enemy,DateTimeOffset at)
     {
@@ -321,7 +330,7 @@ public static class RaidSimulation
         raid.Injured=battle.Fighters.Count(f=>f.Wounded);
         raid.DamagedBuildings=battle.Damage.Count(d=>d.Amount>0);
         raid.ResolvedAt=at;
-        raid.Outcome=cancelled?RaidOutcome.Cancelled:battle.DamageDone<50&&raid.Stolen.Count==0?RaidOutcome.Repelled:RaidOutcome.Lost;
+        raid.Outcome=cancelled?RaidOutcome.Cancelled:village.DefeatedByBattleId==battle.Id?RaidOutcome.Lost:battle.DamageDone<50&&raid.Stolen.Count==0?RaidOutcome.Repelled:RaidOutcome.Lost;
         var contributors=battle.Fighters.Where(f=>f.DamageDealt>0&&!f.RewardsGranted).OrderBy(f=>f.CitizenId).ToList();
         var total=contributors.Sum(f=>f.DamageDealt);
         var remaining=raid.Killed*RaidRules.RenownPerKill;

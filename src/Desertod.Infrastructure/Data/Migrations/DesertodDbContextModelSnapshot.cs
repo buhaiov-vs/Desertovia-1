@@ -823,6 +823,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("BridgeDamage").HasColumnType("integer");
+                    b.Property<DateTimeOffset?>("BridgeRuinedAt").HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("BridgeOpened")
                         .HasColumnType("boolean");
 
@@ -832,6 +835,12 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DefeatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DefeatedByBattleId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .HasMaxLength(280)
@@ -1194,6 +1203,10 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<double?>("DestinationY");
 
                             b1.Property<bool>("Guard");
+
+                            b1.Property<DateTimeOffset?>("HealReadyAt");
+
+                            b1.Property<string>("HealingReceipts");
 
                             b1.Property<double>("Health");
 
@@ -1836,6 +1849,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<bool>("BoundaryApproved");
 
+                            b1.Property<int>("Damage");
+
                             b1.Property<string>("Kind")
                                 .IsRequired();
 
@@ -1855,6 +1870,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .IsRequired();
 
                             b1.Property<bool>("PublicDemolition");
+
+                            b1.Property<DateTimeOffset?>("RuinedAt");
 
                             b1.Property<double>("Scale");
 
@@ -2025,6 +2042,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .IsRequired();
 
                             b1.Property<int>("ProductionCycles");
+
+                            b1.Property<DateTimeOffset?>("RuinedAt");
 
                             b1.HasKey("VillageId", "__synthesizedOrdinal");
 
@@ -2298,6 +2317,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<string>("PlotId")
                                 .IsRequired();
+
+                            b1.Property<DateTimeOffset?>("RuinedAt");
 
                             b1.HasKey("VillageId", "__synthesizedOrdinal");
 

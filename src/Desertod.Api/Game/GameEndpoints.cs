@@ -12,8 +12,9 @@ public static class GameEndpoints
             Microsoft.Extensions.Options.IOptions<TelegramOptions> options, GameService game, IConfiguration config, CancellationToken ct) => {
             if (!AlmightyService.Trusted(http, options)) return Results.Unauthorized();
             if (string.IsNullOrWhiteSpace(config["Hosting:PrimaryVillage"]) || vote.Slug != config["Hosting:PrimaryVillage"]) return Results.Forbid();
-            await game.CivicTelegramDecisionAsync(vote.Slug, vote.OwnerId, vote.OrderId, vote.Approve, ct);
-            return Results.Ok(new { result = "Решение сохранено. Текущее состояние заявки — в городе." });
+            var state=await game.CivicTelegramDecisionAsync(vote.Slug, vote.OwnerId, vote.OrderId, vote.Approve, ct);
+            var status=state.CivicOrders.Single(o=>o.Id==vote.OrderId).Status;
+            return Results.Ok(new { status, result = status switch { "rejected"=>"Заявка отклонена.", "completed"=>"Заявка выполнена.", "working"=>"Заявка одобрена. Работы начаты.", _=>"Заявка ожидает решения." } });
         });
         app.MapPost("/api/director/vote", async (AlmightyTelegramVote vote, HttpContext http,
             Microsoft.Extensions.Options.IOptions<TelegramOptions> options, GameService game, CancellationToken ct) => {
@@ -23,6 +24,8 @@ public static class GameEndpoints
         });
         var player = app.MapGroup("/api").RequireAuthorization();
 
+        player.MapGet("/villages/{slug}/monastery", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) => game.GetMonasteryAsync(slug,user.RequireAccountId(),ct));
+        player.MapPost("/villages/{slug}/monastery", (string slug, MonasteryRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) => game.TradeMonasteryAsync(slug,user.RequireAccountId(),request,ct));
         player.MapGet("/villages/{slug}/economy", (string slug, Guid? before, string? asset, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
             game.GetEconomyAsync(slug, user.RequireAccountId(), before, asset, ct));
         player.MapPost("/villages/{slug}/economy", (string slug, EconomyRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>

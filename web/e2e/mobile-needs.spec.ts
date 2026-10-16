@@ -11,7 +11,7 @@ for(const role of ['tsar','governor'])for(const width of [320,390,1280])test(`me
  await expect(page.getByRole('checkbox',{name:'Показывать ники игроков на карте'})).toBeChecked()
  await page.getByRole('checkbox',{name:'Показывать ники игроков на карте'}).uncheck()
  expect(await page.evaluate(()=>localStorage.getItem('desertovia.playerNames'))).toBe('0')
- const url=page.url();await page.getByRole('button',{name:'Вернуться к карте'}).click()
+ const url=page.url();await expect(page.getByRole('button',{name:'Вернуться к карте'})).toHaveCount(0);await page.locator('.modal.menu .modal-header button.close').click()
  await expect(page.locator('.modal.menu')).toHaveCount(0);expect(page.url()).toBe(url)
  const dock=page.locator('.hud-buttons')
  const rects=await dock.locator('button').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right}}))

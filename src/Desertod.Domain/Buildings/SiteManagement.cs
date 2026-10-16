@@ -39,6 +39,7 @@ public static class SiteManagement
             person.CycleEndsAt=null;person.CycleStartedAt=null;person.Spot=null;
         }
         site.PublicDemolition=site.OwnerAccountId is null || tsar;
+        site.RuinedAt=null;site.Damage=0;
         site.Operation="site-demolish";site.Stage=0;site.Progress.Clear();site.Hands.Clear();site.TreesToFell=0;
     }
 }

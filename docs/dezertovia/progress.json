@@ -979,7 +979,7 @@
     "deployed": true
   },
   "live_version": "0.7.1",
-  "candidate_version": null,
+  "candidate_version": "0.7.2",
   "feedback_identity": {
     "decision": "D-072",
     "state": "released",
@@ -1059,8 +1059,7 @@
   "pending_patch": {
     "branch": "fix/civic-request-capacity",
     "pull_request": 46,
-    "state": "implemented_not_deployed",
-    "version_unchanged": "0.7.1",
+    "state": "release_authorized_ci_pending",
     "scope": [
       "request_capacity",
       "upgrade_errors",
@@ -1069,6 +1068,8 @@
       "click_to_attack",
       "combat_rendering_reuse"
     ],
-    "live_source_unchanged": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da"
+    "live_source_unchanged": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
+    "version": "0.7.2",
+    "authorization": "D-077: owner said выкладывай"
   }
 }

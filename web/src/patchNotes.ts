@@ -10,6 +10,23 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.2',date:'2026-10-16',
+    title:{ru:'Бой, карта и очередь строек',en:'Combat, map and construction queue'},
+    changes:{
+      ru:['Исправлены лишние пересоздания зданий, освещения и полос здоровья во время боя; движение врагов стало плавнее.',
+        'Клик по врагу задаёт автоатаку без четырёх отдельных кнопок. Царь может вступить Воеводой без задания охраны.',
+        'Пациенты готовой больницы отображаются в её карточке. Раненые до переноски остаются на поле.',
+        'Dcoin, тестовые свечи и ресурсы собраны в компактной верхней панели.',
+        'Нельзя подать новую строительную заявку, когда общая очередь заполнена. Причины недоступных улучшений объясняются по-русски.',
+        'Батюшка уточняет проект, версию и время отзыва; сведения автора сохраняются отдельно от проверенной версии сервера.'],
+      en:['Combat reuses buildings, lighting and health bars; enemy movement is smoother.',
+        'Click an enemy to set autoattack without four separate buttons. The Tsar may join as Voivode without guard duty.',
+        'Admitted patients appear in the completed hospital card. Wounded awaiting rescue remain on the field.',
+        'Dcoin, test candles and resources share a compact top bar.',
+        'New construction applications are blocked when their queue is full. Unavailable upgrades explain their reason.',
+        'Father clarifies feedback project, version and time, keeping reporter statements separate from verified live versions.']}
+  },
+  {
     version:'0.7.1',date:'2026-10-16',
     title:{ru:'Управление обороной и удобство карты',en:'Defense controls and map usability'},
     changes:{

@@ -1,6 +1,6 @@
-# Дезертовия0.7 — готово к назначенному выпуску
+# Дезертовия0.7 — установлена и независимо проверена
 
-**Статус: код проверен, установка ещё не выполнена.** Разрешение D-069:
+**Статус: установлена16.10.2026 после07:00Europe/Oslo, независимая проверка PASS.** Разрешение D-069:
 начать16.10.2026 в07:00 Europe/Oslo (05:00UTC), не раньше. На момент подготовки
 LIVE0.6.1/61d726c184315d54c3d2c86b4984954bf818e31b оставлен без изменений.
 Scheduled не означает installed; фактический результат добавить после установки.
@@ -62,9 +62,7 @@ almighty.py поверх установленного3fd0c1c budgetfix, без �
 
 ## Результат установки
 
-Ещё не выполнена. После назначенного выпуска сюда добавить фактические install/
-independent-check runIDs, установленный SHA и preservation receipt; до этого
-не писать, что0.7 уже работает на сервере.
+Установка и отдельная проверка выполнены. Фактические runIDs/SHA/preservation receipt приведены ниже.
 
 
 ## Повторная проверка16октября до выкладки
@@ -78,6 +76,32 @@ Candidate снова ready=true, оба game CI обязательны. Конт
 payload/миграция/отсутствие runtime-расхождений main проверены повторно.
 
 Read-only LIVE перед выпуском:HTTP200,61d726c, Telegram logintrue/devfalse.
-Установка ещё НЕ выполнялась. Фактические backups/проверка baseline — в07:00Oslo,
+На момент повторного CI установка ещё не выполнялась. Фактические backups/проверка baseline назначались на07:00Oslo,
 после обновления отдельный preservation check. В приватном operator guide см.
 deploy/PREDEPLOY_RECHECK_0_7.md; trigger до05:00UTC отсутствует.
+
+
+## Фактический выпуск16.10.2026 — INSTALLED и независимо проверен
+
+Проверка сервера начата после07:00Europe/Oslo (05:00UTC).
+Preflight [38853486600](https://github.com/desertod666/bolig-agent/actions/runs/38853486600) PASS;
+install [38853561064](https://github.com/desertod666/bolig-agent/actions/runs/38853561064) PASS;
+отдельный check [38853958496](https://github.com/desertod666/bolig-agent/actions/runs/38853958496) PASS.
+Новая API стала healthy05:04:48UTC (07:04:48Oslo), независимая проверка05:05:31UTC.
+
+- LIVEgame0.7: `0540a2a006d2c72b580b37f74387f1e53e68f9eb`, engine2.
+- Speech payload ONLY`almighty.py`: source`3f7038c886e8ea37c98191a32ba0c3f558b05e69`,
+  SHA256`748acaf68f5e1a739b2e0cb7e284e6206b0e5fcd69227deab7e81f1e23d1867f`.
+  Прежний AI-budgetfix сохранён; старые app/town_proxy/llm не устанавливались.
+- Snapshot comparison:113профилей до →113после, `lost_profiles_or_progress=0`;
+  привязки аккаунтов, слава, уровни/опыт навыков и характеристик сохранены.
+-22миграции, включая LiveVillageCombat. PostgreSQL/SQLite/config/snapshot backups созданы.
+- Telegram login/bridge и маршруты здоровы, development login=false;
+  Hospital/Almighty enabled=true, режим Всевышнего Propose сохранён.
+- Внешний HTTP200 и release header совпадают; новый GamePage bundle успешно
+  загружается и содержит боевые элементы выбора цели/удержания позиции.
+- Искусственных сообщений, модельных проб, тестовых платежей и нападений не было.
+
+Проверки перед выпуском: оба game CI38817618664/38851717640 SUCCESS на этом
+же source, botCI38811556338 attempt2 SUCCESS816tests, operator15PASS.
+Текущий факт — INSTALLED, предыдущие READY/HOLD записи являются историей подготовки.

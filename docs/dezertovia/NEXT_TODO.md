@@ -1,3 +1,9 @@
+> **LIVE0.7.5:** [combat motion release and actual checks](RELEASE_0_7_5.md).
+> Exact374323f, independentcheck38966145677PASS,119profiles/121bindings preserved.
+> Next: measure motion in an ordinary battle on real phones with a fresh0.7.5
+> diagnostic export; assess remaining frame spikes/packet gaps/lock contention
+> from measurements. Headless regression48/48frames is not physical-device FPS.
+
 > **LIVE0.7.4:** [фактическая выкладка и проверка](RELEASE_0_7_4.md).
 > Exact74adbe8, independentcheck38959583714SUCCESS.119профилей/121привязка сохранены.
 > Дозоры/посты/привязка к костру убраны; диагностика включена. Замеры физического

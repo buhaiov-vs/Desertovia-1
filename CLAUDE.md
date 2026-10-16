@@ -1,3 +1,21 @@
+#0.7.5 INSTALLED and independently verified16Oct2026
+
+LIVEgame374323f8c3ef519694497371716e611d3396ee43, CI38963553875 SUCCESS424Domain+
+239API+155browser/1normal skip,frontend/DockerPASS. PublicPR49 mergedbbb5f29,
+tree identical to tested source. Botmetadata380d8ea CI38963592945 SUCCESS887tests/
+serverSKIPPED, canonicalPR47 mergede0a4cfa.20operator guardsPASS. Freshpreflight
+38965661962, install38965752003 and independentcheck38966145677 SUCCESS
+2026-10-16T20:59:15.5558416Z.119→119profiles,0progress losses,121accounts/bindings,
+25migrations,24frontendchunks,feedbackversion0.7.5PASS. PG/SQLite/code/config/
+profile backups saved;14protected modules/quarantine/Propose/budget preserved.
+Subpixel combat motion, shared bounded jitter-aware pacing and wall damage-only
+static-world fast path are LIVE. Reproduced9/48positions before vs48/48after,
+late30/30,healthbar drift0 in actual map browser regression; not physical-phone
+FPS proof. Natural next battle capture still needed; initial client frame spikes
+and lock512ms were observed, do not claim every source of jitter gone. No forced
+raids/messages/payments/model probes or resets. No old request replay/reinstall.
+See docs/dezertovia/RELEASE_0_7_5.md. Earlier READY/HOLD/NOTLIVE entries are history.
+
 # D-085: movement-only stutter after0.7.4; client pacing fix in progress
 
 Owner reports map/buttons smooth, fighting avatars stutter. Two owner-provided

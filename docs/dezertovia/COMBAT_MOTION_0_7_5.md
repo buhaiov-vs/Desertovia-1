@@ -1,6 +1,6 @@
 #0.7.5 movement fix: implementation and evidence
 
-NOT LIVE; current0.7.4 remains installed. Owner clarified camera/buttons stay
+INSTALLED0.7.5; see RELEASE_0_7_5.md /RELEASE_0_7_5_RESULT.json. Owner clarified camera/buttons stay
 smooth while fighting avatars stutter. Requested diagnostic files were read
 locally; raw reports are not committed or uploaded publicly.
 
@@ -42,5 +42,5 @@ drawn coordinates. TypeScript/lint/focused browser and full exactCI are required
 No assertion of complete live/device resolution until next natural battle capture.
 
 Local TypeScript, lint (existing warnings only) and production frontend build PASS.
-Full exact source CI and fresh baseline/install/independent-check receipts pending.
+Full exact CI38963553875 and fresh preflight38965661962/install38965752003/independentcheck38966145677 PASS.
 Focused26browser tests PASS, including actual enemy click targets on displayed sprites.

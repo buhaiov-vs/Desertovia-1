@@ -637,3 +637,5 @@ POST_0_7_IMPLEMENTATION.md. Сначала весь пакет, затем об�
 Сохранить частные материалы/владение, прогресс и лечение; без автоматического
 сноса старых площадок. Самооборона всех жителей остаётся отдельной идеей.
 
+
+D-085 release verification16Oct2026: exact374323f fullCI38963553875 PASS424Domain/239API/155browser+1skip; bot380d8ea CI38963592945PASS887/serverSKIPPED. Actualpreflight38965661962/install38965752003/independentcheck38966145677PASS20:59:15UTC.119profiles/121bindings preserved,0progresslosses; backups/configs/quarantine/Propose/budget retained. LIVE0.7.5. Next natural phone battle capture still needed; no forced raid or player probes. See RELEASE_0_7_5.md.

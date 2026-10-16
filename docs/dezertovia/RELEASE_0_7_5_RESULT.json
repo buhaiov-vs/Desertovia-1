@@ -1,0 +1,50 @@
+{
+  "phase": "post075_verified",
+  "version": "0.7.5",
+  "game_sha": "374323f8c3ef519694497371716e611d3396ee43",
+  "bot_sha": "380d8ea3100a67834f28b8bac11d32377d6212f0",
+  "progress": {
+    "profiles_before": 119,
+    "profiles_after": 119,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 121,
+    "login_bindings_preserved": 121
+  },
+  "migrations": 25,
+  "director_mode": "Propose",
+  "pending_notice_states": [],
+  "telegram_civic_deliveries_confirmed": 42,
+  "frontend": {
+    "version": "0.7.5",
+    "game_chunk": true,
+    "checked_chunks": 24,
+    "transient_http_retries": 0
+  },
+  "feedback_live_version_verified": true,
+  "protected_modules_preserved": true,
+  "configurations_preserved": true,
+  "quarantine_mode": "quarantine",
+  "protected_module_count": 14,
+  "postgres_backup": {
+    "created": true,
+    "restore_catalog_verified": true,
+    "before_game": "74adbe8c1d778f0751a755a4b36dbefe6f16a405",
+    "candidate": "374323f8c3ef519694497371716e611d3396ee43"
+  },
+  "sqlite_backup": true,
+  "combat_diagnostics": {
+    "legacy_duties": {
+      "unfinished": 0,
+      "medicallyPaused": 0
+    },
+    "recent_timing_samples": [],
+    "forced_raid": false
+  },
+  "synthetic_messages": 0,
+  "test_payments": 0,
+  "forced_raids": 0,
+  "checked_at": "2026-10-16T20:59:15.5558416Z",
+  "preflight_run": 38965661962,
+  "install_run": 38965752003,
+  "independent_check_run": 38966145677
+}

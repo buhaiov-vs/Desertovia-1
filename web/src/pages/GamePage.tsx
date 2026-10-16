@@ -774,9 +774,6 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         selectedEnemyId={enemyPick?.unitId??null}
         onEnemyPick={(battleId,unitId)=>{
           setEnemyPick({battleId,unitId});setPicked(null)
-          const battle=village.battles?.find(b=>b.id===battleId)
-          const fighter=battle?.fighters.find(f=>(tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id)&&f.guard&&f.active&&f.health>0)
-          if(fighter||tsar)void api.battleOrder(slug,battleId,unitId,fighter?.mode??'intercept').catch(e=>{setNotice(i18n.error(e));window.setTimeout(()=>setNotice(null),5000)})
         }}
         onCitizenPick={pickCitizen}
         onWorldPick={pickWorld}

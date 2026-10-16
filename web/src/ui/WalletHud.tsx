@@ -30,8 +30,8 @@ export function WalletHud({slug,onOpen}:{slug:string;onOpen:()=>void}) {
   },[slug])
   const amount=(n:number)=>new Intl.NumberFormat(i18n.language,{notation:n>=100000?'compact':'standard',maximumFractionDigits:1}).format(n)
   return <button className="wallet-hud" onClick={onOpen} aria-label={ru?'Открыть кошелёк Dcoin и тестовых свечей':'Open Dcoin and test candle wallet'} title={balance?`Dcoin: ${balance.coins} · ${ru?'Тестовые свечи':'Test candles'}: ${balance.testCandles}`:ru?'Кошелёк':'Wallet'}>
-    <span><DcoinIcon/><strong>{balance?amount(balance.coins):failed?'—':'…'}</strong> Dcoin</span>
-    <span><span aria-hidden="true">🕯</span><strong>{balance?amount(balance.testCandles):failed?'—':'…'}</strong> {ru?'свечи · тест':'candles · test'}</span>
+    <span><DcoinIcon/><strong>{balance?amount(balance.coins):failed?'—':'…'}</strong><span className="wallet-label"> Dcoin</span></span>
+    <span><span aria-hidden="true">🕯</span><strong>{balance?amount(balance.testCandles):failed?'—':'…'}</strong><span className="wallet-label"> {ru?'свечи':'candles'}</span><small>{ru?'тест':'test'}</small></span>
     {failed&&<span role="status" className="wallet-stale" title={ru?'Не удалось обновить баланс':'Could not refresh balance'}>↻</span>}
   </button>
 }

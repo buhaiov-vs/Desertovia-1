@@ -1055,5 +1055,20 @@
       "run_id": 38873661537,
       "verified_at_utc": "2026-10-16T08:26:14.6780507Z"
     }
+  },
+  "pending_patch": {
+    "branch": "fix/civic-request-capacity",
+    "pull_request": 46,
+    "state": "implemented_not_deployed",
+    "version_unchanged": "0.7.1",
+    "scope": [
+      "request_capacity",
+      "upgrade_errors",
+      "compact_wallet_hud",
+      "hospital_map_presence",
+      "click_to_attack",
+      "combat_rendering_reuse"
+    ],
+    "live_source_unchanged": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da"
   }
 }

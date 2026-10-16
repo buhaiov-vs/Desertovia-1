@@ -53,8 +53,11 @@ export class Fog {
   }
 
   /** Adds the land the server says the tribe has seen; nothing seen is ever forgotten. */
+  private lastExplored: string | null = null
   setExplored(base64: string) {
+    if(base64===this.lastExplored)return
     const bits = atob(base64)
+    this.lastExplored=base64
     for (let index = 0; index < this.explored.length; index++) {
       if ((bits.charCodeAt(index >> 3) >> (index & 7)) & 1) this.explored[index] = 1
     }

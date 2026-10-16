@@ -262,6 +262,7 @@ export class VillageWorld {
   private activeProjectId: string | null = null
   private lastBuildingKey = ''
   private buildingViews: Container[] = []
+  private readonly damageViews = new Map<string, {damage:number; view:Container}>()
   private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
   private buildingLabels: Array<{ text: Text; x: number; y: number }> = []
@@ -567,7 +568,10 @@ export class VillageWorld {
     walker.normalSubtitle=this.tsarTitle
     if(walker.injuredUntil>Date.now()){walker.inHospital=true;walker.wardVisible=true;walker.treatmentCause='После боя'}
     walker.staying = true
-    this.walkTo(walker, spot)
+    // Battle positions already drive this walker. Replanning a civilian route to
+    // the stale Tsar spot on every combat snapshot can search the whole map.
+    const fighting=this.village?.battles?.some(b=>!b.finishedAt&&b.fighters.some(f=>f.isTsar&&f.active&&f.health>0))
+    if(!fighting)this.walkTo(walker, spot)
   }
 
   private bridgeDone() {
@@ -893,11 +897,11 @@ export class VillageWorld {
         const hospital = this.village?.structures.find(s => s.kind === 'Hospital')
         const plot = hospital ? this.plot(hospital.plotId) : null
         const index=visiblePatients.findIndex(c=>c.id===citizen.id)
-        walker.wardVisible=index>=0
+        walker.wardVisible=!plot&&index>=0
         // Staggered ward places leave space for a full name and two status lines.
         const slot=Math.max(0,index)
-        walker.targetX=((plot?.x??CAMPFIRE.x)+(slot%2===0?-1.2:4.2))*TILE
-        walker.targetY=((plot?.y??CAMPFIRE.y)+4.35+Math.floor(slot/2)*5.5+(slot%2)*2.75)*TILE
+        walker.targetX=(plot?plot.x+1.5:CAMPFIRE.x+(slot%2===0?-1.2:4.2))*TILE
+        walker.targetY=(plot?plot.y+2:CAMPFIRE.y+4.35+Math.floor(slot/2)*5.5+(slot%2)*2.75)*TILE
         walker.x=walker.targetX;walker.y=walker.targetY;walker.staying=true
       }
       this.setIcon(walker, icon?.key ?? '', icon?.tile ?? null)
@@ -989,10 +993,23 @@ export class VillageWorld {
   private drawBuildings() {
     const village = this.village
     if (!village) return
+    // Damage changes every few combat ticks. Update its overlay independently,
+    // keeping every unchanged building, light and label alive.
+    const damaged=new Map([...village.structures,...village.storages].filter(s=>s.damage>0).map(s=>[s.plotId,s.damage]))
+    for(const [plotId,entry] of this.damageViews){
+      if(damaged.get(plotId)===entry.damage)continue
+      entry.view.destroy({children:true});this.damageViews.delete(plotId)
+    }
+    for(const [plotId,damage] of damaged){
+      if(this.damageViews.has(plotId))continue
+      const plot=this.plot(plotId);if(!plot)continue
+      const view=this.damageView(plotId,damage,plot.x,plot.y)
+      this.objects.addChild(view);this.damageViews.set(plotId,{damage,view})
+    }
     const key = JSON.stringify([
       this.buildingDefinitions.size,
-      village.storages.map((s) => [s.kind, s.plotId, s.damage, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
-      village.structures.map((s) => [s.kind, s.plotId, s.damage]),
+      village.storages.map((s) => [s.kind, s.plotId, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
+      village.structures.map((s) => [s.kind, s.plotId]),
       village.sites.map(siteVisualKey),
       village.fields.map((bed) => {
         const plant = cropTile(bed.crop ?? '', bed.growth, isRipe(bed))
@@ -1038,7 +1055,6 @@ export class VillageWorld {
       if (!plot) continue
       const view = this.finishedView(structure.kind, plot.x, plot.y)
       add(view)
-      if (structure.damage > 0) add(this.damageView(structure.plotId, structure.damage, plot.x, plot.y))
       if (structure.kind !== 'Hospital') name(structure.kind, false, view)
       const beds = village.fields.filter((bed) => bed.plotId === structure.plotId)
       if (beds.length > 0) add(this.bedsView(beds, plot.x, plot.y))
@@ -1050,7 +1066,6 @@ export class VillageWorld {
       if (!plot || !definition) continue
       const view = this.finishedView(storage.kind, plot.x, plot.y)
       add(view)
-      if (storage.damage > 0) add(this.damageView(storage.plotId, storage.damage, plot.x, plot.y))
       name(storage.kind, true, view)
       add(this.goodsYard(storage, definition, plot.x, plot.y))
     }
@@ -2076,11 +2091,19 @@ export class VillageWorld {
     const sortDepth = this.elapsed - this.depthSortedAt >= DEPTH_SORT_SECONDS
     if (sortDepth) this.depthSortedAt = this.elapsed
     const front = this.enemies.front(now)
+    const hasWard=!!this.village?.structures.some(s=>s.kind==='Hospital')
+    const combatants=new Map<string,NonNullable<VillageState['battles']>[number]['fighters'][number]>()
+    for(const battle of this.village?.battles??[]){
+      if(battle.finishedAt||['Warning','Cancelled'].includes(battle.phase))continue
+      for(const fighter of battle.fighters)if(fighter.active&&fighter.health>0)
+        combatants.set(fighter.isTsar?TSAR_ID:fighter.citizenId,fighter)
+    }
     for (const walker of this.walkers.values()) {
       let speed = WALK_SPEED
       walker.icon.visible = true
       const hurt = walker.injuredUntil > now
-      walker.sprite.visible=!hurt||!walker.inHospital||walker.wardVisible
+      const insideWard=hurt&&walker.inHospital&&hasWard
+      walker.sprite.visible=!insideWard&&(!hurt||!walker.inHospital||walker.wardVisible)
       walker.icon.visible=walker.sprite.visible&&!walker.inHospital
       const namesVisible = this.showPlayerNames || walker.id === PRIEST_ID
       walker.label.visible=walker.sprite.visible && namesVisible
@@ -2148,12 +2171,11 @@ export class VillageWorld {
         walker.targetY=(plot?plot.y+3:CAMPFIRE.y+1)*TILE
         walker.way=[];speed=WALK_SPEED*.5
       }
-      const combatant=this.village?.battles?.filter(b=>!b.finishedAt&&!['Warning','Cancelled'].includes(b.phase))
-        .flatMap(b=>b.fighters).find(f=>(f.isTsar?walker.id===TSAR_ID:f.citizenId===walker.id)&&f.active&&f.health>0)
+      const combatant=combatants.get(walker.id)
       if(combatant&&!hurt){
         walker.targetX=combatant.x*TILE;walker.targetY=combatant.y*TILE;walker.way=[]
         walker.staying=true;walker.roaming=false
-        speed=Math.max(WALK_SPEED,Math.hypot(walker.targetX-walker.x,walker.targetY-walker.y)*5)
+        speed=Math.max(WALK_SPEED,Math.hypot(walker.targetX-walker.x,walker.targetY-walker.y))
       }
       const end = walker.way.at(-1)
       if (end && (end.x !== walker.targetX || end.y !== walker.targetY)) walker.way = []

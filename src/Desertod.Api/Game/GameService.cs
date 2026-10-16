@@ -859,7 +859,7 @@ public sealed partial class GameService(
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        await SyncHospitalAsync(db, village.Id, cancellationToken);
+        await SyncHospitalAsync(db, village.Id, cancellationToken, actorAccount:village.OwnerAccountId);
         var due = RaidRules.Due(village, now);
         if (due.Count == 0)
         {
@@ -917,6 +917,8 @@ public sealed partial class GameService(
                     if(prior is not null)CarryFighters(prior,battle,now);
                 }
             }
+            if(HasHospitalRestriction(village.OwnerAccountId))
+                foreach(var royal in battle.Fighters.Where(f=>f.IsTsar))royal.Active=false;
             var advanced = RaidSimulation.Tick(village,raid,battle,citizens,
                 citizens.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now);
             changed |= advanced;

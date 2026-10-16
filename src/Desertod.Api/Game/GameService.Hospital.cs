@@ -41,8 +41,26 @@ public sealed partial class GameService
         HospitalStatusReply? last = null;
         var allPatients = new List<HospitalPatient>();
         var updated = new List<Citizen>();
-        if (linked.Count == 0 && actorAccount is { } actorId && await TelegramIdAsync(db, actorId, ct) is { } telegram)
-            return await hospitalBridge.StatusAsync(telegram, [new HospitalPatientRequest(telegram, 0, 0)], ct);
+        // The royal combat actor can have a Telegram account without a Citizen row.
+        if (actorAccount is { } actorId && !linked.Any(c=>c.AccountId==actorId)
+            && await TelegramIdAsync(db, actorId, ct) is { } telegram
+            && (force || !hospitalAccounts.TryGetValue(actorId,out var cached) || now-cached.CheckedAt>=TimeSpan.FromSeconds(15)))
+        {
+            try
+            {
+                last=await hospitalBridge.StatusAsync(telegram,[new HospitalPatientRequest(telegram,HospitalRules.Level(village),0)],ct);
+                var p=last.Patients.SingleOrDefault(p=>p.Id==telegram.ToString())??throw new HttpRequestException("Incomplete hospital reply.");
+                hospitalAccounts[actorId]=new ExternalRecovery { EpisodeId=p.EpisodeId,AdmittedAt=Utc(p.AdmittedAt),Until=Utc(p.Until),CheckedAt=now,Available=true,
+                    HospitalPercent=p.HospitalPercent,SkillPercent=p.SkillPercent,EffectKind=p.Effect?.Kind,EffectUntil=Utc(p.Effect?.Until) };
+                allPatients.AddRange(last.Patients);
+            }
+            catch(Exception error) when(error is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
+            {
+                if(ct.IsCancellationRequested)throw;
+                hospitalAccounts[actorId]=new ExternalRecovery {Available=false,CheckedAt=now};
+                logger.LogWarning("Royal hospital status unavailable; combat remains blocked.");
+            }
+        }
         foreach (var chunk in linked.Chunk(100))
         {
             if (!force && chunk.All(c => c.Recovery is { Available: true } r && now-r.CheckedAt < TimeSpan.FromSeconds(15))) continue;

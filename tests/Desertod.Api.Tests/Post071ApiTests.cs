@@ -36,6 +36,44 @@ public sealed class Post071ApiTests(DesertodApiFactory factory)
         await AssertRuleBrokenAsync(await stranger.Client.PutAsJsonAsync(v.Path+$"/battles/{battleId}/order",new{targetUnitId=target}),"defense.guard");
     }
     [Fact]
+    public async Task Future_wave_cannot_mint_a_second_royal_actor()
+    {
+        var v=await players.FoundVillageAsync("Queued commands");
+        await OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+"/undead",new{enemy="Zombie",size="Medium"}));
+        Guid queued;
+        await using(var db=await Db())
+        {
+            var village=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);
+            queued=(await db.RaidBattles.Where(x=>x.VillageId==village.Id).OrderBy(x=>x.ScheduledAt).ToListAsync()).Last().Id;
+        }
+        await AssertRuleBrokenAsync(await v.Tsar.PutAsJsonAsync(v.Path+$"/battles/{queued}/order",new{mode="intercept"}),"raid.queued");
+        await using(var db=await Db())Assert.Empty((await db.RaidBattles.SingleAsync(x=>x.Id==queued)).Fighters);
+    }
+    [Fact]
+    public async Task Royal_actor_without_citizen_obeys_external_hospital_restriction()
+    {
+        var v=await players.FoundVillageAsync("Royal recovery");
+        await OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+"/undead",new{enemy="Skeleton",size="Small"}));
+        const long uid=71907101;Guid battle;
+        await using(var db=await Db())
+        {
+            var village=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);
+            db.ExternalLogins.Add(new(){Provider="telegram",ProviderUserId=uid.ToString(),AccountId=village.OwnerAccountId});
+            battle=(await db.RaidBattles.SingleAsync(x=>x.VillageId==village.Id)).Id;
+            await db.SaveChangesAsync();
+        }
+        factory.Hospital.Enabled=true;
+        var now=factory.Clock.GetUtcNow().ToUnixTimeSeconds();
+        factory.Hospital.States[uid]=new(uid.ToString(),"royal-wound",now,now+3600,now,0,0,[]);
+        try
+        {
+            await AssertRuleBrokenAsync(await v.Tsar.PutAsJsonAsync(v.Path+$"/battles/{battle}/order",new{mode="intercept"}),"hospital.unavailable");
+            factory.Hospital.States.Remove(uid);
+            await OkJsonAsync(await v.Tsar.PutAsJsonAsync(v.Path+$"/battles/{battle}/order",new{mode="intercept"}));
+        }
+        finally {factory.Hospital.Reset();}
+    }
+    [Fact]
     public async Task Sleep_stops_active_and_queued_undead_and_is_idempotent_without_removing_history()
     {
         var v=await players.FoundVillageAsync("Stop battle");var worker=await players.JoinAsync(v);

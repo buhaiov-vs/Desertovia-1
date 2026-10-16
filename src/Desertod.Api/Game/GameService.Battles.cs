@@ -27,8 +27,12 @@ public sealed partial class GameService
     private static void CarryFighters(RaidBattle previous,RaidBattle next,DateTimeOffset now)
     {
         foreach(var f in previous.Fighters)
+        {
+            // A queued order must never create a second actor or restore spent health.
+            next.Fighters.RemoveAll(x=>x.IsTsar==f.IsTsar&&x.ActorId==f.ActorId);
             next.Fighters.Add(new(){CitizenId=f.CitizenId,AccountId=f.AccountId,IsTsar=f.IsTsar,X=f.X,Y=f.Y,Health=f.Health,MaximumHealth=f.MaximumHealth,
-                Mode=f.Mode,Guard=f.Guard,Wounded=f.Wounded,NextAttackAt=now.AddSeconds(1)});
+                Mode=f.Mode,Guard=f.Guard,Active=f.Active,Wounded=f.Wounded,NextAttackAt=now.AddSeconds(1)});
+        }
     }
 
     private static RaidReport BattleReport(Raid raid,RaidBattle battle,IReadOnlyList<Citizen> people) => new(
@@ -65,6 +69,9 @@ public sealed partial class GameService
             if(citizen is not null)HospitalRules.RequireReady(citizen,now);
             var battle=await db.RaidBattles.SingleOrDefaultAsync(b=>b.Id==battleId&&b.VillageId==villageId&&b.FinishedAt==null,ct)
                 ??throw new GameRuleException("raid.finished","This battle has finished.");
+            var queue=await db.RaidBattles.Where(b=>b.VillageId==villageId&&b.FinishedAt==null).ToListAsync(ct);
+            if(battle.Phase=="Warning"&&queue.Any(b=>b.Id!=battle.Id&&(b.Phase!="Warning"||b.ScheduledAt<battle.ScheduledAt)))
+                throw new GameRuleException("raid.queued","Wait for the current wave before issuing orders to the next one.");
             if(order.TargetUnitId is {} target && !battle.Units.Any(u=>u.Id==target&&u.Alive))
                 throw new GameRuleException("raid.targetGone","This enemy is no longer available.");
             var nav=new RaidNavigation(village);
@@ -105,7 +112,7 @@ public sealed partial class GameService
                 }
             }
             if(fighter.Health<=0)throw new GameRuleException("defense.wounded","Wait until this encounter is over and recover.");
-            fighter.Mode=order.Mode;fighter.TargetUnitId=order.Destination is null?order.TargetUnitId:null;
+            fighter.Active=true;fighter.Mode=order.Mode;fighter.TargetUnitId=order.Destination is null?order.TargetUnitId:null;
             fighter.DestinationX=order.Destination?.X;fighter.DestinationY=order.Destination?.Y;battle.Revision++;
             db.AuditActor=actor;db.AuditOperation="battle-order";
             await db.SaveChangesAsync(ct);changes.Mark(villageId);

@@ -75,10 +75,10 @@ export const en = {
     'needs.drinkCooldown': 'Your heart is still racing. Next drink in {minutes} min.',
     'needs.drinkFull': 'You are full of energy already.',
     'hint.fed':
-      'You are fed. After every {cycles} finished tasks you eat 1 food: first from what you carry, then from the village storage. If there is none anywhere, you go hungry.',
-    'hint.meal': '{done} of {cycles} tasks done since your last meal. At {cycles} you eat 1 food.',
+      'You are fed. Eating is automatic: 1 food after every {cycles} completed tasks. Public work uses carried food, then village storage; private work uses your personal inventory.',
+    'hint.meal': 'Eating is automatic. {done} of {cycles} tasks completed since your last meal. After task {cycles} you eat 1 food.',
     'hint.hungry':
-      'Your last meal found no food in your hands or in the village storage. Until you eat, tasks give {experience}% of the experience and energy comes back at {rest}% speed. You try to eat again after every task: bring food to the storage.',
+      'No available food was found at your last meal. Tasks give {experience}% XP and energy recovers at {rest}% speed. You try to eat after each completed task: private work uses your personal inventory; public work uses carried food or village storage.',
     'hint.hungryExperience': 'Hungry: every task gives {percent}% of the usual experience.',
     'hint.hungryRest': 'Hungry: energy comes back at {percent}% of its usual speed.',
     'hint.underTrees':
@@ -305,8 +305,8 @@ export const en = {
     'character.underTrees': 'under the trees',
     'character.inShelter': 'in a shelter',
     'character.rest': 'energy recovers at {percent}%',
-    'character.hungry': 'You are hungry: half XP and slower rest. The village needs food in storage.',
-    'character.eating': 'Every {cycles} tasks you eat 1 food: from what you carry first, then from the village storage.',
+    'character.hungry': 'You are hungry: half XP and slower rest. You try to eat again after the next completed task. Private work needs food in your personal inventory; public work uses carried food or village storage.',
+    'character.eating': 'Eating is automatic; no Eat button is needed. After every {cycles} completed tasks you eat 1 food. Public work uses carried food, then village storage. Private work uses your personal inventory only. Food removes hunger; energy recovers gradually while resting.',
     'character.fed': 'Fed',
 
     'inventory.title': 'Inventory',
@@ -978,7 +978,6 @@ export const en = {
   } as Record<string, { name: string; description: string }>,
 
   stages: {
-    dismantle: 'Dismantling',
     dismantle:'Dismantling', upgrade:'Storage upgrade', expand:'Housing expansion',
     ground: 'Ground',
     foundation: 'Foundation',
@@ -998,7 +997,6 @@ export const en = {
   } as Record<string, string>,
 
   jobs: {
-    dismantle: 'Dismantle carefully',
     dismantle:'Dismantle carefully',
     'bring-sticks': 'Bring sticks',
     'bring-logs': 'Bring logs',
@@ -1222,6 +1220,7 @@ export const en = {
     "defense.arriving": "The guard is still arriving. Try again shortly.",
     "defense.wounded": "You are wounded. Recover before attacking.",
     "defense.noWall": "Complete the palisade first.",
+    "raid.queued": "Wait for the current wave before issuing orders for the next one.",
     "raid.finished": "This battle has already finished.",
     "raid.targetGone": "This enemy is no longer available. Choose another target.",
     "raid.alreadyFighting": "The battle has begun and cannot be cancelled.",

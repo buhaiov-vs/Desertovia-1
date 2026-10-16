@@ -1,0 +1,15 @@
+import { test,expect,uniqueName } from './fixtures.ts'
+test('battle-only packets skip citizen and static-world rebuilds; topology and fighter changes still apply',async({page})=>{
+ await page.request.post('/auth/dev-login',{data:{name:uniqueName('combat-metrics')}})
+ await page.goto('/e2e/patients-harness.html')
+ await page.waitForFunction(()=>!!(window as unknown as {patientTest:unknown}).patientTest)
+ const report=await page.evaluate(()=>(window as unknown as {patientTest:{combatCheck:()=>{steady:number;topology:number;membership:number;continuity:unknown;diagnostics:{samples:{packets:number;staticUpdates:number}[]}}}}).patientTest.combatCheck())
+ expect(report.steady).toBe(0)
+ expect(report.topology).toBeGreaterThan(0)
+ expect(report.membership).toBeGreaterThan(report.topology)
+ expect(report.continuity).toEqual({before:{x:10.5,y:10},after:{x:10.5,y:10},end:{x:12,y:10}})
+ expect(report.diagnostics.samples.reduce((n,s)=>n+s.packets,0)).toBe(100)
+ expect(report.diagnostics.samples.reduce((n,s)=>n+s.staticUpdates,0)).toBeLessThan(5)
+ const text=JSON.stringify(report.diagnostics)
+ expect(text).not.toContain('Fighter');expect(text).not.toContain('measured-battle')
+})

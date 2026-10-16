@@ -78,6 +78,7 @@ builder.Services.AddHostedService(provider => provider.GetRequiredService<Chapla
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<DungeonRuntime>();
 builder.Services.AddHostedService<CycleSettlementWorker>();
+builder.Services.AddHostedService<RetiredGuardWorker>();
 builder.Services.AddHostedService<RaidWorker>();
 builder.Services.AddHostedService<PresenceWorker>();
 builder.Services.AddHostedService<DungeonWorker>();

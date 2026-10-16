@@ -1,62 +1,33 @@
 import { useState } from 'react'
 import {
   comingRaids,
-  isInjured,
   RAID_SIZES,
   UNDEAD,
   type Catalog,
   type CitizenSummary,
   type EnemyKind,
-  type Raid,
   type RaidSize,
-  type Task,
   type VillageState,
 } from '../api'
 import { useI18n } from '../i18n'
 
 const UNDEAD_WARNING_MINUTES = 3
 
-/** Citizens on a guard task running at the moment the raid strikes, mirroring the server's choice of defenders. */
-function defendersOf(raid: Raid, citizens: Iterable<CitizenSummary>, catalog: Catalog) {
-  const strikesAt = Date.parse(raid.strikesAt)
-  const guardTasks = new Set(catalog.tasks.filter((task) => task.effect === 'Guard').map((task) => task.id))
-  return [...citizens].filter(
-    (citizen) =>
-      citizen.state === 'Working' &&
-      citizen.taskId !== null &&
-      guardTasks.has(citizen.taskId) &&
-      citizen.siteId === null &&
-      citizen.cycleStartedAt !== null &&
-      citizen.cycleEndsAt !== null &&
-      Date.parse(citizen.cycleStartedAt) <= strikesAt &&
-      strikesAt < Date.parse(citizen.cycleEndsAt) &&
-      !isInjured(citizen, strikesAt),
-  )
-}
-
 function countdown(milliseconds: number) {
   const seconds = Math.max(0, Math.ceil(milliseconds / 1000))
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
 
-/** The next attack the tribe can see coming: who, how many, when, and who stands on watch. */
+/** The next attack the tribe can see coming: who, how many, when, and their arrival time. */
 export function RaidBanner({
   village,
-  citizens,
-  catalog,
   now,
-  watch,
-  pending,
-  onWatch,
 }: {
   village: VillageState
   citizens: Map<string, CitizenSummary>
   catalog: Catalog
   now: number
-  /** The guard task the player's citizen can take; null for the Tsar and visitors. */
-  watch: Task | null
   pending: boolean
-  onWatch: (task: Task) => void
 }) {
   const i18n = useI18n()
   const { t } = i18n
@@ -66,8 +37,6 @@ export function RaidBanner({
   const battle=village.battles?.find(b=>b.id===raid.id)
   const active=!!battle&&battle.phase!=='Warning'&&!battle.finishedAt
   const alive=battle?.units.filter(u=>u.health>0&&!u.exitedAt).length??raid.count
-  const defenders = defendersOf(raid, citizens.values(), catalog)
-  const guarding=active?battle.fighters.filter(f=>f.guard&&f.active&&f.health>0).length:defenders.length
   return (
     <div className="raid-banner" role="alert">
       <div className="raid-banner-title">
@@ -79,14 +48,7 @@ export function RaidBanner({
         {raid.entrySector && <span> · {i18n.language === 'ru' ? 'Подход' : 'Approach'}: {(i18n.language==='ru'?({north:'Север',west:'Запад',south:'Юг'} as Record<string,string>):({north:'North',west:'West',south:'South'} as Record<string,string>))[raid.entrySector] ?? raid.entrySector}</span>}
         {raid.waves > 1 && <span className="muted"> · {t('raid.wave', { wave: raid.wave, waves: raid.waves })}</span>}
       </div>
-      <div className="raid-banner-row small">
-        <details className="raid-details"><summary>{i18n.language==='ru'?'Оборона':'Defense'}</summary><span>{i18n.language==='ru'?'Активная охрана':'Active guards'}: {guarding}</span>{active&&<span> · {i18n.language==='ru'?'Бойцов':'Fighters'}: {battle.fighters.filter(f=>f.active&&f.health>0).length}</span>}</details>
-        {watch && (
-          <button className="primary" disabled={pending} onClick={() => onWatch(watch)} title={t('raid.hint')}>
-            {t('raid.guard')}
-          </button>
-        )}
-      </div>
+
     </div>
   )
 }

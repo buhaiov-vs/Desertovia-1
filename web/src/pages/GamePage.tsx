@@ -15,7 +15,6 @@ import {
   myArrival,
   myHero,
   INVITE_PARAMETER,
-  KEEP_WATCH,
   isStoryQuest,
   takesSpot,
   type BuildingDefinition,
@@ -687,7 +686,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         const watched = target !== null && villageRef.current !== null && watchable(target, villageRef.current)
         setPicked(watched ? { target, screen } : null)
         if (watched || blocked(TSAR_ID, point)) return
-        const active=villageRef.current?.battles?.find(b=>!b.finishedAt&&b.fighters.some(f=>f.isTsar&&f.accountId===me.id&&f.active&&f.health>0))
+        const active=villageRef.current?.battles?.find(b=>!b.finishedAt&&!['Warning','Cancelled'].includes(b.phase))
         if(active){void api.battleOrder(slug,active.id,null,'intercept',point).catch(e=>setNotice(i18n.error(e)));return}
         api.tsarGoTo(slug, point).then(setVillageState, (exception) => {
           setNotice(i18n.error(exception))
@@ -702,7 +701,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
       if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
       setError(null)
       setPicked(target ? { target, screen } : null)
-      const battle=villageRef.current?.battles?.find(b=>!b.finishedAt&&b.fighters.some(f=>!f.isTsar&&f.citizenId===ownId&&f.guard&&f.active&&f.health>0))
+      const battle=villageRef.current?.battles?.find(b=>!b.finishedAt&&!['Warning','Cancelled'].includes(b.phase))
       if(!target&&battle){void api.battleOrder(slug,battle.id,null,'intercept',point).catch(e=>setNotice(i18n.error(e)));return}
       // Empty ground: "come here". A citizen busy with a task stays at work.
       if (target || working || blocked(ownId, point)) return
@@ -875,9 +874,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
               citizens={live.citizens}
               catalog={catalog}
               now={now}
-              watch={canWork ? (catalog.tasks.find((task) => task.id === KEEP_WATCH) ?? null) : null}
               pending={pending || working}
-              onWatch={(task) => void start(task)}
             />
           )}
         </ServerClock>

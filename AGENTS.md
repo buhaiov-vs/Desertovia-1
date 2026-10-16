@@ -1,3 +1,15 @@
+# New request: remove guard/post binding and diagnose combat freezes
+
+Owner16Oct2026: players choose where to go/what to do; no guard duty. Implement
+fix/free-combat-and-diagnostics, plan docs/dezertovia/FREE_COMBAT_AND_DIAGNOSTICS.md.
+Manual movement/targeting, local self-defense, no camp leash or guard prerequisite.
+Preserve paid work/HP/ammo/injuries; settle legacy paid duties once. Bounded
+combat diagnostics and remove repeated citizen work from battle snapshot handling.
+Implementation0.7.4 includes bounded server/client logs and renderer/navigation fixes.
+Local424Domain+22browser PASS; final239API and exact CI pending. Not READY.
+All code first, then focused checks and exact CI. Current LIVE0.7.3 below remains
+until fresh rollout. No synthetic production actions or old request replay.
+
 #0.7.3 INSTALLED16Oct2026, independently verified
 
 Owner authorized installation. LIVE game672d72e167dd477f925df6394ecc5b188d3924ff;

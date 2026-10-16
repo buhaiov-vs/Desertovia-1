@@ -9,7 +9,8 @@ export function receiveFighterSample(old:FighterSample|undefined,battle:string,r
     if(old.x===x&&old.y===y)return {...old,revision}
   }
   const close=old?.battle===battle&&Math.hypot(old.x-x,old.y-y)<4
-  return {battle,revision,fromX:close?old.x:x,fromY:close?old.y:y,x,y,at}
+  const drawn=close?fighterPositionAt(old,at):{x,y}
+  return {battle,revision,fromX:drawn.x,fromY:drawn.y,x,y,at}
 }
 
 export function fighterPositionAt(sample:FighterSample,at:number){

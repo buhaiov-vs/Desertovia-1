@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { api, type Catalog, type Citizen, type RaidBattle, type RaidUnit, type VillageState } from '../api'
 import { useI18n } from '../i18n'
 
-export function BattleControls({ village, battle, unit, citizen, catalog, tsar=false, accountId, onDefend, onClose, selectionToken=0, issuedOrder }: {
+export function BattleControls({ village, battle, unit, citizen, tsar=false, accountId, onClose, selectionToken=0, issuedOrder }: {
   village: VillageState; battle: RaidBattle; unit: RaidUnit; citizen: Citizen | null | undefined;
   catalog: Catalog; tsar?:boolean; accountId?:string; onDefend?:()=>void; onClose: () => void
   selectionToken?:number; issuedOrder?:RefObject<string>
@@ -12,10 +12,9 @@ export function BattleControls({ village, battle, unit, citizen, catalog, tsar=f
   const [now,setNow]=useState(()=>Date.now())
   useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),1000);return()=>window.clearInterval(timer)},[])
   const fighter=battle.fighters.find(f=>tsar?f.isTsar&&f.accountId===accountId:!f.isTsar&&f.citizenId===citizen?.id)
-  const guard=!!citizen&&catalog.tasks.some(t=>t.id===citizen.taskId&&t.effect==='Guard')
   const alive=unit.health>0&&!unit.exitedAt&&!battle.finishedAt
   const recovering=tsar&&!!village.tsar.injuredUntil&&Date.parse(village.tsar.injuredUntil)>now
-  const canOrder=(tsar||guard)&&alive&&!recovering&&(!fighter||fighter.health>0)
+  const canOrder=(tsar||!!citizen)&&alive&&!recovering&&(!fighter||fighter.health>0)
   const raid=village.raids.find(r=>r.id===battle.id)
   const phases:Record<string,string>=ru?{Waiting:'Ожидает',Approaching:'Приближается',Fighting:'В бою',Raiding:'Разоряет',Breaching:'Ломает забор',Retreating:'Отступает',Escaped:'Ушёл',Dispersed:'Рассеялся',Dead:'Повержен'}:{}
   const localAttempt=useRef('')
@@ -36,7 +35,6 @@ export function BattleControls({ village, battle, unit, citizen, catalog, tsar=f
     {fighter&&<p className="small">{ru?'Моё здоровье':'My health'}: {Math.ceil(fighter.health)}/{fighter.maximumHealth} · {ru?'Урон':'Damage'} {Math.round(fighter.damageDealt)}{fighter.arrows?` · ➶ ${fighter.arrows}`:''}</p>}
     {recovering&&<p role="status">{ru?'Царь на лечении до':'The Tsar is recovering until'} {new Date(village.tsar.injuredUntil!).toLocaleTimeString(i18n.language,{hour:'2-digit',minute:'2-digit'})}</p>}
     {!canOrder&&fighter&&fighter.health<=0&&<p>{ru?'Вы ранены. Дождитесь восстановления.':'You are wounded. Wait for recovery.'}</p>}
-    {!guard&&!tsar&&citizen&&<><p className="small muted">{ru?'Для атаки встань на защиту. Текущее дело само не отменяется.':'Join the defense to attack. Your current work stays active.'}</p>{onDefend&&<button disabled={busy||citizen.state==='Working'||citizen.state==='Paused'} onClick={onDefend}>{ru?'Встать на защиту':'Join defense'}</button>}</>}
     {canOrder&&!error&&<p className="small" role="status">{busy?(ru?'Выбираю цель…':'Selecting target…'):(ru?'Цель выбрана. Подойду и буду бить автоматически.':'Target selected. I will approach and attack automatically.')}</p>}
     {error&&<p className="error small" role="status">{error}</p>}
     {canOrder&&error&&<button disabled={busy} onClick={()=>void order()}>{ru?'Повторить атаку':'Retry attack'}</button>}

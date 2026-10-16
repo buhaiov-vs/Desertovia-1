@@ -53,7 +53,7 @@ function Stand(){
  <button onClick={()=>setUnit(battle.units[1])}>Выбрать другого врага</button>
  <button onClick={()=>setSelectionToken(n=>n+1)}>Повторно выбрать врага</button>
  <button onClick={()=>setShown(v=>!v)}>Открыть или закрыть меню</button></div>
- <div id="queue-banner"><RaidBanner village={{...village,raids:[{...raid,id:'queued-third',wave:3,strikesAt:iso(now-60000)},raid]}} citizens={new Map()} catalog={catalog} now={now+1000} watch={null} pending={false} onWatch={()=>{}}/></div>
+ <div id="queue-banner"><RaidBanner village={{...village,raids:[{...raid,id:'queued-third',wave:3,strikesAt:iso(now-60000)},raid]}} citizens={new Map()} catalog={catalog} now={now+1000} pending={false}/></div>
  <div id="energy"><ActionEnergy citizen={citizen} action="work"/></div>
  {shown&&<BattleControls selectionToken={selectionToken} issuedOrder={issuedOrder} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} onClose={()=>{}}/>}
  </div></I18nProvider>

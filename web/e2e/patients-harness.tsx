@@ -1,5 +1,7 @@
+import {combatDiagnostics} from '../src/game/combatDiagnostics'
+import {receiveFighterSample,fighterPositionAt} from '../src/game/fighterSamples'
 import {VillageWorld} from '../src/game/VillageWorld'
-import type {Catalog,CitizenSummary,VillageState} from '../src/api'
+import type {Catalog,CitizenSummary,VillageState,RaidBattle} from '../src/api'
 import type {Sprite,Graphics,Text} from 'pixi.js'
 const catalog=await fetch('/api/catalog').then(r=>r.json()) as Catalog
 const response=await fetch('/api/villages/demo-bridge').then(r=>r.json())
@@ -16,6 +18,31 @@ const world=await VillageWorld.create(document.getElementById('ward')!,{minimap:
 world.setCatalog(catalog);world.setVillage(state);world.setNightOverride(false);world.setCitizens(patients,null);world.centerOn(9.5,13)
 const walkers=(world as unknown as {walkers:Map<string,{sprite:Sprite;bed:Graphics;subtitle:Text;label:Text}>}).walkers
 Object.assign(window,{patientTest:{
+ combatCheck:()=>{
+  const c={...base,id:'fighter',name:'Fighter',state:'Idle',recovery:null,idleSpot:{x:12.5,y:13.5}} as CitizenSummary
+  world.setCitizens([c],c.id)
+  let battle={id:'measured-battle',phase:'Fighting',finishedAt:null,revision:1,units:[],fighters:[{citizenId:c.id,x:12.5,y:13.5,health:40,maximumHealth:40,active:true,mode:'hold',isTsar:false}]} as unknown as RaidBattle
+  let snapshot={...state,battles:[battle]}
+  world.setVillage(snapshot)
+  let citizenUpdates=0
+  const original=world.setCitizens.bind(world)
+  world.setCitizens=(...args)=>{citizenUpdates++;original(...args)}
+  for(let i=0;i<100;i++){
+   battle={...battle,revision:battle.revision+1,fighters:battle.fighters.map(f=>({...f,x:f.x+.001}))}
+   snapshot={...snapshot,battles:[battle],fortifications:(snapshot.fortifications??[]).map(w=>({...w}))}
+   combatDiagnostics.packet();world.setVillage(snapshot)
+  }
+  const steady=citizenUpdates
+  world.setVillage({...snapshot,structures:[]})
+  const topology=citizenUpdates
+  world.setVillage({...snapshot,battles:[{...battle,revision:battle.revision+1,fighters:[]}]})
+  const membership=citizenUpdates
+  const first=receiveFighterSample(undefined,'b',1,10,10,0)
+  const moving=receiveFighterSample(first,'b',2,11,10,1000)
+  const overlap=receiveFighterSample(moving,'b',3,12,10,1500)
+  const continuity={before:fighterPositionAt(moving,1500),after:fighterPositionAt(overlap,1500),end:fighterPositionAt(overlap,2500)}
+  return {steady,topology,membership,continuity,diagnostics:combatDiagnostics.export()}
+ },
  inspect:()=>patients.map(c=>{const w=walkers.get(c.id)!;return {id:c.id,rotation:w.sprite.rotation,bed:w.bed.visible,reason:w.subtitle.text,name:w.label.text,nameBounds:w.label.getBounds().rectangle,statusBounds:w.subtitle.getBounds().rectangle,bodyBounds:w.sprite.getBounds().rectangle}}),
  visibility:()=>patients.map(c=>{const w=walkers.get(c.id)!;return {body:w.sprite.visible,bed:w.bed.visible,name:w.label.visible,status:w.subtitle.visible}}),
  withoutHospital:()=>{state.structures=[];world.setVillage(state);world.centerOn(17,23)},

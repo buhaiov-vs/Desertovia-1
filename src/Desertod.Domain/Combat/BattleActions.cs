@@ -39,8 +39,11 @@ public static class BattleActions
             throw new GameRuleException("battle.notActive","You are not actively fighting.");
         if(fighter.Mode=="retreating")return;
         var from=new TilePoint(Math.Floor(fighter.X)+.5,Math.Floor(fighter.Y)+.5);
-        var home=WorldMap.Places[WorldMap.Camp];
-        var destination=nav.NearestFree(home,p=>p.DistanceTo(fighter.Position)>=3
+        var nearest=battle.Units.Where(u=>u.Alive).OrderBy(u=>u.Position.DistanceTo(fighter.Position)).FirstOrDefault();
+        var dx=nearest is null?1:fighter.X-nearest.X;var dy=nearest is null?1:fighter.Y-nearest.Y;
+        var length=Math.Max(.001,Math.Sqrt(dx*dx+dy*dy));
+        var wish=new TilePoint(fighter.X+dx/length*5,fighter.Y+dy/length*5);
+        var destination=nav.NearestFree(wish,p=>p.DistanceTo(fighter.Position)>=3
             && battle.Units.All(u=>!u.Alive||u.Position.DistanceTo(p)>=4)
             && nav.Next(from,p,false) is not null);
         fighter.Mode="retreating";fighter.TargetUnitId=null;

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-16",
-  "phase": "released_0_7_1_independently_verified",
+  "phase": "released_0_7_2_independently_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -13,7 +13,8 @@
     "release_0_6_1": "61d726c184315d54c3d2c86b4984954bf818e31b",
     "release_0_7": "0540a2a006d2c72b580b37f74387f1e53e68f9eb",
     "candidate_0_7_1": "573af93ccb2892b7e07c48529f8c387b63237cab",
-    "release_0_7_1": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da"
+    "release_0_7_1": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
+    "release_0_7_2": "04c395052a106562b8e00b6c73a8a5b119b1aea5"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -978,8 +979,8 @@
     "browser_tests_skipped": 1,
     "deployed": true
   },
-  "live_version": "0.7.1",
-  "candidate_version": "0.7.2",
+  "live_version": "0.7.2",
+  "candidate_version": null,
   "feedback_identity": {
     "decision": "D-072",
     "state": "released",
@@ -1059,7 +1060,7 @@
   "pending_patch": {
     "branch": "fix/civic-request-capacity",
     "pull_request": 46,
-    "state": "release_authorized_ci_pending",
+    "state": "released_and_independently_verified",
     "scope": [
       "request_capacity",
       "upgrade_errors",
@@ -1068,8 +1069,136 @@
       "click_to_attack",
       "combat_rendering_reuse"
     ],
-    "live_source_unchanged": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
     "version": "0.7.2",
-    "authorization": "D-077: owner said выкладывай"
+    "authorization": "D-077: owner said выкладывай",
+    "installed_source": "04c395052a106562b8e00b6c73a8a5b119b1aea5"
+  },
+  "release_0_7_2_receipt": {
+    "state": "installed_and_independently_verified",
+    "preflight_run": 38891316244,
+    "preflight": [
+      {
+        "phase": "almighty_preflight",
+        "release": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
+        "profiles": 117,
+        "bot_hashes": {
+          "app.py": "b25025587826c65e648a2e215990b4fee354927c68c4dbb5ed1ad56866a34984",
+          "db.py": "0f443cca83dfe16bca33a07320979c5a112441c28f1467923d469afcfcb11a7d",
+          "feedback.py": "15e7d692f659147233361ca4daeb803ef46fe491fb2f9c63dd57f66bdaf51dbf",
+          "feedback_context.py": null,
+          "feedback_report.py": "d6941f858ce99a0cd65b1583f1a642d5caca282ba0b08b2418bf8b0e9063c712"
+        },
+        "hospital_enabled": true
+      },
+      {
+        "phase": "post072_baseline",
+        "bot_hashes": {
+          "app.py": "b25025587826c65e648a2e215990b4fee354927c68c4dbb5ed1ad56866a34984",
+          "db.py": "0f443cca83dfe16bca33a07320979c5a112441c28f1467923d469afcfcb11a7d",
+          "feedback.py": "15e7d692f659147233361ca4daeb803ef46fe491fb2f9c63dd57f66bdaf51dbf",
+          "feedback_context.py": null,
+          "feedback_report.py": "d6941f858ce99a0cd65b1583f1a642d5caca282ba0b08b2418bf8b0e9063c712"
+        },
+        "protected": {
+          "town_proxy.py": "f26035de606328380d53373901b3b3729e1d802718499dace403fe1b997a85c0",
+          "llm.py": "f91170f71f08627fbbd378bf10ee27ebe042ac66d8e1ca1610aba49a5b5b542a",
+          "ai_budget.py": "6694910b5805f2ce71cec15091886babde5fbc2e7e094fbd0c3ee33ce2b48cd6",
+          "feedback_identity.py": "7c4d2f9924d00c79b41d055c976a27df9fa22b0a334631f9e93a34a30d726211",
+          "almighty.py": "a7d53b6bad64a2b846fdbb5fd1945dc820000261367cb912ce28151b7ce67b8f",
+          "civic_notifications.py": "ec14ea083fb3f744d347c5cfc36765d50e253d26dd5664a429e66142abef74b5"
+        }
+      },
+      {
+        "phase": "civic_notice_routing",
+        "ownerLinked": true,
+        "pendingConstruction": 0,
+        "ownerAllowed": true
+      }
+    ],
+    "ready_preflight_run": 38892398267,
+    "game_sha": "04c395052a106562b8e00b6c73a8a5b119b1aea5",
+    "bot_sha": "ac2ca8e4c8b53921cc34a47efa77ab046e376a0b",
+    "game_ci": 38891077915,
+    "bot_ci": 38891110155,
+    "install_run": 38892470520,
+    "install_run_status": "failure",
+    "public_live_sha": "04c395052a106562b8e00b6c73a8a5b119b1aea5",
+    "note": "Actual candidate answers HTTP200; no reinstall or rollback; standalone check to diagnose preserved installed state",
+    "first_check_run": 38893024313,
+    "verification_issue": "Checker truncated dotted Vite basename webworkerAll.es5-* to es5-* and requested404; runtime remained exact candidate; operator parser corrected/tested21; no reinstall/rollback",
+    "check": {
+      "phase": "post072_verified",
+      "version": "0.7.2",
+      "game_sha": "04c395052a106562b8e00b6c73a8a5b119b1aea5",
+      "bot_sha": "ac2ca8e4c8b53921cc34a47efa77ab046e376a0b",
+      "progress": {
+        "profiles_before": 117,
+        "profiles_after": 117,
+        "lost_profiles_or_progress": 0,
+        "accounts_preserved": 119,
+        "login_bindings_preserved": 119
+      },
+      "migrations": 24,
+      "director_mode": "Propose",
+      "pending_notice_states": [],
+      "telegram_civic_deliveries_confirmed": 39,
+      "frontend": {
+        "version": "0.7.2",
+        "game_chunk": true,
+        "checked_chunks": 24
+      },
+      "feedback_live_version_verified": true,
+      "protected_modules_preserved": true,
+      "configurations_preserved": true,
+      "synthetic_messages": 0,
+      "test_payments": 0,
+      "forced_raids": 0,
+      "run_id": 38893238465,
+      "verified_at_utc": "2026-10-16T11:21:42.3877366Z"
+    },
+    "repeat_check_failure": {
+      "run_id": 38893366537,
+      "reason": "One public BitmapFont asset returned404; following complete public24chunk check passed. Bounded3attempt retry added for404/502/503/504; persistent absence still fails."
+    },
+    "installation_completed": true,
+    "game_healthy_at_utc": "2026-10-16T11:18:41.9824997Z",
+    "final_check": {
+      "phase": "post072_verified",
+      "version": "0.7.2",
+      "game_sha": "04c395052a106562b8e00b6c73a8a5b119b1aea5",
+      "bot_sha": "ac2ca8e4c8b53921cc34a47efa77ab046e376a0b",
+      "progress": {
+        "profiles_before": 117,
+        "profiles_after": 117,
+        "lost_profiles_or_progress": 0,
+        "accounts_preserved": 119,
+        "login_bindings_preserved": 119
+      },
+      "migrations": 24,
+      "director_mode": "Propose",
+      "pending_notice_states": [],
+      "telegram_civic_deliveries_confirmed": 39,
+      "frontend": {
+        "version": "0.7.2",
+        "game_chunk": true,
+        "checked_chunks": 24,
+        "transient_http_retries": 0
+      },
+      "feedback_live_version_verified": true,
+      "protected_modules_preserved": true,
+      "configurations_preserved": true,
+      "synthetic_messages": 0,
+      "test_payments": 0,
+      "forced_raids": 0,
+      "run_id": 38893644226,
+      "verified_at_utc": "2026-10-16T11:25:20.7425857Z"
+    },
+    "operator_tests": 22,
+    "public_merge_ci": {
+      "id": 38892389532,
+      "sha": "d31c554057dba2fb50634a03d9abeb20cecca4e5",
+      "conclusion": "success",
+      "tree_identical_to_tested_source": true
+    }
   }
 }

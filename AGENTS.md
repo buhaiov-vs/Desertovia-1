@@ -1,3 +1,35 @@
+# D-077 /0.7.2 INSTALLED16.10.2026, независимо проверен
+
+Owner «выкладывай» разрешил пакетD-074/D-075/D-076. LIVEgame
+04c395052a106562b8e00b6c73a8a5b119b1aea5, bot five-file payloadac2ca8e4c8b53921cc34a47efa77ab046e376a0b.
+ExactCI38891077915 SUCCESS401Domain+230API+133browser/1штатныйskip,
+frontend/DockerPASS; bot38891110155 SUCCESS840tests/client/runner,
+serverSKIPPED. PublicPR46 mergedd31c554, botPR40 merged8ef414a; деревья
+совпадают с tested source. Дополнительный public mergeCI38892389532SUCCESS.
+Freshpreflight38892398267PASS. Install38892470520 фактически заменил runtime,
+APIhealthy11:18:41UTC, но workflowFAIL из-за ошибочного asset-probe: обрезал
+точку в basename webworkerAll.es5-*. Диагностика38893024313FAIL, checker исправлен.
+Independentcheck38893238465PASS. Повтор38893366537 поймал единичный404
+BitmapFont, следующий полный публичный24chunk прогонPASS; bounded3attempt
+retry404/502/503/504 добавлен, persistentfailure остаётся запрещённым.
+Finalindependentcheck38893644226PASS, 2026-10-16T11:25:20.7425857Z.
+Не переименовывать failed workflow в SUCCESS: факты и история в release record.
+
+117→117профилей,0потерь навыков/характеристик/славы;
+119аккаунтов и119Telegrambindings сохранены,24миграции.
+PG/SQLite/обаconfig/snapshot backups сохранены. FlagsHospital/Almighty true,
+Propose сохранён. Protectedidentity/Almighty/civic/budget/proxy hashes unchanged.
+Публичные24JSchunk/0.7.2 и livefeedbackversion подтверждены; operator22testsPASS.
+Нет синтетических сообщений, AI-проб, платежей/волн или сбросов.
+
+Пакет: очередь/ошибки улучшений, компактныйHUD, пациенты в карточке больницы,
+клик для атаки, reuse графики/плавное движение, контекст отзывов батюшки.
+Обычным жителям ещё нужна охрана; самооборона всех TODO. FPS реального телефона
+не измерен; не обещать устранение каждого возможного лага. Экономические/tax
+инструменты Всевышнего в этот пакет не входят. Исторические hold/READY ниже
+не текущее состояние. Не повторять install; новый exactsource только check
+со снимками post-0.7.2. Нельзя запускать старыеpost071/live-combat requests.
+
 # D-077: выпуск0.7.2 разрешён, проверяется точный пакет
 
 Владелец16.10 сказал «выкладывай» для пакетаD-074/D-075/D-076.

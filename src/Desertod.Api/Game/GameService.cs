@@ -362,6 +362,7 @@ public sealed partial class GameService(
         var task = GameCatalog.FindTask(request.TaskId)
                    ?? throw new GameRuleException("task.unknown", $"Unknown task \"{request.TaskId}\".",
                        new Dictionary<string, object> { ["taskId"] = request.TaskId });
+        if(task.Effect==TaskEffect.Guard)throw new GameRuleException("task.retired","Guard duty has been removed. Choose movement and enemies on the map.");
         var key = await RequireCitizenAsync(slug, accountId, cancellationToken);
         return await StartAsync(
             key,
@@ -822,7 +823,9 @@ public sealed partial class GameService(
                 }
             }
             var raids = await FightDueRaidsAsync(db, village, null, now, cancellationToken);
+            var saveStarted=System.Diagnostics.Stopwatch.GetTimestamp();
             await db.SaveChangesAsync(cancellationToken);
+            CombatDiagnostics.Stage(villageId,"save",System.Diagnostics.Stopwatch.GetElapsedTime(saveStarted).TotalMilliseconds);
             if (planned is not null)
             {
                 logger.RaidPlanned(village.Slug, planned.Count, planned.Enemy.ToString(), planned.StrikesAt);
@@ -935,7 +938,8 @@ public sealed partial class GameService(
             if(HasHospitalRestriction(village.OwnerAccountId))
                 foreach(var royal in battle.Fighters.Where(f=>f.IsTsar))royal.Active=false;
             var advanced = RaidSimulation.Tick(village,raid,battle,citizens,
-                citizens.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now);
+                citizens.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now,
+                sample=>CombatDiagnostics.Record(logger,village.Id,battle.Id,now,battle.Units.Count(u=>u.Alive),battle.Fighters.Count(f=>f.Active&&f.Health>0),sample));
             changed |= advanced;
             if(advanced&&!updated.Contains(battle))updated.Add(battle);
             if(battle.FinishedAt is not null)
@@ -953,7 +957,7 @@ public sealed partial class GameService(
         }
         var worldAfter=(village.BridgeOpened,village.BridgeRuinedAt,village.DefeatedAt,
             Ruins:CombatRules.Buildings(village).Count(b=>b.Damage>=100));
-        return new RaidsFought(reports,citizens.Where(c=>reports.Any(r=>r.Defenders.Any(d=>d.CitizenId==c.Id)||r.Victims.Any(v=>v.CitizenId==c.Id))
+        return new RaidsFought(reports,citizens.Where(c=>updated.Any(b=>b.FinishedAt is not null&&b.Fighters.Any(f=>!f.IsTsar&&f.CitizenId==c.Id)) || reports.Any(r=>r.Defenders.Any(d=>d.CitizenId==c.Id)||r.Victims.Any(v=>v.CitizenId==c.Id))
             || changed && (!injuredBefore.Contains(c.Id) && CombatRules.IsInjured(c,now)
                 || peopleBefore[c.Id]!=(c.HomePlotId,c.CurrentSiteId,c.CycleSettled,c.HospitalizedAt is not null?c.IdleSpot:null)))
             .ToArray(),changed,updated,village.Fortifications,worldBefore!=worldAfter);
@@ -1142,6 +1146,8 @@ public sealed partial class GameService(
             return new(false);
         }
 
+        if(GameCatalog.FindTask(report.TaskId)?.Effect==TaskEffect.Guard)
+        {citizen.CurrentTaskId=null;citizen.DefenseSector=null;citizen.DefenseReadyAt=null;}
         await AfterSettleAsync(db, village, report, now, cancellationToken);
         var completion = await CompleteProjectIfDoneAsync(db, context, now, cancellationToken);
         var quests = await UpdateQuestsAsync(db, village, citizen, report, now, cancellationToken);
@@ -1448,6 +1454,7 @@ public sealed partial class GameService(
         var started = time.GetTimestamp();
         var releaser = await locks.AcquireAsync(villageId, cancellationToken);
         var waited = time.GetElapsedTime(started);
+        CombatDiagnostics.Stage(villageId,"lock",waited.TotalMilliseconds);
         if (waited >= SlowLockThreshold)
         {
             logger.SlowLock((long)waited.TotalMilliseconds, villageId);

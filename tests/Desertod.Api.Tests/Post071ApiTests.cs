@@ -33,7 +33,9 @@ public sealed class Post071ApiTests(DesertodApiFactory factory)
             Assert.False(await db.Citizens.AnyAsync(x=>x.AccountId==village.OwnerAccountId));
         }
         var stranger=await players.JoinAsync(v);
-        await AssertRuleBrokenAsync(await stranger.Client.PutAsJsonAsync(v.Path+$"/battles/{battleId}/order",new{targetUnitId=target}),"defense.guard");
+        Assert.Equal(HttpStatusCode.OK,(await stranger.Client.PutAsJsonAsync(v.Path+$"/battles/{battleId}/order",new{targetUnitId=target})).StatusCode);
+        await using(var db=await Db())
+        {var b=await db.RaidBattles.AsNoTracking().SingleAsync(x=>x.Id==battleId);Assert.Equal(2,b.Fighters.Count);Assert.Single(b.Fighters,f=>f.IsTsar);Assert.Equal(hp,b.Units[0].Health);}
     }
     [Fact]
     public async Task Future_wave_cannot_mint_a_second_royal_actor()

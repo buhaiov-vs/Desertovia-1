@@ -1,3 +1,4 @@
+import { combatDiagnostics } from './game/combatDiagnostics'
 import { mergeBattles } from './api'
 import { appPath } from './paths'
 import { HubConnectionBuilder, LogLevel, type HubConnection } from '@microsoft/signalr'
@@ -121,6 +122,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
 
     connection.on('villageUpdated', (next: VillageState) => setState(previous=>({...next,battles:mergeBattles(previous?.battles,next.battles)})))
     connection.on('villageEvents', (events: VillageEvents) => {
+      if(events.battles?.length)combatDiagnostics.packet()
       if(events.battles?.length || events.fortifications)setState(previous=>previous?{
         ...previous,battles:mergeBattles(previous.battles,events.battles),
         fortifications:events.fortifications??previous.fortifications,
@@ -171,6 +173,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     connection.on('villageDeleted', () => callbacks.current.onVillageDeleted?.())
     // Groups are per connection, and lines written while offline come back with the history.
     connection.onreconnected(async () => {
+      combatDiagnostics.reconnect();
       await connection.invoke('JoinVillage', slug)
       const refreshed=await loadVillage(slug)
       if(!cancelled){setState(refreshed.state);setCitizens(new Map(refreshed.citizens.map(c=>[c.id,c])))}

@@ -1413,6 +1413,7 @@ export const api = {
   economyAction: (slug: string, body: EconomyRequest) => request<EconomyView>('POST', `/api/villages/${encodeURIComponent(slug)}/economy`, body).then(result=>{
     window.dispatchEvent(new CustomEvent('desertovia-wallet-changed',{detail:{slug,coins:result.coins,testCandles:result.testCandles}}));return result
   }),
+  combatDiagnostics:(slug:string)=>request<unknown>('GET',`/api/villages/${encodeURIComponent(slug)}/combat-diagnostics`),
   monastery:(slug:string)=>request<MonasteryView>('GET',`/api/villages/${encodeURIComponent(slug)}/monastery`),
   monasteryTrade:(slug:string,requestId:string)=>request<MonasteryView>('POST',`/api/villages/${encodeURIComponent(slug)}/monastery`,{requestId}),
   battleOrder: (slug:string,battleId:string,targetUnitId:string|null,mode:'hold'|'intercept'|'retreat'|'heal'='intercept',destination?:TilePoint,requestId?:string) =>

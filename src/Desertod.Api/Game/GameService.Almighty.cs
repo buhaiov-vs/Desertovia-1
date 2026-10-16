@@ -41,7 +41,7 @@ public sealed partial class GameService
         bool Ready(Citizen c) => !CombatRules.IsInjured(c, now) && !(c.Recovery?.Until > now) && c.RecoveryPausedAt is null && c.Recovery?.Available != false && !(c.ExhaustedUntil > now);
         var online = citizens.Where(c => presence.IsPresent(c.Id)).ToList();
         return new(citizens.Count, online.Count,
-            online.Count(c => Ready(c) && c.WorkState(now) == WorkState.Working && GameCatalog.FindTask(c.CurrentTaskId ?? "")?.Effect == TaskEffect.Guard),
+            online.Count(c => RaidSimulation.CanFight(c,now)),
             citizens.Count(c => !Ready(c)), village.Raids.Count(r => r.IsPending), village.Sites.Count,
             village.Structures.Count(s => s.Damage > 0) + village.Storages.Count(s => s.Damage > 0),
             village.Raids.Count(r => r.Outcome == RaidOutcome.Lost && r.ResolvedAt >= now.AddHours(-2)),
@@ -128,7 +128,7 @@ public sealed partial class GameService
                         weaknesses=village.Fortifications.Where(f=>f.Damage>0).OrderByDescending(f=>f.Damage).Take(8).Select(f=>new{f.X,f.Y,f.Damage})},
                     recentBattles = await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==villageId&&b.FinishedAt!=null&&b.Phase!="Cancelled").OrderByDescending(b=>b.FinishedAt).Take(3).Select(b=>new{b.Sector,b.Composition,b.DamageDone,b.ReadyDefenders,b.ThreatBudget}).ToListAsync(ct),
                     uncertainty = "Готовность определяет ограниченный бюджет при объявлении. Отдельные HP, атаки по расстоянию; геометрия и подготовка влияют на исход. Новая подготовка не усиливает объявленных врагов." },
-                defenseSectors = await db.Citizens.Where(c => c.VillageId == villageId && c.DefenseSector != null).Select(c => new { c.DefenseSector, c.DefenseReadyAt }).ToListAsync(ct),
+                combatControls = "manual movement and target selection; no guard duty or defense sectors",
                 economyAccuracy = "Складские остатки, не прибыль. Учёт операций только с даты startedAt; внутренние переносы не доход. Начальные остатки не заработок. Налоги/реальные свечи не менять.",
                 chat = recent.OrderBy(m => m.SentAt).Select(m => new { text = m.Text, id = m.Id, author = m.AccountId.ToString()[..8] }),
                 catalog = new {
@@ -255,21 +255,7 @@ public sealed partial class GameService
         foreach (var citizen in tunedCitizens) await notifier.CitizenUpdated(publishedSlug!, citizen);
         return decisionResult;
     }
-    public async Task SetDefenseSectorAsync(string slug, Guid actor, string sector, CancellationToken ct)
-    {
-        if (sector != "auto" && !RaidTactics.Sectors.Contains(sector)) throw new GameRuleException("defense.sector", "Неизвестный участок обороны.");
-        var key = await RequireCitizenAsync(slug, actor, ct);
-        await WithVillageAsync(key.VillageId, async db => {
-            var c = await db.Citizens.SingleAsync(c => c.Id == key.Id, ct);
-            var village = await db.Villages.SingleAsync(v => v.Id == key.VillageId, ct);
-            var now = time.GetUtcNow();
-            HospitalRules.RequireReady(c, now);
-            if (c.WorkState(now) != WorkState.Working || GameCatalog.FindTask(c.CurrentTaskId ?? "")?.Effect != TaskEffect.Guard)
-                throw new GameRuleException("defense.guard", "Сначала встань на охрану.");
-            c.DefenseSector = sector == "auto" ? null : sector;
-            c.DefenseReadyAt = now.AddSeconds(30);
-            await db.SaveChangesAsync(ct); changes.Mark(key.VillageId); await notifier.CitizenUpdated(slug, c.ToSummaryDto(now)); return true;
-        }, ct);
-    }
+    public Task SetDefenseSectorAsync(string slug, Guid actor, string sector, CancellationToken ct) =>
+        throw new GameRuleException("defense.removed","Guard duty and defense sectors have been removed. Choose movement and targets on the map.");
 
 }

@@ -151,7 +151,7 @@ export function GameMenu(props: MenuProps) {
         </header>
 
         <div className="modal-body">
-          {tab === 'village' && (ruler || citizen && catalog.tasks.some(t => t.id === citizen.taskId && t.effect === 'Guard')) && <DefensePanel slug={props.slug} village={village} ruler={ruler} canDeploy={!!citizen&&catalog.tasks.some(t=>t.id===citizen.taskId&&t.effect==='Guard')}/>}
+          {tab === 'village' && ruler && <DefensePanel slug={props.slug} village={village} ruler/>}
           {tab === 'village' && tsar && <AlmightyPanel slug={props.slug}/>}
           {tab === 'village' && (tsar || citizen) && <EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId={props.me.id} onPrivatePlace={props.onPrivatePlace}/>}
           {tab==='village'&&(village.bridgeDamage??0)>0&&<p className="error small">{i18n.language==='ru'?'Царский мост повреждён. Восстановление — работа «Ремонт зданий» в заданиях.':'The royal bridge is damaged. Use Repair buildings in Tasks to restore it.'} {village.bridgeDamage}/100</p>}

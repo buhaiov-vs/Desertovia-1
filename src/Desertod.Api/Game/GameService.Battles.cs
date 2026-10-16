@@ -107,21 +107,22 @@ public sealed partial class GameService
                 {
                     var p=nav.NearestFree(village.TsarTrip?.PositionAt(now)??village.TsarSpot??WorldMap.Places[WorldMap.Camp]);
                     fighter=new(){IsTsar=true,AccountId=actor,X=p.X,Y=p.Y,Health=HeroClassCatalog.VoivodeHealth,
-                        MaximumHealth=HeroClassCatalog.VoivodeHealth,Guard=true,Active=true,NextAttackAt=now.AddSeconds(1)};
+                        MaximumHealth=HeroClassCatalog.VoivodeHealth,Guard=false,Active=true,NextAttackAt=now.AddSeconds(1)};
                     battle.Fighters.Add(fighter);village.TsarTrip=null;village.TsarSpot=p;
                 }
                 if(citizen is not null)foreach(var duplicate in battle.Fighters.Where(f=>!f.IsTsar&&f.CitizenId==citizen.Id))duplicate.Active=false;
             }
             else
             {
-                if(CombatRules.IsInjured(citizen!,now))throw new GameRuleException("citizen.injured","A wounded guard cannot attack.");
-                if(RaidRules.GuardTask(citizen!,now) is null)throw new GameRuleException("defense.guard","Start guard duty first.");
+                if(CombatRules.IsInjured(citizen!,now))throw new GameRuleException("citizen.injured","A wounded citizen cannot attack.");
+                if(!RaidSimulation.CanFight(citizen!,now))throw new GameRuleException("battle.notReady","Wait until recovery or return from the dungeon.");
                 fighter=battle.Fighters.SingleOrDefault(f=>!f.IsTsar&&f.CitizenId==citizen!.Id);
                 if(fighter is null)
                 {
-                    var p=nav.NearestFree(citizen!.Spot??citizen.IdleSpot??WorldMap.Places[WorldMap.Camp]);
+                    if(citizen!.Weapon is null)CombatRules.Arm(citizen,village);
+                    var p=nav.NearestFree(citizen!.Trip?.PositionAt(now)??citizen.Spot??citizen.IdleSpot??WorldMap.Places[WorldMap.Camp]);
                     fighter=new(){CitizenId=citizen.Id,X=p.X,Y=p.Y,Health=32+citizen.Stats.Endurance*4,
-                        MaximumHealth=32+citizen.Stats.Endurance*4,Guard=true,Active=true,NextAttackAt=now.AddSeconds(1)};
+                        MaximumHealth=32+citizen.Stats.Endurance*4,Guard=false,Active=true,NextAttackAt=now.AddSeconds(1)};
                     battle.Fighters.Add(fighter);
                 }
             }

@@ -196,7 +196,7 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
     }
 
     [Fact]
-    public async Task Directed_raid_path_and_guard_deployment_survive_real_database_reload()
+    public async Task Directed_raid_path_survives_reload_and_retired_defense_sectors_cannot_be_reassigned()
     {
         var v=await players.FoundVillageAsync("Directed raid");var residents=new[]{await players.JoinAsync(v,"Guard"),await players.JoinAsync(v,"One"),await players.JoinAsync(v,"Two")};
         await players.ArrangeVillageAsync(v.Slug,(city,now)=>{city.CreatedAt=now.AddDays(-10);city.RaidsPlannedPeriod=long.MaxValue;});
@@ -215,9 +215,8 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
         var battle=await db.RaidBattles.AsNoTracking().SingleAsync(b=>b.Id==raid.Id);
         Assert.Equal(option.Sector,battle.Sector);Assert.Equal(option.Composition,battle.Composition);
         Assert.Equal(raid.Count,battle.Units.Count);Assert.NotEmpty(battle.Units);
-        Assert.True((await residents[0].Client.PutAsJsonAsync(v.Path+"/me/defense",new{mode=option.Sector})).IsSuccessStatusCode);
-        var guard=await players.LoadCitizenAsync(residents[0].Id);Assert.Equal(option.Sector,guard.DefenseSector);Assert.NotNull(guard.DefenseReadyAt);
-        Assert.InRange((guard.DefenseReadyAt!.Value-factory.Clock.GetUtcNow()).TotalSeconds,25,30);
+        await AssertRuleBrokenAsync(await residents[0].Client.PutAsJsonAsync(v.Path+"/me/defense",new{mode=option.Sector}),"defense.removed");
+        var resident=await players.LoadCitizenAsync(residents[0].Id);Assert.Null(resident.DefenseSector);Assert.Null(resident.DefenseReadyAt);
     }
 
     [Fact]

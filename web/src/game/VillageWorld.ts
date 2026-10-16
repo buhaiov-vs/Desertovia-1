@@ -1,3 +1,5 @@
+import { combatDiagnostics } from './combatDiagnostics'
+import { sameStaticVillage } from './combatSnapshot'
 import { receiveFighterSample, fighterPositionAt, type FighterSample } from './fighterSamples'
 import { playerNamesVisible, PREFERENCES_EVENT } from '../gamePreferences'
 import { HospitalConstruction } from './HospitalConstruction'
@@ -149,9 +151,6 @@ interface Walker {
   sleepsAt: number | null
   /** Turns around water towards a spot the player sent the walker to, in world pixels; the last one is the target. */
   way: Array<{ x: number; y: number }>
-  /** On watch: runs out to meet an attack on its way. */
-  defenseSector: string | null
-  guard: boolean
   /** Wounded until then (wall clock, milliseconds): keeps still, tinted, with a red cross over the head. */
   injuredUntil: number
   bed:Graphics
@@ -211,8 +210,6 @@ export class VillageWorld {
   private readonly objects = new Container()
   private readonly wildlife = new WildlifeLayer(this.objects)
   private readonly enemies = new EnemyLayer(this.objects)
-  /** Guards ran out to meet an attack and must be sent back to their posts once it is over. */
-  private guardsOut = false
   private readonly projectLayer = new Container()
   private readonly night = new Graphics()
   private readonly lights = new Graphics()
@@ -367,6 +364,7 @@ export class VillageWorld {
   }
 
   destroy() {
+    combatDiagnostics.stop()
     window.removeEventListener(PREFERENCES_EVENT, this.onPreferences)
     window.removeEventListener('storage', this.onPreferences)
     this.minimap?.destroy()
@@ -621,6 +619,7 @@ export class VillageWorld {
   /** A dimmed map behind a modal needs fewer frames, leaving the phone responsive to controls. */
   setObscured(obscured: boolean) {
     this.app.ticker.maxFPS = obscured ? 8 : window.matchMedia('(pointer: coarse)').matches ? 30 : 60
+    combatDiagnostics.context(obscured,this.app.ticker.maxFPS)
   }
 
   setNightOverride(night: boolean | null) {
@@ -848,8 +847,6 @@ export class VillageWorld {
       const hunt = this.huntOf(citizen)
       if (!hunt && walker.hunt) this.wildlife.endHunt(walker.id)
       walker.hunt = hunt
-      walker.defenseSector = citizen.defenseSector ?? null
-      walker.guard = working && this.catalog?.tasks.find((task) => task.id === citizen.taskId)?.effect === 'Guard'
       walker.injuredUntil = Math.max(citizen.injuredUntil ? Date.parse(citizen.injuredUntil) : 0, citizen.recovery?.until ? Date.parse(citizen.recovery.until) : 0)
       const injured = walker.injuredUntil > Date.now()
       const duel=!!citizen.recovery?.until&&Date.parse(citizen.recovery.until)>Date.now()
@@ -860,7 +857,7 @@ export class VillageWorld {
       walker.carrierId=citizen.rescueByCitizenId??null
       walker.pickupAt=citizen.rescuePatientId&&citizen.cycleStartedAt&&citizen.cycleEndsAt?
         Date.parse(citizen.cycleStartedAt)+(Date.parse(citizen.cycleEndsAt)-Date.parse(citizen.cycleStartedAt))*.6:0
-      if(injured){walker.working=false;walker.roaming=false;walker.guard=false;walker.hunt=null;walker.way=[];walker.targetX=walker.x;walker.targetY=walker.y}
+      if(injured){walker.working=false;walker.roaming=false;walker.hunt=null;walker.way=[];walker.targetX=walker.x;walker.targetY=walker.y}
       if (injured) walker.staying = true
       let icon: { key: string; tile: TileRef | null } | null = null
       if (injured) {
@@ -1330,7 +1327,16 @@ export class VillageWorld {
     return yard
   }
 
+  private staticUpdate=false
   setVillage(state: VillageState) {
+    const started=performance.now();this.staticUpdate=false
+    combatDiagnostics.battles(state.battles??[])
+    try{this.applyVillage(state)}finally{combatDiagnostics.world(performance.now()-started,this.staticUpdate)}
+  }
+
+  private applyVillage(state: VillageState) {
+    const sameWorld=sameStaticVillage(this.village,state)
+    const previousFighters=new Set(this.fighterSamples.keys())
     this.rainTarget = state.weather.raining ? 1 : 0
     if (this.terrainSeed === null) {
       this.terrainSeed = seedFrom(state.id)
@@ -1351,6 +1357,12 @@ export class VillageWorld {
       }
     }
     for(const id of this.fighterSamples.keys())if(!presentFighters.has(id))this.fighterSamples.delete(id)
+    this.enemies.setBattles(state.battles??[])
+    if(sameWorld){
+      if(previousFighters.size!==presentFighters.size||[...presentFighters].some(id=>!previousFighters.has(id))){this.setCitizens(this.citizens,this.highlightId);this.setTsar(state.tsar)}
+      return
+    }
+    this.staticUpdate=true
     this.drawKingdomBorder()
     this.fog.setExplored(state.explored)
     this.drawTrees(state.trees)
@@ -1625,8 +1637,6 @@ export class VillageWorld {
       hunt: null,
       sleepsAt: null,
       way: [],
-      defenseSector: null,
-      guard: false,
       injuredUntil: 0,
       bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,
     }
@@ -2090,6 +2100,7 @@ export class VillageWorld {
   }
 
   private update(ticker: Ticker) {
+    const measuredAt=performance.now()
     const seconds = Math.min(ticker.deltaMS / 1000, 0.1)
     this.elapsed += seconds
 
@@ -2109,7 +2120,6 @@ export class VillageWorld {
     const hunters = new Set<string>()
     const sortDepth = this.elapsed - this.depthSortedAt >= DEPTH_SORT_SECONDS
     if (sortDepth) this.depthSortedAt = this.elapsed
-    const front = this.enemies.front(now)
     const hasWard=!!this.village?.structures.some(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
     const combatants=new Map<string,NonNullable<VillageState['battles']>[number]['fighters'][number]>()
     for(const battle of this.village?.battles??[]){
@@ -2133,7 +2143,7 @@ export class VillageWorld {
       if(hurt)walker.sprite.scale.x=1
       walker.sprite.anchor.set(.5,hurt?.5:1)
       if(hurt){
-        walker.staying=true;walker.working=false;walker.guard=false;walker.hunt=null;walker.roaming=false
+        walker.staying=true;walker.working=false;walker.hunt=null;walker.roaming=false
         walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}${walker.treatmentCause ? ' · ' + walker.treatmentCause : ''}`
         walker.subtitle.visible=walker.sprite.visible
       } else if(walker.treatmentCause){walker.subtitle.text=walker.normalSubtitle;walker.subtitle.visible=!!walker.normalSubtitle;walker.treatmentCause='';walker.inHospital=false;walker.carrierId=null}
@@ -2143,17 +2153,7 @@ export class VillageWorld {
         walker.wanderAt = 0
       }
       if (walker.sleepsAt !== null && now >= walker.sleepsAt) walker.staying = true
-      if (walker.guard && walker.defenseSector) {
-        const raid = this.village?.raids.find(r => r.outcome === 'Pending' && r.entrySector === walker.defenseSector)
-        const route = raid?.approachPath
-        const post = route && route.length > 1 ? route[Math.max(0,route.length-7)] : ({ north:{x:15,y:7}, west:{x:9,y:13}, south:{x:15,y:19} } as Record<string,{x:number;y:number}>)[walker.defenseSector]
-        if(post){walker.targetX=(post.x+.5)*TILE;walker.targetY=(post.y+.5)*TILE;speed=RUN_SPEED;this.guardsOut=true}
-      } else if (walker.guard && front) {
-        walker.targetX = front.x + (pseudo(walker.seed, 9) - 0.5) * 2.5 * TILE
-        walker.targetY = front.y + (pseudo(walker.seed, 10) - 0.5) * 1.5 * TILE
-        speed = RUN_SPEED
-        this.guardsOut = true
-      } else if (walker.hunt) {
+      if (walker.hunt) {
         hunters.add(walker.id)
         const secondsLeft = (walker.hunt.catchAt - now) / 1000
         const chase = this.wildlife.chase(walker.id, walker.hunt.prey, walker.x, walker.y, secondsLeft)
@@ -2248,12 +2248,6 @@ export class VillageWorld {
     }
     this.wildlife.update(seconds, this.elapsed, [...this.walkers.values()], hunters, sortDepth)
     this.enemies.update(seconds, now, sortDepth)
-    // The attack is over: guards go back to their posts.
-    if (this.guardsOut && !front) {
-      this.guardsOut = false
-      this.setCitizens(this.citizens, this.highlightId)
-    }
-
     for (const label of this.buildingLabels) {
       const top = this.world.toGlobal({ x: label.x, y: label.y })
       label.text.position.set(Math.round(top.x), Math.round(top.y - 5))
@@ -2281,6 +2275,7 @@ export class VillageWorld {
       this.cullDirty = false
       Culler.shared.cull(this.objects, this.app.screen, false)
     }
+    combatDiagnostics.frame(ticker.elapsedMS,performance.now()-measuredAt)
   }
 
   /** Who sees the land now: every figure on the map, the campfire, and the buildings and sites of the village. */

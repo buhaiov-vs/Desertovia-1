@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Desertod.Domain.Buildings;
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Entities;
@@ -7,6 +8,8 @@ using Desertod.Domain.World;
 
 namespace Desertod.Domain.Combat;
 
+public sealed record RaidTickMetrics(int Steps,double BacklogMs,double ElapsedMs,int PathSearches,int PathNodes,int BlockedPaths);
+
 /// <summary>Authoritative, bounded steps. No aggregate victory calculation and no network/model calls.</summary>
 public static class RaidSimulation
 {
@@ -15,9 +18,11 @@ public static class RaidSimulation
     public const int PlunderDamageLimit = 180;
 
     public static bool Tick(Village village,Raid raid,RaidBattle battle,IReadOnlyList<Citizen> people,
-        IReadOnlySet<Guid> online,DateTimeOffset now)
+        IReadOnlySet<Guid> online,DateTimeOffset now,Action<RaidTickMetrics>? observe=null)
     {
         if(battle.FinishedAt is not null || now < battle.StartsAt || now <= battle.LastTickAt)return false;
+        var measuredAt=Stopwatch.GetTimestamp();
+        var backlogMs=(now-battle.LastTickAt).TotalMilliseconds;
         // A server outage freezes the fight rather than charging hours of unseen attacks to players.
         if(now-battle.LastTickAt>TimeSpan.FromSeconds(15))
         {
@@ -34,7 +39,7 @@ public static class RaidSimulation
         for(var step=0;step<steps;step++)
         {
             var at=battle.LastTickAt+Step;
-            Join(battle,people,online,at,nav);
+            Join(village,battle,people,online,at,nav);
             if(battle.Phase=="Warning")
             {battle.Phase="Approaching";battle.Event("arrived",battle.Sector,at);foreach(var u in battle.Units)u.State="Approaching";}
             var living=battle.Units.Count(u=>u.Alive);
@@ -45,8 +50,8 @@ public static class RaidSimulation
             }
             foreach(var f in battle.Fighters.Where(f=>f.Active&&f.Health>0))
                 if(f.Mode=="retreating") { BattleActions.StepRetreat(f,nav); if(f.IsTsar)village.TsarSpot=f.Position; else if(citizens.TryGetValue(f.CitizenId,out var withdrawing)){withdrawing.Spot=f.Position;withdrawing.IdleSpot=f.Position;withdrawing.Trip=null;} }
-                else if(f.Guard && f.IsTsar) ActTsar(village,battle,f,nav,at);
-                else if(f.Guard && citizens.TryGetValue(f.CitizenId,out var c))Guard(village,raid,battle,f,c,citizens,nav,at);
+                else if(f.IsTsar) ActTsar(village,battle,f,nav,at);
+                else if(citizens.TryGetValue(f.CitizenId,out var c))FightCitizen(village,raid,battle,f,c,citizens,nav,at);
             foreach(var unit in battle.Units.Where(u=>u.Alive))
             {
                 Enemy(village,raid,battle,unit,citizens,nav,at);
@@ -63,66 +68,63 @@ public static class RaidSimulation
                 break;
             }
         }
+        observe?.Invoke(new(steps,backlogMs,Stopwatch.GetElapsedTime(measuredAt).TotalMilliseconds,nav.PathSearches,nav.PathNodes,nav.BlockedPaths));
         return true;
     }
 
-    private static bool Available(Citizen c,DateTimeOffset at) => c.Status==CitizenStatus.Active
+    public static bool CanFight(Citizen c,DateTimeOffset at) => c.Status==CitizenStatus.Active
         && c.RecoveryPausedAt is null && !HospitalRules.IsAdmitted(c,at) && !CombatRules.IsInjured(c,at) && !(c.ExhaustedUntil>at)
         && c.Recovery?.Available!=false && c.DungeonRunId is null;
 
-    private static void Join(RaidBattle battle,IReadOnlyList<Citizen> people,IReadOnlySet<Guid> online,
+    private static void Join(Village village,RaidBattle battle,IReadOnlyList<Citizen> people,IReadOnlySet<Guid> online,
         DateTimeOffset at,RaidNavigation nav)
     {
         foreach(var c in people)
         {
             if (battle.Fighters.Any(f => f.IsTsar && f.AccountId == c.AccountId)) continue;
-            var guard=Available(c,at)&&RaidRules.GuardTask(c,at)!=null;
-            var position=c.Spot??c.IdleSpot??WorldMap.Places[WorldMap.Camp];
-            var inDanger=online.Contains(c.Id)&&Available(c,at)&&battle.Units.Any(u=>u.Alive&&u.Position.DistanceTo(position)<4);
+            var position=c.Trip?.PositionAt(at)??c.Spot??c.IdleSpot??WorldMap.Places[WorldMap.Camp];
+            var inDanger=online.Contains(c.Id)&&CanFight(c,at)&&battle.Units.Any(u=>u.Alive&&u.Position.DistanceTo(position)<4);
             var existing=battle.Fighters.SingleOrDefault(f=>f.CitizenId==c.Id);
             if(existing is not null)
             {
                 if(existing.Mode=="withdrawn"){existing.Active=false;continue;}
-                if(existing.Mode=="retreating"){existing.Active=Available(c,at)&&existing.Health>0;continue;}
-                existing.Guard=guard;existing.Active=Available(c,at)&&(guard||inDanger);
+                if(existing.Mode=="retreating"){existing.Active=CanFight(c,at)&&existing.Health>0;continue;}
+                existing.Guard=false;existing.Active=CanFight(c,at)&&existing.Health>0&&(existing.Active||inDanger);
                 existing.Weapon=c.Weapon;existing.Armor=c.Armor;existing.Arrows=c.Arrows;
                 continue;
             }
-            if(!guard&&!inDanger)continue;
+            if(!inDanger)continue;
+            if(c.Weapon is null)CombatRules.Arm(c,village);
             var p=nav.NearestFree(position);
-            battle.Fighters.Add(new(){CitizenId=c.Id,X=p.X,Y=p.Y,Guard=guard,Active=true,
+            battle.Fighters.Add(new(){CitizenId=c.Id,X=p.X,Y=p.Y,Guard=false,Active=true,
                 Health=32+c.Stats.Endurance*4,MaximumHealth=32+c.Stats.Endurance*4,Weapon=c.Weapon,Armor=c.Armor,Arrows=c.Arrows,NextAttackAt=at.AddSeconds(1)});
         }
     }
 
-    private static void Guard(Village village,Raid raid,RaidBattle battle,RaidFighter fighter,
+    private static void FightCitizen(Village village,Raid raid,RaidBattle battle,RaidFighter fighter,
         Citizen citizen,IReadOnlyDictionary<Guid,Citizen> battlePeople,RaidNavigation nav,DateTimeOffset at)
     {
-        if(citizen.DefenseReadyAt>at)return;
         if (MoveOrder(fighter, nav)) return;
-        var home=nav.NearestFree(RaidNavigation.GuardPoint(citizen.DefenseSector));
         var weapon=CombatRules.UsableWeapon(citizen);
         var range=weapon?.Kind==ResourceKind.Bow?5:1.45;
         var target=battle.Units.FirstOrDefault(u=>u.Id==fighter.TargetUnitId&&u.Alive);
-        if(target is not null&&target.Position.DistanceTo(home)>12){fighter.TargetUnitId=null;target=null;}
-        target??=battle.Units.Where(u=>u.Alive&&u.Position.DistanceTo(home)<(fighter.Mode=="hold"?4:10))
+        var selected=target is not null;
+        if(!selected)fighter.TargetUnitId=null;
+        // No patrol, post or implicit chase. Local self-defense never moves the player.
+        target??=battle.Units.Where(u=>u.Alive&&u.Position.DistanceTo(fighter.Position)<=range&&nav.ClearShot(fighter.Position,u.Position))
             .OrderBy(u=>u.Position.DistanceTo(fighter.Position)).FirstOrDefault();
-        if(target is null){nav.Move(fighter,home,1);return;}
+        if(target is null)return;
         var distance=target.Position.DistanceTo(fighter.Position);
         if(distance>range || !nav.ClearShot(fighter.Position,target.Position))
         {
-            if(fighter.Mode!="hold"||fighter.Position.DistanceTo(home)>1)nav.Move(fighter,fighter.Mode=="hold"?home:target.Position,1);
+            if(selected&&fighter.Mode!="hold")nav.Move(fighter,target.Position,1);
             return;
         }
         if(fighter.NextAttackAt>at)return;
         fighter.NextAttackAt=at.AddSeconds(weapon?.Kind==ResourceKind.Bow?2.5:2);
         if(weapon?.Arrows>0)citizen.Arrows=Math.Max(0,citizen.Arrows-1);
         fighter.Arrows=citizen.Arrows;
-        var captain=battle.Fighters.Where(f=>f.Guard&&f.Active&&f.Health>0&&f.Position.DistanceTo(fighter.Position)<=5)
-            .Select(f=>battlePeople.GetValueOrDefault(f.CitizenId))
-            .Where(c=>c is not null&&RaidRules.GuardTask(c,at)?.RoleId==RaidRules.CaptainRole)
-            .Select(c=>1+RaidRules.CommandPerEndurance*c!.Stats.Endurance).DefaultIfEmpty(1).Max();
-        var multiplier=(RaidRules.GuardTask(citizen,at)?.BaseYield??1)*captain*(village.Has(BuildingKind.Barracks)?RaidRules.BarracksMultiplier:1);
+        var multiplier=village.Has(BuildingKind.Barracks)?RaidRules.BarracksMultiplier:1;
         var hit=Math.Min(target.Health,Math.Max(1,CombatRules.Power(citizen)*multiplier*.85));
         target.Health=Math.Max(0,target.Health-hit);fighter.DamageDealt+=hit;
         if(battle.Phase=="Approaching")battle.Phase="Fighting";
@@ -136,8 +138,8 @@ public static class RaidSimulation
         if (fighter.DestinationX is not {} x || fighter.DestinationY is not {} y) return false;
         var goal = new TilePoint(x,y);
         nav.Move(fighter,goal,1);
-        // A move order stays authoritative until another command: reaching the point
-        // must not immediately turn a deliberate retreat into an automatic chase.
+        if(fighter.Position.DistanceTo(goal)<.01)
+        {fighter.DestinationX=null;fighter.DestinationY=null;fighter.Mode="hold";}
         return true;
     }
 
@@ -147,7 +149,7 @@ public static class RaidSimulation
         { fighter.Active=false; return; }
         if (MoveOrder(fighter,nav)) { village.TsarSpot=fighter.Position; return; }
         var target=battle.Units.FirstOrDefault(u=>u.Id==fighter.TargetUnitId&&u.Alive);
-        target ??= battle.Units.Where(u=>u.Alive&&u.Position.DistanceTo(fighter.Position)<(fighter.Mode=="hold"?4:10))
+        target ??= battle.Units.Where(u=>u.Alive&&u.Position.DistanceTo(fighter.Position)<=1.0)
             .OrderBy(u=>u.Position.DistanceTo(fighter.Position)).FirstOrDefault();
         if (target is null) return;
         if (target.Position.DistanceTo(fighter.Position)>1.0 || !nav.ClearShot(fighter.Position,target.Position))
@@ -346,6 +348,11 @@ public static class RaidSimulation
             if(c.Armor is {} a && random.NextDouble()<(ArmoryCatalog.Armor(a)?.BreakChance??0))c.Armor=null;
             f.RewardsGranted=true;
         }
+        // An idle player's chosen final position survives the transition out of combat.
+        // Keep paid work/travel intact; their ordinary settlement owns those destinations.
+        foreach(var f in battle.Fighters.Where(f=>!f.IsTsar&&!f.Wounded))
+            if(people.TryGetValue(f.CitizenId,out var c)&&c.CycleSettled)
+            {c.Spot=f.Position;c.IdleSpot=f.Position;c.Trip=null;}
         foreach(var good in EnemyCatalog.Get(raid.Enemy).Loot)
         {
             var amount=village.Store(good.Resource,good.Amount*raid.Killed);

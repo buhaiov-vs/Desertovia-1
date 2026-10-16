@@ -39,6 +39,11 @@ public sealed class DesertodApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.ConfigureServices(services => services.AddTransient<IStartupFilter, TestAddressStartupFilter>());
         builder.ConfigureTestServices(services =>
         {
+            // Tests deliberately arrange historical duties directly in SQL after startup.
+            // Exercise retirement explicitly in FreeCombatApiTests, rather than racing that fixture setup.
+            var retirement=services.Single(d=>d.ServiceType==typeof(Microsoft.Extensions.Hosting.IHostedService)
+                &&d.ImplementationType==typeof(Desertod.Api.Game.RetiredGuardWorker));
+            services.Remove(retirement);
             services.RemoveAll<Desertod.Api.Game.IHospitalBridge>();
             services.AddSingleton<Desertod.Api.Game.IHospitalBridge>(Hospital);
             services.RemoveAll<TimeProvider>();

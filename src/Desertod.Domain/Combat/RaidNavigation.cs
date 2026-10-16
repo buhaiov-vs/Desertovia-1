@@ -7,6 +7,9 @@ namespace Desertod.Domain.Combat;
 /// <summary>One server geometry for movement, attack visibility and breakable barriers. No diagonal corner cutting.</summary>
 public sealed class RaidNavigation
 {
+    public int PathSearches {get;private set;}
+    public int PathNodes {get;private set;}
+    public int BlockedPaths {get;private set;}
     private readonly Village village;
     private readonly HashSet<(int X, int Y)> solid = [];
     private readonly Dictionary<(int X, int Y), Fortification> walls;
@@ -69,12 +72,6 @@ public sealed class RaidNavigation
             if (Pass(x,y) && (allowed is null || allowed(new(x+.5,y+.5)))) return new(x+.5,y+.5);
         throw new GameRuleException("raid.noApproach","No free position on this approach.");
     }
-    public static TilePoint GuardPoint(string? sector) => sector switch
-    {
-        "north" => new(15.5,1.5), "south" => new(15.5,24.5), "west" => new(1.5,13.5),
-        _ => WorldMap.Places[WorldMap.Camp]
-    };
-
     public bool ClearShot(TilePoint from,TilePoint to)
     {
         var steps=Math.Max(1,(int)Math.Ceiling(from.DistanceTo(to)*4));
@@ -92,14 +89,14 @@ public sealed class RaidNavigation
         var start=((int)Math.Floor(from.X),(int)Math.Floor(from.Y));
         var end=((int)Math.Floor(target.X),(int)Math.Floor(target.Y));
         if(start==end)return target;
-        var centre=new TilePoint(start.Item1+.5,start.Item2+.5);
-        if(from.DistanceTo(centre)>.01)return centre;
+        PathSearches++;
         var queue=new PriorityQueue<(int,int),double>();queue.Enqueue(start,0);
         var cost=new Dictionary<(int,int),double>{{start,0}};
         var previous=new Dictionary<(int,int),(int,int)>();
         var found=false;
         while(queue.TryDequeue(out var p,out _) && cost.Count<=5000)
         {
+            PathNodes++;
             if(p==end){found=true;break;}
             foreach(var n in new[]{(p.Item1+1,p.Item2),(p.Item1-1,p.Item2),(p.Item1,p.Item2+1),(p.Item1,p.Item2-1)})
             {
@@ -112,7 +109,7 @@ public sealed class RaidNavigation
                 queue.Enqueue(n,nextCost+Math.Abs(n.Item1-end.Item1)+Math.Abs(n.Item2-end.Item2));
             }
         }
-        if(!found)return null;
+        if(!found){BlockedPaths++;return null;}
         var step=end;
         while(previous[step]!=start)step=previous[step];
         return new TilePoint(step.Item1+.5,step.Item2+.5);

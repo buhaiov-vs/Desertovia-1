@@ -1262,5 +1262,15 @@
     "independent_check": 38948699510,
     "verified_at": "2026-10-16T18:37:12.2283924Z",
     "release_record": "RELEASE_0_7_3_RESULT.json"
+  },
+  "free_combat_diagnostics": {
+    "version": "0.7.4",
+    "branch": "fix/free-combat-and-diagnostics",
+    "implemented": true,
+    "ready": false,
+    "deployed": false,
+    "domain_tests": 424,
+    "status": "validating",
+    "plan": "FREE_COMBAT_AND_DIAGNOSTICS.md"
   }
 }

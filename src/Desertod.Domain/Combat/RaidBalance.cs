@@ -15,18 +15,16 @@ public static class RaidBalance
     {
         var healthy=citizens.Where(c=>c.Status==CitizenStatus.Active && c.RecoveryPausedAt is null
             && !HospitalRules.IsAdmitted(c,now) && !CombatRules.IsInjured(c,now) && !(c.ExhaustedUntil>now) && c.Recovery?.Available!=false && c.DungeonRunId is null).ToList();
-        var guards=healthy.Where(c=>RaidRules.GuardTask(c,now)!=null).ToList();
-        var reserve=healthy.Where(c=>!guards.Contains(c)&&online.Contains(c.Id)).ToList();
-        // Equipped guards count fully. Idle, available residents count only as a bounded reserve, not a full army.
-        var command=guards.Where(c=>RaidRules.GuardTask(c,now)?.RoleId==RaidRules.CaptainRole).Select(c=>1+RaidRules.CommandPerEndurance*c.Stats.Endurance).DefaultIfEmpty(1).Max();
-        var readiness=guards.Sum(c=>CombatRules.Power(c)*(RaidRules.GuardTask(c,now)?.BaseYield??1)*(c.CurrentEnergy(now,village)>0?1:.65))*command*(village.Has(BuildingKind.Barracks)?RaidRules.BarracksMultiplier:1)
-            + reserve.OrderByDescending(CombatRules.Power).Take(12).Sum(c=>CombatRules.Power(c)*.4);
-        var storedWeapons=ArmoryCatalog.Weapons.Sum(w=>Math.Min(reserve.Count,village.Stock(w.Kind))*w.Power);
-        readiness+=Math.Min(reserve.Count*2,storedWeapons*.25);
+        var guards=healthy.Where(c=>online.Contains(c.Id)).ToList();
+        // Readiness uses present capable residents, never a retired duty assignment.
+        var readiness=guards.Sum(c=>CombatRules.Power(c)*(c.CurrentEnergy(now,village)>0?1:.65))
+            *(village.Has(BuildingKind.Barracks)?RaidRules.BarracksMultiplier:1);
+        var storedWeapons=ArmoryCatalog.Weapons.Sum(w=>Math.Min(guards.Count,village.Stock(w.Kind))*w.Power);
+        readiness+=Math.Min(guards.Count*2,storedWeapons*.25);
         var shelter=village.Fortifications.Count(f=>f.Blocks)>0?6:0;
         var scale=waves switch{>=3=>1.2,2=>1.05,_=>.9};
         var budget=Math.Clamp((readiness+6+shelter)*scale,8,240);
-        return new(guards.Count,reserve.Count,readiness,budget);
+        return new(guards.Count,0,readiness,budget);
     }
     public static IReadOnlyList<RaidApproach> Approaches(Village village)
     {

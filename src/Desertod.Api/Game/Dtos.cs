@@ -736,7 +736,7 @@ public static class DtoMapper
     public static CatalogDto Catalog(GameOptions options) => new(
         GameCatalog.Roles,
         SkillCatalog.Skills,
-        GameCatalog.Tasks,
+        GameCatalog.Tasks.Where(t=>t.Effect!=TaskEffect.Guard).ToArray(),
         ProjectCatalog.Projects,
         StorageCatalog.Storages,
         BuildingCatalog.Buildings,

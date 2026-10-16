@@ -102,8 +102,13 @@ public sealed class VillageNotifier(IHubContext<VillageHub> hub, VillageStateCha
     public Task VillageUpdated(VillageStateDto state) =>
         hub.Clients.Group(VillageHub.GroupName(state.Slug)).SendAsync("villageUpdated", state);
 
-    public Task VillageEvents(string slug, VillageEventsDto events, CancellationToken cancellationToken) =>
-        hub.Clients.Group(VillageHub.GroupName(slug)).SendAsync("villageEvents", events, cancellationToken);
+    public async Task VillageEvents(string slug, VillageEventsDto events, CancellationToken cancellationToken)
+    {
+        var start=System.Diagnostics.Stopwatch.GetTimestamp();
+        await hub.Clients.Group(VillageHub.GroupName(slug)).SendAsync("villageEvents",events,cancellationToken);
+        var elapsed=System.Diagnostics.Stopwatch.GetElapsedTime(start).TotalMilliseconds;
+        foreach(var battle in events.Battles)CombatDiagnostics.Sent(battle.Id,elapsed);
+    }
 
     public Task CitizenUpdated(string slug, CitizenSummaryDto citizen) =>
         Queue(slug, events =>

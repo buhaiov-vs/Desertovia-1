@@ -10,6 +10,19 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.4',date:'2026-10-16',
+    title:{ru:'Свободный бой и диагностика',en:'Free combat and diagnostics'},
+    changes:{
+      ru:['Дозоры и участки обороны убраны. Выбирай врага или место на карте самостоятельно; без цели персонаж отвечает только на врага в пределах удара.',
+        'Бой больше не привязывает персонажа к костру. Возврат в бой сохраняет потраченное здоровье и лечение.',
+        'Исправлен откат медленных бойцов к предыдущей клетке и рывок при наложении снимков движения. Боевые пакеты больше не обновляют всех мирных персонажей.',
+        'В настройках можно скачать диагностику рывков: время кадров, обновлений и доставки данных. Сервер отдельно измеряет расчёт боя, поиск пути и сохранение.'],
+      en:['Guard duties and defense sectors are removed. Choose enemies and ground yourself; without a target, characters defend only within attack range.',
+        'Combat no longer ties players to the camp. Re-entry preserves spent health and healing.',
+        'Fixed slow actors returning to a previous cell and overlapping movement snapshots. Combat packets no longer rebuild all civilian actors.',
+        'Settings can export combat frame, update and delivery timings. The server also measures simulation, pathfinding and persistence.']}
+  },
+  {
     version:'0.7.3',date:'2026-10-16',
     title:{ru:'Личный бой и последствия осады',en:'Personal combat and siege consequences'},
     changes:{

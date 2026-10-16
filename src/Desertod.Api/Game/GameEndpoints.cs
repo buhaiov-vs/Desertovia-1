@@ -7,6 +7,7 @@ public static class GameEndpoints
 {
     public static void MapGameEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapFeedbackIdentityEndpoints();
         app.MapPost("/api/director/vote", async (AlmightyTelegramVote vote, HttpContext http,
             Microsoft.Extensions.Options.IOptions<TelegramOptions> options, GameService game, CancellationToken ct) => {
             if (!AlmightyService.Trusted(http, options)) return Results.Unauthorized();

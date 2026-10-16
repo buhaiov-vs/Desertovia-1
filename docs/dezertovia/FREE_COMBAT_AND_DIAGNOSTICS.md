@@ -1,3 +1,10 @@
+> LIVE0.7.4 installed and independently verified. Full CI38956420909 PASS:
+>424Domain+239API+151browser/1skip,frontend/Docker. Install38959075262 and separate
+>check38959583714 SUCCESS;119profiles retained,0old unfinished duties.
+> See RELEASE_0_7_4.md /RELEASE_0_7_4_RESULT.json. Earlier preparation text below
+> is history; do not repeat installation. Live measurements are still needed for
+> any remaining device-specific freezes.
+
 # Owner request: no guard duty, manual combat, measured performance
 
 16Oct2026: remove every duty/post/sector binding. Player chooses movement/target.

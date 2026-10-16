@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-16",
-  "phase": "released_0_7_2_independently_verified",
+  "phase": "released_0_7_4_independently_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -14,7 +14,9 @@
     "release_0_7": "0540a2a006d2c72b580b37f74387f1e53e68f9eb",
     "candidate_0_7_1": "573af93ccb2892b7e07c48529f8c387b63237cab",
     "release_0_7_1": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
-    "release_0_7_2": "04c395052a106562b8e00b6c73a8a5b119b1aea5"
+    "release_0_7_2": "04c395052a106562b8e00b6c73a8a5b119b1aea5",
+    "release_0_7_3": "672d72e167dd477f925df6394ecc5b188d3924ff",
+    "release_0_7_4": "74adbe8c1d778f0751a755a4b36dbefe6f16a405"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -1267,10 +1269,26 @@
     "version": "0.7.4",
     "branch": "fix/free-combat-and-diagnostics",
     "implemented": true,
-    "ready": false,
-    "deployed": false,
+    "ready": true,
+    "deployed": true,
     "domain_tests": 424,
-    "status": "validating",
-    "plan": "FREE_COMBAT_AND_DIAGNOSTICS.md"
+    "status": "installed_independently_verified",
+    "plan": "FREE_COMBAT_AND_DIAGNOSTICS.md",
+    "source": "74adbe8c1d778f0751a755a4b36dbefe6f16a405",
+    "game_ci": 38956420909,
+    "api_tests": 239,
+    "browser_passed": 151,
+    "browser_skipped": 1,
+    "install_run": 38959075262,
+    "independent_check_run": 38959583714,
+    "checked_at": "2026-10-16T20:04:47.4389681Z",
+    "preservation": {
+      "profiles_before": 119,
+      "profiles_after": 119,
+      "lost_profiles_or_progress": 0,
+      "accounts_preserved": 121,
+      "login_bindings_preserved": 121
+    },
+    "do_not_reinstall": true
   }
 }

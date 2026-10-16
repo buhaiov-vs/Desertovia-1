@@ -1,3 +1,23 @@
+#0.7.4 INSTALLED16Oct2026; independent verificationPASS
+
+Owner requested no guard/post/camp bindings and combat diagnostics; prior server
+fix installation authorization continued. LIVE game74adbe8c1d778f0751a755a4b36dbefe6f16a405,
+CI38956420909 SUCCESS424Domain+239API+151browser/1skip,frontend/DockerPASS.
+PR48 mergeddfdc0ac with identical tested tree. Bot metadata67f9149,
+CI38957570632 SUCCESS887tests/serverSKIPPED; canonicalPR46 merged6ae84ce.
+20operator guardsPASS. Preflight38958939581, install38959075262 and separatecheck
+38959583714 SUCCESS2026-10-16T20:04:47.4389681Z.119→119profiles,0progress losses,
+121accounts/bindings,25migrations,24publicJS chunks,feedback live versionPASS.
+Old unfinished duties0.14protected botmodules/configs/quarantine/Propose/budget
+preserved; PG/SQLite/config/code/profile backups saved. No forced raids/messages/
+payments/model probes or resets. No guard task, sector, counter or camp leash.
+Manual ground/target orders, local range-only self-defense, HP/ammo/heal receipt
+preservation; slow navigation and combat renderer/snapshot fixes. Bounded server/
+client diagnostics and Settings download enabled. No natural postdeploy raid
+sample at finalcheck; physical phone FPS and any remaining freeze need actual
+measurements. See docs/dezertovia/RELEASE_0_7_4.md and RELEASE_0_7_4_RESULT.json.
+Do not reinstall/replay oldrequests. Earlier pending/NOTLIVE entries are history.
+
 # New request: remove guard/post binding and diagnose combat freezes
 
 Owner16Oct2026: players choose where to go/what to do; no guard duty. Implement

@@ -5,6 +5,9 @@ using Desertod.Domain.Combat;
 using Desertod.Domain.Economy;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
+using Desertod.Domain.Projects;
+using Desertod.Domain.Stats;
+using Desertod.Domain.Technologies;
 using Desertod.Domain.Storage;
 using Desertod.Domain.World;
 using static Desertod.Domain.Tests.TestWorld;
@@ -140,6 +143,24 @@ public sealed class OwnerCorrectionTests
         Assert.True(RaidSimulation.Tick(v,raid,b,[],new HashSet<Guid>(),Now.AddSeconds(1)));
         Assert.NotNull(v.DefeatedAt);Assert.NotNull(b.FinishedAt);Assert.Equal(RaidOutcome.Lost,raid.Outcome);
         Assert.Equal(0,raid.Killed);Assert.Equal(100,b.Units[0].Health);Assert.Equal("Dispersed",b.Units[0].State);
+    }
+
+    [Fact]
+    public void Completed_project_knowledge_cannot_reopen_a_ruined_bridge_when_starting_work()
+    {
+        var v=NewVillage();v.BridgeOpened=true;
+        CombatRules.Damage(v,RuinRules.RoyalBridge,100);RuinRules.Collapse(v,RuinRules.RoyalBridge,[],Now,Guid.NewGuid());
+        CycleEngine.Start(NewCitizen(v),Task("forage"),new WorkContext{Village=v,CompletedProjects=new HashSet<string>{ProjectCatalog.TsarBridge}},Now);
+        Assert.False(v.BridgeOpened);Assert.NotNull(v.BridgeRuinedAt);Assert.False(BankAccess.CanReach(v,new(40,12)));
+    }
+    [Fact]
+    public void A_ruined_workshop_does_not_disable_another_intact_public_workshop()
+    {
+        var v=NewVillage();var ruined=new Structure{Kind=BuildingKind.Workshop,PlotId="1,1",Damage=100,RuinedAt=Now};
+        var working=new Structure{Kind=BuildingKind.Workshop,PlotId="21,12"};v.Structures.AddRange([ruined,working]);
+        v.Research.Add(new(){TechnologyId=TechnologyCatalog.Carpentry,ResearchedAt=Now});v.Store(ResourceKind.Wood,10);
+        var c=NewCitizen(v,(Stat.Dexterity,4),(Stat.Strength,2));CycleEngine.Start(c,Task("saw-planks"),WorkContext.For(v),Now);
+        Assert.Equal("saw-planks",c.CurrentTaskId);Assert.Equal(WorldMap.Yard(working.PlotId),CycleEngine.Workplace(v,Task("saw-planks")));
     }
 
 }

@@ -30,7 +30,7 @@ public static class ProjectRules
         DateTimeOffset now)
     {
         var reward = project.Definition.Reward;
-        if (project.DefinitionId == ProjectCatalog.TsarBridge) village.BridgeOpened = true;
+        if (project.DefinitionId == ProjectCatalog.TsarBridge && village.BridgeRuinedAt is null) village.BridgeOpened = true;
         project.Status = ProjectStatus.Completed;
         project.CompletedAt = now;
 

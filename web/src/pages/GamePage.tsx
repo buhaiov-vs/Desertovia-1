@@ -868,7 +868,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         <TopBar
           village={live.state}
           catalog={catalog}
-          accountId={me.id}
+          accountId={tsar?me.id:undefined}
           citizen={citizen}
           citizens={live.citizens}
           onForecast={async (rain) => setVillageState(await api.forecast(slug, rain))}

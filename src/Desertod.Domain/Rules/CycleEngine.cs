@@ -65,7 +65,7 @@ public static class CycleEngine
     public static void Start(Citizen citizen, TaskDefinition task, WorkContext context, DateTimeOffset now, TilePoint? spot = null, string? workplacePlotId = null)
     {
         var village = context.Village;
-        if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge)) village.BridgeOpened=true;
+        if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge) && village.BridgeRuinedAt is null) village.BridgeOpened=true;
         CheckReady(citizen, now);
         task=ProjectTask(task,context);
         if(task.Id==RescueRules.TaskId)throw new GameRuleException("rescue.target","Click a wounded citizen to carry them.");
@@ -87,9 +87,9 @@ public static class CycleEngine
         if (workplacePlotId is not null && (selectedWorkplace is null || selectedWorkplace.OwnerAccountId is {} owner && owner != citizen.AccountId))
             throw new GameRuleException("building.private", "Choose an available workplace belonging to you or the kingdom.");
         var privateWorkplace = selectedWorkplace?.OwnerAccountId == citizen.AccountId || task.RequiredBuilding is {} needed && !village.Has(needed)
-            && village.Structures.Any(b => b.Kind == needed && b.OwnerAccountId == citizen.AccountId && !b.Decommissioning);
+            && village.Structures.Any(b => b.Kind == needed && b.OwnerAccountId == citizen.AccountId && !b.Decommissioning && b.RuinedAt is null && b.Damage<100);
         if (privateWorkplace && task.RequiredBuilding is {} ownKind)
-            spot = WorldMap.Yard((selectedWorkplace ?? village.Structures.First(b=>b.Kind==ownKind && b.OwnerAccountId==citizen.AccountId && !b.Decommissioning)).PlotId);
+            spot = WorldMap.Yard((selectedWorkplace ?? village.Structures.First(b=>b.Kind==ownKind && b.OwnerAccountId==citizen.AccountId && !b.Decommissioning && b.RuinedAt is null && b.Damage<100)).PlotId);
         citizen.CyclePrivateOutput = privateWorkplace || spot is {} ownSpot && !KingdomRules.Area(village).Contains(ownSpot.ToTile());
         if (task.RequiredBuilding is { } building && !village.Has(building) && !privateWorkplace)
         {
@@ -119,7 +119,7 @@ public static class CycleEngine
             throw new GameRuleException("project.intelligence", "Surveying and supervision require Intelligence 3 and Building 1.");
         if (task.Id == "brew-vigor" && (citizen.SkillLevel(Skill.Scholarship) < 3 || citizen.Stats.Intelligence < 3))
             throw new GameRuleException("task.brewer", "Ask a skilled brewer: Scholarship 3 and Intelligence 3 are required.");
-        if (task.RequiredBuilding is {} productionKind && village.Structures.FirstOrDefault(s => s.Kind == productionKind && s.OwnerAccountId == (privateWorkplace ? citizen.AccountId : null)) is { } production && (production.Damage >= 100 || production.RuinedAt is not null))
+        if (task.RequiredBuilding is {} productionKind && (selectedWorkplace ?? village.Structures.Where(s => s.Kind == productionKind && s.OwnerAccountId == (privateWorkplace ? citizen.AccountId : null) && !s.Decommissioning).OrderBy(s=>s.RuinedAt is not null||s.Damage>=100).FirstOrDefault()) is { } production && (production.Damage >= 100 || production.RuinedAt is not null))
             throw new GameRuleException("building.repairFirst", "Repair this building before working inside.");
 
         if (task.Effect is TaskEffect.Sow or TaskEffect.Water or TaskEffect.Harvest)
@@ -212,7 +212,7 @@ public static class CycleEngine
         var selectedSite = context.Village.Sites.SingleOrDefault(s => s.PlotId == plotId);
         citizen.CyclePrivateOutput = selectedSite?.OwnerAccountId is not null && !selectedSite.PublicDemolition;
         var village = context.Village;
-        if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge)) village.BridgeOpened=true;
+        if (context.CompletedProjects.Contains(ProjectCatalog.TsarBridge) && village.BridgeRuinedAt is null) village.BridgeOpened=true;
         CheckReady(citizen, now);
         var job = ConstructionRules.CheckJob(village, citizen, plotId, stage, jobId, context.RecentCitizenCount);
 
@@ -920,7 +920,7 @@ public static class CycleEngine
 
     /// <summary>Where the task is done: the yard of the building it needs once one stands, else its place on the map.</summary>
     public static TilePoint Workplace(Village village, TaskDefinition task) =>
-        task.RequiredBuilding is { } kind && village.Structures.FirstOrDefault(s => s.Kind == kind && !s.Decommissioning && s.RuinedAt is null && s.Damage<100) is { } building
+        task.RequiredBuilding is { } kind && village.Structures.FirstOrDefault(s => s.Kind == kind && s.OwnerAccountId is null && !s.Decommissioning && s.RuinedAt is null && s.Damage<100) is { } building
             ? WorldMap.Yard(building.PlotId)
             : WorldMap.Place(task.Workplace);
 

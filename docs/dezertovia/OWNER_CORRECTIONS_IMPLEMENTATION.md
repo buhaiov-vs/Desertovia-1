@@ -26,6 +26,8 @@ The owner authorized code and tests. No rollout request or production event is c
   Collapse retains site contributions, stored goods, level, research and player stats,
   releases construction claims and makes ruins nonfunctional until paid repair.
   Existing repair work costs 2 wood + 1 stone per cycle and repairs up to 5 damage.
+  Legacy completed-project flags cannot reopen a ruined bridge. Intact alternative
+  public workshops remain usable when another workshop is ruined.
   The 180 damage event cap is retained. Patients keep their recovery deadlines in
   a field infirmary if their hospital collapses. The royal bridge closes on collapse.
 - New-world creation explicitly places a level-one castle at 14,9. Old-world loading
@@ -55,7 +57,8 @@ its isolated rerun passed, and the full repeat must succeed before readiness.
 
 ## Validation record
 
-- Domain: 417 PASS, including low-damage castle defeat and no fake enemy kills.
+- Domain: 419 PASS, including low-damage castle defeat/no fake kills, a ruined
+  bridge staying closed when work starts, and an intact second workshop remaining usable.
 - Final local API run: 235 PASS, including old JSON migration and cancellation of future waves after castle defeat.
 - EF pending-model check: PASS, no model differences.
 - Isolated revised HUD: 5 PASS at 360/390/430/1440px, including disabled healing.

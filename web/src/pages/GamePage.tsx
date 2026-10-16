@@ -1,5 +1,6 @@
+import { MonasteryPanel } from '../ui/MonasteryPanel'
 import { WalletDialog, WalletHud } from '../ui/WalletHud'
-import { BattleControls } from '../ui/BattleControls'
+import { PersonalBattlePanel } from '../ui/PersonalBattlePanel'
 import { createOperationId } from '../api'
 import { HospitalPanel } from '../ui/HospitalPanel'
 import { SramoslavPanel } from '../ui/SramoslavPanel'
@@ -68,7 +69,7 @@ const UI_HIDDEN_KEY = 'desertod.ui-hidden'
 const chatBubbleSeconds = (text: string) => Math.min(12, 4 + text.length / 15)
 
 /** Villages are for signed-in players only: visitors sign in before the map loads. */
-export function GamePage() {
+export function GamePage({primarySlug}:{primarySlug?:string}={}) {
   const { t } = useI18n()
   const [me, setMe] = useState<Me | null | undefined>(undefined)
   const loadMe = useCallback(async () => setMe(await api.me()), [])
@@ -93,23 +94,25 @@ export function GamePage() {
       </div>
     )
   }
-  return <VillageView key={me.id} me={me} onAccountChanged={loadMe} />
+  return <VillageView key={me.id} me={me} onAccountChanged={loadMe} primarySlug={primarySlug} />
 }
 
-function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () => void }) {
-  const { slug = '' } = useParams()
+function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountChanged: () => void; primarySlug?:string }) {
+  const { slug:routeSlug } = useParams()
+  const slug=routeSlug??primarySlug??''
   const navigate = useNavigate()
   const i18n = useI18n()
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [ownCitizen, setCitizen] = useState<Citizen | null | undefined>(undefined)
   const [walletOpen,setWalletOpen]=useState(false)
+  const [monasteryOpen,setMonasteryOpen]=useState(false)
   const [placing, setPlacing] = useState<{ definition: BuildingDefinition; private?:boolean; requestId?:string } | null>(null)
   /** Citizen the Tsar clicked: appoints them Governor or writes their subtitle. */
   const [subtitleFor, setSubtitleFor] = useState<string | null>(null)
   /** Place on the map the player clicked to send their citizen there. */
   const [picked, setPicked] = useState<{ target: WorldTarget; screen: { x: number; y: number } } | null>(null)
   const [enemyPick,setEnemyPick]=useState<{battleId:string;unitId:string;selectionToken:number}|null>(null)
-  const enemySelection=useRef(0), issuedBattleOrder=useRef('')
+  const enemySelection=useRef(0)
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
   const [patientFor,setPatientFor]=useState<string|null>(null)
@@ -403,6 +406,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
       }
       if (event.key === 'Escape') {
         event.preventDefault()
+        setMonasteryOpen(false)
         if (placingRef.current) {
           setPlacing(null)
           return
@@ -678,6 +682,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     if (tsar) {
       return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => {
         setEnemyPick(null)
+        if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
         if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
         const watched = target !== null && villageRef.current !== null && watchable(target, villageRef.current)
         setPicked(watched ? { target, screen } : null)
@@ -693,6 +698,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
     if (!canWork || !ownId) return null
     return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => {
       setEnemyPick(null)
+      if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
       if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
       setError(null)
       setPicked(target ? { target, screen } : null)
@@ -706,6 +712,11 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
       })
     }
   }, [tsar, canWork, working, ownId, slug, applyCitizen, setVillageState, i18n, me.id])
+  const pickEnemy=useCallback((battleId:string,unitId:string)=>{
+    if(monasteryOpen)return
+    setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current});setPicked(null)
+    void api.battleOrder(slug,battleId,unitId,'intercept').catch(e=>{setNotice(i18n.error(e));window.setTimeout(()=>setNotice(null),5000)})
+  },[monasteryOpen,slug,i18n])
   // Only the isolated E2E build exposes deterministic selection setup. Vite removes
   // this listener from production; tests still exercise the real popup/chat composition.
   useEffect(() => {
@@ -715,8 +726,10 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
       pickWorld(target, screen, point)
     }
     window.addEventListener('desertovia-e2e-select', select)
-    return () => window.removeEventListener('desertovia-e2e-select', select)
-  }, [pickWorld])
+    const enemy=(event:Event)=>{const {battleId,unitId}=(event as CustomEvent<{battleId:string;unitId:string}>).detail;pickEnemy(battleId,unitId)}
+    window.addEventListener('desertovia-e2e-enemy',enemy)
+    return () => {window.removeEventListener('desertovia-e2e-select', select);window.removeEventListener('desertovia-e2e-enemy',enemy)}
+  }, [pickWorld,pickEnemy])
 
   const worldPickable = useMemo(
     () => (tsar ? (target: WorldTarget) => target.kind === 'building' && target.building === 'Hospital' || villageRef.current !== null && watchable(target, villageRef.current) : null),
@@ -769,23 +782,22 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         citizens={shownCitizens}
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
-        obscured={walletOpen || chatFull || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
+        obscured={monasteryOpen || walletOpen || chatFull || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
         selectedEnemyId={enemyPick?.unitId??null}
-        onEnemyPick={(battleId,unitId)=>{
-          setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current});setPicked(null)
-        }}
+        onEnemyPick={pickEnemy}
         onCitizenPick={pickCitizen}
         onWorldPick={pickWorld}
         worldPickable={worldPickable}
         selection={showPicked || showWatched ? picked.target.area : null}
       />
 
-      {!walletOpen&&!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&!subtitleFor&&!inviteFor&&enemyPick&&(()=>{
-        const battle=village.battles?.find(b=>b.id===enemyPick.battleId)
-        const unit=battle?.units.find(u=>u.id===enemyPick.unitId)
-        return battle&&unit?<BattleControls key={unit.id} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} tsar={tsar} accountId={me.id} selectionToken={enemyPick.selectionToken} issuedOrder={issuedBattleOrder} onDefend={()=>{const task=catalog.tasks.find(t=>t.id===KEEP_WATCH);if(task)void start(task)}} onClose={()=>setEnemyPick(null)}/>:null
+      {!walletOpen&&!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&(()=>{
+        const battle=village.battles?.find(b=>!b.finishedAt&&b.phase!=='Warning'&&b.fighters.some(f=>tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id))
+        const fighter=battle?.fighters.find(f=>tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id)
+        const remedies=(village.resources.find(r=>r.kind==='Remedy')?.amount??0)+(tsar?0:(citizen?.load.find(g=>g.resource==='Remedy')?.amount??0)+(citizen?.personalGoods?.find(g=>g.kind==='Remedy')?.amount??0))
+        return battle&&fighter?<ServerClock offsetMs={serverOffset}>{now=><PersonalBattlePanel slug={slug} battle={battle} fighter={fighter} remedies={remedies} now={now} onError={setNotice}/>}</ServerClock>:null
       })()}
 
       {!walletOpen&&!chatFull && <button
@@ -851,10 +863,12 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         </ServerClock>
       )}
 
+      {village.defeatedAt&&<div className="defeat-banner" role="status">{i18n.language==='ru'?'Поселение разорено. Восстановите замок ремонтом. Жители и навыки сохранены.':'The settlement has fallen. Restore the castle. Residents and skills are preserved.'}</div>}
       <div className="hud" ref={watchTopBar}>
         <TopBar
           village={live.state}
           catalog={catalog}
+          accountId={me.id}
           citizen={citizen}
           citizens={live.citizens}
           onForecast={async (rain) => setVillageState(await api.forecast(slug, rain))}
@@ -906,7 +920,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
           key={slug}
           mentionCandidates={citizens.filter(c=>!live.away.has(c.id)).map(c=>({id:c.id,name:c.name}))}
           incoming={live.chatArrivals}
-          interrupted={walletOpen || enemyPick!==null || showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
+          interrupted={walletOpen || showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}
@@ -989,6 +1003,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         </ServerClock>
       </div>
 
+      {monasteryOpen&&<MonasteryPanel slug={slug} onClose={()=>setMonasteryOpen(false)} onGo={async point=>{if(tsar)setVillageState(await api.tsarGoTo(slug,point));else setCitizen(await api.goTo(slug,point))}}/>}
       {patientFor&&live.citizens.get(patientFor)&&<div className="modal-backdrop"><section className="modal" role="dialog" aria-label="Раненый житель"><header className="modal-header"><h2>{live.citizens.get(patientFor)!.name}</h2><button onClick={()=>setPatientFor(null)}>✕</button></header><div className="modal-body"><p>{live.citizens.get(patientFor)!.recovery?.until?'На лечении после дуэли':live.citizens.get(patientFor)!.hospitalizedAt?'На лечении после боя':'Ранен после боя, ждёт помощи'}</p><p className="small muted">Переноска не лечит. Если никто не поможет, санитары заберут раненого через 5 минут.</p>{citizen&&citizen.id!==patientFor&&!live.citizens.get(patientFor)!.hospitalizedAt&&!live.citizens.get(patientFor)!.recovery?.until&&<button disabled={pending||!!live.citizens.get(patientFor)!.rescueByCitizenId} onClick={()=>{const id=patientFor;setPatientFor(null);void run(()=>api.rescue(slug,id))}}>Отнести в больницу</button>}<button onClick={()=>{setHospitalPatient(patientFor);setPatientFor(null);setHospitalOpen(true)}}>Лечение</button></div></section></div>}
       {hospitalOpen && <HospitalPanel initialPatientId={hospitalPatient} slug={slug} actorId={me.id} citizenId={citizen?.id} tsar={tsar} village={village}
         onVillage={setVillageState} serverOffsetMs={serverOffset} onClose={() => setHospitalOpen(false)} onUpdated={() => { void loadCitizen() }} />}
@@ -1001,6 +1016,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
               tab={tab}
               onTab={setTab}
               onHospital={() => { setPanel('none'); setHospitalOpen(true) }}
+              onMonastery={()=>{setPanel('none');setMonasteryOpen(true)}}
               onClose={() => setPanel('none')}
               village={village}
               population={{total:citizens.length,online:citizens.filter(c=>!live.away.has(c.id)).length}}

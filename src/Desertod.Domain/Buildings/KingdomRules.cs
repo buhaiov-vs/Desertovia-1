@@ -5,6 +5,15 @@ namespace Desertod.Domain.Buildings;
 
 public static class KingdomRules
 {
+    public static void FoundCastle(Village village,DateTimeOffset now)
+    {
+        if(village.Structures.Any(s=>s.Kind==BuildingKind.Castle))return;
+        const string plot="14,9";
+        if(village.AreaTaken(WorldMap.Footprint(plot)!.Value))throw new GameRuleException("castle.occupied","The central castle site is occupied.");
+        Forest.Hold(village,WorldMap.Footprint(plot)!.Value,now);
+        village.Structures.Add(new Structure{Kind=BuildingKind.Castle,PlotId=plot,Level=1,BuiltAt=now});
+    }
+
     public static int Level(Village village) => village.Structures.Where(s => s.Kind == BuildingKind.Castle && !s.Decommissioning)
         .Select(s => s.Level).DefaultIfEmpty(0).Max();
 

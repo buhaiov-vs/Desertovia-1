@@ -33,6 +33,8 @@ public static class ConstructionRules
     /// <summary>Pure validation: pending applications do not occupy land, fell trees or consume a construction slot.</summary>
     public static void ValidatePlacement(Village village, BuildingKind kind, int x, int y, Guid? privateOwner = null, bool checkCapacity = true)
     {
+        if(village.DefeatedAt is not null && kind is not (BuildingKind.Hut or BuildingKind.LeanTo or BuildingKind.Heap))
+            throw new GameRuleException("village.defeated","Restore the royal castle before expanding the settlement.");
         var definition = BuildingCatalog.Get(kind);
         if (kind == BuildingKind.Castle && village.CountOf(kind) > 0)
             throw new GameRuleException("castle.unique", "Only one royal castle can be built.");
@@ -117,6 +119,7 @@ public static class ConstructionRules
     public static void Cancel(Village village, string plotId)
     {
         var site = FindSite(village, plotId);
+        if(site.RuinedAt is not null)throw new GameRuleException("building.ruined","Restore the ruins before continuing construction.");
         if(site.Operation=="site-demolish")throw new GameRuleException("building.cannotCancel","Finish dismantling this site.");
         if (site.HasWork)
         {

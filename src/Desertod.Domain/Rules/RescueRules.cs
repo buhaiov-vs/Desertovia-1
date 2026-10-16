@@ -8,7 +8,7 @@ namespace Desertod.Domain.Rules;
 public static class RescueRules
 {
     public const string TaskId="rescue-wounded";
-    public static TilePoint Ward(Village village) => village.Structures.FirstOrDefault(s=>s.Kind==BuildingKind.Hospital) is {} hospital
+    public static TilePoint Ward(Village village) => village.Structures.FirstOrDefault(s=>s.Kind==BuildingKind.Hospital && s.RuinedAt is null && s.Damage<100) is {} hospital
         ? WorldMap.Yard(hospital.PlotId) : WorldMap.Places[WorldMap.Camp];
     public static bool NeedsHelp(Citizen patient,DateTimeOffset now) => CombatRules.IsInjured(patient,now)&&patient.HospitalizedAt is null&&!HospitalRules.IsAdmitted(patient,now);
     public static void Check(Citizen helper,Citizen patient,DateTimeOffset now)

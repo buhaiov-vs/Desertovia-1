@@ -1,3 +1,7 @@
+> **D-081:** owner correction code is implemented in `feat/owner-combat-and-siege`,
+> candidate 0.7.3 under final validation; NOT LIVE. See [implementation and checks](OWNER_CORRECTIONS_IMPLEMENTATION.md).
+> Earlier PLAN/release entries below are history, not proof of current readiness.
+
 > [Подробный единый план: код, состояния, порядок и приёмка](DETAILED_OWNER_FIX_PLAN_0_7_2.md).
 > Все пункты пока PLAN; версия и сервер не менялись.
 

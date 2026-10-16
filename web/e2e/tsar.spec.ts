@@ -25,7 +25,7 @@ test.describe('tsar', () => {
 
     await expect(page).toHaveURL(/\/v\/[\w-]+$/)
     await expectVillageView(page)
-    await expect(page.locator('.hud-status').getByRole('button', { name: 'Build', exact: true })).toBeVisible()
+    await expect(page.locator('.hud-status').getByRole('button', { name: 'Build', exact: true })).toHaveCount(0)
 
     await openMenu(page)
     await visitEveryTab(page, ['Village', 'Build', 'Tech', 'Settings'])

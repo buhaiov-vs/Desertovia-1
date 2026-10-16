@@ -244,7 +244,7 @@ public static class CombatRules
         HospitalRules.Resume(citizen, now, now);
     }
 
-    /// <summary>Damaged buildings work slower: down to half speed at <see cref="MaximumDamage"/>.</summary>
+    /// <summary>Collapsed workplaces cannot start work; paid cycles settle without losing their inputs.</summary>
     public static double BuildingMultiplier(Village village, TaskDefinition task) =>
         task.RequiredBuilding is { } kind && village.Structures.FirstOrDefault(s => s.Kind == kind) is { } building
             ? (building.Damage >= MaximumDamage ? 0 : 1)
@@ -253,7 +253,9 @@ public static class CombatRules
     /// <summary>Every finished building: plot and damage.</summary>
     public static IEnumerable<(string PlotId, int Damage)> Buildings(Village village) =>
         village.Structures.Select(s => (s.PlotId, s.Damage)).Concat(village.Storages.Select(s => (s.PlotId, s.Damage)))
-            .Concat(village.Fortifications.Select(f => (f.Id, f.Damage)));
+            .Concat(village.Fortifications.Select(f => (f.Id, f.Damage)))
+            .Concat(village.Sites.Where(s=>!village.Structures.Any(b=>b.PlotId==s.PlotId)&&!village.Storages.Any(b=>b.PlotId==s.PlotId)).Select(s=>(s.PlotId,s.Damage)))
+            .Concat(village.BridgeOpened||village.BridgeRuinedAt is not null?new[]{(RuinRules.RoyalBridge,village.BridgeDamage)}:[]);
 
     /// <summary>The building most in need of repair, or null when none is damaged.</summary>
     public static string? MostDamaged(Village village) =>
@@ -261,6 +263,7 @@ public static class CombatRules
 
     public static TilePoint RepairYard(Village village,string plot)
     {
+        if(plot==RuinRules.RoyalBridge)return new RaidNavigation(village).NearestFree(RuinRules.TargetYard(plot));
         var wall=village.Fortifications.FirstOrDefault(f=>f.Id==plot);
         return wall is null?WorldMap.Yard(plot):new TilePoint(wall.X+.5+(wall.X==-1?1:0),wall.Y+.5+(wall.Y==-1?1:wall.Y==26?-1:0));
     }
@@ -285,17 +288,19 @@ public static class CombatRules
         var current = DamageOf(village, plotId);
         var repaired = Math.Clamp(amount, 0, current);
         SetDamage(village, plotId, current - repaired);
+        RuinRules.Restored(village,plotId);
         return repaired;
     }
 
-    public static int DamageOf(Village village, string plotId) =>
+    public static int DamageOf(Village village, string plotId) => plotId==RuinRules.RoyalBridge?village.BridgeDamage:
         village.Structures.FirstOrDefault(s => s.PlotId == plotId)?.Damage
         ?? village.Storages.FirstOrDefault(s => s.PlotId == plotId)?.Damage
         ?? village.Fortifications.FirstOrDefault(f => f.Id == plotId)?.Damage
-        ?? 0;
+        ?? village.Sites.FirstOrDefault(s=>s.PlotId==plotId)?.Damage ?? 0;
 
     private static void SetDamage(Village village, string plotId, int damage)
     {
+        if(plotId==RuinRules.RoyalBridge){village.BridgeDamage=damage;return;}
         if (village.Fortifications.FirstOrDefault(f => f.Id == plotId) is {} wall) { wall.Damage = damage; return; }
         if (village.Structures.FirstOrDefault(s => s.PlotId == plotId) is { } structure)
         {
@@ -305,6 +310,8 @@ public static class CombatRules
         {
             storage.Damage = damage;
         }
+        else if(village.Sites.FirstOrDefault(s=>s.PlotId==plotId) is {} site)site.Damage=damage;
+        if(village.Sites.FirstOrDefault(s=>s.PlotId==plotId&&s.RuinedAt!=null) is {} rebuilding)rebuilding.Damage=damage;
     }
 
     private static int Available(Citizen citizen, Village village, ResourceKind kind) => citizen.Carried(kind) + village.Stock(kind);

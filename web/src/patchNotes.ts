@@ -1,6 +1,6 @@
 import type { Language } from './i18n/translator'
 
-/** Only documented, released changes belong here. Plans are kept in docs/dezertovia. */
+/** Implemented changes in this build. Deployment evidence is kept in docs/dezertovia. */
 export interface PatchNote {
   version: string
   date: string
@@ -9,6 +9,25 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version:'0.7.3',date:'2026-10-16',
+    title:{ru:'Личный бой и последствия осады',en:'Personal combat and siege consequences'},
+    changes:{
+      ru:['HP и силы собраны в компактном блоке в стиле ресурсов. Стройка и голосование доступны из меню; дублирующая кнопка выхода убрана.',
+        'Клик по врагу отправляет приказ атаки без карточки. В личном бою доступны отход и лечение: одно лекарство за 20% HP, откат 60 секунд.',
+        'Бойцы движутся по серверным снимкам без конкурирующего движения мирного персонажа.',
+        'Перед добровольным сносом дома жители получают конкретные подходящие места. Причины отказа и состояние заявки понятны в игре и Telegram.',
+        'Нападающие повреждают недострои. Полностью разрушенные здания и мост не работают до восстановления; прежние материалы и прогресс сохраняются.',
+        'Новые поселения начинают с замка. Потеря замка заканчивает оборону и останавливает следующие волны, сохраняя персонажей и путь восстановления.',
+        'За мостом действует монастырский обмен припасов на лекарство. Короткий адрес открывает основной мир; старые ссылки сохраняются.'],
+      en:['Personal health and stamina share the resource-card style. Building and votes stay in the menu; the duplicate exit is removed.',
+        'Selecting an enemy sends an attack without a card. Personal combat offers physical retreat and healing: one remedy for 20% HP, with a 60-second cooldown.',
+        'Fighters follow server snapshots without competing civilian movement.',
+        'Voluntary demolition assigns suitable replacement beds. The game and Telegram explain application refusals and actual status.',
+        'Attackers damage unfinished sites. Ruined buildings and the bridge need restoration; previous materials and progress remain.',
+        'New settlements start with a castle. Losing it ends defense and cancels later waves while preserving characters and recovery.',
+        'The monastery trades supplies for a remedy beyond the bridge. The short address opens the primary world and old links still work.']}
+  },
   {
     version:'0.7.2',date:'2026-10-16',
     title:{ru:'Бой, карта и очередь строек',en:'Combat, map and construction queue'},

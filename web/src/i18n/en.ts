@@ -1215,6 +1215,17 @@ export const en = {
   } as Record<string, { ruler: string; citizen: string }>,
 
   errors: {
+    'monastery.distance': 'Come to the monastery courtyard first.',
+    'monastery.knowledge': 'Discover herb lore first.',
+    'monastery.cooldown': 'Wait six hours after the previous contract.',
+    'monastery.supplies': 'Bring ten wood and six food.',
+    'castle.occupied': 'The central castle site is occupied.',
+    'battle.notActive': 'You are not actively fighting.',
+    'battle.requestId': 'Refresh this action and try again.',
+    'battle.fullHealth': 'Health is already full.',
+    'battle.healCooldown': 'Wait for the healing cooldown.',
+    'building.ruined': 'Restore the ruins before continuing construction.',
+    'village.defeated': 'Restore the royal castle before starting another raid.',
     "defense.mode": "Choose hold position or intercept.",
     "defense.guard": "Start guard duty before attacking.",
     "defense.arriving": "The guard is still arriving. Try again shortly.",

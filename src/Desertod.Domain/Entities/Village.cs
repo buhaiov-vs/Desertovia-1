@@ -40,6 +40,8 @@ public sealed class Village
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>Research points. Not a physical good, so it has no storage limit.</summary>
+    public DateTimeOffset? DefeatedAt { get; set; }
+    public Guid? DefeatedByBattleId { get; set; }
     public int Knowledge { get; set; }
 
     public int VigorEnergy { get; set; } = 8;
@@ -56,6 +58,8 @@ public sealed class Village
     public List<ConstructionSite> Sites { get; set; } = [];
     public List<SiteRecovery> SiteRecoveries { get; set; } = [];
     public bool BridgeOpened { get; set; }
+    public int BridgeDamage { get; set; }
+    public DateTimeOffset? BridgeRuinedAt { get; set; }
     public List<CivicOrder> CivicOrders { get; set; } = [];
 
     /// <summary>Game animals on the village land, one herd per kind.</summary>
@@ -257,8 +261,8 @@ public sealed class Village
     public Herd HerdOf(AnimalKind kind) => Wildlife.Single(h => h.Kind == kind);
 
     public bool Has(BuildingKind kind) =>
-        Structures.Any(s => s.OwnerAccountId == null && s.Kind == kind && !s.Decommissioning)
-        || Storages.Any(s => s.OwnerAccountId == null && BuildingCatalog.ForStorage(s.Kind) == kind && !s.Decommissioning);
+        Structures.Any(s => s.OwnerAccountId == null && s.Kind == kind && !s.Decommissioning && s.RuinedAt is null && s.Damage<100)
+        || Storages.Any(s => s.OwnerAccountId == null && BuildingCatalog.ForStorage(s.Kind) == kind && !s.Decommissioning && s.RuinedAt is null && s.Damage<100);
 
     /// <summary>Finished buildings and open sites of this kind; repeats need more material.</summary>
     public int CountOf(BuildingKind kind, Guid? owner = null) =>
@@ -282,10 +286,10 @@ public sealed class Village
         plotIds.Any(plotId => WorldMap.Footprint(plotId) is { } taken && taken.Overlaps(area));
 
     public int Stock(ResourceKind kind) =>
-        StorageCatalog.IsGood(kind) ? Storages.Where(s => s.OwnerAccountId == null).Sum(s => s.Amount(kind)) : Knowledge;
+        StorageCatalog.IsGood(kind) ? Storages.Where(s => s.OwnerAccountId == null && s.RuinedAt is null && s.Damage<100).Sum(s => s.Amount(kind)) : Knowledge;
 
     public int FreeSpace(ResourceKind kind) =>
-        StorageCatalog.IsGood(kind) ? Storages.Where(s => s.OwnerAccountId == null).Sum(s => s.FreeSpace(kind)) : int.MaxValue;
+        StorageCatalog.IsGood(kind) ? Storages.Where(s => s.OwnerAccountId == null && s.RuinedAt is null && s.Damage<100).Sum(s => s.FreeSpace(kind)) : int.MaxValue;
 
     /// <summary>Stores as much as fits, specialised buildings first, and returns the stored amount.</summary>
     public int Store(ResourceKind kind, int amount)
@@ -297,7 +301,7 @@ public sealed class Village
         }
 
         var stored = 0;
-        var order = Storages.Where(s => s.OwnerAccountId == null)
+        var order = Storages.Where(s => s.OwnerAccountId == null && s.RuinedAt is null && s.Damage<100)
             .OrderBy(s => s.Definition.IsGeneral)
             .ThenByDescending(s => s.Amount(kind) > 0);
         foreach (var building in order)
@@ -324,7 +328,7 @@ public sealed class Village
         }
 
         var taken = 0;
-        foreach (var building in Storages.Where(s => s.OwnerAccountId == null).OrderBy(s => !s.Definition.IsGeneral))
+        foreach (var building in Storages.Where(s => s.OwnerAccountId == null && s.RuinedAt is null && s.Damage<100).OrderBy(s => !s.Definition.IsGeneral))
         {
             if (amount - taken <= 0)
             {

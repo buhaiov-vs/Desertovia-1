@@ -26,12 +26,13 @@ public sealed record StorageSlotDto(ResourceKind Kind, double Fill);
 public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots, int Damage)
 {
     public Guid? OwnerAccountId { get; init; }
+    public DateTimeOffset? RuinedAt { get; init; }
     public int ResourceLimit => StorageLimits.PerResource(Kind);
     public int? TotalLimit => StorageLimits.Total(Kind);
 }
 
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
-public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1) { public Guid? OwnerAccountId { get; init; } }
+public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1) { public Guid? OwnerAccountId { get; init; } public DateTimeOffset? RuinedAt { get; init; } }
 
 /// <summary>An attack on the way, or a fought one kept for the record.</summary>
 /// <param name="AnnouncedAt">Players see an attack on the way from then on; clients hide it before.</param>
@@ -63,6 +64,8 @@ public sealed record SiteStageDto(string Id, int CrewNeeded, int Hands, IReadOnl
 
 public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double Progress, IReadOnlyList<SiteStageDto> Stages, int TargetLevel = 1)
 {
+    public int Damage { get; init; }
+    public DateTimeOffset? RuinedAt { get; init; }
     public Guid? OwnerAccountId { get; init; }
     public Guid? PlacedByAccountId { get; init; }
     public string? OwnerName { get; init; }
@@ -192,12 +195,17 @@ public sealed record VillageStateDto(
 {
     public TileArea KingdomArea { get; init; } = WorldMap.BuildArea;
     public int CastleLevel { get; init; }
+    public DateTimeOffset? DefeatedAt { get; init; }
+    public IReadOnlyList<RelocationDto> Relocations { get; init; } = [];
     public IReadOnlyList<CivicOrder> CivicOrders { get; init; } = [];
     public IReadOnlyList<HousingDto> Housing { get; init; } = [];
     public bool BridgeOpened { get; init; }
+    public int BridgeDamage { get; init; }
+    public DateTimeOffset? BridgeRuinedAt { get; init; }
     public IReadOnlyList<Fortification> Fortifications { get; init; } = [];
     public IReadOnlyList<RaidBattleDto> Battles { get; init; } = [];
 }
+public sealed record RelocationDto(string PlotId,int Residents,int Available);
 public sealed record HousingDto(string PlotId, int Beds, int Occupied, int Level);
 
 /// <param name="Appearance">Null until the owner creates their character.</param>
@@ -484,9 +492,9 @@ public static class DtoMapper
                 s.PlotId,
                 (s.OwnerAccountId is null ? s.Goods : []).OrderBy(g => g.Kind).Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
                 s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList(),
-                s.Damage) { OwnerAccountId = s.OwnerAccountId })
+                s.Damage) { OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt })
             .ToList(),
-        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level) { OwnerAccountId = s.OwnerAccountId }).ToList(),
+        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level) { OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt }).ToList(),
         village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount, context)).ToList(),
         context.Project is { } project ? project.ToDto(context) : null,
         completedProjects,
@@ -611,7 +619,7 @@ public static class DtoMapper
                     .ToList()))
             .ToList(), site.TargetLevel) { OwnerAccountId = site.OwnerAccountId,PlacedByAccountId=site.PlacedByAccountId,
                 PlacedAt=site.PlacedAt, BoundaryConflict=SiteManagement.LegacyConflict(site), BoundaryApproved=site.BoundaryApproved,
-                HasWork=site.HasWork,Operation=site.Operation,PublicDemolition=site.PublicDemolition };
+                Damage=site.Damage,RuinedAt=site.RuinedAt,HasWork=site.HasWork,Operation=site.Operation,PublicDemolition=site.PublicDemolition };
 
     public static ProjectDto ToDto(this VillageProject project, WorkContext context)
     {

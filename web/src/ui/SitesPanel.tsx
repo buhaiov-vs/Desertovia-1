@@ -33,7 +33,7 @@ export function SitesPanel({
           catalog={catalog}
           village={village}
           citizen={citizen}
-          disabled={disabled}
+          disabled={disabled||!!site.ruinedAt}
           onStartJob={onStartJob}
         />
       ))}
@@ -63,6 +63,7 @@ export function SiteCard({
   const stageDefinition = definition?.stages[site.stage]
   if (!definition || !stage || !stageDefinition) return null
 
+  if(site.ruinedAt)return <section className="card"><h3>{i18n.building(site.kind).name} · {i18n.language==='ru'?'Руины':'Ruins'}</h3><p>{i18n.language==='ru'?'Стройка остановлена. Восстановите участок работой «Ремонт зданий». Материалы и прежний вклад сохранены.':'Construction is suspended. Restore the site using Repair buildings. Materials and prior contributions are preserved.'}</p></section>
   const jobsDone = stage.jobs.every((job) => job.done >= job.required - 1e-6)
   const handsWanted = jobsDone && stage.hands < stage.crewNeeded
   const ahead = site.stages.flatMap((later, index) =>

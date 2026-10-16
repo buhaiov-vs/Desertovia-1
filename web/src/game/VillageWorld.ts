@@ -262,6 +262,7 @@ export class VillageWorld {
   private activeProjectId: string | null = null
   private lastBuildingKey = ''
   private buildingViews: Container[] = []
+  private readonly fighterSamples=new Map<string,{battle:string;revision:number;fromX:number;fromY:number;x:number;y:number;at:number}>()
   private readonly damageViews = new Map<string, {damage:number; view:Container}>()
   private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
@@ -575,7 +576,7 @@ export class VillageWorld {
   }
 
   private bridgeDone() {
-    return this.village?.completedProjects.includes('tsar-bridge') ?? false
+    return !!this.village&&!this.village.bridgeRuinedAt&&(this.village.bridgeOpened||this.village.completedProjects.includes('tsar-bridge'))
   }
 
   private way(walker: Walker, spot: TilePoint) {
@@ -594,8 +595,7 @@ export class VillageWorld {
     if (!this.terrain) return
     const way = this.way(walker, spot)
     if (typeof way === 'string') {
-      walker.x = x
-      walker.y = y
+      walker.targetX=walker.x;walker.targetY=walker.y
       return
     }
     walker.way = way.map((point) => ({ x: point.x * TILE, y: point.y * TILE }))
@@ -803,7 +803,7 @@ export class VillageWorld {
     const visiblePatients=[...admitted].sort((a,b)=>a.id.localeCompare(b.id)).slice(0,4)
     const ownPatient=admitted.find(c=>c.id===highlightId)
     if(ownPatient&&!visiblePatients.some(c=>c.id===ownPatient.id))visiblePatients[3]=ownPatient
-    const ward=this.village?.structures.find(s=>s.kind==='Hospital')
+    const ward=this.village?.structures.find(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
     const wardPlot=ward?this.plot(ward.plotId):null
     if(!this.wardCaption){this.wardCaption=new Text({text:'',style:{fontFamily:LABEL_FONT,fontSize:11,fontWeight:'700',fill:0xffe9b0,stroke:{color:0x1b1206,width:3}}});this.wardCaption.anchor.set(.5,1);this.screen.addChild(this.wardCaption)}
     this.wardCaption.text=`${wardPlot?'Больница':'Лазарет'} · На лечении: ${admitted.length}`
@@ -864,6 +864,8 @@ export class VillageWorld {
       let icon: { key: string; tile: TileRef | null } | null = null
       if (injured) {
         icon = { key: INJURED_ICON, tile: null }
+      } else if (this.fighterSamples.has(citizen.id)) {
+        walker.working=false;walker.roaming=false;walker.staying=true;walker.way=[]
       } else if (hunt && citizen.taskId) {
         icon = { key: `task:${citizen.taskId}`, tile: taskIcon(citizen.taskId) }
       } else if (roaming && citizen.taskId) {
@@ -894,7 +896,7 @@ export class VillageWorld {
       }
 
       if (walker.inHospital) {
-        const hospital = this.village?.structures.find(s => s.kind === 'Hospital')
+        const hospital = this.village?.structures.find(s => s.kind === 'Hospital'&&!s.ruinedAt&&s.damage<100)
         const plot = hospital ? this.plot(hospital.plotId) : null
         const index=visiblePatients.findIndex(c=>c.id===citizen.id)
         walker.wardVisible=!plot&&index>=0
@@ -995,7 +997,7 @@ export class VillageWorld {
     if (!village) return
     // Damage changes every few combat ticks. Update its overlay independently,
     // keeping every unchanged building, light and label alive.
-    const damaged=new Map([...village.structures,...village.storages].filter(s=>s.damage>0).map(s=>[s.plotId,s.damage]))
+    const damaged=new Map([...village.structures,...village.storages,...village.sites.map(s=>({...s,damage:s.damage??0}))].filter(s=>s.damage>0).map(s=>[s.plotId,s.damage]))
     for(const [plotId,entry] of this.damageViews){
       if(damaged.get(plotId)===entry.damage)continue
       entry.view.destroy({children:true});this.damageViews.delete(plotId)
@@ -1008,9 +1010,9 @@ export class VillageWorld {
     }
     const key = JSON.stringify([
       this.buildingDefinitions.size,
-      village.storages.map((s) => [s.kind, s.plotId, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
-      village.structures.map((s) => [s.kind, s.plotId]),
-      village.sites.map(siteVisualKey),
+      village.storages.map((s) => [s.kind, s.plotId, !!s.ruinedAt, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
+      village.structures.map((s) => [s.kind, s.plotId, !!s.ruinedAt]),
+      village.sites.map(site=>[siteVisualKey(site),!!site.ruinedAt]),
       village.fields.map((bed) => {
         const plant = cropTile(bed.crop ?? '', bed.growth, isRipe(bed))
         return [bed.plotId, bed.crop, plant && tileKey(plant), this.isWet(bed)]
@@ -1027,10 +1029,10 @@ export class VillageWorld {
       this.buildingViews.push(view)
       this.objects.addChild(view)
     }
-    const name = (kind: string, storage: boolean, view: Container, alpha = 1) => {
+    const name = (kind: string, storage: boolean, view: Container, alpha = 1, ruined=false) => {
       if (!this.buildingName || localStorage.getItem('desertovia.buildingLabels') !== 'true') return
       const text = new Text({
-        text: this.buildingName(kind, storage),
+        text: (ruined?(localStorage.getItem('desertod.language')==='en'?'Ruins · ':'Руины · '):'')+this.buildingName(kind, storage),
         style: {
           fontFamily: LABEL_FONT,
           fontSize: 11,
@@ -1054,8 +1056,9 @@ export class VillageWorld {
       const plot = this.plot(structure.plotId)
       if (!plot) continue
       const view = this.finishedView(structure.kind, plot.x, plot.y)
+      if(structure.ruinedAt){view.alpha=.3;const rubble=this.damageView(structure.plotId,100,plot.x,plot.y);add(rubble)}
       add(view)
-      if (structure.kind !== 'Hospital') name(structure.kind, false, view)
+      if (structure.kind !== 'Hospital'||structure.ruinedAt) name(structure.kind, false, view,1,!!structure.ruinedAt)
       const beds = village.fields.filter((bed) => bed.plotId === structure.plotId)
       if (beds.length > 0) add(this.bedsView(beds, plot.x, plot.y))
     }
@@ -1065,8 +1068,9 @@ export class VillageWorld {
       const definition = this.storageDefinitions.get(storage.kind)
       if (!plot || !definition) continue
       const view = this.finishedView(storage.kind, plot.x, plot.y)
+      if(storage.ruinedAt)view.alpha=.3
       add(view)
-      name(storage.kind, true, view)
+      name(storage.kind, true, view,1,!!storage.ruinedAt)
       add(this.goodsYard(storage, definition, plot.x, plot.y))
     }
 
@@ -1074,8 +1078,9 @@ export class VillageWorld {
       const plot = this.plot(site.plotId)
       if (!plot) continue
       const view = this.siteView(site, plot.x, plot.y)
+      if(site.ruinedAt)view.alpha=.3
       add(view)
-      name(site.kind, false, view, 0.7)
+      name(site.kind, false, view, 0.7,!!site.ruinedAt)
     }
 
     const covered = new Set<string>()
@@ -1332,6 +1337,20 @@ export class VillageWorld {
       this.showCamp()
     }
     this.village = state
+    const presentFighters=new Set<string>()
+    for(const battle of state.battles??[]){
+      if(battle.finishedAt||battle.phase==='Warning')continue
+      for(const fighter of battle.fighters){
+        if((!fighter.active&&fighter.mode!=='withdrawn')||fighter.health<=0)continue
+        const id=fighter.isTsar?TSAR_ID:fighter.citizenId
+        presentFighters.add(id)
+        const old=this.fighterSamples.get(id)
+        if(old?.battle===battle.id&&old.revision>=battle.revision)continue
+        const close=old&&Math.hypot(old.x-fighter.x,old.y-fighter.y)<4
+        this.fighterSamples.set(id,{battle:battle.id,revision:battle.revision,fromX:close?old.x:fighter.x,fromY:close?old.y:fighter.y,x:fighter.x,y:fighter.y,at:performance.now()})
+      }
+    }
+    for(const id of this.fighterSamples.keys())if(!presentFighters.has(id))this.fighterSamples.delete(id)
     this.drawKingdomBorder()
     this.fog.setExplored(state.explored)
     this.drawTrees(state.trees)
@@ -1347,7 +1366,7 @@ export class VillageWorld {
     const project = state.project
     const key = JSON.stringify([
       state.completedProjects,
-      state.fortifications?.map(f=>[f.id,f.damage>=100,f.open]),
+      state.fortifications?.map(f=>[f.id,f.damage>=100,f.open]),state.bridgeRuinedAt,
       project?.definitionId,
       project?.phase,
       project ? project.surveyDone : 0,
@@ -1363,9 +1382,9 @@ export class VillageWorld {
     const completed = new Set(state.completedProjects)
 
     // Tsar bridge.
-    const bridgeDone = completed.has('tsar-bridge')
+    const bridgeDone = completed.has('tsar-bridge')&&!state.bridgeRuinedAt
     const bridgeActive = project?.definitionId === 'tsar-bridge'
-    let builtColumns = 0
+    let builtColumns = state.bridgeRuinedAt?1:0
     if (bridgeDone) {
       builtColumns = RIVER_RIGHT - RIVER_LEFT + 1
     } else if (bridgeActive && project.phase === 'Construction') {
@@ -2091,11 +2110,11 @@ export class VillageWorld {
     const sortDepth = this.elapsed - this.depthSortedAt >= DEPTH_SORT_SECONDS
     if (sortDepth) this.depthSortedAt = this.elapsed
     const front = this.enemies.front(now)
-    const hasWard=!!this.village?.structures.some(s=>s.kind==='Hospital')
+    const hasWard=!!this.village?.structures.some(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
     const combatants=new Map<string,NonNullable<VillageState['battles']>[number]['fighters'][number]>()
     for(const battle of this.village?.battles??[]){
       if(battle.finishedAt||['Warning','Cancelled'].includes(battle.phase))continue
-      for(const fighter of battle.fighters)if(fighter.active&&fighter.health>0)
+      for(const fighter of battle.fighters)if((fighter.active||fighter.mode==='withdrawn')&&fighter.health>0)
         combatants.set(fighter.isTsar?TSAR_ID:fighter.citizenId,fighter)
     }
     for (const walker of this.walkers.values()) {
@@ -2165,7 +2184,7 @@ export class VillageWorld {
       }
 
       if(walker.pickupAt>0&&now>=walker.pickupAt&&walker.working){
-        const hospital=this.village?.structures.find(s=>s.kind==='Hospital')
+        const hospital=this.village?.structures.find(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
         const plot=hospital?this.plot(hospital.plotId):null
         walker.targetX=(plot?plot.x+1.5:CAMPFIRE.x)*TILE
         walker.targetY=(plot?plot.y+3:CAMPFIRE.y+1)*TILE
@@ -2173,9 +2192,13 @@ export class VillageWorld {
       }
       const combatant=combatants.get(walker.id)
       if(combatant&&!hurt){
-        walker.targetX=combatant.x*TILE;walker.targetY=combatant.y*TILE;walker.way=[]
+        const sample=this.fighterSamples.get(walker.id)
+        const t=sample?Math.max(0,Math.min(1,(performance.now()-sample.at)/1000)):1
+        const x=sample?sample.fromX+(sample.x-sample.fromX)*t:combatant.x
+        const y=sample?sample.fromY+(sample.y-sample.fromY)*t:combatant.y
+        if(sample&&Math.abs(sample.x-sample.fromX)>.01)walker.sprite.scale.x=sample.x<sample.fromX?-1:1
+        walker.x=x*TILE;walker.y=y*TILE;walker.targetX=walker.x;walker.targetY=walker.y;walker.way=[]
         walker.staying=true;walker.roaming=false
-        speed=Math.max(WALK_SPEED,Math.hypot(walker.targetX-walker.x,walker.targetY-walker.y))
       }
       const end = walker.way.at(-1)
       if (end && (end.x !== walker.targetX || end.y !== walker.targetY)) walker.way = []
@@ -2187,8 +2210,9 @@ export class VillageWorld {
       const dx = goal.x - walker.x
       const dy = goal.y - walker.y
       const distance = Math.hypot(dx, dy)
-      const moving = distance > 0.5
-      if (moving) {
+      const sample=this.fighterSamples.get(walker.id)
+      const moving = combatant&&sample?performance.now()-sample.at<1000&&Math.hypot(sample.x-sample.fromX,sample.y-sample.fromY)>.01:distance>0.5
+      if (moving&&!combatant) {
         const step = Math.min(distance, speed * seconds)
         walker.x += (dx / distance) * step
         walker.y += (dy / distance) * step

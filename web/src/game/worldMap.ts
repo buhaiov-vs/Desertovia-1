@@ -1170,4 +1170,4 @@ export const TASK_ICONS: Record<string, TileRef> = {
 export const taskIcon = (id: string) => TASK_ICONS[id] ?? HAMMER
 
 /** Matches the server shore guard; hidden/queued API actions are checked again on the server. */
-export function canReachBank(village:VillageState,point:TilePoint) { return village.bridgeOpened || village.completedProjects.includes('tsar-bridge') || point.x<=riverCenter(Math.floor(point.y),seedFrom(village.id)) }
+export function canReachBank(village:VillageState,point:TilePoint) { return (!village.bridgeRuinedAt&&(village.bridgeOpened || village.completedProjects.includes('tsar-bridge'))) || point.x<=riverCenter(Math.floor(point.y),seedFrom(village.id)) }

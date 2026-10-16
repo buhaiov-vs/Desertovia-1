@@ -83,6 +83,8 @@ public sealed class RaidFighter
     public bool Guard { get; set; }
     public bool Active { get; set; }
     public bool RewardsGranted { get; set; }
+    public DateTimeOffset? HealReadyAt { get; set; }
+    public string? HealingReceipts { get; set; }
     public string Mode { get; set; } = "intercept";
     public Guid? TargetUnitId { get; set; }
     public DateTimeOffset NextAttackAt { get; set; }

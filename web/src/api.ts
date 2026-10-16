@@ -361,7 +361,7 @@ export interface RaidUnit {
 export interface RaidFighter {
   isTsar?:boolean; accountId?:string|null;
   citizenId:string; x:number; y:number; health:number; maximumHealth:number; damageDealt:number; kills:number;
-  weapon?:string|null; armor?:string|null; arrows?:number; renownEarned?:number; nextAttackAt?:string; wounded:boolean; guard:boolean; active:boolean; mode:'hold'|'intercept'; targetUnitId:string|null;
+  weapon?:string|null; armor?:string|null; arrows?:number; renownEarned?:number; nextAttackAt?:string; wounded:boolean; guard:boolean; active:boolean; mode:'hold'|'intercept'|'retreating'|'withdrawn'; healReadyAt?:string|null; targetUnitId:string|null;
 }
 export interface RaidBattle {
   id:string; villageId:string; phase:string; sector:string; tactic:string; composition:string;
@@ -769,6 +769,8 @@ export interface SiteStage {
 }
 
 export interface Site {
+  damage?:number
+  ruinedAt?:string|null
   placedByAccountId?:string|null; ownerName?:string|null; placedAt?:string; boundaryConflict?:boolean; boundaryApproved?:boolean; hasWork?:boolean; operation?:string|null; publicDemolition?:boolean;
   ownerAccountId?: string|null
   targetLevel?: number
@@ -781,6 +783,7 @@ export interface Site {
 }
 
 export interface Structure {
+  ruinedAt?:string|null
   ownerAccountId?: string|null
   level?: number
   kind: BuildingKind
@@ -796,6 +799,7 @@ export interface StorageSlot {
 }
 
 export interface Storage {
+  ruinedAt?:string|null
   ownerAccountId?: string|null
   resourceLimit?: number
   totalLimit?: number | null
@@ -920,7 +924,12 @@ export const RAIN = {
 
 export interface CivicOrder { buildingKind?:BuildingKind|null; id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
 export interface Housing { plotId:string; beds:number; occupied:number; level:number }
+export interface MonasteryView {open:boolean;inRange:boolean;knowsRemedy:boolean;readyAt:string|null;wood:number;food:number;remedyRoom:number;yard:TilePoint}
 export interface VillageState {
+  bridgeDamage?:number
+  bridgeRuinedAt?:string|null
+  defeatedAt?:string|null
+  relocations?:{plotId:string;residents:number;available:number}[]
   battles?: RaidBattle[]
   fortifications?: Fortification[]
   kingdomArea?: TileArea
@@ -1404,8 +1413,10 @@ export const api = {
   economyAction: (slug: string, body: EconomyRequest) => request<EconomyView>('POST', `/api/villages/${encodeURIComponent(slug)}/economy`, body).then(result=>{
     window.dispatchEvent(new CustomEvent('desertovia-wallet-changed',{detail:{slug,coins:result.coins,testCandles:result.testCandles}}));return result
   }),
-  battleOrder: (slug:string,battleId:string,targetUnitId:string|null,mode:'hold'|'intercept'='intercept',destination?:TilePoint) =>
-    request<void>('PUT',`/api/villages/${encodeURIComponent(slug)}/battles/${battleId}/order`,{targetUnitId,mode,destination}),
+  monastery:(slug:string)=>request<MonasteryView>('GET',`/api/villages/${encodeURIComponent(slug)}/monastery`),
+  monasteryTrade:(slug:string,requestId:string)=>request<MonasteryView>('POST',`/api/villages/${encodeURIComponent(slug)}/monastery`,{requestId}),
+  battleOrder: (slug:string,battleId:string,targetUnitId:string|null,mode:'hold'|'intercept'|'retreat'|'heal'='intercept',destination?:TilePoint,requestId?:string) =>
+    request<void>('PUT',`/api/villages/${encodeURIComponent(slug)}/battles/${battleId}/order`,{targetUnitId,mode,destination,requestId}),
   gateOrder: (slug:string,open:boolean) => request<void>('PUT',`/api/villages/${encodeURIComponent(slug)}/gate`,{open}),
   defenseSector: (slug: string, sector: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/me/defense`, { mode: sector }),
   almighty: (slug: string) => request<AlmightyView>('GET', `/api/villages/${encodeURIComponent(slug)}/director`),

@@ -1,3 +1,7 @@
+> **D-081:** owner correction code is implemented in `feat/owner-combat-and-siege`,
+> candidate 0.7.3 under final validation; NOT LIVE. See [implementation and checks](OWNER_CORRECTIONS_IMPLEMENTATION.md).
+> Earlier PLAN/release entries below are history, not proof of current readiness.
+
 > **D-077 /LIVE0.7.2:** [фактический выпуск и проверки](RELEASE_0_7_2.md).
 > PR46+botPR40 установлены, independent checksPASS; прежние holds ниже исторические.
 

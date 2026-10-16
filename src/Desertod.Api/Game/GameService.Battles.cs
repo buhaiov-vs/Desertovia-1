@@ -10,13 +10,14 @@ using Desertod.Domain.Dungeons;
 
 namespace Desertod.Api.Game;
 
-public sealed record BattleOrder(Guid? TargetUnitId = null, string Mode = "intercept", TilePoint? Destination = null);
+public sealed record BattleOrder(Guid? TargetUnitId = null, string Mode = "intercept", TilePoint? Destination = null, Guid? RequestId = null);
 public sealed record GateOrder(bool Open);
 
 public sealed partial class GameService
 {
     private async Task PrepareBattleAsync(DesertodDbContext db,Village village,Raid raid,DateTimeOffset now,CancellationToken ct,string? sector=null,string? composition=null)
     {
+        if(village.DefeatedAt is not null)throw new GameRuleException("village.defeated","Restore the royal castle before starting another raid.");
         var people=await db.Citizens.Where(c=>c.VillageId==village.Id&&c.Status==CitizenStatus.Active).ToListAsync(ct);
         var completed=await db.VillageProjects.Where(p=>p.VillageId==village.Id&&p.Status==ProjectStatus.Completed)
             .Select(p=>p.DefinitionId).ToListAsync(ct);
@@ -31,7 +32,7 @@ public sealed partial class GameService
             // A queued order must never create a second actor or restore spent health.
             next.Fighters.RemoveAll(x=>x.IsTsar==f.IsTsar&&x.ActorId==f.ActorId);
             next.Fighters.Add(new(){CitizenId=f.CitizenId,AccountId=f.AccountId,IsTsar=f.IsTsar,X=f.X,Y=f.Y,Health=f.Health,MaximumHealth=f.MaximumHealth,
-                Mode=f.Mode,Guard=f.Guard,Active=f.Active,Wounded=f.Wounded,NextAttackAt=now.AddSeconds(1)});
+                Mode=f.Mode,Guard=f.Guard,Active=f.Active,Wounded=f.Wounded,HealReadyAt=f.HealReadyAt,HealingReceipts=f.HealingReceipts,NextAttackAt=now.AddSeconds(1)});
         }
     }
 
@@ -55,7 +56,7 @@ public sealed partial class GameService
 
     public async Task SetBattleOrderAsync(string slug,Guid actor,Guid battleId,BattleOrder order,CancellationToken ct)
     {
-        if(order.Mode is not ("hold" or "intercept"))throw new GameRuleException("defense.mode","Unknown defense mode.");
+        if(order.Mode is not ("hold" or "intercept" or "retreat" or "heal"))throw new GameRuleException("defense.mode","Unknown defense mode.");
         var villageId=await FindVillageIdAsync(slug,ct);
         await WithVillageAsync(villageId,async db=>
         {
@@ -74,6 +75,19 @@ public sealed partial class GameService
                 throw new GameRuleException("raid.queued","Wait for the current wave before issuing orders to the next one.");
             if(order.TargetUnitId is {} target && !battle.Units.Any(u=>u.Id==target&&u.Alive))
                 throw new GameRuleException("raid.targetGone","This enemy is no longer available.");
+            if(order.Mode is "heal" or "retreat")
+            {
+                if(battle.Phase=="Warning")throw new GameRuleException("battle.notActive","The battle has not started.");
+                var own=battle.Fighters.SingleOrDefault(f=>tsar?f.IsTsar&&f.AccountId==actor:!f.IsTsar&&f.CitizenId==citizen!.Id)
+                    ??throw new GameRuleException("battle.notActive","You are not actively fighting.");
+                if(order.Mode=="heal")BattleActions.Heal(village,tsar?null:citizen,own,order.RequestId??Guid.Empty,now);
+                else BattleActions.Retreat(battle,own,new RaidNavigation(village));
+                battle.Revision++;db.AuditActor=actor;db.AuditOperation="battle-"+order.Mode;
+                await db.SaveChangesAsync(ct);changes.Mark(villageId);
+                await notifier.BattleUpdated(slug,battle,village.Fortifications);
+                if(citizen is not null)await notifier.CitizenUpdated(slug,citizen.ToSummaryDto(now));
+                return true;
+            }
             var nav=new RaidNavigation(village);
             if(order.Destination is {} destination && (!double.IsFinite(destination.X)||!double.IsFinite(destination.Y)
                 ||!nav.Pass((int)Math.Floor(destination.X),(int)Math.Floor(destination.Y))))

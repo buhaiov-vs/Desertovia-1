@@ -4,6 +4,36 @@ import { test, expect, developmentLogin, expectVillageView, openMenu, DEMO_SLUG,
 test.setTimeout(120_000)
 test.use({ deviceScaleFactor: 1, trace: { mode: 'retain-on-failure', screenshots: false, snapshots: true } })
 
+test('real map enemy selection sends an attack immediately without opening an enemy card',async({page})=>{
+  await page.addInitScript(()=>localStorage.setItem('desertod.language','en'))
+  await page.goto(`/v/${DEMO_SLUG}`);await developmentLogin(page,uniqueName('tap-attack'));await expectVillageView(page)
+  const battleId='78cad270-8fc4-4890-b763-552395a33911',unitId='b6b920ff-b572-48fd-8f97-37df982b56a7'
+  const orders:unknown[]=[]
+  await page.route(`**/api/villages/${DEMO_SLUG}/battles/${battleId}/order`,async route=>{
+    orders.push(route.request().postDataJSON());await route.fulfill({json:{}})
+  })
+  await page.evaluate(({battleId,unitId})=>window.dispatchEvent(new CustomEvent('desertovia-e2e-enemy',{detail:{battleId,unitId}})),{battleId,unitId})
+  await expect.poll(()=>orders).toEqual([{targetUnitId:unitId,mode:'intercept'}])
+  await expect(page.locator('.battle-controls')).toHaveCount(0)
+  await expect(page.getByRole('button',{name:'Attack',exact:true})).toHaveCount(0)
+})
+
+test('personal HUD matches the resource cards on the real map and leaves navigation uncluttered',async({page})=>{
+  await page.addInitScript(()=>{localStorage.setItem('desertod.language','en');localStorage.setItem('desertod.chat.mode','hidden')})
+  await page.goto(`/v/${DEMO_SLUG}`);await developmentLogin(page,uniqueName('hud-map'));await expectVillageView(page)
+  const vitals=page.getByLabel('My health and stamina');await expect(vitals).toBeVisible()
+  const appearance=await vitals.evaluate(el=>{
+    const card=el.closest('.hud-resources')!.querySelector('.resource-chip')!,weather=el.parentElement!.querySelector('.weather')!
+    const a=getComputedStyle(el),b=getComputedStyle(card)
+    return {background:a.backgroundColor,cardBackground:b.backgroundColor,border:a.border,borderCard:b.border,radius:a.borderRadius,cardRadius:b.borderRadius,height:el.getBoundingClientRect().height,weatherHeight:weather.getBoundingClientRect().height}
+  })
+  expect(appearance.background).toBe(appearance.cardBackground);expect(appearance.border).toBe(appearance.borderCard);expect(appearance.radius).toBe(appearance.cardRadius)
+  expect(appearance.height).toBe(appearance.weatherHeight)
+  await expect(page.locator('.battle-controls')).toHaveCount(0)
+  await expect(page.locator('.hud-poll-actions')).toHaveCount(0)
+  await page.screenshot({path:test.info().outputPath('owner-real-map.png')})
+})
+
 for (const mode of ['hidden', 'quarter'] as const) test(`real game selected object owns its header with ${mode} chat`, async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('desertod.language', 'en')

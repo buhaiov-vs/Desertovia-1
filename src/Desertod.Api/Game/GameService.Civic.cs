@@ -58,6 +58,7 @@ public sealed partial class GameService
             else
             {
                 if (village.OwnerAccountId != actor && citizen?.IsGovernor != true) throw new UnauthorizedAccessException();
+                if(request.Operation=="demolish")ShelterRules.RequireRelocation(village,people,request.PlotId);
                 var order = BuildingOperations.Request(village, actor, request.PlotId, request.Operation, now);
                 if (village.OwnerAccountId == actor) BuildingOperations.Approve(village, order, people, now);
             }

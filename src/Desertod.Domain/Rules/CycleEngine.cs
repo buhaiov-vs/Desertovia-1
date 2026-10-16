@@ -119,7 +119,7 @@ public static class CycleEngine
             throw new GameRuleException("project.intelligence", "Surveying and supervision require Intelligence 3 and Building 1.");
         if (task.Id == "brew-vigor" && (citizen.SkillLevel(Skill.Scholarship) < 3 || citizen.Stats.Intelligence < 3))
             throw new GameRuleException("task.brewer", "Ask a skilled brewer: Scholarship 3 and Intelligence 3 are required.");
-        if (task.RequiredBuilding is {} productionKind && village.Structures.FirstOrDefault(s => s.Kind == productionKind)?.Damage >= 100)
+        if (task.RequiredBuilding is {} productionKind && village.Structures.FirstOrDefault(s => s.Kind == productionKind && s.OwnerAccountId == (privateWorkplace ? citizen.AccountId : null)) is { } production && (production.Damage >= 100 || production.RuinedAt is not null))
             throw new GameRuleException("building.repairFirst", "Repair this building before working inside.");
 
         if (task.Effect is TaskEffect.Sow or TaskEffect.Water or TaskEffect.Harvest)
@@ -217,6 +217,7 @@ public static class CycleEngine
         var job = ConstructionRules.CheckJob(village, citizen, plotId, stage, jobId, context.RecentCitizenCount);
 
         var site = ConstructionRules.FindSite(village, plotId);
+        if(site.RuinedAt is not null)throw new GameRuleException("building.ruined","Restore the ruins before continuing construction.");
         var room = jobId == BuildingCatalog.LendAHand
             ? site.RequiredCrew(stage, context.RecentCitizenCount) - site.HandCount(stage)
             : job.Kind == JobKind.Labor ? site.LaborRoom(stage, jobId) : site.Remaining(stage, jobId);
@@ -733,7 +734,7 @@ public static class CycleEngine
     private static double TaskYieldFactor(Citizen citizen, Village village, TaskDefinition task, DateTimeOffset now) =>
         YieldFactor(citizen, village, task.Primary, task.Secondary, now) * TechnologyRules.YieldMultiplier(village, task.Id)
         * SkillRules.YieldMultiplier(citizen, task.Skill, task.SkillLevel)
-        * WeatherRules.YieldMultiplier(village, task, WorkedAt(citizen, now)) * CombatRules.BuildingMultiplier(village, task);
+        * WeatherRules.YieldMultiplier(village, task, WorkedAt(citizen, now));
 
     private static int SiteWorkYield(Citizen citizen, Village village, JobDefinition job, DateTimeOffset now) =>
         YieldMath.Whole(job.PerCycle * YieldFactor(citizen, village, job.Primary, job.Secondary, now) / GameRules.StatFactorBase
@@ -919,7 +920,7 @@ public static class CycleEngine
 
     /// <summary>Where the task is done: the yard of the building it needs once one stands, else its place on the map.</summary>
     public static TilePoint Workplace(Village village, TaskDefinition task) =>
-        task.RequiredBuilding is { } kind && village.Structures.FirstOrDefault(s => s.Kind == kind) is { } building
+        task.RequiredBuilding is { } kind && village.Structures.FirstOrDefault(s => s.Kind == kind && !s.Decommissioning && s.RuinedAt is null && s.Damage<100) is { } building
             ? WorldMap.Yard(building.PlotId)
             : WorldMap.Place(task.Workplace);
 

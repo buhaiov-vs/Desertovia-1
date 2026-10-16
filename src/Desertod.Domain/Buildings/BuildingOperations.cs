@@ -57,6 +57,7 @@ public static class BuildingOperations
 
     public static CivicOrder Request(Village village,Guid actor,string plot,string operation,DateTimeOffset now)
     {
+        if(operation=="upgrade"&&village.DefeatedAt is not null)throw new GameRuleException("village.defeated","Restore the royal castle first.");
         if(operation is not ("demolish" or "upgrade")) throw new GameRuleException("building.operation","Unknown building action.");
         if(village.CivicOrders.Any(o=>o.PlotId==plot&&o.Status is "pending" or "working"))
             throw new GameRuleException("building.orderExists","An application already exists for this building.");
@@ -67,6 +68,7 @@ public static class BuildingOperations
             throw new GameRuleException("building.private", "Only the private owner can request this operation.");
         var structure = village.Structures.SingleOrDefault(s=>s.PlotId==plot);
         var storage = village.Storages.SingleOrDefault(s=>s.PlotId==plot);
+        if(operation=="upgrade" && (structure?.RuinedAt is not null||storage?.RuinedAt is not null))throw new GameRuleException("building.ruined","Restore the ruins first.");
         if (operation == "upgrade" && !(structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse, Level: < 3 }
             || storage is not null && StorageLimits.Upgrade(storage.Kind) is not null))
             throw UpgradeUnavailable(structure, storage);
@@ -132,15 +134,15 @@ public static class BuildingOperations
         {
             if(storage?.Goods.Any(g=>g.Amount>0)==true) throw new GameRuleException("building.emptyStorage","Empty this storage before demolition.");
             var residents=citizens.Where(c=>c.HomePlotId==order.PlotId).ToList();
-            var otherBeds=village.Structures.Where(s=>s.PlotId!=order.PlotId&&!s.Decommissioning).Sum(ShelterRules.Beds);
-            var already=citizens.Count(c=>c.HomePlotId!=null&&c.HomePlotId!=order.PlotId);
-            if(otherBeds-already<residents.Count) throw new GameRuleException("housing.relocateFirst","Provide enough free beds and relocate the residents first.");
-            foreach(var resident in residents) resident.HomePlotId=null;
+            ShelterRules.RequireRelocation(village,citizens,order.PlotId);
+            var moves=ShelterRules.Relocation(village,citizens,order.PlotId);
+            foreach(var resident in residents)ShelterRules.Move(village,citizens,[resident],moves[resident.Id],now);
             if(structure is not null) structure.Decommissioning=true;
             if(storage is not null) storage.Decommissioning=true;
             site.Operation="demolish";site.TargetLevel=0;
             site.OperationWork=Math.Max(3,(int)Math.Ceiling(BuildingCatalog.Get(kind).Stages.Sum(s=>s.Jobs.Where(j=>BuildingCatalog.FindJob(j.JobId)?.Kind==JobKind.Labor).Sum(j=>j.Amount))*0.3));
         }
+        else if(structure?.RuinedAt is not null||storage?.RuinedAt is not null)throw new GameRuleException("building.ruined","Restore the ruins first.");
         else if(structure is {Kind:BuildingKind.Castle,Level:<3})
         {site.Operation="castle-upgrade";site.TargetLevel=structure.Level+1;site.Scale=Math.Pow(2,structure.Level);}
         else if(storage is not null&&StorageLimits.Upgrade(storage.Kind) is not null) site.Operation="storage-upgrade";

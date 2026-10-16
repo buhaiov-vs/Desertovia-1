@@ -5,7 +5,7 @@ namespace Desertod.Domain.World;
 /// <summary>One server rule for every destination; the river continues beyond the initial viewport.</summary>
 public static class BankAccess
 {
-    public static bool CanReach(Village village, TilePoint point) => village.BridgeOpened ||
+    public static bool CanReach(Village village, TilePoint point) => village.BridgeOpened && village.BridgeRuinedAt is null ||
         point.X <= Wilderness.RiverCenter((int)Math.Floor(point.Y), Wilderness.Seed(village.Id.ToString()));
     public static void Require(Village village, TilePoint point)
     {

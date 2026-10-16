@@ -2577,3 +2577,16 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
  .wallet-hud .wallet-label{display:none}.hud-state-row>.wallet-hud{margin-left:auto;flex:none;gap:4px;padding:2px 3px;font-size:.72rem}
  .hud-state-row>.wallet-hud>span{gap:2px}.hud-state-row>.wallet-hud .dcoin-icon{width:16px;height:16px}
 }
+
+/* Own vitals share the existing status row, never a full-width third HUD row. */
+.hud-state-row>.personal-vitals{order:1;display:grid;gap:2px;width:160px;flex:0 0 auto;padding:2px 6px;font-size:11px;line-height:12px}
+.hud-state-row{align-items:stretch}.hud-state-row>.weather{order:2}.hud-state-row .weather-chip{height:100%}.hud-state-row>.wallet-hud{order:3}
+.vital-line{display:grid;grid-template-columns:12px 54px minmax(20px,1fr);align-items:center;gap:3px;white-space:nowrap}.vital-line:first-child>span:first-child{color:#ed6860}
+.personal-vitals progress{display:block;width:100%;height:5px;border:0;border-radius:3px;overflow:hidden;background:#332713;accent-color:#d44f45}
+.personal-vitals progress::-webkit-progress-bar{background:#332713}.personal-vitals progress::-webkit-progress-value{background:#d44f45}.personal-vitals progress.stamina{accent-color:#bdc347}.personal-vitals progress.stamina::-webkit-progress-value{background:#bdc347}.personal-vitals progress::-moz-progress-bar{background:#d44f45}.personal-vitals progress.stamina::-moz-progress-bar{background:#bdc347}
+.personal-battle-panel{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:6px;padding:6px;min-width:0;max-width:calc(100% - 16px);pointer-events:auto}.personal-battle-panel button{white-space:nowrap}.personal-battle-panel button:disabled{background:#3d382d;color:#a69d86;opacity:.8;cursor:default}
+.hud-status:empty{display:none}.raid-details summary{cursor:pointer}.raid-details{font-size:.75rem}
+@media(min-width:721px){.hud-resources{display:grid;grid-template-columns:repeat(6,max-content)}.hud-state-row{grid-column:1/-1}.personal-battle-panel{bottom:62px}}
+@media(max-width:720px){.hud-state-row>.personal-vitals{order:2;width:104px;padding:1px 3px;gap:1px;font-size:9px;line-height:11px}.hud-state-row>.weather{order:1;flex:0 1 auto}.hud-state-row>.wallet-hud{order:3;gap:2px;margin-left:auto}.vital-line{grid-template-columns:9px 37px minmax(15px,1fr);gap:2px}.personal-vitals progress{height:4px}.hud-state-row{gap:2px}.personal-battle-panel button{font-size:.85rem;padding:5px 8px}.hud-state-row>.resource-chip{font-size:.65rem}}
+
+.defeat-banner{position:absolute;top:150px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);z-index:15;padding:8px;background:#6b211a;color:#fff3d6;border:2px solid #c49445;border-radius:6px;text-align:center}

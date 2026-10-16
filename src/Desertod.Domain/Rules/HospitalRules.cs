@@ -8,7 +8,7 @@ namespace Desertod.Domain.Rules;
 public static class HospitalRules
 {
     public static bool IsAdmitted(Citizen citizen, DateTimeOffset now) => citizen.Recovery?.Until > now;
-    public static int Level(Village village) => village.Structures.Where(s => s.Kind == BuildingKind.Hospital)
+    public static int Level(Village village) => village.Structures.Where(s => s.Kind == BuildingKind.Hospital && s.RuinedAt is null && s.Damage<100)
         .Select(s => Math.Clamp(s.Level, 1, 3)).DefaultIfEmpty(0).Max();
     public static int SkillLevel(Citizen citizen) => Math.Min(5, citizen.SkillLevel(Skill.Recovery));
 

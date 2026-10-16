@@ -19,6 +19,7 @@ public sealed class StorageBuilding
     /// <summary>Harm done by raiders, 0 to <see cref="Combat.CombatRules.MaximumDamage"/>; repaired by citizens.</summary>
     public int Damage { get; set; }
     public bool Decommissioning { get; set; }
+    public DateTimeOffset? RuinedAt { get; set; }
     public List<StoredGood> Investment { get; set; } = [];
 
     public List<StoredGood> Goods { get; set; } = [];
@@ -40,7 +41,7 @@ public sealed class StorageBuilding
             return 0;
         }
 
-        if (Decommissioning) return 0;
+        if (Decommissioning || RuinedAt is not null || Damage>=100) return 0;
         var resourceRoom = Math.Max(0, StorageLimits.PerResource(Kind) - Amount(kind));
         var totalRoom = StorageLimits.Total(Kind) is { } total ? Math.Max(0,total-Goods.Sum(g=>g.Amount)) : int.MaxValue;
         return Math.Min(resourceRoom,totalRoom);

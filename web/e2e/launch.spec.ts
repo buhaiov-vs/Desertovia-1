@@ -6,9 +6,11 @@ test('our single world opens directly after login and hides city selection', asy
   })
   await page.goto('/')
   await developmentLogin(page, uniqueName('single'))
-  await expect(page).toHaveURL(`/v/${DEMO_SLUG}`)
+  await expect(page).toHaveURL('/')
   await expectVillageView(page)
   await expect(page.getByRole('link', { name: 'Found a village' })).toHaveCount(0)
+  await page.reload();await expectVillageView(page);await expect(page).toHaveURL('/')
+  await page.goto(`/v/${DEMO_SLUG}`);await expectVillageView(page);await page.reload();await expectVillageView(page)
 })
 test('bot login hides the unsupported Telegram widget and folds email away', async ({ page }) => {
   await page.route('**/auth/providers', async route => {

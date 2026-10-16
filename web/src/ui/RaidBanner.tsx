@@ -80,7 +80,7 @@ export function RaidBanner({
         {raid.waves > 1 && <span className="muted"> · {t('raid.wave', { wave: raid.wave, waves: raid.waves })}</span>}
       </div>
       <div className="raid-banner-row small">
-        <span>{t('raid.defenders', { count: guarding })}</span>
+        <details className="raid-details"><summary>{i18n.language==='ru'?'Оборона':'Defense'}</summary><span>{i18n.language==='ru'?'Активная охрана':'Active guards'}: {guarding}</span>{active&&<span> · {i18n.language==='ru'?'Бойцов':'Fighters'}: {battle.fighters.filter(f=>f.active&&f.health>0).length}</span>}</details>
         {watch && (
           <button className="primary" disabled={pending} onClick={() => onWatch(watch)} title={t('raid.hint')}>
             {t('raid.guard')}

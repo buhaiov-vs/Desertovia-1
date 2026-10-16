@@ -1,5 +1,6 @@
 import { appBase } from './paths'
-import { lazy, Suspense } from 'react'
+import { api } from './api'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { useI18n } from './i18n'
 import { CreateVillagePage } from './pages/CreateVillagePage'
@@ -15,12 +16,19 @@ function Loading() {
   return <div className="splash">{i18n.t('loading')}</div>
 }
 
+function PrimaryVillage() {
+  const [primary,setPrimary]=useState<string|null|undefined>(undefined)
+  useEffect(()=>{void api.providers().then(p=>setPrimary(p.primaryVillage??null),()=>setPrimary(null))},[])
+  if(primary===undefined)return <Loading/>
+  return primary?<GamePage primarySlug={primary}/>:<HomePage/>
+}
+
 export function App() {
   return (
     <BrowserRouter basename={appBase || "/"}>
       <Suspense fallback={<Loading />}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<PrimaryVillage />} />
           <Route path="/new" element={<CreateVillagePage />} />
           <Route path="/v/:slug" element={<GamePage />} />
           <Route path="/v/:slug/dungeon/:runId" element={<DungeonPage />} />

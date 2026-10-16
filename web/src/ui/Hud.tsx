@@ -21,17 +21,22 @@ export function TopBar({
   citizens,
   onForecast,
   wallet,
+  accountId,
 }: {
   village: VillageState
   catalog: Catalog
   citizen: Citizen | null | undefined
   citizens: Map<string, CitizenSummary>
   onForecast: (rain: boolean) => Promise<void>
+  accountId?:string
   wallet?: ReactNode
 }) {
   const i18n = useI18n()
   const { t } = i18n
   const energy = useEnergy(citizen)
+  const fighter=village.battles?.filter(b=>!b.finishedAt&&b.phase!=='Warning').flatMap(b=>b.fighters).find(f=>f.isTsar?f.accountId===accountId:f.citizenId===citizen?.id)
+  const ru=i18n.language==='ru'
+  const healthState=citizen&&isInjured(citizen,Date.now())||village.tsar?.injuredUntil&&Date.parse(village.tsar.injuredUntil)>Date.now()&&!citizen?(ru?'На лечении':'Recovering'):(ru?'Здоров':'Healthy')
   return (
     <div className="hud-top">
       <div className="hud-top-spacer" />
@@ -49,17 +54,12 @@ export function TopBar({
           )
         })}
         <div className="hud-state-row"><span className="resource-chip">
-          {citizen ? <span title={`${i18n.language==='ru'?'Личная энергия':'Personal energy'}: ${Math.floor(energy)}/${Math.floor(citizen.maximumEnergy)}`}>⚡ {Math.floor(energy)}{citizen.isHungry?' 🍽':''}</span> : <><span className="morale-icon" aria-hidden>☺</span>
-          <Hint
-            text={t('hint.morale', {
-              value: Math.round(village.morale * 100),
-              minimum: i18n.amount(catalog.rules.moraleMinimum * 100),
-              maximum: i18n.amount(catalog.rules.moraleMaximum * 100),
-            })}
-          >
-            {Math.round(village.morale * 100)}
-          </Hint></>}
+          <span className="morale-icon" aria-hidden>☺</span><Hint text={t('hint.morale',{value:Math.round(village.morale*100),minimum:i18n.amount(catalog.rules.moraleMinimum*100),maximum:i18n.amount(catalog.rules.moraleMaximum*100)})}>{Math.round(village.morale*100)}</Hint>
         </span>
+        {(citizen||accountId)&&<div className="resource-chip personal-vitals" aria-label={ru?'Мои здоровье и силы':'My health and stamina'}>
+          <div className="vital-line"><span aria-hidden>♥</span><span className="vital-value">{fighter?`${Math.ceil(fighter.health)}/${Math.ceil(fighter.maximumHealth)}`:healthState}</span>{fighter&&<progress className="hp" value={fighter.health} max={fighter.maximumHealth} aria-label={ru?'Моё здоровье':'My health'}/>}</div>
+          {citizen&&<div className="vital-line"><span aria-hidden>⚡</span><span className="vital-value">{Math.floor(energy)}/{Math.floor(citizen.maximumEnergy)}</span><progress className="stamina" value={energy} max={citizen.maximumEnergy} aria-label={ru?'Мои силы':'My stamina'}/></div>}
+        </div>}
         <WeatherChip village={village} catalog={catalog} citizen={citizen} citizens={citizens} onForecast={onForecast} />
         {wallet}
         </div>
@@ -95,7 +95,6 @@ export function BottomBar({
   tsar,
   ruler,
   hasResult,
-  poll,
   onMenu,
   onInventory,
   onShowResult,
@@ -148,11 +147,7 @@ export function BottomBar({
           />
         )}
         <div className="hud-status">
-          {tsar ? (
-            <button className="primary" onClick={() => onMenu('build')}>
-              {t('hud.build')}
-            </button>
-          ) : citizen ? (
+          {!tsar && citizen ? (
             <>
               <NextAction citizen={citizen} catalog={catalog} now={now} compact pending={pending} onCancel={onCancelTask} />
               {hasResult && citizen.state === 'AwaitingRenewal' && (
@@ -160,18 +155,12 @@ export function BottomBar({
                   {t('hud.results')}
                 </button>
               )}
-              {ruler && <button onClick={() => onMenu('build')}>{t('hud.build')}</button>}
             </>
-          ) : (
+          ) : !tsar ? (
             <button className="primary" onClick={() => onMenu('character')}>
               {t('hud.join')}
             </button>
-          )}
-          {poll && (
-            <button className="primary" onClick={poll.onClick}>
-              {poll.label}
-            </button>
-          )}
+          ) : null}
         </div>
       </div>
       <div className="hud-buttons" style={{ '--hud-button-count': tabsFor(tsar, ruler).filter(tab => tab !== 'settings').length + 1 } as CSSProperties}>

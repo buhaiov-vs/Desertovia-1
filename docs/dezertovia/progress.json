@@ -1244,5 +1244,15 @@
     },
     "implementation_plan": "DETAILED_OWNER_FIX_PLAN_0_7_2.md",
     "implementation_plan_status": "documented_not_implemented"
+  },
+  "owner_corrections": {
+    "decision": "D-081",
+    "candidate_version": "0.7.3",
+    "branch": "feat/owner-combat-and-siege",
+    "status": "implemented_validation_in_progress",
+    "deployed": false,
+    "ready": false,
+    "implementation_record": "OWNER_CORRECTIONS_IMPLEMENTATION.md",
+    "shared_style_correction": "Owner rejected first stand style; reuse existing resource cards and verify on real map."
   }
 }

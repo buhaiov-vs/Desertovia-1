@@ -1,3 +1,24 @@
+#0.7.3 INSTALLED16Oct2026, independently verified
+
+Owner authorized installation. LIVE game672d72e167dd477f925df6394ecc5b188d3924ff;
+CI38941941103 SUCCESS419Domain+235API+149browser/1skip, frontend/DockerPASS.
+PublicPR47 merged9ac0007; its tree matches the tested source. Bot original civic
+patch e4269ef7 plus version-registry fix f4dd269, CI38948020819 SUCCESS887tests,
+serverSKIPPED. Narrow two-file bot payload preserves quarantine/budget/Propose.
+Preflight38947072346 PASS. Initial install38947223449 switched runtime butFAILED
+at feedback version lookup; separatecheck38947768084FAILED. Missing registry
+mapping fixed in botPR45; repair38948536494PASS without game reinstall.
+Final independentcheck38948699510SUCCESS2026-10-16T18:37:12.2283924Z:
+119→119profiles,0skill/stat/renownlosses,121accounts/loginbindings retained,
+25migrations,24publicJS chunks and feedback live-version lookupPASS.
+PG/SQLite/code/config/profile backups saved; quarantine and Propose preserved.
+No synthetic messages, model/payment/raid probes or progress resets.18operator
+checks PASS, including version-registry coverage before switching future games.
+See docs/dezertovia/RELEASE_0_7_3.md / RELEASE_0_7_3_RESULT.json. Do not reinstall
+or replay older requests. Existing castle not moved; phone FPS not measured;
+new director tax/economic executors remain separate work. Earlier PLAN below
+is history. Current HUD is icons/bars, numbers on tap; Chat/Retreat/Heal44px row.
+
 # D-081: реализация полного плана разрешена, без установки
 
 16.10 владелец сказал «Делай» после DETAILED_OWNER_FIX_PLAN_0_7_2.md.

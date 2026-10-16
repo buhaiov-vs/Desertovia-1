@@ -1,3 +1,10 @@
+# Current status: LIVE0.7.3, independently verified
+
+Installed tested672d72e; finalcheck38948699510SUCCESS2026-10-16T18:37:12.2283924Z.
+See [actual release and changes](RELEASE_0_7_3.md) and RELEASE_0_7_3_RESULT.json.
+Initial install/check failures, metadata repair and preservation are recorded there.
+The preparation-time notes below are history, not the current deployment status.
+
 # Owner correction package · D-081 · candidate 0.7.3
 
 Status: implementation branch, validation in progress, NOT INSTALLED.

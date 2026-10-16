@@ -1,0 +1,48 @@
+{
+  "version": "0.7.3",
+  "game_source": "672d72e167dd477f925df6394ecc5b188d3924ff",
+  "bot_payload_source": "f4dd269dba728892b6fec9fa89189b1c211db426",
+  "checked_at": "2026-10-16T18:37:12.2283924Z",
+  "game_ci": 38941941103,
+  "bot_ci": 38948020819,
+  "preflight_run": 38947072346,
+  "initial_install_run": {
+    "id": 38947223449,
+    "conclusion": "failure",
+    "runtime_changed": true
+  },
+  "initial_check_run": {
+    "id": 38947768084,
+    "conclusion": "failure",
+    "reason": "Missing 0.7.3 source in feedback version registry"
+  },
+  "repair_run": {
+    "id": 38948536494,
+    "conclusion": "success",
+    "game_reinstalled": false
+  },
+  "independent_check_run": {
+    "id": 38948699510,
+    "conclusion": "success"
+  },
+  "progress": {
+    "profiles_before": 119,
+    "profiles_after": 119,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 121,
+    "login_bindings_preserved": 121
+  },
+  "migrations": 25,
+  "frontend": {
+    "version": "0.7.3",
+    "game_chunk": true,
+    "checked_chunks": 24,
+    "transient_http_retries": 0
+  },
+  "director_mode": "Propose",
+  "quarantine_mode": "quarantine",
+  "protected_modules_preserved": true,
+  "configurations_preserved": true,
+  "postgres_backup_catalog_verified": true,
+  "sqlite_backup": true
+}

@@ -1249,10 +1249,18 @@
     "decision": "D-081",
     "candidate_version": "0.7.3",
     "branch": "feat/owner-combat-and-siege",
-    "status": "implemented_validation_in_progress",
-    "deployed": false,
-    "ready": false,
+    "status": "installed_independently_verified",
+    "deployed": true,
+    "ready": true,
     "implementation_record": "OWNER_CORRECTIONS_IMPLEMENTATION.md",
-    "shared_style_correction": "Owner rejected first stand style; reuse existing resource cards and verify on real map."
+    "shared_style_correction": "Owner rejected first stand style; reuse existing resource cards and verify on real map.",
+    "do_not_reinstall": true,
+    "game_source": "672d72e167dd477f925df6394ecc5b188d3924ff",
+    "game_ci": 38941941103,
+    "bot_payload_source": "f4dd269dba728892b6fec9fa89189b1c211db426",
+    "bot_ci": 38948020819,
+    "independent_check": 38948699510,
+    "verified_at": "2026-10-16T18:37:12.2283924Z",
+    "release_record": "RELEASE_0_7_3_RESULT.json"
   }
 }

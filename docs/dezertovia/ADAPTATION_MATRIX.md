@@ -1,3 +1,9 @@
+> **LIVE0.7.3:** [установленные изменения и фактическая проверка](RELEASE_0_7_3.md).
+> Exact672d72e, independentcheck38948699510SUCCESS.119профилей и121привязка сохранены.
+> Пакет D081 выполнен и установлен. Предыдущие PLAN/NOTLIVE ниже исторические.
+> Текущий HUD: сердце/молния, числа по нажатию; Чат/Отступить/Лечение одним рядом44px.
+> Старый замок не перемещали; новый налоговый директор и измерение FPS остаются отдельно.
+
 > **D-081:** owner correction code is implemented in `feat/owner-combat-and-siege`,
 > candidate 0.7.3 under final validation; NOT LIVE. See [implementation and checks](OWNER_CORRECTIONS_IMPLEMENTATION.md).
 > Earlier PLAN/release entries below are history, not proof of current readiness.

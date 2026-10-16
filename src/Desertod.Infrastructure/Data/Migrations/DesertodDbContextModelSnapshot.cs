@@ -593,6 +593,10 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<int?>("CurrentSiteStage")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CurrentTargetPlotId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("CurrentTaskId")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
@@ -823,11 +827,17 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("BridgeDamage").HasColumnType("integer");
-                    b.Property<DateTimeOffset?>("BridgeRuinedAt").HasColumnType("timestamp with time zone");
+                    b.Property<int>("BridgeDamage")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("BridgeOpened")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("BridgeRuinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("BuildingSequence")
+                        .HasColumnType("integer");
 
                     b.Property<string>("ChosenTechnology")
                         .HasMaxLength(32)
@@ -1854,6 +1864,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<string>("Kind")
                                 .IsRequired();
 
+                            b1.Property<int>("Number");
+
                             b1.Property<string>("Operation");
 
                             b1.Property<int>("OperationWork");
@@ -2035,6 +2047,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .IsRequired();
 
                             b1.Property<int>("Level");
+
+                            b1.Property<int>("Number");
 
                             b1.Property<Guid?>("OwnerAccountId");
 
@@ -2312,6 +2326,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<string>("Kind")
                                 .IsRequired();
+
+                            b1.Property<int>("Number");
 
                             b1.Property<Guid?>("OwnerAccountId");
 

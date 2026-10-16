@@ -1347,5 +1347,33 @@
       "login_bindings_preserved": 121
     },
     "do_not_reinstall": true
+  },
+  "player_feedback_077": {
+    "decision": "D-087",
+    "status": "source_prepared_ci_pending",
+    "version": "0.7.7",
+    "earliest_install_utc": "2026-10-17T05:30:00Z",
+    "timezone": "Europe/Oslo",
+    "scope": [
+      "stable_building_numbers",
+      "owned_food_and_manual_meal",
+      "targeted_repair_10_percent",
+      "selected_storage_unload",
+      "own_home_move",
+      "output_destination",
+      "both_work_stats",
+      "free_donation",
+      "dry_work_and_roaming_paths"
+    ],
+    "release_plan": "PLAYER_FEEDBACK_0_7_7.md",
+    "live_changed": false,
+    "local_checks": {
+      "domain": 439,
+      "api": 251,
+      "browser_focused": 24,
+      "typescript": "pass",
+      "lint": "pass",
+      "production_build": "pass"
+    }
   }
 }

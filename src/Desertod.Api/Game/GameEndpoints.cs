@@ -123,6 +123,9 @@ public static class GameEndpoints
         player.MapPost("/villages/{slug}/me/drop", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.DropLoadAsync(slug, user.RequireAccountId(), cancellationToken));
 
+        player.MapPost("/villages/{slug}/me/eat", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
+            game.EatAsync(slug, user.RequireAccountId(), cancellationToken));
+
         player.MapPost("/villages/{slug}/me/drink", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.DrinkAsync(slug, user.RequireAccountId(), cancellationToken));
 

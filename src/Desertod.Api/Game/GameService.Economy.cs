@@ -131,6 +131,18 @@ public sealed partial class GameService
             db.AuditActor = account; db.AuditOperation = request.Action;
             switch (request.Action)
             {
+                case "donate-stock":
+                {
+                    var donor = Own();
+                    var available = PersonalInventory.Amount(donor, request.Resource);
+                    if (available < request.Amount) throw new GameRuleException("inventory.missing", "You do not own enough of this material.");
+                    var stored = village.Store(request.Resource, request.Amount);
+                    if (stored == 0) throw new GameRuleException("storage.targetFull", "There is no room for these materials in public storage.");
+                    PersonalInventory.Remove(donor, request.Resource, stored);
+                    MoneyEntry(db, village.Id, request.RequestId, account, "donate-stock", request.Resource.ToString(), "personal", -stored, now);
+                    MoneyEntry(db, village.Id, request.RequestId, account, "donate-stock", request.Resource.ToString(), "village", stored, now);
+                    break;
+                }
                 case "claim-site-recovery":
                 {
                     var recovery=village.SiteRecoveries.SingleOrDefault(r=>r.Id==request.Target);

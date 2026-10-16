@@ -1,3 +1,5 @@
+import {TILE} from '../src/game/sheets'
+import {Terrain,MAP_LEFT,MAP_TOP,MAP_WIDTH,BRIDGE_DECK} from '../src/game/worldMap'
 import {combatDiagnostics} from '../src/game/combatDiagnostics'
 import {receiveFighterSample,fighterPositionAt} from '../src/game/fighterSamples'
 import {VillageWorld} from '../src/game/VillageWorld'
@@ -18,6 +20,20 @@ const world=await VillageWorld.create(document.getElementById('ward')!,{minimap:
 world.setCatalog(catalog);world.setVillage(state);world.setNightOverride(false);world.setCitizens(patients,null);world.centerOn(9.5,13)
 const walkers=(world as unknown as {walkers:Map<string,{sprite:Sprite;bed:Graphics;subtitle:Text;label:Text}>}).walkers
 Object.assign(window,{patientTest:{
+ workPathCheck:()=>{
+  const internal=world as unknown as {app:{ticker:{stop:()=>void}};terrain:Uint8Array;update:(tick:Ticker)=>void;walkers:Map<string,{x:number;y:number;way:{x:number;y:number}[];targetX:number;targetY:number;hunt:unknown}>}
+  internal.app.ticker.stop();world.setVillage({...state,bridgeOpened:true,battles:[]})
+  const c={...base,id:'river-worker',name:'Worker',state:'Working',recovery:null,injuredUntil:null,taskId:'quarry-stone',workplace:'stones',spot:{x:38.5,y:6.5},idleSpot:null,cycleStartedAt:now,cycleEndsAt:until} as CitizenSummary
+  world.setCitizens([c],c.id)
+  const walker=internal.walkers.get(c.id)!;walker.x=25.5*TILE;walker.y=6.5*TILE;walker.targetX=walker.x;walker.targetY=walker.y;walker.way=[]
+  world.setCitizens([c],c.id)
+  const turns=walker.way.map(p=>({x:p.x/TILE,y:p.y/TILE})),route:{x:number;y:number}[]=[]
+  let previous={x:25.5,y:6.5}
+  for(const end of turns){const steps=Math.ceil(Math.hypot(end.x-previous.x,end.y-previous.y)/.1);for(let i=1;i<=steps;i++)route.push({x:previous.x+(end.x-previous.x)*i/steps,y:previous.y+(end.y-previous.y)*i/steps});previous=end}
+  let unsafe=0
+  for(const point of route){const x=Math.floor(point.x),y=Math.floor(point.y);const kind=internal.terrain[(y-MAP_TOP)*MAP_WIDTH+x-MAP_LEFT];const deck=x>=BRIDGE_DECK.x&&x<BRIDGE_DECK.x+BRIDGE_DECK.width&&y>=BRIDGE_DECK.y&&y<BRIDGE_DECK.y+BRIDGE_DECK.height;if(kind===Terrain.Water&&!deck)unsafe++}
+  return {points:turns.length,samples:route.length,unsafe,usesBridge:route.some(p=>p.x>=BRIDGE_DECK.x&&p.x<BRIDGE_DECK.x+BRIDGE_DECK.width&&p.y>=BRIDGE_DECK.y&&p.y<BRIDGE_DECK.y+BRIDGE_DECK.height)}
+ },
  motionCheck:()=>{
   const internal=world as unknown as {app:{ticker:{stop:()=>void}};update:(tick:Ticker)=>void;walkers:Map<string,{x:number;sprite:Sprite}>;enemies:{liveViews:Map<string,{bar:Graphics}>}}
   internal.app.ticker.stop()

@@ -11,12 +11,15 @@ public static class StorageRules
         (citizen.HasMedicalEffect("cast",now) ? .75 : citizen.HasMedicalEffect("cups",now) ? .8 : 1));
 
     /// <summary>Puts as much of the citizen's load into storage as fits. Returns what was unloaded.</summary>
-    public static IReadOnlyList<ResourceAmount> Unload(Citizen citizen, Village village)
+    public static IReadOnlyList<ResourceAmount> Unload(Citizen citizen, Village village, string? targetPlotId = null)
     {
+        // A destination that vanished during the walk must never redirect the load elsewhere.
+        var destination = targetPlotId is null ? null : village.Storages.SingleOrDefault(s => s.PlotId == targetPlotId);
+        if (targetPlotId is not null && (destination is null || destination.OwnerAccountId is not null)) return [];
         var unloaded = new List<ResourceAmount>();
         foreach (var good in citizen.Load.ToList())
         {
-            var stored = village.Store(good.Kind, good.Amount);
+            var stored = destination is null ? village.Store(good.Kind, good.Amount) : destination.Put(good.Kind, good.Amount);
             if (stored > 0)
             {
                 citizen.TakeFromLoad(good.Kind, stored);
@@ -25,6 +28,18 @@ public static class StorageRules
         }
 
         return unloaded;
+    }
+
+    public static StorageBuilding UnloadTarget(Citizen citizen, Village village, string plotId)
+    {
+        var storage = village.Storages.SingleOrDefault(s => s.PlotId == plotId)
+            ?? throw new GameRuleException("take.noStorage", "There is no storage building here.");
+        // Private warehouse deposits use personal inventory and cost-basis accounting, not communal carry jobs.
+        if (storage.OwnerAccountId is not null)
+            throw new GameRuleException("building.private", "Use the personal warehouse deposit action.");
+        if (!citizen.Load.Any(g => storage.FreeSpace(g.Kind) > 0))
+            throw new GameRuleException("storage.targetFull", "This storage has no room for your load.");
+        return storage;
     }
 
     /// <summary>

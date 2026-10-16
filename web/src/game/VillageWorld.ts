@@ -583,7 +583,7 @@ export class VillageWorld {
     return findWay(this.terrain!, { x: walker.x / TILE, y: walker.y / TILE }, spot, this.bridgeDone(), crossings)
   }
 
-  /** Sends a walker to a spot, in tiles, around water. A spot the map cannot reach is jumped to rather than waded to. */
+  /** Sends a walker to a spot, in tiles, around water. An unreachable destination leaves the walker on their current dry ground. */
   private walkTo(walker: Walker, spot: TilePoint) {
     const x = spot.x * TILE
     const y = spot.y * TILE
@@ -806,7 +806,7 @@ export class VillageWorld {
     const ward=this.village?.structures.find(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
     const wardPlot=ward?this.plot(ward.plotId):null
     if(!this.wardCaption){this.wardCaption=new Text({text:'',style:{fontFamily:LABEL_FONT,fontSize:11,fontWeight:'700',fill:0xffe9b0,stroke:{color:0x1b1206,width:3}}});this.wardCaption.anchor.set(.5,1);this.screen.addChild(this.wardCaption)}
-    this.wardCaption.text=`${wardPlot?'Больница':'Лазарет'} · На лечении: ${admitted.length}`
+    this.wardCaption.text=`${wardPlot?`Больница${ward?.number ? ` №${ward.number}` : ''}`:'Лазарет'} · На лечении: ${admitted.length}`
     this.wardCaption.visible=admitted.length>0
     this.wardCaptionAt={x:(wardPlot?wardPlot.x+1.5:CAMPFIRE.x)*TILE,y:(wardPlot?wardPlot.y:CAMPFIRE.y-1)*TILE-3}
     const seen = new Set<string>([PRIEST_ID, TSAR_ID])
@@ -878,15 +878,17 @@ export class VillageWorld {
             : citizen.workplace === 'project' && this.activeProjectId && PROJECT_YARDS[this.activeProjectId]
             ? PROJECT_YARDS[this.activeProjectId]
             : (this.buildingYard(citizen.taskId) ?? WORKPLACES[citizen.workplace ?? 'camp'] ?? WORKPLACES.camp)
-        walker.targetX = (spot.x + (pseudo(walker.seed, 3) - 0.5) * spot.spread * 2) * TILE
-        walker.targetY = (spot.y + (pseudo(walker.seed, 4) - 0.5) * Math.min(spot.spread, 1)) * TILE
+        this.walkTo(walker, {
+          x: spot.x + (pseudo(walker.seed, 3) - 0.5) * spot.spread * 2,
+          y: spot.y + (pseudo(walker.seed, 4) - 0.5) * Math.min(spot.spread, 1),
+        })
         icon = { key: `task:${citizen.taskId}`, tile: taskIcon(citizen.taskId) }
       } else if (stayAt) {
         this.walkTo(walker, stayAt)
       } else if (waitAt && carried) {
         // Waiting at a full storage building with the load in hands: the crowd is the Tsar's only hint.
-        walker.targetX = (waitAt.x + (pseudo(walker.seed, 5) - 0.5) * waitAt.spread * 2) * TILE
-        walker.targetY = (waitAt.y + (pseudo(walker.seed, 6) - 0.5) * 0.6) * TILE
+        this.walkTo(walker, {x:waitAt.x + (pseudo(walker.seed, 5) - 0.5) * waitAt.spread * 2,
+          y:waitAt.y + (pseudo(walker.seed, 6) - 0.5) * 0.6})
         const tile = RESOURCE_ICONS[carried]
         if (tile) icon = { key: `good:${carried}`, tile }
       } else if (!asleep) {
@@ -1008,9 +1010,9 @@ export class VillageWorld {
     }
     const key = JSON.stringify([
       this.buildingDefinitions.size,
-      village.storages.map((s) => [s.kind, s.plotId, !!s.ruinedAt, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
-      village.structures.map((s) => [s.kind, s.plotId, !!s.ruinedAt]),
-      village.sites.map(site=>[siteVisualKey(site),!!site.ruinedAt]),
+      village.storages.map((s) => [s.kind, s.plotId, s.number, !!s.ruinedAt, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
+      village.structures.map((s) => [s.kind, s.plotId, s.number, !!s.ruinedAt]),
+      village.sites.map(site=>[siteVisualKey(site),site.number,!!site.ruinedAt]),
       village.fields.map((bed) => {
         const plant = cropTile(bed.crop ?? '', bed.growth, isRipe(bed))
         return [bed.plotId, bed.crop, plant && tileKey(plant), this.isWet(bed)]
@@ -1027,10 +1029,10 @@ export class VillageWorld {
       this.buildingViews.push(view)
       this.objects.addChild(view)
     }
-    const name = (kind: string, storage: boolean, view: Container, alpha = 1, ruined=false) => {
+    const name = (kind: string, storage: boolean, view: Container, alpha = 1, ruined=false, number?:number) => {
       if (!this.buildingName || localStorage.getItem('desertovia.buildingLabels') !== 'true') return
       const text = new Text({
-        text: (ruined?(localStorage.getItem('desertod.language')==='en'?'Ruins · ':'Руины · '):'')+this.buildingName(kind, storage),
+        text: (ruined?(localStorage.getItem('desertod.language')==='en'?'Ruins · ':'Руины · '):'')+this.buildingName(kind, storage)+(number ? ` №${number}` : ''),
         style: {
           fontFamily: LABEL_FONT,
           fontSize: 11,
@@ -1056,7 +1058,7 @@ export class VillageWorld {
       const view = this.finishedView(structure.kind, plot.x, plot.y)
       if(structure.ruinedAt){view.alpha=.3;const rubble=this.damageView(structure.plotId,100,plot.x,plot.y);add(rubble)}
       add(view)
-      if (structure.kind !== 'Hospital'||structure.ruinedAt) name(structure.kind, false, view,1,!!structure.ruinedAt)
+      if (structure.kind !== 'Hospital'||structure.ruinedAt) name(structure.kind, false, view,1,!!structure.ruinedAt,structure.number)
       const beds = village.fields.filter((bed) => bed.plotId === structure.plotId)
       if (beds.length > 0) add(this.bedsView(beds, plot.x, plot.y))
     }
@@ -1068,7 +1070,7 @@ export class VillageWorld {
       const view = this.finishedView(storage.kind, plot.x, plot.y)
       if(storage.ruinedAt)view.alpha=.3
       add(view)
-      name(storage.kind, true, view,1,!!storage.ruinedAt)
+      name(storage.kind, true, view,1,!!storage.ruinedAt,storage.number)
       add(this.goodsYard(storage, definition, plot.x, plot.y))
     }
 
@@ -1078,7 +1080,7 @@ export class VillageWorld {
       const view = this.siteView(site, plot.x, plot.y)
       if(site.ruinedAt)view.alpha=.3
       add(view)
-      name(site.kind, false, view, 0.7,!!site.ruinedAt)
+      name(site.kind, false, view, 0.7,!!site.ruinedAt,site.number)
     }
 
     const covered = new Set<string>()
@@ -2173,13 +2175,13 @@ export class VillageWorld {
         }
       } else if (walker.roaming && this.elapsed >= walker.wanderAt) {
         const spot = ROAMING_SPOTS[Math.floor(Math.random() * ROAMING_SPOTS.length)]
-        walker.targetX = (spot.x + (Math.random() - 0.5) * (spot.spread + 2) * 2) * TILE
-        walker.targetY = (spot.y + (Math.random() - 0.5) * (spot.spread + 2) * 2) * TILE
+        this.walkTo(walker, {x:spot.x + (Math.random() - 0.5) * (spot.spread + 2) * 2,
+          y:spot.y + (Math.random() - 0.5) * (spot.spread + 2) * 2})
         walker.wanderAt = this.elapsed + 8 + Math.random() * 6
       } else if (!walker.working && !walker.staying && this.elapsed >= walker.wanderAt) {
         const home = walker.id === PRIEST_ID ? { x: PRIEST_SPOT.x, y: PRIEST_SPOT.y, spread: 1.5 } : WORKPLACES.camp
-        walker.targetX = (home.x + (Math.random() - 0.5) * home.spread * 2) * TILE
-        walker.targetY = (home.y + (Math.random() - 0.5) * (walker.id === PRIEST_ID ? 0.6 : 1.2)) * TILE
+        this.walkTo(walker, {x:home.x + (Math.random() - 0.5) * home.spread * 2,
+          y:home.y + (Math.random() - 0.5) * (walker.id === PRIEST_ID ? 0.6 : 1.2)})
         walker.wanderAt = this.elapsed + 4 + Math.random() * 6
       }
 

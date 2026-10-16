@@ -464,6 +464,7 @@ export interface CropDefinition {
 export interface FieldBed {
   /** Plot of the farm. */
   plotId: string
+  number?: number
   index: number
   /** Null while the bed is empty. */
   crop: CropKind | null
@@ -776,6 +777,7 @@ export interface Site {
   targetLevel?: number
   kind: BuildingKind
   plotId: string
+  number?: number
   stage: number
   /** 0 to 1. */
   progress: number
@@ -788,6 +790,7 @@ export interface Structure {
   level?: number
   kind: BuildingKind
   plotId: string
+  number?: number
   /** Harm done by raiders, 0 to `rules.maximumDamage`. */
   damage: number
 }
@@ -805,6 +808,7 @@ export interface Storage {
   totalLimit?: number | null
   kind: StorageKind
   plotId: string
+  number?: number
   goods: ResourceAmount[]
   slots: StorageSlot[]
   /** Harm done by raiders, 0 to `rules.maximumDamage`. */
@@ -923,7 +927,7 @@ export const RAIN = {
 }
 
 export interface CivicOrder { buildingKind?:BuildingKind|null; id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
-export interface Housing { plotId:string; beds:number; occupied:number; level:number }
+export interface Housing { plotId:string; beds:number; occupied:number; level:number; number?:number; ownerAccountId?:string|null; ownerName?:string|null; builtAt?:string|null }
 export interface MonasteryView {open:boolean;inRange:boolean;knowsRemedy:boolean;readyAt:string|null;wood:number;food:number;remedyRoom:number;yard:TilePoint}
 export interface VillageState {
   bridgeDamage?:number
@@ -1233,6 +1237,7 @@ export interface CycleReport {
   /** A beast attacked on the way; null when nothing did. */
   fight: FightReport | null
   /** Damage mended by a repair task. */
+  targetPlotId?: string | null
   repaired: number
 }
 
@@ -1460,6 +1465,7 @@ export const api = {
   startJob: (slug: string, plotId: string, stage: number, jobId: string) =>
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/job`, { plotId, stage, jobId }),
   dropLoad: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drop`),
+  eat: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/eat`),
   drink: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drink`),
   hospital: (slug: string) => request<HospitalStatus>('GET', `/api/villages/${encodeURIComponent(slug)}/hospital`),
   hospitalHeal: (slug: string, payment: HospitalPayment) => request<HospitalReceipt>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/heal`, payment),

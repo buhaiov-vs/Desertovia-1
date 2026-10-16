@@ -258,8 +258,11 @@ public static class CombatRules
             .Concat(village.BridgeOpened||village.BridgeRuinedAt is not null?new[]{(RuinRules.RoyalBridge,village.BridgeDamage)}:[]);
 
     /// <summary>The building most in need of repair, or null when none is damaged.</summary>
-    public static string? MostDamaged(Village village) =>
-        Buildings(village).Where(b => b.Damage > 0).OrderByDescending(b => b.Damage).Select(b => b.PlotId).FirstOrDefault();
+    public static string? MostDamaged(Village village, Guid? actor = null) =>
+        Buildings(village).Where(b => b.Damage > 0 && (actor is null || OwnerOf(village,b.PlotId) is not {} owner || owner == actor)).OrderByDescending(b => b.Damage).Select(b => b.PlotId).FirstOrDefault();
+
+    private static Guid? OwnerOf(Village village,string plot) => village.Structures.FirstOrDefault(s=>s.PlotId==plot)?.OwnerAccountId
+        ?? village.Storages.FirstOrDefault(s=>s.PlotId==plot)?.OwnerAccountId ?? village.Sites.FirstOrDefault(s=>s.PlotId==plot)?.OwnerAccountId;
 
     public static TilePoint RepairYard(Village village,string plot)
     {
@@ -278,9 +281,9 @@ public static class CombatRules
     }
 
     /// <summary>Mends the most damaged building. Returns the damage repaired.</summary>
-    public static int Repair(Village village, int amount)
+    public static int Repair(Village village, int amount, string? targetPlotId = null)
     {
-        if (MostDamaged(village) is not { } plotId)
+        if ((targetPlotId ?? MostDamaged(village)) is not { } plotId)
         {
             return 0;
         }

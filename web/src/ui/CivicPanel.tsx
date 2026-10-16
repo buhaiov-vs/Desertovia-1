@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { buildingNumber } from './buildingLabel'
 import { useI18n } from '../i18n'
 import { api, type VillageState, type Citizen } from '../api'
 
@@ -26,10 +27,11 @@ export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}
   const free=homes.reduce((n,h)=>n+h.beds-h.occupied,0)
   const orderLabel=(operation:string)=>operation==='build'?(ru?'Строительство':'Construction'):operation==='housing'?(ru?'Заселение':'Housing'):operation==='upgrade'?(ru?'Улучшение здания':'Building upgrade'):(ru?'Разборка':'Dismantle')
   const homeCards=homes.map(h=><div className="civic-home" key={h.plotId}>
-    <strong>{buildingName(h.plotId)} · {h.plotId}</strong>
+    <strong>{buildingName(h.plotId)} {buildingNumber(village,h.plotId)}</strong>
+    {h.ownerAccountId&&<span>{ru?'Владелец':'Owner'}: {h.ownerName??(h.ownerAccountId===actorId?(ru?'Вы':'You'):'—')}{h.builtAt&&` · ${new Date(h.builtAt).toLocaleDateString(i18n.language)}`}</span>}
     <span>{ru?'Уровень':'Level'} {h.level} · {ru?'Занято мест':'Occupied beds'}: {h.occupied}/{h.beds}{citizen?.homePlotId===h.plotId?(ru?' · Мой дом':' · My home'):''}</span>
-    {citizen&&citizen.homePlotId!==h.plotId&&<button disabled={busy||h.occupied>=h.beds||orders.some(o=>o.operation==='housing'&&o.requestedBy===actorId)} onClick={()=>run(()=>api.civic(village.slug,h.plotId,'housing'))}>{ru?'Попросить место':'Request a bed'}</button>}
-    {citizen?.spouseAccountId&&<button disabled={busy||h.beds-h.occupied<2||orders.some(o=>o.operation==='housing'&&o.requestedBy===actorId)} onClick={()=>run(()=>api.civic(village.slug,h.plotId,'housing',citizen.spouseAccountId!))}>{ru?'Заявка для супругов':'Request for spouses'}</button>}
+    {citizen&&citizen.homePlotId!==h.plotId&&<button disabled={busy||h.occupied>=h.beds||(h.ownerAccountId!==actorId&&orders.some(o=>o.operation==='housing'&&o.requestedBy===actorId))} onClick={()=>run(()=>api.civic(village.slug,h.plotId,'housing'))}>{h.ownerAccountId===actorId?(ru?'Заселиться':'Move in'):(ru?'Попросить место':'Request a bed')}</button>}
+    {citizen?.spouseAccountId&&!h.ownerAccountId&&<button disabled={busy||h.beds-h.occupied<2||orders.some(o=>o.operation==='housing'&&o.requestedBy===actorId)} onClick={()=>run(()=>api.civic(village.slug,h.plotId,'housing',citizen.spouseAccountId!))}>{ru?'Заявка для супругов':'Request for spouses'}</button>}
   </div>)
   return <section className="civic-panel">
     {error&&<p className="error" role="alert">{error}</p>}
@@ -48,7 +50,7 @@ export function CivicPanel({village,tsar,ruler,actorId,citizen,onVillage,plotId}
       <details className="civic-applications"><summary>{ru?'Заявки на рассмотрении':'Pending applications'} · {orders.length}</summary>
         {orders.length===0&&<p className="small muted">{ru?'Новых заявок нет':'No pending applications'}</p>}
         {orders.map(o=><article className="civic-order" key={o.id}>
-          <strong>{orderLabel(o.operation)} · {o.operation==='build'&&o.buildingKind?i18n.building(o.buildingKind).name:buildingName(o.plotId)}</strong><small>{ru?'Координаты':'Coordinates'}: {o.plotId}</small>
+          <strong>{orderLabel(o.operation)} · {o.operation==='build'&&o.buildingKind?i18n.building(o.buildingKind).name:buildingName(o.plotId)}</strong><small>{o.operation==='build'?`${ru?'Новая постройка · Участок':'New building · Plot'} ${o.plotId}`:`${ru?'Здание':'Building'} ${buildingNumber(village,o.plotId)}`}</small>
           {o.operation==='build'&&<span className="small">{ru?'Заявка посадника. Стройка начнётся только после одобрения царём.':'Governor application. Construction starts only after the Tsar approves.'}</span>}
           {o.operation==='upgrade'&&<span className="small">{ru?'Начать отдельную стройку улучшения. Материалы и работа потребуются после одобрения.':'Start an upgrade construction. Materials and work are required after approval.'}</span>}
           {o.operation==='demolish'&&village.relocations?.filter(h=>h.plotId===o.plotId&&h.residents>0).map(h=><p className="small" key={h.plotId}>{ru?'Нужно мест':'Beds needed'}: {h.residents} · {ru?'Доступно':'Available'}: {h.available}{h.available<h.residents?(ru?' · Сначала освободите подходящее жильё.':' · Free suitable beds first.'):''}</p>)}

@@ -60,3 +60,15 @@ test('third tired work warns about fainting before starting on a narrow screen',
   await expect(page.locator('#faint-warning')).toContainText('После этой работы — обморок на 12 игровых часов')
   expect(await page.locator('#faint-warning').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true)
 })
+
+
+test('personal material donation sends a free donation operation from the existing inventory controls',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('desertod.language','ru'))
+ await page.goto('/e2e/economy-harness.html');await page.getByText('Кошелёк, имущество и рынок',{exact:true}).click()
+ const donate=page.getByRole('button',{name:'Отдать в общий запас бесплатно',exact:true})
+ await expect(donate).toBeDisabled()
+ await page.getByLabel('Количество',{exact:true}).fill('2');await page.getByRole('button',{name:/Купить у царства/}).click()
+ await expect(donate).toBeEnabled();await donate.click()
+ const calls=await page.evaluate(()=>(window as unknown as {economyCalls:{action:string;resource:string;amount:number;price?:number}[]}).economyCalls)
+ expect(calls.at(-1)).toMatchObject({action:'donate-stock',resource:'Wood',amount:2});expect(calls.at(-1)?.price).toBeUndefined()
+})

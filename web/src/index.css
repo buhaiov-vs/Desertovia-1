@@ -2557,10 +2557,23 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 @media(max-width:380px){.battle-controls{max-height:38dvh}}
 
 /* 0.7.1: compact personal balances and content-sized civic cards. */
-.wallet-hud{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;max-width:100%;width:max-content;padding:3px 8px;min-height:32px;margin:0 0 3px;background:var(--wood-dark);color:#ffe7ac;font-size:.8rem;pointer-events:auto}
+.wallet-hud{display:inline-flex;align-items:center;flex-wrap:nowrap;gap:8px;max-width:100%;width:max-content;padding:2px 6px;min-height:28px;margin:0;background:var(--wood-dark);color:#ffe7ac;font-size:.8rem;pointer-events:auto;white-space:nowrap}
 .wallet-hud>span{display:inline-flex;align-items:center;gap:4px;min-width:0}
+.wallet-hud .dcoin-icon{width:18px;height:18px}.wallet-hud small{font-size:.65rem;font-weight:400}
 .dcoin-icon{display:inline-block;vertical-align:middle;width:24px;height:24px;object-fit:contain;image-rendering:pixelated;flex:none}
 .wallet-stale{opacity:.8}.wallet-dialog .economy-panel{margin:0}.wallet-dialog .modal-header h2{margin:0;font-size:1.2rem}
 .civic-home,.civic-order{align-items:stretch;flex-wrap:nowrap}.civic-order>.row{justify-content:flex-start}.civic-home>span,.civic-order>span{min-height:0}
 .site-management{border-top:1px solid var(--parchment-dark);margin-top:.5rem;padding-top:.5rem}.site-actions{display:flex;flex-wrap:wrap;gap:.5rem}.site-actions p{flex-basis:100%}
-@media (min-width:721px){.hud-top>.wallet-hud{grid-column:3;grid-row:2;justify-self:end}}
+.hud-state-row{display:flex;align-items:flex-start;justify-content:flex-end;flex-wrap:wrap;gap:4px;width:100%}
+.hud-resource-icon{display:inline-flex;flex:none}.hud-resource-amount{min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:720px){
+ .hud-resources{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+ .hud-resources>.resource-chip{justify-content:center;min-width:0;font-size:.75rem;padding:1px 2px}
+ .hud-resources button.resource-hint{gap:2px;max-width:100%;min-width:0}
+ .hud-resource-icon{width:16px;height:16px}.hud-resource-icon>.tile-icon{transform:scale(.666667);transform-origin:top left;flex:none}
+ .hud-state-row{grid-column:1/-1;flex-wrap:nowrap;gap:3px;justify-content:flex-start;align-items:stretch;min-width:0}
+ .hud-state-row>.resource-chip{font-size:.75rem;white-space:nowrap;flex:none;padding:1px 3px}
+ .hud-state-row>.weather{flex:1;min-width:0}.hud-state-row .weather-chip{min-width:0;max-width:100%;overflow:hidden;font-size:.7rem;gap:3px;padding:2px 4px}
+ .wallet-hud .wallet-label{display:none}.hud-state-row>.wallet-hud{margin-left:auto;flex:none;gap:4px;padding:2px 3px;font-size:.72rem}
+ .hud-state-row>.wallet-hud>span{gap:2px}.hud-state-row>.wallet-hud .dcoin-icon{width:16px;height:16px}
+}

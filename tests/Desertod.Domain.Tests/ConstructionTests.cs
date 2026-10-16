@@ -19,15 +19,15 @@ public class ConstructionTests
     }
 
     [Fact]
-    public void Pending_build_does_not_reserve_trees_or_slots_and_approval_rechecks_capacity()
+    public void Pending_build_preserves_land_and_approval_rechecks_capacity_after_Tsar_starts_other_work()
     {
         var village = NewVillage();
         ConstructionRules.Place(village, BuildingKind.LeanTo, 9, 11, Now);
         ConstructionRules.Place(village, BuildingKind.LeanTo, 21, 12, Now);
-        ConstructionRules.Place(village, BuildingKind.LeanTo, 25, 12, Now);
         var trees = village.Trees.Select(t => t.FelledAt).ToArray();
         var order = BuildingOperations.RequestBuild(village, Guid.NewGuid(), BuildingKind.Hospital, 9, 17, Now);
-        Assert.Equal(3, village.Sites.Count);
+        Assert.Equal(2, village.Sites.Count);
+        ConstructionRules.Place(village, BuildingKind.LeanTo, 25, 12, Now);
         Assert.Equal(trees, village.Trees.Select(t => t.FelledAt).ToArray());
         Assert.Equal("building.tooManySites", Assert.Throws<GameRuleException>(() => BuildingOperations.Approve(village, order, [], Now)).Code);
         Assert.Equal("pending", order.Status);

@@ -73,7 +73,10 @@ public sealed class LiveRaidTests
     [Fact]
     public void Gates_and_breaches_are_real_navigation_and_line_of_sight_barriers()
     {
-        var v=NewVillage();Fortifications.Ensure(v,[ProjectCatalog.Palisade]);
+        var v=NewVillage();
+        // Fixed terrain: random village IDs can place a pond outside this gate and test water instead of walls.
+        v.Id=Guid.Parse("00000000-0000-0000-0000-000000000701");
+        Fortifications.Ensure(v,[ProjectCatalog.Palisade]);
         foreach(var gate in v.Fortifications.Where(f=>f.Gate))gate.Open=false;
         var nav=new RaidNavigation(v);var outside=new TilePoint(-2.5,13.5);var inside=new TilePoint(.5,13.5);
         Assert.False(nav.ClearShot(outside,inside));

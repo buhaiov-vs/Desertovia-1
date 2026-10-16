@@ -979,7 +979,7 @@
     "deployed": true
   },
   "live_version": "0.7.1",
-  "candidate_version": null,
+  "candidate_version": "0.7.2",
   "feedback_identity": {
     "decision": "D-072",
     "state": "released",
@@ -1055,5 +1055,21 @@
       "run_id": 38873661537,
       "verified_at_utc": "2026-10-16T08:26:14.6780507Z"
     }
+  },
+  "pending_patch": {
+    "branch": "fix/civic-request-capacity",
+    "pull_request": 46,
+    "state": "release_authorized_ci_pending",
+    "scope": [
+      "request_capacity",
+      "upgrade_errors",
+      "compact_wallet_hud",
+      "hospital_map_presence",
+      "click_to_attack",
+      "combat_rendering_reuse"
+    ],
+    "live_source_unchanged": "e5de51ed04ff8f3b5cff1c5befb2032fa42635da",
+    "version": "0.7.2",
+    "authorization": "D-077: owner said выкладывай"
   }
 }

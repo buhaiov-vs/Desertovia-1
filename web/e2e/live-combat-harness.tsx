@@ -1,8 +1,8 @@
 import { buildLayout, Terrain } from '../src/game/worldMap'
 // Production render and controls, isolated from real players, payments and director calls.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Application, Container } from 'pixi.js'
+import { Application, Container, Graphics } from 'pixi.js'
 import { api, mergeBattles, type Catalog, type Citizen, type Raid, type RaidBattle, type VillageState } from '../src/api'
 import { currentEnergy } from '../src/energy'
 import { EnemyLayer } from '../src/game/enemies'
@@ -29,15 +29,32 @@ Object.assign(window,{combatStand:{
  update:(next:RaidBattle,time=now+2000)=>{enemies.setBattles([next]);enemies.update(.2,time,true);return {children:layer.children.length,positions:layer.children.map(c=>[c.x,c.y]),rotations:layer.children.map(c=>c.rotation)}},
  terrain:(seed:number,wilds:Parameters<typeof buildLayout>[1])=>Array.from(buildLayout(seed,wilds).terrain,k=>[Terrain.Water,Terrain.Mountain,Terrain.Ravine].includes(k as 2|7|8)?1:k===Terrain.Marsh?2:0),
  initial:structuredClone(battle),orders,mergeBattles,currentEnergy,
+ frames:()=>{
+  const bars=layer.children.filter(child=>child instanceof Graphics)
+  let updates=0
+  const clear=Graphics.prototype.clear
+  Graphics.prototype.clear=function(){if(bars.includes(this))updates++;return clear.call(this)}
+  const before=performance.now()
+  for(let i=0;i<300;i++)enemies.update(1/30,now+2000+i*1000/30,false)
+  const stableUpdates=updates,elapsed=performance.now()-before
+  battle.units[0].health--;enemies.update(1/30,now+12001,false)
+  Graphics.prototype.clear=clear
+  return {stableUpdates,changedUpdates:updates-stableUpdates,elapsed}
+ },
  pick:(x:number,y:number)=>enemies.pick(x,y),
 }})
 function Stand(){
- const [unit,setUnit]=useState(battle.units[0])
+ const [unit,setUnit]=useState(battle.units[0]),[selectionToken,setSelectionToken]=useState(0),[shown,setShown]=useState(true)
+ const issuedOrder=useRef('')
  return <I18nProvider><div className="game-root" style={{background:'#68854b'}}><div ref={node=>{if(node&&!node.contains(app.canvas))node.append(app.canvas)}}/>
- <button onClick={()=>setUnit({...unit,health:0,state:'Dead'})}>Добить на стенде</button>
+ <div style={{position:"absolute",bottom:0,zIndex:80}}><button onClick={()=>setUnit({...unit,health:0,state:'Dead'})}>Добить на стенде</button>
+ <button onClick={()=>setUnit({...unit,health:19})}>Обновить здоровье</button>
+ <button onClick={()=>setUnit(battle.units[1])}>Выбрать другого врага</button>
+ <button onClick={()=>setSelectionToken(n=>n+1)}>Повторно выбрать врага</button>
+ <button onClick={()=>setShown(v=>!v)}>Открыть или закрыть меню</button></div>
  <div id="queue-banner"><RaidBanner village={{...village,raids:[{...raid,id:'queued-third',wave:3,strikesAt:iso(now-60000)},raid]}} citizens={new Map()} catalog={catalog} now={now+1000} watch={null} pending={false} onWatch={()=>{}}/></div>
  <div id="energy"><ActionEnergy citizen={citizen} action="work"/></div>
- <BattleControls village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} onClose={()=>{}}/>
+ {shown&&<BattleControls selectionToken={selectionToken} issuedOrder={issuedOrder} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} onClose={()=>{}}/>}
  </div></I18nProvider>
 }
 createRoot(document.getElementById('app')!).render(<Stand/>);

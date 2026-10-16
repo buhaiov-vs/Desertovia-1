@@ -1,3 +1,32 @@
+# D-077: выпуск0.7.2 разрешён, проверяется точный пакет
+
+Владелец16.10 сказал «выкладывай» для пакетаD-074/D-075/D-076.
+Это снимает repository-only hold этого пакета. Следующий малый номер0.7.2;
+package/lock/patch notes согласованы. Исходныйd732713 прошёл полный CI,
+после изменения номера требуется новый exact CI. Не объявлять установленным
+до actual preflight/backups/install/отдельного check. Узкий bot payload включает
+новый feedback_context.py; защищённые budget/proxy/Almighty модули сохраняются.
+Без синтетических сообщений, AI-проб, платежей/волн и сбросов прогресса.
+
+# D-076: компактный HUD, пациенты и отрисовка боя — repository only
+
+Владелец16.10: валюты съедают экран; пациент лежит снаружи больницы; вместо
+четырёх боевых кнопок нужен клик по врагу; при врагах игра фризит, после них
+нормальна. Читать docs/dezertovia/COMBAT_RENDERING_HOTFIX.md. В PR46 вместе
+с D-074. Live0.7.1/e5de51e не менялся. Номер версии не повышать за эту ветку.
+Исправлены подтверждённые лишние пересоздания объектов и рывки интерполяции;
+не выдавать стенд за измерение FPS реального телефона или доказательство
+отсутствия серверных задержек. Обычные жители пока атакуют на охране, царь
+вступает Воеводой без неё. Всеобщая самооборона отдельно в TODO, не готова.
+
+# D-074: queue capacity fix and read-only director diagnosis
+
+Read docs/dezertovia/CIVIC_REQUEST_CAPACITY.md. Implemented in fix/civic-request-capacity.
+Requests use active sites+pending applications, public3/private1; no legacy deletion.
+Civic error text localized. No new deployment yet; LIVE0.7.1/e5de51e unchanged.
+Director audit38875853709: enabled/Propose, recent none decisions,2budget skips,
+no service failure. Hourly owner digest is an idea, not new active messages.
+
 # D-073 /0.7.1 INSTALLED16.10.2026 и независимо проверен
 
 Владелец явно разрешил исправление Telegram заявок и выпуск0.7.1 сейчас;

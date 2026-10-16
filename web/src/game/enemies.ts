@@ -292,7 +292,8 @@ export class EnemyLayer {
   private readonly layer: Container
   private raids: Raid[] = []
   private battles:RaidBattle[] = []
-  private liveViews=new Map<string,{actor:Graphics;bar:Graphics;health:number;hitAt:number}>()
+  private liveViews=new Map<string,{actor:Graphics;bar:Graphics;health:number;hitAt:number;barKey:string;
+    fromX:number;fromY:number;targetX:number;targetY:number;elapsed:number}>()
   private selectedUnit:string|null=null
   select(id:string|null){this.selectedUnit=id}
   setBattles(battles:RaidBattle[]){this.battles=battles}
@@ -301,10 +302,11 @@ export class EnemyLayer {
       if(['Warning','Cancelled','Finished'].includes(battle.phase))continue
       const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
       const height=(variant:string)=>enemyHeight(kind)*(variant==='strong'?1.35:variant==='weak' ? .85 : 1)
+      const at=(u:RaidBattle['units'][number])=>this.liveViews.get(u.id)?.actor.position??{x:u.x*TILE,y:u.y*TILE}
       const unit=battle.units.filter(u=>{
-        const dy=y-u.y*TILE
-        return u.health>0&&!u.exitedAt&&Math.abs(u.x*TILE-x)<=TILE*.8&&dy>=-height(u.variant)-4&&dy<=6
-      }).sort((a,b)=>Math.hypot(a.x*TILE-x,a.y*TILE-height(a.variant)/2-y)-Math.hypot(b.x*TILE-x,b.y*TILE-height(b.variant)/2-y))[0]
+        const p=at(u),dy=y-p.y
+        return u.health>0&&!u.exitedAt&&Math.abs(p.x-x)<=TILE*.8&&dy>=-height(u.variant)-4&&dy<=6
+      }).sort((a,b)=>Math.hypot(at(a).x-x,at(a).y-height(a.variant)/2-y)-Math.hypot(at(b).x-x,at(b).y-height(b.variant)/2-y))[0]
       if(unit){this.selectedUnit=unit.id;return{battleId:battle.id,unitId:unit.id}}
     }
     return null
@@ -315,26 +317,37 @@ export class EnemyLayer {
       shown.add(id)
       let view=this.liveViews.get(id)
       if(!view){
-        view={actor:kind?new Graphics(this.context(kind)):new Graphics(),bar:new Graphics(),health:hp,hitAt:0}
+        view={actor:kind?new Graphics(this.context(kind)):new Graphics(),bar:new Graphics(),health:hp,hitAt:0,barKey:'',
+          fromX:x*TILE,fromY:y*TILE,targetX:x*TILE,targetY:y*TILE,elapsed:1}
         view.actor.position.set(x*TILE,y*TILE);this.layer.addChild(view.actor,view.bar);this.liveViews.set(id,view)
       }
-      const beforeX=view.actor.x, gap=Math.hypot(beforeX-x*TILE,view.actor.y-y*TILE)
-      const blend=gap>TILE*4?1:Math.min(1,seconds*8)
-      view.actor.x+=(x*TILE-view.actor.x)*blend;view.actor.y+=(y*TILE-view.actor.y)*blend
+      // Server positions arrive once a second. Spread movement across that interval,
+      // instead of rushing to each snapshot and standing still for the rest of the tick.
+      if(view.targetX!==x*TILE||view.targetY!==y*TILE){
+        view.fromX=view.actor.x;view.fromY=view.actor.y;view.targetX=x*TILE;view.targetY=y*TILE;view.elapsed=0
+        if(Math.hypot(view.fromX-view.targetX,view.fromY-view.targetY)>TILE*4)view.elapsed=1
+      }
+      view.elapsed=Math.min(1,view.elapsed+seconds)
+      const beforeX=view.actor.x,gap=Math.hypot(view.targetX-view.fromX,view.targetY-view.fromY)
+      view.actor.x=view.fromX+(view.targetX-view.fromX)*view.elapsed
+      view.actor.y=view.fromY+(view.targetY-view.fromY)*view.elapsed
       const size=variant==='strong'?1.35:variant==='weak' ? .85 : 1
       view.actor.scale.set((x*TILE<beforeX-.1?-1:1)*size,size)
       const strike=Math.max(0,Math.min(1,(now-attackAt)/240))
       view.actor.rotation=dead?Math.PI/2:Math.sin(strike*Math.PI)*.15
-      if(!dead&&gap>.2)view.actor.y-=Math.abs(Math.sin(now/90))*LOOKS[kind??'Skeleton'].hop
+      if(!dead&&gap>.2&&view.elapsed<1)view.actor.y-=Math.abs(Math.sin(now/90))*LOOKS[kind??'Skeleton'].hop
       if(hp<view.health)view.hitAt=now
       view.health=hp;view.actor.tint=now-view.hitAt<180?0xff7777:0xffffff
       view.actor.alpha=dead?Math.max(0,1-(now-deathAt)/10000):1
-      view.bar.clear()
-      if(!dead){
-        const barY=-(kind?enemyHeight(kind)*size:26)-7
-        view.bar.rect(-13,barY,26,4).fill(0x241910)
-        view.bar.rect(-12,barY+1,24*Math.max(0,hp/Math.max(1,max)),2).fill(kind?0xda5546:0x68c86a)
-        if(id===this.selectedUnit)view.bar.circle(0,0,14*size).stroke({color:0xffd75b,width:2})
+      const barKey=`${hp}/${max}/${variant}/${dead}/${id===this.selectedUnit}`
+      if(view.barKey!==barKey){
+        view.barKey=barKey;view.bar.clear()
+        if(!dead){
+          const barY=-(kind?enemyHeight(kind)*size:26)-7
+          view.bar.rect(-13,barY,26,4).fill(0x241910)
+          view.bar.rect(-12,barY+1,24*Math.max(0,hp/Math.max(1,max)),2).fill(kind?0xda5546:0x68c86a)
+          if(id===this.selectedUnit)view.bar.circle(0,0,14*size).stroke({color:0xffd75b,width:2})
+        }
       }
       view.bar.position.set(view.actor.x,view.actor.y)
       if(sortDepth){view.actor.zIndex=view.actor.y;view.bar.zIndex=view.actor.y+1}

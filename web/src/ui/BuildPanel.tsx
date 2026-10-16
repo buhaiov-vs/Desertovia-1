@@ -8,6 +8,7 @@ import {
   type Catalog,
   type VillageState,
 } from '../api'
+import { publicConstructionLoad } from '../game/constructionQueue'
 import { useI18n } from '../i18n'
 import { TileIcon } from './TileIcon'
 import { BUILDING_SIGNS, taskIcon } from '../game/worldMap'
@@ -33,7 +34,7 @@ export function BuildPanel({
   const discovered = discoveredTechnologies(village)
   const maximum = catalog.rules.maximumOpenSites
   const publicSites = village.sites.filter(s=>!s.ownerAccountId)
-  const full = publicSites.length >= maximum
+  const full = (tsar ? publicSites.length : publicConstructionLoad(village)) >= maximum
   const buildable = catalog.buildings.filter((b) => b.stages.length > 0)
   const later = catalog.buildings.filter((b) => b.stages.length === 0)
 
@@ -114,7 +115,7 @@ export function BuildPanel({
               <button
                 key={definition.kind}
                 className="task-card"
-                disabled={tsar && full || missing.length > 0 || undiscovered !== null || definition.kind === 'Castle' && buildingCount(village, catalog, 'Castle') > 0}
+                disabled={full || missing.length > 0 || undiscovered !== null || definition.kind === 'Castle' && buildingCount(village, catalog, 'Castle') > 0}
                 onClick={() => onPlace(definition)}
               >
                 <TileIcon tile={BUILDING_SIGNS[definition.kind] ?? taskIcon('build')} scale={2} />

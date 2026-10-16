@@ -17,5 +17,14 @@ world.setCatalog(catalog);world.setVillage(state);world.setNightOverride(false);
 const walkers=(world as unknown as {walkers:Map<string,{sprite:Sprite;bed:Graphics;subtitle:Text;label:Text}>}).walkers
 Object.assign(window,{patientTest:{
  inspect:()=>patients.map(c=>{const w=walkers.get(c.id)!;return {id:c.id,rotation:w.sprite.rotation,bed:w.bed.visible,reason:w.subtitle.text,name:w.label.text,nameBounds:w.label.getBounds().rectangle,statusBounds:w.subtitle.getBounds().rectangle,bodyBounds:w.sprite.getBounds().rectangle}}),
+ visibility:()=>patients.map(c=>{const w=walkers.get(c.id)!;return {body:w.sprite.visible,bed:w.bed.visible,name:w.label.visible,status:w.subtitle.visible}}),
+ withoutHospital:()=>{state.structures=[];world.setVillage(state);world.centerOn(17,23)},
+ damage:()=>{
+  const internal=world as unknown as {buildingViews:import('pixi.js').Container[];litBuildings:Set<unknown>;damageViews:Map<string,unknown>}
+  const originals=[...internal.buildingViews],lights=internal.litBuildings.size
+  const start=performance.now()
+  for(let i=1;i<=20;i++){state.structures[0].damage=i;world.setVillage(state)}
+  return {retained:originals.every(view=>internal.buildingViews.includes(view)&&!view.destroyed),lightsBefore:lights,lightsAfter:internal.litBuildings.size,overlays:internal.damageViews.size,elapsed:performance.now()-start}
+ },
  discharge:()=>world.setCitizens(patients.map(c=>({...c,recovery:null,injuredUntil:null})),null),
 }})

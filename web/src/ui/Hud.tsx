@@ -42,14 +42,14 @@ export function TopBar({
           return (
             <span className="resource-chip" key={kind}>
               <Hint text={resourceHint(kind, village, catalog, i18n)} className="resource-hint">
-                <ResourceIcon kind={kind} scale={1.5} />
-                {i18n.amount(resource?.amount ?? 0)}
+                <span className="hud-resource-icon"><ResourceIcon kind={kind} scale={1.5} /></span>
+                <span className="hud-resource-amount">{i18n.amount(resource?.amount ?? 0)}</span>
               </Hint>
             </span>
           )
         })}
-        <span className="resource-chip">
-          {citizen ? <span title={i18n.language==='ru'?'Личная энергия и сытость':'Personal energy and hunger'}>⚡ {Math.floor(energy)}/{Math.floor(citizen.maximumEnergy)} {citizen.isHungry?'🍽':'🥖'}</span> : <><span className="morale-icon" aria-hidden>☺</span>
+        <div className="hud-state-row"><span className="resource-chip">
+          {citizen ? <span title={`${i18n.language==='ru'?'Личная энергия':'Personal energy'}: ${Math.floor(energy)}/${Math.floor(citizen.maximumEnergy)}`}>⚡ {Math.floor(energy)}{citizen.isHungry?' 🍽':''}</span> : <><span className="morale-icon" aria-hidden>☺</span>
           <Hint
             text={t('hint.morale', {
               value: Math.round(village.morale * 100),
@@ -61,8 +61,9 @@ export function TopBar({
           </Hint></>}
         </span>
         <WeatherChip village={village} catalog={catalog} citizen={citizen} citizens={citizens} onForecast={onForecast} />
+        {wallet}
+        </div>
       </div>
-      {wallet}
     </div>
   )
 }

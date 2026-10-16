@@ -1795,6 +1795,11 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<Guid>("Id");
 
+                            b1.Property<DateTimeOffset?>("NoticeAt");
+
+                            b1.Property<string>("NoticeState")
+                                .IsRequired();
+
                             b1.Property<string>("Operation")
                                 .IsRequired();
 

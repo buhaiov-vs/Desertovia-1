@@ -1,3 +1,11 @@
+# D-073:0.7.1 deployment authorized16Oct
+
+Owner requested missing construction notices fixed AND0.7.1 installed now.
+This supersedes D-071/D-072 repository-only holds for the combined release.
+Read docs/dezertovia/CIVIC_TELEGRAM_0_7_1.md. New exact CI/payload/operator/backups/independent preservation
+check required; never replay old0.7 trigger. No progress resets or synthetic
+player messages. Actual pending civic notices to owner are authorized.
+
 # D-072: идентификация автора отзыва, repository only
 
 Владелец16.10 просит добавлять к багу/репорту батюшке автора и игровой код.

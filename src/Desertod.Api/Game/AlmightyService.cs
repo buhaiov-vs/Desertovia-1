@@ -14,6 +14,7 @@ public interface IAlmightyBridge
 {
     Task<AlmightyAnswer?> AnalyzeAsync(AlmightyReview review, CancellationToken ct);
     Task<AlmightyDelivery> NotifyAsync(AlmightyNotice notice, CancellationToken ct);
+    Task<AlmightyDelivery> NotifyCivicAsync(CivicNotice notice, CancellationToken ct) => Task.FromResult(new AlmightyDelivery("Unavailable"));
     Task<SramoslavReply?> SpeakAsync(object request, CancellationToken ct);
 }
 public sealed class AlmightyBridge(IServiceScopeFactory scopes) : IAlmightyBridge
@@ -33,6 +34,8 @@ public sealed class AlmightyBridge(IServiceScopeFactory scopes) : IAlmightyBridg
     }
     public async Task<AlmightyDelivery> NotifyAsync(AlmightyNotice n, CancellationToken ct) =>
         await Call<AlmightyDelivery>(new { kind = "notify", notice = n }, ct) ?? new("Unavailable");
+    public async Task<AlmightyDelivery> NotifyCivicAsync(CivicNotice n, CancellationToken ct) =>
+        await Call<AlmightyDelivery>(new { kind = "civic_notify", notice = n }, ct) ?? new("Unavailable");
     public Task<SramoslavReply?> SpeakAsync(object request, CancellationToken ct) => Call<SramoslavReply>(request, ct);
 }
 

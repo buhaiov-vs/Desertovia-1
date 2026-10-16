@@ -1233,6 +1233,14 @@
       "no_additional_hud_row": true,
       "mockup_values": "demonstration_only",
       "combat_controls": "retreat and treatment only during personal active combat; no medicine means dark disabled treatment with reason"
+    },
+    "screenshot_reconciliation": {
+      "status": "documented_not_implemented",
+      "latest_screenshot_requirements": 12,
+      "subsequent_clarifications": 4,
+      "earlier_report_groups_for_regression_review": 16,
+      "siege_castle_monastery_remain_in_overall_plan": true,
+      "live_retested_in_this_review": false
     }
   }
 }

@@ -225,3 +225,16 @@ snapshot once per admission and shared authoritative bot expiry. Recommendation
 | UI-07 | Dcoin icon, personal wallet HUD, direct wallet, honest test candles | Build PASS; browser CI PASS |
 
 Не переписывать Dungeon, не сносить старые площадки, не менять реальные свечи.
+
+## D-080: замечания владельца после 0.7.2
+
+[Разбор и приёмка](OWNER_FEEDBACK_0_7_2_REVIEW.md). Статус: TODO, без runtime изменений.
+
+| Пункты | Существующая точка | Следующий шаг |
+| --- | --- | --- |
+| LAND-03 / TG-CIVIC-02 | BuildingOperations / ShelterRules / CivicPanel / CivicNotifications | Пригодные койки, точная причина и реальный статус заявки, сохранение жильцов |
+| COMBAT-03 / COMBAT-04 | GamePage / BattleControls / VillageWorld / enemies.ts | Контроллер тапа без aside; общий способ интерполяции без гражданского пути бойца |
+| COMBAT-07 | RaidFighter / GameService.Battles / RaidSimulation / личная панель | Настоящий отход без автоперевербовки/сброса HP, боевое лекарство с откатом и расходом; не добавлять новую защитную стойку или кнопки-заглушки |
+| HUD-03 / UI-08 / UI-09 / COMBAT-05 | TopBar / GameMenu / нижний HUD / RaidBanner | Маленькие HP/силы; убрать постоянные дубли/действия; Guard в подробностях |
+| URL-01 | React Router / appBase / start/login links | Короткий вход единственного мира, совместимые старые ссылки |
+| COMBAT-06 / CASTLE-02 / MAP-02 | RaidSimulation / ConstructionSite / Village / MONASTERY | Проектирование руин/недостроев, центрального замка/поражения, роли монастыря; пока не внедрять удаление объектов |

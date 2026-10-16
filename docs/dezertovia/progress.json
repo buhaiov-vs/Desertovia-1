@@ -1200,5 +1200,29 @@
       "conclusion": "success",
       "tree_identical_to_tested_source": true
     }
+  },
+  "owner_feedback_after_0_7_2": {
+    "decision": "D-080",
+    "status": "reviewed_todo_not_implemented",
+    "document": "OWNER_FEEDBACK_0_7_2_REVIEW.md",
+    "live_source_unchanged": "04c395052a106562b8e00b6c73a8a5b119b1aea5",
+    "read_only_audit_run": 38917722704,
+    "items": [
+      "UI-08",
+      "COMBAT-03",
+      "COMBAT-04",
+      "COMBAT-05",
+      "LAND-03",
+      "TG-CIVIC-02",
+      "MAP-02",
+      "URL-01",
+      "COMBAT-06",
+      "CASTLE-02",
+      "HUD-03",
+      "UI-09",
+      "COMBAT-07"
+    ],
+    "runtime_changed": false,
+    "new_deployment": false
   }
 }

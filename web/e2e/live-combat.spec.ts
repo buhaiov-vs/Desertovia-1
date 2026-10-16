@@ -87,3 +87,20 @@ test('the active second wave stays in the banner ahead of an overdue queued thir
   await expect(page.locator('#queue-banner')).toContainText('в деревне')
   await expect(page.locator('#queue-banner')).toContainText('волна 2 из 3')
 })
+
+
+test('health-only and stale packets preserve the movement timeline while discontinuities snap',async({page})=>{
+  await page.goto('/e2e/live-combat-harness.html');await page.waitForFunction(()=>!!(window as unknown as {combatStand:unknown}).combatStand)
+  const result=await page.evaluate(()=>{
+    type Sample={battle:string;revision:number;x:number;y:number;fromX:number;fromY:number;at:number}
+    const s=(window as unknown as {combatStand:{receiveFighterSample:(old:Sample|undefined,battle:string,rev:number,x:number,y:number,at:number)=>Sample;fighterPositionAt:(sample:Sample,at:number)=>{x:number;y:number}}}).combatStand
+    const initial=s.receiveFighterSample(undefined,'battle',1,10,10,0)
+    const moved=s.receiveFighterSample(initial,'battle',2,11,10,1000)
+    const half=s.fighterPositionAt(moved,1500)
+    const health=s.receiveFighterSample(moved,'battle',3,11,10,1500)
+    const stale=s.receiveFighterSample(health,'battle',2,10,10,1600)
+    const jump=s.receiveFighterSample(stale,'battle',4,20,20,1700)
+    return {half,afterHealth:s.fighterPositionAt(health,1500),afterStale:s.fighterPositionAt(stale,1750),end:s.fighterPositionAt(stale,2200),jump:s.fighterPositionAt(jump,1700)}
+  })
+  expect(result).toEqual({half:{x:10.5,y:10},afterHealth:{x:10.5,y:10},afterStale:{x:10.75,y:10},end:{x:11,y:10},jump:{x:20,y:20}})
+})

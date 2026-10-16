@@ -16,7 +16,8 @@ The owner authorized code and tests. No rollout request or production event is c
   Healing consumes one eligible remedy for 20% max HP, capped, with 60s cooldown
   and persisted request receipts. Disabled dark buttons expose the actual reason.
 - Combatants interpolate consecutive battle revisions without civilian path catch-up.
-  Large discontinuities snap; server positions and geometry remain authoritative.
+  Large discontinuities snap; status-only and stale packets preserve the interpolation
+  clock instead of jumping to its endpoint. Server positions and geometry remain authoritative.
 - Voluntary demolition calculates actual suitable replacement beds, reserves distinct
   slots and moves residents. Another owner's private beds and ruins do not count.
   The same bounded reasons/counts reach the game and private Telegram cards;
@@ -62,8 +63,12 @@ its isolated rerun passed, and the full repeat must succeed before readiness.
   The fixture is corrected; those failures are not described as a successful run.
 - Real-map shared-style check PASS on phone; direct enemy-selection attack check PASS.
   Initial attack probe ran before local backend readiness (502); fresh isolated retry PASS.
-  Desktop screenshot and final production build/browser CI are pending.
-- Bot civic focused: 8 PASS; full repeat: 887 PASS. Exact PR CI pending.
+  Phone/desktop actual map checks PASS. TypeScript, lint and production build PASS.
+  Final full browser CI is pending.
+- Bot civic focused: 8 PASS; full repeat: 887 PASS. Exact bot CI38935078896
+  SUCCESS on e4269ef7b53c41a4d9b3f53a0e7e5b5f58139257: 887 tests/client/runner, server SKIPPED.
+- Targeted movement regression PASS: health-only/stale packets, halfway position,
+  bounded endpoint and large discontinuity. Final exact game CI pending.
 
 No physical-phone FPS measurement has been made. No universal lag-free claim.
 Director economic/tax executors and owner digests remain their own open backlog.

@@ -1,3 +1,4 @@
+import { receiveFighterSample, fighterPositionAt, type FighterSample } from './fighterSamples'
 import { playerNamesVisible, PREFERENCES_EVENT } from '../gamePreferences'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
@@ -262,7 +263,7 @@ export class VillageWorld {
   private activeProjectId: string | null = null
   private lastBuildingKey = ''
   private buildingViews: Container[] = []
-  private readonly fighterSamples=new Map<string,{battle:string;revision:number;fromX:number;fromY:number;x:number;y:number;at:number}>()
+  private readonly fighterSamples=new Map<string,FighterSample>()
   private readonly damageViews = new Map<string, {damage:number; view:Container}>()
   private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
@@ -1346,8 +1347,7 @@ export class VillageWorld {
         presentFighters.add(id)
         const old=this.fighterSamples.get(id)
         if(old?.battle===battle.id&&old.revision>=battle.revision)continue
-        const close=old&&Math.hypot(old.x-fighter.x,old.y-fighter.y)<4
-        this.fighterSamples.set(id,{battle:battle.id,revision:battle.revision,fromX:close?old.x:fighter.x,fromY:close?old.y:fighter.y,x:fighter.x,y:fighter.y,at:performance.now()})
+        this.fighterSamples.set(id,receiveFighterSample(old,battle.id,battle.revision,fighter.x,fighter.y,performance.now()))
       }
     }
     for(const id of this.fighterSamples.keys())if(!presentFighters.has(id))this.fighterSamples.delete(id)
@@ -2193,9 +2193,7 @@ export class VillageWorld {
       const combatant=combatants.get(walker.id)
       if(combatant&&!hurt){
         const sample=this.fighterSamples.get(walker.id)
-        const t=sample?Math.max(0,Math.min(1,(performance.now()-sample.at)/1000)):1
-        const x=sample?sample.fromX+(sample.x-sample.fromX)*t:combatant.x
-        const y=sample?sample.fromY+(sample.y-sample.fromY)*t:combatant.y
+        const {x,y}=sample?fighterPositionAt(sample,performance.now()):combatant
         if(sample&&Math.abs(sample.x-sample.fromX)>.01)walker.sprite.scale.x=sample.x<sample.fromX?-1:1
         walker.x=x*TILE;walker.y=y*TILE;walker.targetX=walker.x;walker.targetY=walker.y;walker.way=[]
         walker.staying=true;walker.roaming=false

@@ -19,9 +19,10 @@ test('real map enemy selection sends an attack immediately without opening an en
 })
 
 test('personal HUD matches the resource cards on the real map and leaves navigation uncluttered',async({page})=>{
-  await page.addInitScript(()=>{localStorage.setItem('desertod.language','en');localStorage.setItem('desertod.chat.mode','hidden')})
+  await page.addInitScript(()=>{if(!localStorage.getItem('desertod.language'))localStorage.setItem('desertod.language','en');localStorage.setItem('desertod.chat.mode','hidden')})
   await page.goto(`/v/${DEMO_SLUG}`);await developmentLogin(page,uniqueName('hud-map'));await expectVillageView(page)
-  const vitals=page.getByLabel('My health and stamina');await expect(vitals).toBeVisible()
+  await page.evaluate(()=>localStorage.setItem('desertod.language','ru'));await page.reload();await expectVillageView(page)
+  const vitals=page.getByLabel('Мои здоровье и силы');await expect(vitals).toBeVisible()
   const appearance=await vitals.evaluate(el=>{
     const card=el.closest('.hud-resources')!.querySelector('.resource-chip')!,weather=el.parentElement!.querySelector('.weather')!
     const a=getComputedStyle(el),b=getComputedStyle(card)

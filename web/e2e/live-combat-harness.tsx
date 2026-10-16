@@ -1,6 +1,6 @@
 import { buildLayout, Terrain } from '../src/game/worldMap'
 // Production render and controls, isolated from real players, payments and director calls.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Application, Container, Graphics } from 'pixi.js'
 import { api, mergeBattles, type Catalog, type Citizen, type Raid, type RaidBattle, type VillageState } from '../src/api'
@@ -44,14 +44,17 @@ Object.assign(window,{combatStand:{
  pick:(x:number,y:number)=>enemies.pick(x,y),
 }})
 function Stand(){
- const [unit,setUnit]=useState(battle.units[0])
+ const [unit,setUnit]=useState(battle.units[0]),[selectionToken,setSelectionToken]=useState(0),[shown,setShown]=useState(true)
+ const issuedOrder=useRef('')
  return <I18nProvider><div className="game-root" style={{background:'#68854b'}}><div ref={node=>{if(node&&!node.contains(app.canvas))node.append(app.canvas)}}/>
  <div style={{position:"absolute",bottom:0,zIndex:80}}><button onClick={()=>setUnit({...unit,health:0,state:'Dead'})}>Добить на стенде</button>
  <button onClick={()=>setUnit({...unit,health:19})}>Обновить здоровье</button>
- <button onClick={()=>setUnit(battle.units[1])}>Выбрать другого врага</button></div>
+ <button onClick={()=>setUnit(battle.units[1])}>Выбрать другого врага</button>
+ <button onClick={()=>setSelectionToken(n=>n+1)}>Повторно выбрать врага</button>
+ <button onClick={()=>setShown(v=>!v)}>Открыть или закрыть меню</button></div>
  <div id="queue-banner"><RaidBanner village={{...village,raids:[{...raid,id:'queued-third',wave:3,strikesAt:iso(now-60000)},raid]}} citizens={new Map()} catalog={catalog} now={now+1000} watch={null} pending={false} onWatch={()=>{}}/></div>
  <div id="energy"><ActionEnergy citizen={citizen} action="work"/></div>
- <BattleControls village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} onClose={()=>{}}/>
+ {shown&&<BattleControls selectionToken={selectionToken} issuedOrder={issuedOrder} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} onClose={()=>{}}/>}
  </div></I18nProvider>
 }
 createRoot(document.getElementById('app')!).render(<Stand/>);

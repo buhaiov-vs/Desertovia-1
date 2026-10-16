@@ -108,7 +108,8 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
   const [subtitleFor, setSubtitleFor] = useState<string | null>(null)
   /** Place on the map the player clicked to send their citizen there. */
   const [picked, setPicked] = useState<{ target: WorldTarget; screen: { x: number; y: number } } | null>(null)
-  const [enemyPick,setEnemyPick]=useState<{battleId:string;unitId:string}|null>(null)
+  const [enemyPick,setEnemyPick]=useState<{battleId:string;unitId:string;selectionToken:number}|null>(null)
+  const enemySelection=useRef(0), issuedBattleOrder=useRef('')
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
   const [patientFor,setPatientFor]=useState<string|null>(null)
@@ -773,7 +774,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
         placement={placement}
         selectedEnemyId={enemyPick?.unitId??null}
         onEnemyPick={(battleId,unitId)=>{
-          setEnemyPick({battleId,unitId});setPicked(null)
+          setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current});setPicked(null)
         }}
         onCitizenPick={pickCitizen}
         onWorldPick={pickWorld}
@@ -784,7 +785,7 @@ function VillageView({ me, onAccountChanged }: { me: Me; onAccountChanged: () =>
       {!walletOpen&&!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&!subtitleFor&&!inviteFor&&enemyPick&&(()=>{
         const battle=village.battles?.find(b=>b.id===enemyPick.battleId)
         const unit=battle?.units.find(u=>u.id===enemyPick.unitId)
-        return battle&&unit?<BattleControls key={unit.id} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} tsar={tsar} accountId={me.id} onDefend={()=>{const task=catalog.tasks.find(t=>t.id===KEEP_WATCH);if(task)void start(task)}} onClose={()=>setEnemyPick(null)}/>:null
+        return battle&&unit?<BattleControls key={unit.id} village={village} battle={battle} unit={unit} citizen={citizen} catalog={catalog} tsar={tsar} accountId={me.id} selectionToken={enemyPick.selectionToken} issuedOrder={issuedBattleOrder} onDefend={()=>{const task=catalog.tasks.find(t=>t.id===KEEP_WATCH);if(task)void start(task)}} onClose={()=>setEnemyPick(null)}/>:null
       })()}
 
       {!walletOpen&&!chatFull && <button

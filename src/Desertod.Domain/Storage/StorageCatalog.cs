@@ -40,11 +40,11 @@ public static class StorageCatalog
         new(StorageKind.Heap, "Heap", [], 4, 10),
         new(StorageKind.WoodPile, "Wood pile", [ResourceKind.Wood, ResourceKind.Reeds], 2, 30),
         new(StorageKind.StonePile, "Stone pile", [ResourceKind.Stone, ResourceKind.Coal], 2, 30),
-        new(StorageKind.DryingRack, "Drying rack", [ResourceKind.Food, ResourceKind.Grain, ResourceKind.Leather, ResourceKind.Flax], 4, 30),
+        new(StorageKind.DryingRack, "Drying rack", [ResourceKind.Food, ResourceKind.Porridge, ResourceKind.Stew, ResourceKind.Grain, ResourceKind.Leather, ResourceKind.Flax], 4, 30),
         new(StorageKind.TownHall, "Town Hall", [], 6, 20),
         new(StorageKind.Woodyard, "Woodyard", [ResourceKind.Wood, ResourceKind.Planks, ResourceKind.Reeds], 4, 50),
         new(StorageKind.StoneYard, "Stone yard", [ResourceKind.Stone, ResourceKind.IronOre, ResourceKind.Coal], 4, 40),
-        new(StorageKind.Granary, "Granary", [ResourceKind.Food, ResourceKind.Grain, ResourceKind.Leather, ResourceKind.Flax], 4, 60),
+        new(StorageKind.Granary, "Granary", [ResourceKind.Food, ResourceKind.Porridge, ResourceKind.Stew, ResourceKind.Grain, ResourceKind.Leather, ResourceKind.Flax], 4, 60),
         new(StorageKind.Storehouse, "Storehouse",
             [
                 ResourceKind.IronIngot, ResourceKind.Leather, ResourceKind.Feathers, ResourceKind.Flax, ResourceKind.Chain, ResourceKind.Mechanism,
@@ -52,7 +52,7 @@ public static class StorageCatalog
                 ResourceKind.Shield, ResourceKind.LeatherArmor,
             ], 8, 15),
         new(StorageKind.Treasury, "Treasury", [ResourceKind.Gold], 2, 50),
-        new(StorageKind.GreatGranary, "Great Granary", [ResourceKind.Food, ResourceKind.Grain, ResourceKind.Wood, ResourceKind.Stone], 6, 100),
+        new(StorageKind.GreatGranary, "Great Granary", [ResourceKind.Food, ResourceKind.Porridge, ResourceKind.Stew, ResourceKind.Grain, ResourceKind.Wood, ResourceKind.Stone], 6, 100),
     ];
 
     private static readonly Dictionary<StorageKind, StorageDefinition> ByKind = Storages.ToDictionary(s => s.Kind);

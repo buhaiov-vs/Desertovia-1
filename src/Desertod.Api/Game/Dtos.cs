@@ -25,6 +25,7 @@ public sealed record StorageSlotDto(ResourceKind Kind, double Fill);
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
 public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots, int Damage)
 {
+    public int DisplayNumber { get; init; }
     public int Number { get; init; }
     public Guid? OwnerAccountId { get; init; }
     public DateTimeOffset? RuinedAt { get; init; }
@@ -33,7 +34,7 @@ public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<R
 }
 
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
-public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1) { public int Number { get; init; } public Guid? OwnerAccountId { get; init; } public DateTimeOffset? RuinedAt { get; init; } }
+public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1) { public int Number { get; init; } public int DisplayNumber { get; init; } public Guid? OwnerAccountId { get; init; } public DateTimeOffset? RuinedAt { get; init; } }
 
 /// <summary>An attack on the way, or a fought one kept for the record.</summary>
 /// <param name="AnnouncedAt">Players see an attack on the way from then on; clients hide it before.</param>
@@ -54,7 +55,7 @@ public sealed record RaidDto(
     int DamagedBuildings,
     IReadOnlyList<ResourceAmount> Stolen,
     IReadOnlyList<ResourceAmount> Loot,
-    string? EntrySector = null, IReadOnlyList<RaidWaypoint>? ApproachPath = null) { public int EngineVersion { get; init; } }
+    string? EntrySector = null, IReadOnlyList<RaidWaypoint>? ApproachPath = null) { public int EngineVersion { get; init; } public RaidSummary? Summary { get; init; } }
 
 /// <param name="Room">Work a labor job can take right now; it cannot run ahead of the delivered material.</param>
 public sealed record SiteJobDto(string JobId, int Done, int Required, int Room, int Reserved = 0);
@@ -67,6 +68,7 @@ public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double
 {
     public int Damage { get; init; }
     public DateTimeOffset? RuinedAt { get; init; }
+    public int DisplayNumber { get; init; }
     public int Number { get; init; }
     public Guid? OwnerAccountId { get; init; }
     public Guid? PlacedByAccountId { get; init; }
@@ -115,7 +117,11 @@ public sealed record TechnologyStateDto(
     int Done,
     int Required,
     int Hands,
-    int CrewNeeded);
+    int CrewNeeded)
+{
+    public int KnowledgeWork {get;init;}
+    public int KnowledgeCost {get;init;}
+}
 
 public sealed record PollOptionDto(string TechnologyId, int Votes);
 
@@ -196,7 +202,9 @@ public sealed record VillageStateDto(
     DungeonDto? Dungeon)
 {
     public TileArea KingdomArea { get; init; } = WorldMap.BuildArea;
+    public FortificationQuote? FortificationUpgrade { get; init; }
     public int CastleLevel { get; init; }
+    public TileArea? NextKingdomArea { get; init; }
     public DateTimeOffset? DefeatedAt { get; init; }
     public IReadOnlyList<RelocationDto> Relocations { get; init; } = [];
     public IReadOnlyList<CivicOrder> CivicOrders { get; init; } = [];
@@ -212,7 +220,13 @@ public sealed record HousingDto(string PlotId, int Beds, int Occupied, int Level
 
 /// <param name="Appearance">Null until the owner creates their character.</param>
 /// <param name="Spot">Where the Tsar walked to; null while they stand at the campfire.</param>
-public sealed record TsarDto(string Name, Appearance? Appearance, TilePoint? Spot, DateTimeOffset? InjuredUntil = null);
+public sealed record TsarDto(string Name, Appearance? Appearance, TilePoint? Spot, DateTimeOffset? InjuredUntil = null)
+{
+    public Guid? AccountId { get; init; }
+    public DateTimeOffset? HospitalizedAt { get; init; }
+    public Guid? RescueByCitizenId { get; init; }
+    public DateTimeOffset? RescueRequestedAt { get; init; }
+}
 
 /// <param name="Objectives">Rulers' objectives (planning) carry no numbers; citizen objectives carry progress.</param>
 public sealed record QuestDto(Guid Id, QuestKind Kind, ResourceKind? Resource, DateTimeOffset StartedAt, IReadOnlyList<QuestObjective> Objectives);
@@ -271,6 +285,8 @@ public sealed record CitizenSummaryDto(
     public DateTimeOffset? HospitalizedAt { get; init; }
     public Guid? RescueByCitizenId { get; init; }
     public Guid? RescuePatientId { get; init; }
+    public RescueJourney? RescueJourney { get; init; }
+    public DateTimeOffset? RescueRequestedAt { get; init; }
     public string? DefenseSector { get; init; }
     public DateTimeOffset? DefenseReadyAt { get; init; }
 }
@@ -361,6 +377,9 @@ public sealed record CitizenDto(
     public IReadOnlyDictionary<string, double>? ActionEnergyCosts { get; init; }
     public string? DefenseSector { get; init; }
     public DateTimeOffset? DefenseReadyAt { get; init; }
+    public ResourceKind? MealKind {get;init;}
+    public DateTimeOffset? MealUntil {get;init;}
+    public DateTimeOffset? MealReadyAt {get;init;}
     public int VigorEnergy { get; init; } = 8;
     public int VigorCooldownMinutes { get; init; } = 240;
     public string? HomePlotId { get; init; }
@@ -475,7 +494,10 @@ public static class DtoMapper
         TsarDto tsar,
         IReadOnlyList<Trip> citizenTrips,
         DungeonRun? dungeon,
-        DateTimeOffset now) => new(
+        DateTimeOffset now)
+    {
+        var labels=BuildingLabels.Visible(village);
+        return new(
         village.Id,
         village.Slug,
         village.Name,
@@ -494,10 +516,10 @@ public static class DtoMapper
                 s.PlotId,
                 (s.OwnerAccountId is null ? s.Goods : []).OrderBy(g => g.Kind).Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
                 s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList(),
-                s.Damage) { Number = s.Number, OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt })
+                s.Damage) { Number = s.Number, DisplayNumber=labels.GetValueOrDefault(s.Number), OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt })
             .ToList(),
-        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level) { Number = s.Number, OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt }).ToList(),
-        village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount, context)).ToList(),
+        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level) { Number = s.Number, DisplayNumber=labels.GetValueOrDefault(s.Number), OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt }).ToList(),
+        village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount, context) with {DisplayNumber=labels.GetValueOrDefault(s.Number)}).ToList(),
         context.Project is { } project ? project.ToDto(context) : null,
         completedProjects,
         quests
@@ -521,7 +543,8 @@ public static class DtoMapper
                     progress?.Done ?? 0,
                     technology.Cycles,
                     progress?.Hands.Count ?? 0,
-                    TechnologyRules.CrewNeeded(technology, context.RecentCitizenCount));
+                    TechnologyRules.CrewNeeded(technology, context.RecentCitizenCount)) {KnowledgeWork=progress?.KnowledgeWork??0,
+                        KnowledgeCost=TechnologyRules.KnowledgeWorkAvailable(village,technology)*TechnologyRules.KnowledgePerCycle};
             })
             .ToList(),
         village.Poll?.ToDto(electorate),
@@ -541,6 +564,7 @@ public static class DtoMapper
         village.Raids.OrderBy(r => r.StrikesAt).Select(r => r.ToDto()).ToList(),
         village.Wilds?.ToDto(),
         dungeon?.ToDto());
+    }
 
     public static WildsDto ToDto(this Wilds wilds) => new(
         wilds.Ravine.Select(s => new RavineSpanDto(s.X, s.Top, s.Height)).ToList(),
@@ -567,7 +591,7 @@ public static class DtoMapper
         raid.Injured,
         raid.DamagedBuildings,
         raid.Stolen.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
-        raid.Loot.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(), raid.EntrySector, raid.ApproachPath) { EngineVersion=raid.EngineVersion };
+        raid.Loot.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(), raid.EntrySector, raid.ApproachPath) { EngineVersion=raid.EngineVersion, Summary=raid.Summary };
 
     public static WeatherDto ToWeatherDto(this Village village, DateTimeOffset now)
     {
@@ -669,7 +693,7 @@ public static class DtoMapper
             citizen.CycleEndsAt,
             citizen.Load.Select(g => g.Kind).ToList(),
             CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
-            citizen.Weapon, citizen.Recovery) {HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId,DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt};
+            citizen.Weapon, citizen.Recovery) {HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId,RescueJourney=citizen.RescueJourney,RescueRequestedAt=citizen.RescueRequestedAt,DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt};
     }
 
     public static CitizenDto ToDto(this Citizen citizen, Village village, DateTimeOffset now) => new(
@@ -728,7 +752,7 @@ public static class DtoMapper
         citizen.Armor,
         citizen.Arrows,
         Math.Round(CombatRules.Power(citizen), 1), citizen.Recovery)
-        { VigorEnergy = village.VigorEnergy, VigorCooldownMinutes = village.VigorCooldownMinutes, AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
+        { MealKind=citizen.MealKind,MealUntil=citizen.MealUntil,MealReadyAt=citizen.LastMealAt+PreparedMeals.Cooldown, VigorEnergy = village.VigorEnergy, VigorCooldownMinutes = village.VigorCooldownMinutes, AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
             .Concat(BuildingCatalog.Jobs.Select(job => new KeyValuePair<string, double>(job.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.JobCost(village, job, now), now))))
             .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value),
             DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,

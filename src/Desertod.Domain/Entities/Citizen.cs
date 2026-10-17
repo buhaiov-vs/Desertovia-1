@@ -42,6 +42,9 @@ public sealed class Citizen
     public Guid? RescueByCitizenId { get; set; }
     public int? SupervisedProgress { get; set; }
     public Guid? RescuePatientId { get; set; }
+    public RescueJourney? RescueJourney { get; set; }
+    public bool RescueRewardEligible { get; set; }
+    public DateTimeOffset? RescueRequestedAt { get; set; }
     public int ExhaustedCycles { get; set; }
     public DateTimeOffset? ExhaustedUntil { get; set; }
 
@@ -64,6 +67,9 @@ public sealed class Citizen
     public DateTimeOffset EnergyUpdatedAt { get; set; }
 
     /// <summary>Last vigor drink; the next one waits for <see cref="GameRules.VigorDrinkCooldown"/>.</summary>
+    public ResourceKind? MealKind { get; set; }
+    public DateTimeOffset? MealUntil { get; set; }
+    public DateTimeOffset? LastMealAt { get; set; }
     public DateTimeOffset? LastDrinkAt { get; set; }
     public DateTimeOffset? LastEnergyDrinkAt { get; set; }
 

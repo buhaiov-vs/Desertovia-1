@@ -42,3 +42,16 @@ test('hungry inventory offers a meal and disables it when there is no owned food
  await page.getByRole('button',{name:'nofood',exact:true}).click()
  await expect(page.getByRole('button',{name:'Поесть · Нет еды при себе',exact:true})).toBeDisabled()
 })
+
+
+test('per-type numbers replace global labels and unique types have no suffix across cards and inventory',async({page})=>{
+ await page.goto('/e2e/player-feedback-harness.html?typeNumbers=1')
+ await expect(page.getByRole('dialog').locator('header strong')).toHaveText('Хижина №1')
+ await expect(page.getByRole('dialog')).not.toContainText('№12')
+ await page.getByRole('button',{name:'library',exact:true}).click()
+ await expect(page.getByRole('dialog').locator('header strong')).toHaveText('Библиотека')
+ await page.getByRole('button',{name:'storage',exact:true}).click()
+ await expect(page.getByRole('dialog').locator('header strong')).not.toContainText('№')
+ await page.getByRole('button',{name:'inventory',exact:true}).click()
+ await expect(page.getByRole('dialog')).not.toContainText('№13')
+})

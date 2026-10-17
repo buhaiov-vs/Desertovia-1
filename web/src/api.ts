@@ -349,16 +349,33 @@ export interface ArmorDefinition {
 }
 
 export type RaidSource = 'Night' | 'Undead'
-export type RaidOutcome = 'Pending' | 'Repelled' | 'Lost' | 'Cancelled'
+export type RaidOutcome = 'Pending' | 'Repelled' | 'Lost' | 'Cancelled' | 'PropertyDamaged'
 
 /** An attack on the way, or a fought one kept for the record. */
-export interface Fortification { id:string; x:number; y:number; gate:boolean; open:boolean; damage:number }
+export interface FortificationQuote {level:number;nextLevel:number|null;sections:number;strength:number;damaged:number;work:number;materials:ResourceAmount[];blockedBy:string|null;readyAfterBattle:boolean}
+export interface Fortification { id:string; x:number; y:number; gate:boolean; open:boolean; damage:number; level?:number }
 export interface RaidUnit {
-  id:string; variant:'weak'|'regular'|'strong'|'boss'; x:number; y:number; health:number; maximumHealth:number;
+  enemy?:EnemyKind|null; id:string; variant:'weak'|'regular'|'strong'|'boss'; x:number; y:number; health:number; maximumHealth:number;
   attack:number; speed:number; range:number; state:string; targetKind:string|null; targetId:string|null;
   diedAt:string|null; exitedAt:string|null; nextAttackAt?:string;
   bossPhase?:number|null; strikeX?:number|null; strikeY?:number|null; strikeAt?:string|null;
 }
+export interface RaidSettings {
+  preset:'boss'|'mixed'|'swarm'|'elite'; mode:'automatic'|'manual'; enemy:EnemyKind; sector:string|null;
+  count:number; waves:number; warningSeconds:number; waveIntervalSeconds:number; durationSeconds:number;
+  budgetMultiplier:number; healthMultiplier:number; attackMultiplier:number; propertyMultiplier:number; speedMultiplier:number;
+  weakPercent:number; elitePercent:number; tactic:string; retreatSurvivorFraction:number;
+  propertyLimit:number; wallLimit:number; lootLimit:number; theftFraction:number;
+  bossStrike:boolean; bossWarningSeconds:number; bossSecondWarningSeconds:number; bossCooldownSeconds:number;
+  bossSecondCooldownSeconds:number; bossSecondPhase:boolean; species:{enemy:EnemyKind;percent:number}[];
+}
+export interface RaidPreview {
+  recommendedBudget:number; actualCost:number; count:number; totalHealth:number; totalAttack:number;
+  risk:string; units:{enemy:EnemyKind;variant:string;health:number;attack:number;speed:number;cost:number}[];
+}
+export interface SavedRaidPreset {id:string;name:string;updatedAt:string;settings:RaidSettings}
+export interface RaidEditorView {presets:SavedRaidPreset[];coefficient:number;reason:string}
+
 export interface RaidFighter {
   isTsar?:boolean; accountId?:string|null;
   citizenId:string; x:number; y:number; health:number; maximumHealth:number; damageDealt:number; kills:number;
@@ -368,6 +385,7 @@ export interface RaidBattle {
   id:string; villageId:string; phase:string; sector:string; tactic:string; composition:string;
   threatBudget:number; readyDefenders:number; availableReserves:number; startsAt:string; lastTickAt:string;
   endsAt:string; finishedAt:string|null; revision:number; deferred:boolean;
+  settings?:RaidSettings|null; eventId?:string|null; result?:string|null; playerHealthLost?:number; remediesUsed?:number;
   units:RaidUnit[]; fighters:RaidFighter[]; damage?:{plotId:string;amount:number}[];
   events:{sequence:number;kind:string;target:string;at:string}[];
 }
@@ -380,6 +398,7 @@ export function mergeBattles(previous:readonly RaidBattle[] = [], incoming:reado
 }
 
 export interface Raid {
+  summary?:{contactSeconds:number;participants:number;playerHealthLost:number;remediesUsed:number;arrowsSpent:number;brokenItems:number;propertyDamage:number;wallDamage:number;nextCoefficient:number;reason:string}|null
   engineVersion?:number
   id: string
   source: RaidSource
@@ -417,6 +436,7 @@ export interface FightReport {
 }
 
 export interface RaidReport {
+  outcome?:RaidOutcome|null
   engineVersion?:number
   raidId: string
   source: RaidSource
@@ -466,6 +486,7 @@ export interface FieldBed {
   /** Plot of the farm. */
   plotId: string
   number?: number
+  displayNumber?: number
   index: number
   /** Null while the bed is empty. */
   crop: CropKind | null
@@ -619,6 +640,8 @@ export interface TechnologyState {
   required: number
   hands: number
   crewNeeded: number
+  knowledgeWork?:number
+  knowledgeCost?:number
 }
 
 /** A vote on the next discovery. It closes once more than half of the present citizens voted; away ones are not counted. */
@@ -779,6 +802,7 @@ export interface Site {
   kind: BuildingKind
   plotId: string
   number?: number
+  displayNumber?: number
   stage: number
   /** 0 to 1. */
   progress: number
@@ -792,6 +816,7 @@ export interface Structure {
   kind: BuildingKind
   plotId: string
   number?: number
+  displayNumber?: number
   /** Harm done by raiders, 0 to `rules.maximumDamage`. */
   damage: number
 }
@@ -810,6 +835,7 @@ export interface Storage {
   kind: StorageKind
   plotId: string
   number?: number
+  displayNumber?: number
   goods: ResourceAmount[]
   slots: StorageSlot[]
   /** Harm done by raiders, 0 to `rules.maximumDamage`. */
@@ -936,8 +962,10 @@ export interface VillageState {
   defeatedAt?:string|null
   relocations?:{plotId:string;residents:number;available:number}[]
   battles?: RaidBattle[]
+  fortificationUpgrade?:FortificationQuote|null
   fortifications?: Fortification[]
   kingdomArea?: TileArea
+  nextKingdomArea?:{x:number;y:number;width:number;height:number}|null
   castleLevel?: number
   civicOrders?: CivicOrder[]
   housing?: Housing[]
@@ -1002,6 +1030,10 @@ export interface Wilds {
 }
 
 export interface Tsar {
+  accountId?:string|null
+  hospitalizedAt?:string|null
+  rescueByCitizenId?:string|null
+  rescueRequestedAt?:string|null
   injuredUntil?:string|null
   name: string
   /** Null until the owner creates their character. */
@@ -1043,7 +1075,20 @@ export interface HospitalStatus {
 export interface HospitalPayment { patientId: string; code: string; requestId: string; expectedPrice: number; episodeId: string }
 export interface HospitalReceipt { state: string; error: string | null; until: number | null; price: number | null; cutSeconds: number | null }
 
+export interface RescueJourney {
+  patientId:string
+  patientIsTsar:boolean
+  hospitalPlotId:string
+  pickupAt:string
+  arrivesAt:string
+  completedAt?:string|null
+  delivered:boolean
+  steps:{x:number;y:number;at:string}[]
+}
+
 export interface CitizenSummary {
+  rescueJourney?:RescueJourney|null
+  rescueRequestedAt?:string|null
   defenseSector?: string | null
   defenseReadyAt?: string | null
   hospitalizedAt?:string|null
@@ -1139,6 +1184,9 @@ export interface SkillValue {
 }
 
 export interface Citizen {
+  mealKind?: string | null
+  mealUntil?: string | null
+  mealReadyAt?: string | null
   vigorEnergy?: number
   vigorCooldownMinutes?: number
   accountId?: string
@@ -1245,6 +1293,7 @@ export interface CycleReport {
 /** Events of one village since the last `villageEvents` message, in order; only the latest summary per citizen. */
 export interface VillageEvents {
   battles?: RaidBattle[]
+  fortificationUpgrade?:FortificationQuote|null
   fortifications?: Fortification[] | null
   cycles: CycleReport[]
   projects: ProjectCompletion[]
@@ -1430,6 +1479,7 @@ export const api = {
   almightyMode: (slug: string, mode: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/director/mode`, { mode }),
   almightyVote: (slug: string, id: string, accept: boolean) => request<{result:string}>('POST', `/api/villages/${encodeURIComponent(slug)}/director/${id}/vote`, { accept }),
   rescue: (slug:string, id:string)=>request<Citizen>('POST',`/api/villages/${encodeURIComponent(slug)}/rescue/${id}`),
+  requestRescue: (slug:string)=>request<boolean>('POST',`/api/villages/${encodeURIComponent(slug)}/rescue/request`),
   civic: (slug:string, plotId:string, operation:string, partnerAccountId?:string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic`, {plotId,operation,partnerAccountId}),
   civicDecision: (slug:string, id:string, approve:boolean) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic/${id}`, {approve}),
   sramoslav: (slug: string, text: string) => request<{text: string; ai: boolean}>('POST', `/api/villages/${slug}/sramoslav`, { text }),
@@ -1466,12 +1516,19 @@ export const api = {
   startJob: (slug: string, plotId: string, stage: number, jobId: string) =>
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/job`, { plotId, stage, jobId }),
   dropLoad: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drop`),
+  investKnowledge: (slug:string,technologyId:string)=>request<VillageState>('POST',`/api/villages/${encodeURIComponent(slug)}/research/knowledge`,{technologyId}),
+  eatMeal: (slug:string,resource:string)=>request<Citizen>('POST',`/api/villages/${encodeURIComponent(slug)}/me/meal`,{resource}),
   eat: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/eat`),
   drink: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drink`),
   hospital: (slug: string) => request<HospitalStatus>('GET', `/api/villages/${encodeURIComponent(slug)}/hospital`),
   hospitalHeal: (slug: string, payment: HospitalPayment) => request<HospitalReceipt>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/heal`, payment),
   hospitalUpgrade: (slug: string, plot: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/${encodeURIComponent(plot)}/upgrade`),
   heal: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/heal`),
+  upgradeFortifications: (slug:string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/fortifications/upgrade`),
+  raidEditor: (slug:string) => request<RaidEditorView>('GET', `/api/villages/${encodeURIComponent(slug)}/raid-editor`),
+  previewRaid: (slug:string, settings:RaidSettings) => request<RaidPreview>('POST', `/api/villages/${encodeURIComponent(slug)}/raid-editor/preview`, settings),
+  launchRaid: (slug:string, requestId:string, settings:RaidSettings) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/raid-editor/launch`, {requestId,settings}),
+  saveRaidPreset: (slug:string, id:string|null, name:string, settings:RaidSettings) => request<RaidEditorView>('PUT', `/api/villages/${encodeURIComponent(slug)}/raid-editor/presets`, {id,name,settings}),
   callUndead: (slug: string, enemy: EnemyKind, size: RaidSize) =>
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/undead`, { enemy, size }),
   cancelUndead: (slug: string) => request<VillageState>('DELETE', `/api/villages/${encodeURIComponent(slug)}/undead`),

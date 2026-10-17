@@ -26,4 +26,6 @@ public enum ResourceKind
     Sword,
     Shield,
     LeatherArmor,
+    Porridge,
+    Stew,
 }

@@ -1,3 +1,36 @@
+# 0.7.11 full-browser follow-up — validate newest source, NOT INSTALLED
+
+Fullbrowser exposed a legacy partial-state CivicPanel regression (missing storage
+array). Shared upgrade predicate now handles absent collections safely; all10
+existing cooperative desktop/phone tests and TS PASS without weakening assertions.
+CI39030967136 on9b4ece1 is superseded/cancelled, NOT ready. Read latest PATCH journal
+and PR54 checks for new exact source. BotPR52/CI39031013157 SUCCESS903 onbd2c9f2;
+its version map must also include this newer game source and rerun exactCI.
+No deployment date/request for0.7.11; preserve live0.7.9 and all previous bounds.
+
+# 0.7.11 implemented on feature branch; final validation pending, NOT INSTALLED
+
+Public draftPR54 and bot canonical draftPR52 retain all D-093–097 scope. Read
+PATCH_0_7_11_IMPLEMENTATION.md and RELEASE_0_7_11.md (docs/dezertovia).
+Local fullDomain516 + final17 PASS, newWALL/P2browser12 PASS phone/desktop,
+TS/lint/frontendPASS. CI39030589990 on118d6c6 backend516/270 + frontend/Docker
+PASS; completebrowser still pending. A final null-ID research guard is now added
+and needs final exact CI. Do not mistake preliminary run for final readiness.
+Bot futurepayload includes app/db/helper/feedback/civic_notifications AND
+feedback_context source→version mapping; preserve actual installed budget/
+quarantine/llm/town_proxy/Propose. No0.7.11install date/request; LIVE0.7.9 below.
+
+# D-097: implement 0.7.11 now; preserve fence style/day/night
+
+Owner authorized implementation of the full retained plan, not just documentation.
+Read `docs/dezertovia/PATCH_0_7_11_IMPLEMENTATION.md` for the resumable checklist,
+worktrees, entry points, tests and art contract; keep it current after each packet.
+Feature branches feat/patch-0-7-11 in game079-record and bot079-final. Keep all
+D-093–096 scope, original outlines/palette/pixel scale and matched night variants.
+New fence art is explicitly authorized, superseding the historical art pause.
+No 0.7.11 installation date selected. Do not replay older deployment requests.
+State IN PROGRESS, not READY/installed; previous PLAN-only limits superseded.
+
 # D-096: 0.7.11 adds social rescue and owner raid editor, still PLAN
 
 Read `docs/dezertovia/RESCUE_AND_RAID_CONTROLS_0_7_11.md` and the full

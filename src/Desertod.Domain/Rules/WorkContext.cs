@@ -7,6 +7,7 @@ namespace Desertod.Domain.Rules;
 public sealed class WorkContext
 {
     public required Village Village { get; init; }
+    public Citizen? RescuePatient { get; init; }
 
     /// <summary>Active project with materials and all contributions loaded.</summary>
     public VillageProject? Project { get; init; }

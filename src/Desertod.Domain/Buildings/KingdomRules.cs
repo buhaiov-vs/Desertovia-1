@@ -18,7 +18,8 @@ public static class KingdomRules
         .Select(s => s.Level).DefaultIfEmpty(0).Max();
 
     // Grow west, north and south. The river and its bridge remain independent gates.
-    public static TileArea Area(Village village) => Level(village) switch
+    public static TileArea Area(Village village) => AreaForLevel(Level(village));
+    public static TileArea AreaForLevel(int level) => level switch
     {
         >= 3 => new(-8, -6, 36, 38),
         2 => new(-4, -3, 32, 32),

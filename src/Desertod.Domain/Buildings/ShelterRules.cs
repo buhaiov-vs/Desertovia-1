@@ -5,7 +5,8 @@ namespace Desertod.Domain.Buildings;
 public static class ShelterRules
 {
     public static int Beds(Structure building) => building.Decommissioning || building.RuinedAt is not null || building.Damage>=100?0:
-        building.Kind==BuildingKind.Longhouse ? 12+8*(Math.Clamp(building.Level,1,3)-1) : BuildingCatalog.Get(building.Kind).Shelter;
+        building.Kind==BuildingKind.Longhouse ? 12+12*(Math.Clamp(building.Level,1,3)-1)
+        :building.Kind==BuildingKind.Hut?4+2*(Math.Clamp(building.Level,1,3)-1):BuildingCatalog.Get(building.Kind).Shelter;
 
     /// <summary>Keep valid homes stable; allocate only vacant beds. Never evict for a newer upgrade.</summary>
     public static void Assign(Village village,IEnumerable<Citizen> citizens,DateTimeOffset now)

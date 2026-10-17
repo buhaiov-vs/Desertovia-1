@@ -1,3 +1,6 @@
+import {FortificationView} from './FortificationView'
+import {wallVisualStage} from './fortificationState'
+import {buildingOrdinal,buildingSuffix} from '../buildingLabels'
 import { combatDiagnostics } from './combatDiagnostics'
 import { sameStaticVillage } from './combatSnapshot'
 import { receiveFighterSample, fighterPositionAt, fighterIsMoving, type FighterSample } from './fighterSamples'
@@ -160,6 +163,7 @@ interface Walker {
   normalSubtitle:string
   carrierId:string|null
   pickupAt:number
+  rescueJourney:CitizenSummary['rescueJourney']
 }
 
 interface Bubble {
@@ -262,7 +266,7 @@ export class VillageWorld {
   private buildingViews: Container[] = []
   private readonly fighterSamples=new Map<string,FighterSample>()
   private readonly damageViews = new Map<string, {damage:number; view:Container}>()
-  private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction>()
+  private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction | FortificationView>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
   private buildingLabels: Array<{ text: Text; x: number; y: number }> = []
   private wardCaption:Text|null=null
@@ -566,7 +570,9 @@ export class VillageWorld {
     walker.label.text = tsar.name
     walker.injuredUntil = tsar.injuredUntil ? Date.parse(tsar.injuredUntil) : 0
     walker.normalSubtitle=this.tsarTitle
-    if(walker.injuredUntil>Date.now()){walker.inHospital=true;walker.wardVisible=true;walker.treatmentCause='После боя'}
+    walker.inHospital=walker.injuredUntil>Date.now()&&!!tsar.hospitalizedAt
+    walker.carrierId=tsar.rescueByCitizenId??null
+    if(walker.injuredUntil>Date.now()){walker.wardVisible=true;walker.treatmentCause='После боя'}
     walker.staying = true
     // Battle positions already drive this walker. Replanning a civilian route to
     // the stale Tsar spot on every combat snapshot can search the whole map.
@@ -806,7 +812,7 @@ export class VillageWorld {
     const ward=this.village?.structures.find(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
     const wardPlot=ward?this.plot(ward.plotId):null
     if(!this.wardCaption){this.wardCaption=new Text({text:'',style:{fontFamily:LABEL_FONT,fontSize:11,fontWeight:'700',fill:0xffe9b0,stroke:{color:0x1b1206,width:3}}});this.wardCaption.anchor.set(.5,1);this.screen.addChild(this.wardCaption)}
-    this.wardCaption.text=`${wardPlot?`Больница${ward?.number ? ` №${ward.number}` : ''}`:'Лазарет'} · На лечении: ${admitted.length}`
+    this.wardCaption.text=`${wardPlot?`Больница${buildingSuffix(ward)}`:'Лазарет'} · На лечении: ${admitted.length}`
     this.wardCaption.visible=admitted.length>0
     this.wardCaptionAt={x:(wardPlot?wardPlot.x+1.5:CAMPFIRE.x)*TILE,y:(wardPlot?wardPlot.y:CAMPFIRE.y-1)*TILE-3}
     const seen = new Set<string>([PRIEST_ID, TSAR_ID])
@@ -855,8 +861,9 @@ export class VillageWorld {
       if(injured){walker.label.style.wordWrap=true;walker.label.style.breakWords=true;walker.label.style.wordWrapWidth=112;walker.label.style.align='center';walker.subtitle.style.wordWrap=true;walker.subtitle.style.wordWrapWidth=120;walker.subtitle.style.align='center'}
       walker.treatmentCause=duel?'после дуэли':'после боя'
       walker.carrierId=citizen.rescueByCitizenId??null
-      walker.pickupAt=citizen.rescuePatientId&&citizen.cycleStartedAt&&citizen.cycleEndsAt?
-        Date.parse(citizen.cycleStartedAt)+(Date.parse(citizen.cycleEndsAt)-Date.parse(citizen.cycleStartedAt))*.6:0
+      walker.rescueJourney=citizen.rescueJourney??null
+      walker.pickupAt=walker.rescueJourney&&!walker.rescueJourney.completedAt?Date.parse(walker.rescueJourney.pickupAt):0
+      if(injured&&!walker.inHospital&&!walker.carrierId&&citizen.rescueRequestedAt)walker.treatmentCause='Просит помощи'
       if(injured){walker.working=false;walker.roaming=false;walker.hunt=null;walker.way=[];walker.targetX=walker.x;walker.targetY=walker.y}
       if (injured) walker.staying = true
       let icon: { key: string; tile: TileRef | null } | null = null
@@ -1010,9 +1017,9 @@ export class VillageWorld {
     }
     const key = JSON.stringify([
       this.buildingDefinitions.size,
-      village.storages.map((s) => [s.kind, s.plotId, s.number, !!s.ruinedAt, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
-      village.structures.map((s) => [s.kind, s.plotId, s.number, !!s.ruinedAt]),
-      village.sites.map(site=>[siteVisualKey(site),site.number,!!site.ruinedAt]),
+      village.storages.map((s) => [s.kind, s.plotId, s.number, s.displayNumber, !!s.ruinedAt, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
+      village.structures.map((s) => [s.kind, s.plotId, s.number, s.displayNumber, !!s.ruinedAt]),
+      village.sites.map(site=>[siteVisualKey(site),site.number,site.displayNumber,!!site.ruinedAt]),
       village.fields.map((bed) => {
         const plant = cropTile(bed.crop ?? '', bed.growth, isRipe(bed))
         return [bed.plotId, bed.crop, plant && tileKey(plant), this.isWet(bed)]
@@ -1058,7 +1065,7 @@ export class VillageWorld {
       const view = this.finishedView(structure.kind, plot.x, plot.y)
       if(structure.ruinedAt){view.alpha=.3;const rubble=this.damageView(structure.plotId,100,plot.x,plot.y);add(rubble)}
       add(view)
-      if (structure.kind !== 'Hospital'||structure.ruinedAt) name(structure.kind, false, view,1,!!structure.ruinedAt,structure.number)
+      if (structure.kind !== 'Hospital'||structure.ruinedAt) name(structure.kind, false, view,1,!!structure.ruinedAt,buildingOrdinal(structure))
       const beds = village.fields.filter((bed) => bed.plotId === structure.plotId)
       if (beds.length > 0) add(this.bedsView(beds, plot.x, plot.y))
     }
@@ -1070,7 +1077,7 @@ export class VillageWorld {
       const view = this.finishedView(storage.kind, plot.x, plot.y)
       if(storage.ruinedAt)view.alpha=.3
       add(view)
-      name(storage.kind, true, view,1,!!storage.ruinedAt,storage.number)
+      name(storage.kind, true, view,1,!!storage.ruinedAt,buildingOrdinal(storage))
       add(this.goodsYard(storage, definition, plot.x, plot.y))
     }
 
@@ -1080,7 +1087,7 @@ export class VillageWorld {
       const view = this.siteView(site, plot.x, plot.y)
       if(site.ruinedAt)view.alpha=.3
       add(view)
-      name(site.kind, false, view, 0.7,!!site.ruinedAt,site.number)
+      name(site.kind, false, view, 0.7,!!site.ruinedAt,buildingOrdinal(site))
     }
 
     const covered = new Set<string>()
@@ -1380,7 +1387,7 @@ export class VillageWorld {
     const project = state.project
     const key = JSON.stringify([
       state.completedProjects,
-      state.fortifications?.map(f=>[f.id,f.damage>=100,f.open]),state.bridgeRuinedAt,
+      state.fortifications?.map(f=>[f.id,wallVisualStage(f),f.open,f.level??1]),state.bridgeRuinedAt,
       project?.definitionId,
       project?.phase,
       project ? project.surveyDone : 0,
@@ -1472,16 +1479,25 @@ export class VillageWorld {
     if (completed.has(PALISADE.id) || palisadeActive) {
       const fraction = completed.has(PALISADE.id) ? 1 : project!.buildDone / Math.max(project!.buildRequired, 1)
       const standing = Math.floor(fraction * PALISADE.pieces.length + 1e-6)
-      PALISADE.pieces.forEach((piece, index) => {
+      const advanced=new Set((state.fortifications??[]).filter(f=>(f.level??1)>=2).map(f=>f.id))
+      PALISADE.pieces.forEach((piece,index)=>{
         const wall=state.fortifications?.find(f=>f.x===piece.x&&f.y===piece.y)
-        if(wall&&wall.damage>=100)return
-        if (index < standing) add(this.tileSprite(piece.tile, piece.x, piece.y))
-        else if (palisadeActive && index % 4 === 0) add(this.tileSprite(town(47), piece.x, piece.y))
+        if(wall&&(advanced.has(wall.id)||wall.damage>=100))return
+        if(index<standing)add(this.tileSprite(piece.x===27&&(state.fortifications??[]).some(f=>f.x===28&&f.y===piece.y)?town(45):piece.tile,piece.x,piece.y))
+        else if(palisadeActive&&index%4===0)add(this.tileSprite(town(47),piece.x,piece.y))
       })
-      for(const wall of state.fortifications??[])if(wall.x>=28&&wall.damage<100&&!wall.gate)
-        add(this.tileSprite(PALISADE.pieces.find(p=>p.y===wall.y)?.tile??town(56),wall.x,wall.y))
-      if (palisadeActive) add(this.tileSprite(town(83), PALISADE.yard.x - 1, PALISADE.yard.y - 1))
-      for(const gate of state.fortifications??[])if(gate.gate&&!gate.open&&gate.damage<100)add(this.tileSprite(town(56),gate.x,gate.y))
+      for(const wall of state.fortifications??[]){
+        if(advanced.has(wall.id)){
+          if(wall.gate&&wall.open&&wall.damage<100)continue
+          const view=new FortificationView(this.tiles,wall,state.fortifications??[])
+          view.setNight(this.nightAmount);this.litBuildings.add(view)
+          view.once('destroyed',()=>this.litBuildings.delete(view));add(view)
+        }else if(wall.damage<100){
+          if(wall.x>=28&&!wall.gate)add(this.tileSprite(town(wall.x<(Math.max(...(state.fortifications??[]).filter(f=>f.y===wall.y).map(f=>f.x)))?45:82),wall.x,wall.y))
+          if(wall.gate&&!wall.open)add(this.tileSprite(town(56),wall.x,wall.y))
+        }
+      }
+      if(palisadeActive)add(this.tileSprite(town(83),PALISADE.yard.x-1,PALISADE.yard.y-1))
     }
 
     // Gold vein: nuggets in the outcrop thin out as it is dug; an empty vein is bare grey rock.
@@ -1640,7 +1656,7 @@ export class VillageWorld {
       sleepsAt: null,
       way: [],
       injuredUntil: 0,
-      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,
+      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,rescueJourney:null,
     }
     this.walkers.set(id, walker)
     return walker
@@ -2185,12 +2201,23 @@ export class VillageWorld {
         walker.wanderAt = this.elapsed + 4 + Math.random() * 6
       }
 
-      if(walker.pickupAt>0&&now>=walker.pickupAt&&walker.working){
-        const hospital=this.village?.structures.find(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
-        const plot=hospital?this.plot(hospital.plotId):null
-        walker.targetX=(plot?plot.x+1.5:CAMPFIRE.x)*TILE
-        walker.targetY=(plot?plot.y+3:CAMPFIRE.y+1)*TILE
-        walker.way=[];speed=WALK_SPEED*.5
+      if(walker.rescueJourney&&!walker.rescueJourney.completedAt&&!hurt){
+        const steps=walker.rescueJourney.steps
+        let before=steps[0]
+        let position=before?{x:before.x,y:before.y}:null
+        for(const after of steps.slice(1)){
+          if(now<Date.parse(after.at)){
+            const share=Math.max(0,Math.min(1,(now-Date.parse(before.at))/Math.max(1,Date.parse(after.at)-Date.parse(before.at))))
+            position={x:before.x+(after.x-before.x)*share,y:before.y+(after.y-before.y)*share};break
+          }
+          before=after;position={x:after.x,y:after.y}
+        }
+        if(position){
+          const dx=position.x*TILE-walker.x
+          if(Math.abs(dx)>.01)walker.sprite.scale.x=dx<0?-1:1
+          walker.x=position.x*TILE;walker.y=position.y*TILE
+          walker.targetX=walker.x;walker.targetY=walker.y;walker.way=[]
+        }
       }
       const combatant=combatants.get(walker.id)
       if(combatant&&!hurt){
@@ -2221,7 +2248,7 @@ export class VillageWorld {
 
       if(hurt&&walker.carrierId){
         const carrier=this.walkers.get(walker.carrierId)
-        if(carrier?.working&&carrier.pickupAt>0&&now>=carrier.pickupAt){walker.x=carrier.x+5;walker.y=carrier.y-4;walker.bed.visible=false}
+        if(carrier?.rescueJourney&&!carrier.rescueJourney.completedAt&&carrier.pickupAt>0&&now>=carrier.pickupAt){walker.x=carrier.x+5;walker.y=carrier.y-4;walker.bed.visible=false}
       }
       walker.bed.position.set(Math.round(walker.x),Math.round(walker.y))
       walker.bed.zIndex=walker.y+.4

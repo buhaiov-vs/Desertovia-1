@@ -1,5 +1,6 @@
 import { buildingNumber } from './buildingLabel'
 import { currentEnergy } from '../energy'
+import {MealsPanel} from './MealsPanel'
 import { EconomyPanel } from './EconomyPanel'
 import type { BuildingDefinition, Catalog, Citizen, StorageKind, VillageState } from '../api'
 import { useI18n } from '../i18n'
@@ -19,6 +20,7 @@ export function InventoryPanel({
   onCarry,
   onDrop,
   onEat,
+  onCitizen,
   onTake,
   onClose,
   onPrivatePlace,
@@ -31,6 +33,7 @@ export function InventoryPanel({
   error: string | null
   onCarry: () => void
   onDrop: () => void
+  onCitizen?: (c:Citizen)=>void
   onEat?: () => void
   onTake: (plotId: string, resource: string, amount: number) => void
   onPrivatePlace?: (building:BuildingDefinition)=>void
@@ -59,6 +62,7 @@ export function InventoryPanel({
         </header>
         <div className="modal-body">
           {citizen && <EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId={citizen.accountId} onPrivatePlace={onPrivatePlace}/>}
+          {citizen&&<MealsPanel slug={village.slug} citizen={citizen} now={now} pending={pending} onCitizen={onCitizen}/>}
           {citizen?.isHungry&&onEat&&<button disabled={pending||ownFood===0||citizen.state==='Paused'} onClick={onEat}>{i18n.language==='ru'?'Поесть':'Eat'}{ownFood===0?(i18n.language==='ru'?' · Нет еды при себе':' · No food carried'):''}</button>}
       {error && <p className="error">{error}</p>}
           {citizen && (

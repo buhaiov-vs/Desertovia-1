@@ -53,7 +53,7 @@ public class CooperativeUpdateTests
         var village=TestWorld.NewVillage();var home=new Structure{Kind=BuildingKind.Longhouse,PlotId="1,1",BuiltAt=Now};village.Structures.Add(home);
         var citizens=Enumerable.Range(0,13).Select(_=>TestWorld.NewCitizen(village)).ToArray();
         ShelterRules.Assign(village,citizens,Now);Assert.Equal(12,citizens.Count(c=>c.HomePlotId==home.PlotId));
-        home.Level=2;ShelterRules.Assign(village,citizens,Now.AddMinutes(1));Assert.All(citizens,c=>Assert.Equal(home.PlotId,c.HomePlotId));Assert.Equal(20,ShelterRules.Beds(home));
+        home.Level=2;ShelterRules.Assign(village,citizens,Now.AddMinutes(1));Assert.All(citizens,c=>Assert.Equal(home.PlotId,c.HomePlotId));Assert.Equal(24,ShelterRules.Beds(home));
     }
     [Fact] public void ExhaustedWorkIsSlowButWalkingRetainsItsSpeedAndFaintsOnce()
     {

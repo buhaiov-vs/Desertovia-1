@@ -199,7 +199,7 @@ export function createTranslator(language: Language) {
   const describeRaid = (report: RaidReport) => {
     const name = enemy(report.enemy)
     const parts = [
-      report.repelled
+      report.outcome==='PropertyDamaged' ? t('raid.propertyDamaged', {enemy:name}) : report.repelled
         ? t('raid.repelled', { killed: report.killed, enemy: name.toLowerCase() })
         : t('raid.lost', { enemy: name }),
     ]

@@ -19,6 +19,28 @@ public sealed class CivicNotificationTests(DesertodApiFactory factory)
     private Task<DesertodDbContext> Db() => factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
 
     [Fact]
+    public async Task Map_state_and_Telegram_notice_share_the_type_number_while_global_identity_is_retained()
+    {
+        var v=await players.FoundVillageAsync("Display numbers");var planner=await players.JoinAsync(v,"Planner");Guid villageId;
+        await using(var db=await Db())
+        {
+            var city=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);villageId=city.Id;
+            city.Structures.Add(new(){Kind=BuildingKind.Hut,PlotId="0,10",Number=100});
+            city.Structures.Add(new(){Kind=BuildingKind.Library,PlotId="9,1",Number=101});
+            city.Structures.Add(new(){Kind=BuildingKind.Hut,PlotId="4,10",Number=102});
+            city.CivicOrders.Add(new(){PlotId="4,10",Operation="upgrade",RequestedBy=(await db.Citizens.SingleAsync(c=>c.Id==planner.Id)).AccountId,CreatedAt=factory.Clock.GetUtcNow()});
+            db.ExternalLogins.Add(new(){Provider="telegram",ProviderUserId="71073103",AccountId=city.OwnerAccountId});await db.SaveChangesAsync();
+        }
+        var notice=await factory.Services.GetRequiredService<GameService>().ClaimCivicNoticeAsync(villageId,default);
+        Assert.Equal(102,notice!.BuildingNumber);Assert.Equal(2,notice.DisplayNumber);
+        var state=(await OkJsonAsync(await v.Tsar.GetAsync(v.Path))).GetProperty("state");
+        var second=Assert.Single(state.GetProperty("structures").EnumerateArray(),s=>s.GetProperty("plotId").GetString()=="4,10");
+        Assert.Equal(102,second.GetProperty("number").GetInt32());Assert.Equal(2,second.GetProperty("displayNumber").GetInt32());
+        var unique=Assert.Single(state.GetProperty("structures").EnumerateArray(),s=>s.GetProperty("plotId").GetString()=="9,1");
+        Assert.Equal(0,unique.GetProperty("displayNumber").GetInt32());
+    }
+
+    [Fact]
     public async Task Existing_pending_request_is_claimed_once_and_failed_bridge_retries_without_changing_building()
     {
         var v = await players.FoundVillageAsync("Civic telegram queue");

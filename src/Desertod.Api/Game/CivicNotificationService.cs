@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Desertod.Api.Game;
 
 public sealed record CivicNotice(Guid OrderId, string Slug, string OwnerId, string RequestedBy,
-    string Operation, string BuildingKind, string PlotId, int? BuildingNumber = null);
+    string Operation, string BuildingKind, string PlotId, int? BuildingNumber = null, int? DisplayNumber = null);
 public sealed record CivicTelegramVote(Guid OrderId, string Slug, string OwnerId, bool Approve);
 
 public sealed partial class GameService
@@ -29,8 +29,10 @@ public sealed partial class GameService
                 ?? (village.Storages.SingleOrDefault(s => s.PlotId == order.PlotId) is {} storage ? BuildingCatalog.ForStorage(storage.Kind) : null);
             order.NoticeState = "Sending"; order.NoticeAt = now;
             await db.SaveChangesAsync(ct);
+            var number=village.Structures.FirstOrDefault(s=>s.PlotId==order.PlotId)?.Number
+                ??village.Storages.FirstOrDefault(s=>s.PlotId==order.PlotId)?.Number;
             return new(order.Id, village.Slug, owner, author, order.Operation, kind?.ToString() ?? "Building", order.PlotId,
-                village.Structures.FirstOrDefault(s=>s.PlotId==order.PlotId)?.Number ?? village.Storages.FirstOrDefault(s=>s.PlotId==order.PlotId)?.Number);
+                number,order.BuildingKind==BuildingKind.FortificationUpgrade?0:number is {} n?BuildingLabels.Visible(village).GetValueOrDefault(n):null);
         }, ct);
 
     public Task<bool> CompleteCivicNoticeAsync(Guid villageId, Guid orderId, string state, CancellationToken ct) =>

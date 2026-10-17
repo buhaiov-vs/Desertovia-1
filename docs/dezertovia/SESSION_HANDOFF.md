@@ -1,3 +1,13 @@
+# 0.7.11 implementation — latest checkpoint
+
+All retained packets now implemented on feat/patch-0-7-11, publicdraftPR54 and
+canonicalbotdraftPR52. Exact source/checks/remaining CI in
+PATCH_0_7_11_IMPLEMENTATION.md and RELEASE_0_7_11.md.
+FullDomain516/final17, fullAPI270, focusedWALL/P2browser12PASS.
+Runtime0.7.9; no0.7.11install date or request; oldrequests must not be replayed.
+
+> **D-097 · реализация 0.7.11 начата:** [рабочий журнал и полный handoff](PATCH_0_7_11_IMPLEMENTATION.md). Обводка, цвета, пиксельный масштаб и ночь заборов обязательны. Ещё не READY/не установлено.
+
 > **D-068 · единый план следующего патча:** [новая оборона + связанные исправления](COMBAT_AND_FIXES_PATCH_PLAN.md). Боёвка/HP/цели, энергия, глаз, завершение дел, границы и компактная сводка складов. Сейчас PLAN, LIVE0.6.1 не менялся.
 
 > **D-067 · отзывы за15октября сверены:** [вечерний разбор34 обращений](FEEDBACK_REVIEW_2026_10_15_EVENING.md). Новые P1: усталость до перезахода (#87) и глаз поверх сообщения (#88). Исправленные/частичные/неподтверждённые случаи разделены; пока только TODO.

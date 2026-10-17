@@ -3,6 +3,7 @@ import { WalletDialog, WalletHud } from '../ui/WalletHud'
 import { PersonalBattlePanel } from '../ui/PersonalBattlePanel'
 import { createOperationId } from '../api'
 import { HospitalPanel } from '../ui/HospitalPanel'
+import { RescuePatientPanel } from '../ui/RescuePatientPanel'
 import { SramoslavPanel } from '../ui/SramoslavPanel'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -666,7 +667,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
     villageRef.current = live.state
   })
   const citizens = useMemo(() => [...live.citizens.values()], [live.citizens])
-  const pickCitizen = useMemo(() => (id: string) => { setEnemyPick(null); if (id === PRIEST_ID) setChaplainOpen(true); else if(live.citizens.get(id)?.injuredUntil||live.citizens.get(id)?.recovery?.until)setPatientFor(id); else if (tsar) setSubtitleFor(id) }, [tsar,live.citizens])
+  const pickCitizen = useMemo(() => (id: string) => { setEnemyPick(null); if (id === PRIEST_ID) setChaplainOpen(true); else if(id===TSAR_ID&&live.state?.tsar.injuredUntil||live.citizens.get(id)?.injuredUntil||live.citizens.get(id)?.recovery?.until)setPatientFor(id); else if (tsar) setSubtitleFor(id) }, [tsar,live.citizens,live.state?.tsar.injuredUntil])
   // Only a citizen can be sent to work; the Tsar watches and walks around, players without a character just look.
   const canWork = !tsar && !!citizen
   const working = citizen?.state === 'Paused' || citizen?.state === 'Working' && !!citizen.cycleEndsAt && Date.parse(citizen.cycleEndsAt)>raidClock
@@ -1009,7 +1010,24 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
       </div>
 
       {monasteryOpen&&<MonasteryPanel slug={slug} onClose={()=>setMonasteryOpen(false)} onGo={async point=>{if(tsar)setVillageState(await api.tsarGoTo(slug,point));else setCitizen(await api.goTo(slug,point))}}/>}
-      {patientFor&&live.citizens.get(patientFor)&&<div className="modal-backdrop"><section className="modal" role="dialog" aria-label="Раненый житель"><header className="modal-header"><h2>{live.citizens.get(patientFor)!.name}</h2><button onClick={()=>setPatientFor(null)}>✕</button></header><div className="modal-body"><p>{live.citizens.get(patientFor)!.recovery?.until?'На лечении после дуэли':live.citizens.get(patientFor)!.hospitalizedAt?'На лечении после боя':'Ранен после боя, ждёт помощи'}</p><p className="small muted">Переноска не лечит. Если никто не поможет, санитары заберут раненого через 5 минут.</p>{citizen&&citizen.id!==patientFor&&!live.citizens.get(patientFor)!.hospitalizedAt&&!live.citizens.get(patientFor)!.recovery?.until&&<button disabled={pending||!!live.citizens.get(patientFor)!.rescueByCitizenId} onClick={()=>{const id=patientFor;setPatientFor(null);void run(()=>api.rescue(slug,id))}}>Отнести в больницу</button>}<button onClick={()=>{setHospitalPatient(patientFor);setPatientFor(null);setHospitalOpen(true)}}>Лечение</button></div></section></div>}
+      {patientFor&&(()=>{
+        const royal=patientFor===TSAR_ID
+        const patient=royal?live.state.tsar:live.citizens.get(patientFor)
+        if(!patient)return null
+        const patientId=royal?live.state.tsar.accountId:patientFor
+        return <RescuePatientPanel patient={patient} now={raidClock} pending={pending}
+          own={royal?tsar:citizen?.id===patientFor} canCarry={!!citizen&&citizen.id!==patientFor}
+          hasHospital={live.state.structures.some(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)}
+          carrierName={patient.rescueByCitizenId?live.citizens.get(patient.rescueByCitizenId)?.name:undefined}
+          onClose={()=>setPatientFor(null)}
+          onCarry={()=>{if(patientId){setPatientFor(null);void run(()=>api.rescue(slug,patientId))}}}
+          onAsk={()=>{void (async()=>{setPending(true);try{
+            const sent=await api.requestRescue(slug)
+            setNotice(sent?'Просьба о помощи отправлена в игровой чат':'Просьба уже отправлена')
+            setVillageState((await api.village(slug)).state)
+          }catch(error){setNotice(i18n.error(error))}finally{setPending(false)}})()}}
+          onTreatment={royal?undefined:()=>{setHospitalPatient(patientFor);setPatientFor(null);setHospitalOpen(true)}}/>
+      })()}
       {hospitalOpen && <HospitalPanel initialPatientId={hospitalPatient} slug={slug} actorId={me.id} citizenId={citizen?.id} tsar={tsar} village={village}
         onVillage={setVillageState} serverOffsetMs={serverOffset} onClose={() => setHospitalOpen(false)} onUpdated={() => { void loadCitizen() }} />}
       {chaplainOpen && <SramoslavPanel citizen={citizen} slug={slug} onClose={() => setChaplainOpen(false)} onReply={text => canvas.current?.say(PRIEST_ID, text, 12)} />}
@@ -1053,7 +1071,6 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
               joining={joining}
               joinError={joinError}
               feed={live.feed}
-              onCallUndead={(enemy, size) => undeadAction(() => api.callUndead(slug, enemy, size))}
               onCancelUndead={() => undeadAction(() => api.cancelUndead(slug))}
               undeadError={undeadError}
               onOpenDungeon={() => dungeonAction(() => api.openDungeon(slug))}
@@ -1080,6 +1097,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
               onCarry={carry}
               onDrop={drop}
               onEat={eat}
+              onCitizen={applyCitizen}
               onTake={takeFromStorage}
               onClose={() => setPanel('none')}
             />

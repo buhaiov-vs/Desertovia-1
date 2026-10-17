@@ -1,3 +1,4 @@
+import {buildingSuffix} from '../buildingLabels'
 import { ActionEnergy } from './ActionEnergy'
 import { LEND_A_HAND, type Catalog, type Citizen, type JobDefinition, type Site, type SiteJob, type VillageState } from '../api'
 import { useI18n } from '../i18n'
@@ -91,7 +92,7 @@ export function SiteCard({
   return (
     <section className="card site">
       <div className="site-head">
-        <strong>{i18n.building(site.kind).name}{site.number ? ` №${site.number}` : ''}</strong>
+        <strong>{i18n.building(site.kind).name}{buildingSuffix(site)}</strong>
         <span className="muted small">
           {t('site.stage', { number: site.stage + 1, total: site.stages.length, stage: i18n.stage(stage.id) })}
         </span>

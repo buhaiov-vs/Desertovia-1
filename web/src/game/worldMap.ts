@@ -179,6 +179,7 @@ export const WORKPLACES: Record<string, { x: number; y: number; spread: number }
   'bird-grove': { x: 21, y: 23.5, spread: 2 },
   camp: { x: CAMPFIRE.x, y: CAMPFIRE.y + 1, spread: 2.5 },
   gate: { x: 1.2, y: 13.4, spread: 0.6 },
+  fortifications: { x:2.5,y:10.5,spread:.6 },
   project: { x: 28, y: 11.2, spread: 1.4 },
 }
 
@@ -1057,6 +1058,8 @@ export const RESOURCE_ICONS: Record<string, TileRef> = {
   Feathers: EXTRAS.feather,
   Flax: farm(80),
   Grain: farm(68),
+  Porridge: town(29),
+  Stew: town(29),
   VigorDrink: dungeon(116),
   Spear: dungeon(130),
   Bow: town(119),
@@ -1122,6 +1125,8 @@ export const TASK_ICONS: Record<string, TileRef> = {
   explore: town(119),
   design: dungeon(65),
   'brew-remedy': dungeon(115),
+  'cook-porridge': RESOURCE_ICONS.Food,
+  'cook-stew': RESOURCE_ICONS.Food,
   'brew-vigor': RESOURCE_ICONS.VigorDrink,
   'lead-crew': factory(120),
   negotiate: battle(196),

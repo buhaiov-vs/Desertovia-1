@@ -10,6 +10,29 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.11',date:'2026-10-17',
+    title:{ru:'Набеги, спасение и развитие поселения',en:'Raids, rescue and settlement progression'},
+    changes:{
+      ru:['Раненого можно подобрать и физически доставить в больницу в любой момент до выздоровления. В палате оставшееся время лечения сокращается до четверти; полезная доставка даёт славу один раз.',
+        'Редактор царя: БОСС-ФАЙТ, смешанный бой и орда, собственные пресеты и настройка состава, волн, силы и ущерба. Оценку можно посмотреть до запуска.',
+        'Сложность учитывает фактическое сопротивление и результаты боёв. Ущерб зданиям отделён от тяжёлого разгрома; кражи и расходники учитываются отдельно.',
+        'Здания получили постоянные номера внутри своего типа. Единственная постройка типа показывается без номера; координаты, владельцы и история сохранены.',
+        'Деревянный забор можно усилить до бревенчатого, затем до каменного за материалы и работу. Повреждения сохраняются; готовое усиление ждёт окончания всех волн. Добавлены дневные и ночные текстуры в стиле карты.',
+        'Еда расходуется раз в три законченных рабочих цикла. Улучшения жилья и складов увеличивают вместимость; меню показывает условия расширения царства.',
+        'Реальные удары в набегах дают ограниченный опыт силы и ловкости. Очки исследований можно однократно вложить в выбранную технологию, сохраняя требования к участникам.',
+        'Каша и похлёбка готовятся из существующих ресурсов в пекарне и корчме. Один временный эффект: −10% расхода сил на работу или +5% урона в набеге; HP и силы мгновенно не восстанавливаются.',
+        'Явные предложения владельца батюшке действительно сохраняются в предложке; повтор сообщения не создаёт дубликат.'],
+      en:['A wounded resident can be physically carried to a hospital at any time before recovery. Admission reduces remaining recovery to a quarter; useful rescue awards renown once.',
+        'Owner raid editor: boss, mixed and horde presets, saved configurations, composition, waves, power and loss controls, with a preview before launch.',
+        'Difficulty uses actual resistance and battle outcomes. Property damage is separate from a heavy defeat; theft and consumables are accounted for.',
+        'Buildings have permanent numbers within each type. A sole building hides its suffix; coordinates, ownership and history are preserved.',
+        'Upgrade wooden fences to logs and stone through paid construction. Damage remains; completed reinforcement waits for all waves to end. Matching day and night map textures added.',
+        'Food is consumed every three completed work cycles. Housing and storage upgrades offer more capacity; the menu explains kingdom expansion.',
+        'Actual raid hits grant bounded strength and dexterity experience. Research points can support the elected technology once, retaining participant requirements.',
+        'Cook porridge or stew at the bakery and tavern using existing resources. One temporary effect: −10% work energy cost or +5% raid damage; neither instantly restores HP or energy.',
+        'Explicit owner suggestions to the chaplain are durably recorded without duplicate messages.']}
+  },
+  {
     version:'0.7.9',date:'2026-10-17',
     title:{ru:'Разорение деревни, орда и боссы',en:'Property raids, hordes and bosses'},
     changes:{

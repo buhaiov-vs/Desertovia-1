@@ -14,6 +14,9 @@ namespace Desertod.Domain.Entities;
 
 public sealed class Village
 {
+    public List<BuildingDisplayNumber> BuildingDisplayNumbers { get; set; } = [];
+    public RaidAdaptation RaidAdaptation { get; set; } = new();
+    public List<SavedRaidPreset> RaidPresets { get; set; } = [];
     public const int NameMinimumLength = 3;
     public const int NameMaximumLength = 64;
     public const int DescriptionMaximumLength = 280;
@@ -103,6 +106,11 @@ public sealed class Village
     /// <summary>The Tsar's last walk; the land along it is seen as they get there.</summary>
     public Trip? TsarTrip { get; set; }
     public DateTimeOffset? TsarInjuredUntil { get; set; }
+    public DateTimeOffset? TsarWoundedAt { get; set; }
+    public DateTimeOffset? TsarHospitalizedAt { get; set; }
+    public Guid? TsarRescueByCitizenId { get; set; }
+    public bool TsarRescueRewardEligible { get; set; }
+    public DateTimeOffset? TsarRescueRequestedAt { get; set; }
 
     /// <summary>Land the tribe has seen, shared by all its players; see <see cref="Exploration"/>.</summary>
     public byte[] Explored { get; set; } = [];

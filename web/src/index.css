@@ -2596,3 +2596,17 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 @media(max-width:720px){.hud-state-row>.personal-vitals{order:2;width:104px;padding:1px 3px;gap:1px;font-size:9px;line-height:11px}.hud-state-row>.weather{order:1;flex:0 1 auto}.hud-state-row>.wallet-hud{order:3;gap:2px;margin-left:auto}.personal-vitals .vital-line{grid-template-columns:12px minmax(15px,1fr);gap:3px}.personal-vitals progress{height:4px}.hud-state-row{gap:2px}.hud-state-row>.resource-chip{font-size:.65rem}}
 
 .defeat-banner{position:absolute;top:150px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);z-index:15;padding:8px;background:#6b211a;color:#fff3d6;border:2px solid #c49445;border-radius:6px;text-align:center}
+
+/* Raid editor lives inside the existing parchment menu, never the map HUD. */
+.raid-editor-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.65rem;margin:.7rem 0; }
+.raid-editor-field {display:flex;flex-direction:column;gap:.25rem;font-size:.9rem;min-width:0;}
+.raid-editor input[type=number], .raid-editor select {width:100%;min-width:0;}
+.raid-editor details {margin:.7rem 0;}
+.raid-editor details > label {display:block;margin:.4rem 0;}
+.raid-editor-species {display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin:.35rem 0;}
+.raid-editor-species input[type=number] {width:5rem;}
+.raid-editor-presets {display:flex;flex-wrap:wrap;align-items:end;gap:.5rem;margin:1rem 0;}
+.raid-editor-presets > label {display:flex;flex-direction:column;flex:1 1 180px;}
+.raid-editor-presets > input {flex:1 1 150px;min-width:0;}
+.raid-preview {margin-top:.7rem;padding:.65rem;border:1px solid var(--border,#8b6a41);border-radius:8px;}
+.raid-editor select {font:inherit;color:inherit;background:#fff9ed;border:2px solid #795430;border-radius:.3rem;padding:.4rem .5rem;min-height:44px;}

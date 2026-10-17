@@ -12,9 +12,7 @@ import {
   type BuildingDefinition,
   type Catalog,
   type Citizen,
-  type EnemyKind,
   type Me,
-  type RaidSize,
   type Task,
   type VillageState,
 } from '../api'
@@ -86,7 +84,6 @@ export interface MenuProps {
   joining: boolean
   joinError: string | null
   feed: FeedEntry[]
-  onCallUndead: (enemy: EnemyKind, size: RaidSize) => void
   onCancelUndead: () => void
   undeadError: string | null
   onOpenDungeon: () => void
@@ -151,7 +148,7 @@ export function GameMenu(props: MenuProps) {
         </header>
 
         <div className="modal-body">
-          {tab === 'village' && ruler && <DefensePanel slug={props.slug} village={village} ruler/>}
+          {tab === 'village' && ruler && <DefensePanel slug={props.slug} village={village} ruler tsar={tsar} onVillage={props.onVillage}/>}
           {tab === 'village' && tsar && <AlmightyPanel slug={props.slug}/>}
           {tab === 'village' && (tsar || citizen) && <EconomyPanel village={village} catalog={catalog} citizen={citizen} accountId={props.me.id} onPrivatePlace={props.onPrivatePlace}/>}
           {tab==='village'&&(village.bridgeDamage??0)>0&&<p className="error small">{i18n.language==='ru'?'Царский мост повреждён. Восстановление — работа «Ремонт зданий» в заданиях.':'The royal bridge is damaged. Use Repair buildings in Tasks to restore it.'} {village.bridgeDamage}/100</p>}
@@ -248,10 +245,11 @@ export function GameMenu(props: MenuProps) {
               )}
               {tsar && (
                 <UndeadPanel
+                  catalog={catalog}
                   village={village}
                   pending={pending}
                   error={props.undeadError}
-                  onCall={props.onCallUndead}
+                  onVillage={props.onVillage}
                   onCancel={props.onCancelUndead}
                 />
               )}
@@ -311,6 +309,7 @@ export function GameMenu(props: MenuProps) {
               disabled={disabled}
               onPoll={props.onPoll}
               onResearch={props.onResearch}
+              onVillage={props.onVillage}
             />
           )}
 

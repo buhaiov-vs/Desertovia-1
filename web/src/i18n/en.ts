@@ -75,10 +75,10 @@ export const en = {
     'needs.drinkCooldown': 'Your heart is still racing. Next drink in {minutes} min.',
     'needs.drinkFull': 'You are full of energy already.',
     'hint.fed':
-      'You are fed. Eating is automatic: 1 food after every {cycles} completed tasks. Public work uses carried food, then village storage; private work uses your personal inventory.',
+      'You are fed. One food is eaten after every {cycles} completed tasks: carried food first, then personal inventory. Village food is also available during public work.',
     'hint.meal': 'Eating is automatic. {done} of {cycles} tasks completed since your last meal. After task {cycles} you eat 1 food.',
     'hint.hungry':
-      'No available food was found at your last meal. Tasks give {experience}% XP and energy recovers at {rest}% speed. You try to eat after each completed task: private work uses your personal inventory; public work uses carried food or village storage.',
+      'No food was available at the last meal. Tasks give {experience}% XP and energy recovers at {rest}% speed. After each task: carried food → personal inventory → village stock for public work only. Eat immediately from your own supplies in Inventory.',
     'hint.hungryExperience': 'Hungry: every task gives {percent}% of the usual experience.',
     'hint.hungryRest': 'Hungry: energy comes back at {percent}% of its usual speed.',
     'hint.underTrees':
@@ -305,8 +305,8 @@ export const en = {
     'character.underTrees': 'under the trees',
     'character.inShelter': 'in a shelter',
     'character.rest': 'energy recovers at {percent}%',
-    'character.hungry': 'You are hungry: half XP and slower rest. You try to eat again after the next completed task. Private work needs food in your personal inventory; public work uses carried food or village storage.',
-    'character.eating': 'Eating is automatic; no Eat button is needed. After every {cycles} completed tasks you eat 1 food. Public work uses carried food, then village storage. Private work uses your personal inventory only. Food removes hunger; energy recovers gradually while resting.',
+    'character.hungry': 'You are hungry: half XP and slower rest. Eat immediately from carried or personal supplies in Inventory. After each completed task you also try to eat automatically; village food is available for public work only.',
+    'character.eating': 'One food after every {cycles} completed tasks: carried food → personal inventory → village stock for public work only. To end hunger immediately, press Eat in Inventory. Food removes hunger; energy recovers gradually during rest. Idle time does not consume food.',
     'character.fed': 'Fed',
 
     'inventory.title': 'Inventory',
@@ -693,11 +693,13 @@ export const en = {
     'raid.none': 'No raids yet.',
     'raid.result.Repelled': 'repelled',
     'raid.result.Cancelled': 'Undead put to sleep by the Tsar',
+    'raid.propertyDamaged': '{enemy} raid repelled with property losses',
+    'raid.result.PropertyDamaged': 'repelled with property losses',
     'raid.result.Lost': 'lost',
     'notify.raidTitle': 'Raid: {enemy}!',
     'notify.raidBody': 'They strike in {minutes} min. Keep watch to defend the village.',
     'notify.raidOverTitle': 'Raid over',
-    'undead.title': 'Undead event',
+    'undead.title': 'Raids',
     'undead.hint':
       'Send waves of the dead against the village for your stream. Citizens get {minutes} min of warning; keepers of the watch fight them.',
     'undead.enemy': 'Who rises',
@@ -706,7 +708,7 @@ export const en = {
     'undead.size.Medium': 'Medium: 2 waves',
     'undead.size.Large': 'Large: 3 waves',
     'undead.call': 'Raise the dead',
-    'undead.cancel': 'Lay them to rest',
+    'undead.cancel': 'Stop raid (all waves)',
     'undead.coming': 'The dead are on their way.',
     'building.damaged': 'Damaged {percent}%: works slower until repaired',
     'dungeon.deadLands': 'Dead Lands',
@@ -852,6 +854,8 @@ export const en = {
     Feathers: 'Feathers',
     Flax: 'Flax',
     Grain: 'Grain',
+    Porridge: 'Grain porridge',
+    Stew: 'Hearty stew',
     VigorDrink: 'Vigor drinks',
     Spear: 'Spears',
     Bow: 'Bows',
@@ -944,6 +948,7 @@ export const en = {
   } as Record<string, string>,
 
   buildings: {
+    FortificationUpgrade: {name: 'Fortification upgrade', description: 'Materials and work reinforce the existing perimeter without repairing damage.'},
     Castle: { name: 'Royal castle', description: 'The Tsar’s residence. Upgrades open new land for the kingdom.' },
     Hospital: { name: 'Hospital', description: 'Duel recovery and first-aid training.' },
     Heap: { name: 'Heap', description: 'A fenced patch of ground for any goods. Small and messy.' },
@@ -978,6 +983,7 @@ export const en = {
   } as Record<string, { name: string; description: string }>,
 
   stages: {
+    reinforce: 'Reinforcement',
     dismantle:'Dismantling', upgrade:'Storage upgrade', expand:'Housing expansion',
     ground: 'Ground',
     foundation: 'Foundation',
@@ -1032,6 +1038,8 @@ export const en = {
   } as Record<string, string>,
 
   tasks: {
+    'cook-porridge': 'Cook grain porridge',
+    'cook-stew': 'Cook hearty stew',
     'learn-first-aid': 'Study first aid',
     'practice-first-aid': 'Practice first aid',
     'chop-wood': 'Gather wood',
@@ -1215,6 +1223,17 @@ export const en = {
   } as Record<string, { ruler: string; citizen: string }>,
 
   errors: {
+    "defense.raidPending": "Wait for all raid waves to end before upgrading fortifications.",
+    "defense.upgradeWorking": "A fortification upgrade is already under construction.",
+    "defense.upgradeTechnology": "Carpentry is required; stone also requires Mining.",
+    "raid.requestConflict": "This launch identifier was used with different settings. Refresh the preview.",
+    "raid.settings": "Invalid settings: check ranges and composition shares (100% total).",
+    "raid.unaffordable": "This composition exceeds the automatic budget. Reduce its strength or select manual mode.",
+    "raid.pending": "A raid is already announced. Finish or cancel it first.",
+    "raid.presetName": "Enter a preset name of 1–48 characters.",
+    "raid.presetGone": "The preset no longer exists. Reload the list.",
+    "raid.presetLimit": "Up to eight presets can be saved.",
+
     'monastery.distance': 'Come to the monastery courtyard first.',
     'monastery.knowledge': 'Discover herb lore first.',
     'monastery.cooldown': 'Wait six hours after the previous contract.',

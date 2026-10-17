@@ -11,6 +11,7 @@ public sealed class RaidNavigation
     public int PathNodes {get;private set;}
     public int BlockedPaths {get;private set;}
     private readonly Village village;
+    private readonly bool pedestrian;
     private readonly HashSet<(int X, int Y)> solid = [];
     private readonly Dictionary<(int X, int Y), Fortification> walls;
     private readonly uint seed;
@@ -29,7 +30,7 @@ public sealed class RaidNavigation
         crowd=battle.Units.Where(u=>u.Alive).ToArray();
         bystanders=battle.Fighters.Where(f=>f.Active&&f.Health>0).ToArray();
         intentions.Clear();density.Clear();aversion.Clear();routes.Clear();
-        for(var i=0;i<battle.Units.Count;i++)aversion[battle.Units[i].Id]=MonsterBrain.Profile(enemy,battle.Units[i].Variant,i).CrowdAversion;
+        for(var i=0;i<battle.Units.Count;i++)aversion[battle.Units[i].Id]=MonsterBrain.Profile(EnemyCatalog.Get(battle.Units[i].Enemy??enemy.Kind),battle.Units[i].Variant,i).CrowdAversion;
         foreach(var u in crowd)
         {var tile=((int)Math.Floor(u.X),(int)Math.Floor(u.Y));density[tile]=density.GetValueOrDefault(tile)+1;}
     }
@@ -48,9 +49,10 @@ public sealed class RaidNavigation
         }
     }
 
-    public RaidNavigation(Village village)
+    public RaidNavigation(Village village, bool pedestrian = false)
     {
         this.village = village;
+        this.pedestrian = pedestrian;
         seed = Wilderness.Seed(village.Id.ToString());
         terrain=AuthoredTerrain.For(village.Id,village.Wilds);
         walls = village.Fortifications.ToDictionary(f => (f.X, f.Y));
@@ -65,11 +67,12 @@ public sealed class RaidNavigation
     {
         if (land.TryGetValue((x,y), out var valid)) return valid;
         // Raids use the kingdom's river bank. An enemy has no implicit swimming or closed-bridge permission.
-        valid = AuthoredTerrain.Inside(x,y) && x + .5 < Wilderness.RiverWestBank(y,seed);
+        valid = AuthoredTerrain.Inside(x,y) && (pedestrian || x + .5 < Wilderness.RiverWestBank(y,seed));
         if(valid)
         {
             var kind=terrain[AuthoredTerrain.Index(x,y)];
-            valid=kind is not (AuthoredTerrain.Water or AuthoredTerrain.Mountain)
+            var bridge = pedestrian && village.BridgeOpened && village.BridgeRuinedAt is null && x is >= 30 and <= 33 && y is >= 12 and <= 13;
+            valid=bridge || kind is not (AuthoredTerrain.Water or AuthoredTerrain.Mountain)
                 && (kind!=AuthoredTerrain.Ravine || village.Structures.Any(s=>s.Kind==BuildingKind.RopeBridge
                     && WorldMap.Footprint(s.PlotId) is {} bridge && bridge.Contains(new(x,y,1,1))));
         }
@@ -139,7 +142,7 @@ public sealed class RaidNavigation
                 if(!Dry(n.Item1,n.Item2)||solid.Contains(n))continue;
                 var wall=walls.GetValueOrDefault(n);
                 if(wall?.Blocks==true&&!canBreach)continue;
-                var nextCost=cost[p]+1+(wall?.Blocks==true?(100-wall.Damage)*(preferBreach ? .06 : .35):0)
+                var nextCost=cost[p]+1+(wall?.Blocks==true?(100-wall.Damage)*wall.Strength*(preferBreach ? .06 : .35):0)
                     +density.GetValueOrDefault(n)*crowdWeight;
                 if(cost.TryGetValue(n,out var old)&&old<=nextCost)continue;
                 cost[n]=nextCost;previous[n]=p;

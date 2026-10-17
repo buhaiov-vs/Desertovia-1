@@ -59,7 +59,7 @@ public static class GameRules
     public const double SkillWorkTimePerLevel = 0.04;
 
     /// <summary>A citizen eats one food every this many finished cycles; a missed meal is tried again after every cycle.</summary>
-    public const int CyclesPerMeal = 5;
+    public const int CyclesPerMeal = 3;
     public const double HungryExperienceMultiplier = 0.5;
     public const double HungryRegenerationMultiplier = 0.5;
     public const double UnderTreesRegeneration = 0.8;

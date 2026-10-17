@@ -1,3 +1,4 @@
+import {canUpgradeBuilding} from '../buildingLabels'
 import { buildingNumber } from './buildingLabel'
 import { useEffect, useRef, useState } from 'react'
 import { api, createOperationId, plotPosition, type BuildingDefinition, type Catalog, type Citizen, type EconomyRequest, type EconomyView, type VillageState } from '../api'
@@ -107,7 +108,7 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
             <button disabled={busy||!onPrivatePlace} onClick={()=>{const definition=catalog.buildings.find(b=>b.kind===building);if(definition)onPrivatePlace?.(definition)}}>{text('Выбрать место на карте','Choose a plot on the map')}</button>
           </div>
           {view.privateProperty.map(p=><div className="economy-lot" key={(p.site?'site:':'building:')+p.plotId}><span>{i18n.building(p.kind).name} · {buildingNumber(village,p.plotId)} · {p.site?text('Строится','Under construction'):text('Уровень','Level')+' '+p.level}</span><div>
-            {!p.site&&<button disabled={busy} onClick={()=>{const at=plotPosition(p.plotId);if(at)void act({action:'private-upgrade',x:at.x,y:at.y})}}>{text('Улучшить','Upgrade')}</button>}
+            {!p.site&&<button disabled={busy||!canUpgradeBuilding(village,p.plotId)} onClick={()=>{const at=plotPosition(p.plotId);if(at)void act({action:'private-upgrade',x:at.x,y:at.y})}}>{text('Улучшить','Upgrade')}</button>}
             {p.site&&!p.hasWork&&<button disabled={busy} onClick={()=>{const at=plotPosition(p.plotId);if(at)void act({action:'private-cancel',x:at.x,y:at.y})}}>{text('Отменить разметку','Cancel blueprint')}</button>}
             {!p.site&&(confirmProperty===p.plotId?<><span>{text('Начать медленную разборку?','Start slow dismantling?')}</span><button disabled={busy} onClick={()=>{const at=plotPosition(p.plotId);if(at)void act({action:'private-demolish',x:at.x,y:at.y});setConfirmProperty(null)}}>{text('Подтвердить','Confirm')}</button><button onClick={()=>setConfirmProperty(null)}>{text('Отмена','Cancel')}</button></>:<button onClick={()=>setConfirmProperty(p.plotId)}>{text('Разобрать','Dismantle')}</button>)}
           </div></div>)}

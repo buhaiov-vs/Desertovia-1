@@ -63,6 +63,8 @@ public static class GameEndpoints
             game.CivicDecisionAsync(slug, user.RequireAccountId(), id, request, ct));
         player.MapPost("/villages/{slug}/rescue/{patientId:guid}", (string slug,Guid patientId,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
             game.RescueAsync(slug,user.RequireAccountId(),patientId,ct));
+        player.MapPost("/villages/{slug}/rescue/request", (string slug,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
+            game.RequestRescueAsync(slug,user.RequireAccountId(),ct));
         player.MapGet("/catalog", (CatalogDto catalog) => catalog);
 
         player.MapGet("/villages/public", async (GameService game, IConfiguration config, CancellationToken cancellationToken) =>
@@ -123,6 +125,10 @@ public static class GameEndpoints
         player.MapPost("/villages/{slug}/me/drop", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.DropLoadAsync(slug, user.RequireAccountId(), cancellationToken));
 
+        player.MapPost("/villages/{slug}/research/knowledge", (string slug,KnowledgeInvestment request,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
+            game.InvestKnowledgeAsync(slug,user.RequireAccountId(),request,ct));
+        player.MapPost("/villages/{slug}/me/meal", (string slug,MealRequest request,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
+            game.EatMealAsync(slug,user.RequireAccountId(),request,ct));
         player.MapPost("/villages/{slug}/me/eat", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.EatAsync(slug, user.RequireAccountId(), cancellationToken));
 
@@ -131,6 +137,18 @@ public static class GameEndpoints
 
         player.MapPost("/villages/{slug}/me/heal", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.HealAsync(slug, user.RequireAccountId(), cancellationToken));
+
+        player.MapPost("/villages/{slug}/fortifications/upgrade", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.UpgradeFortificationsAsync(slug,user.RequireAccountId(),ct));
+
+        player.MapGet("/villages/{slug}/raid-editor", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.GetRaidEditorAsync(slug, user.RequireAccountId(), ct));
+        player.MapPost("/villages/{slug}/raid-editor/preview", (string slug, Desertod.Domain.Combat.RaidSettings settings, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.PreviewRaidAsync(slug, user.RequireAccountId(), settings, ct));
+        player.MapPost("/villages/{slug}/raid-editor/launch", (string slug, RaidLaunchRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.LaunchRaidAsync(slug, user.RequireAccountId(), request, ct));
+        player.MapPut("/villages/{slug}/raid-editor/presets", (string slug, RaidPresetRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.SaveRaidPresetAsync(slug, user.RequireAccountId(), request, ct));
 
         player.MapPost("/villages/{slug}/undead", (string slug, CallUndeadRequest request, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.CallUndeadAsync(slug, user.RequireAccountId(), request, cancellationToken));

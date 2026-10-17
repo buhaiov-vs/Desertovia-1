@@ -26,13 +26,16 @@ public sealed class MonsterBehaviorMigrationTests
         db.RaidBattles.Add(battle);await db.SaveChangesAsync();
         await db.GetService<IMigrator>().MigrateAsync("20261016223103_PlayerFeedback077");
         await db.Database.ExecuteSqlRawAsync("""
-            UPDATE "RaidBattles" SET "Units"=(SELECT jsonb_agg(u-'BossPhase'-'StrikeX'-'StrikeY'-'StrikeTarget'-'StrikeAt'-'SpecialReadyAt')
+            UPDATE "RaidBattles" SET "Units"=(SELECT jsonb_agg(u-'Enemy'-'BossPhase'-'StrikeX'-'StrikeY'-'StrikeTarget'-'StrikeAt'-'SpecialReadyAt')
                 FROM jsonb_array_elements("Units") u);
             """);
         await db.Database.MigrateAsync();db.ChangeTracker.Clear();
         Assert.False(db.Database.HasPendingModelChanges());
+        var preservedVillage=await db.Villages.SingleAsync(v=>v.Id==village.Id);
+        Assert.Equal(1,preservedVillage.RaidAdaptation.Coefficient);
+        Assert.Empty(preservedVillage.RaidAdaptation.Recent);Assert.Empty(preservedVillage.RaidPresets);
         var restored=await db.RaidBattles.SingleAsync();var unit=Assert.Single(restored.Units);
-        Assert.Equal(7,unit.Health);Assert.Equal(30,unit.MaximumHealth);Assert.Null(unit.StrikeAt);Assert.Null(unit.BossPhase);
+        Assert.Equal(7,unit.Health);Assert.Equal(30,unit.MaximumHealth);Assert.Null(unit.StrikeAt);Assert.Null(unit.BossPhase);Assert.Null(unit.Enemy);
         Assert.Equal(17,restored.DamageDone);Assert.Equal(13,restored.Fighters.Single().Health);
         Assert.Equal(3,restored.Fighters.Single().Arrows);Assert.Equal(21,restored.Fighters.Single().DamageDealt);
         unit.Variant="boss";unit.BossPhase=2;unit.StrikeX=12.5;unit.StrikeY=13.5;unit.StrikeTarget="11,10";

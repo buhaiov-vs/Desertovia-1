@@ -1,3 +1,14 @@
+# D-097: implement 0.7.11 now; preserve fence style/day/night
+
+Owner authorized implementation of the full retained plan, not just documentation.
+Read `docs/dezertovia/PATCH_0_7_11_IMPLEMENTATION.md` for the resumable checklist,
+worktrees, entry points, tests and art contract; keep it current after each packet.
+Feature branches feat/patch-0-7-11 in game079-record and bot079-final. Keep all
+D-093–096 scope, original outlines/palette/pixel scale and matched night variants.
+New fence art is explicitly authorized, superseding the historical art pause.
+No 0.7.11 installation date selected. Do not replay older deployment requests.
+State IN PROGRESS, not READY/installed; previous PLAN-only limits superseded.
+
 # D-096: 0.7.11 adds social rescue and owner raid editor, still PLAN
 
 Read `docs/dezertovia/RESCUE_AND_RAID_CONTROLS_0_7_11.md` and the full

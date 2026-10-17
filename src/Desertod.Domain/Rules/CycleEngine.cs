@@ -211,13 +211,15 @@ public static class CycleEngine
 
     public static void StartRescue(Citizen helper,Citizen patient,WorkContext context,DateTimeOffset now)
     {
-        CheckReady(helper,now);RescueRules.Check(helper,patient,now);helper.CyclePrivateOutput=false;
-        var spot=patient.Spot??patient.IdleSpot??patient.Trip?.To??WorldMap.Places[WorldMap.Camp];
-        BankAccess.Require(context.Village,spot);
-        var walk=WorldMap.Walk(WorldMap.Places[WorldMap.Camp],spot)+WorldMap.Walk(spot,RescueRules.Ward(context.Village))*2;
-        Begin(helper,RescueRules.TaskId,GameRules.CraftLength+walk,1.5,context.Village,now,walk);
+        CheckReady(helper,now);
+        var journey=RescueRules.Prepare(helper,patient,context.Village,now);
+        helper.CyclePrivateOutput=false;
+        var walk=journey.ArrivesAt-now;
+        Begin(helper,RescueRules.TaskId,walk,1.5,context.Village,now,walk);
+        helper.CycleEndsAt=journey.ArrivesAt; // Медицинская скорость уже включена в маршрут.
         helper.CurrentSiteId=null;helper.CurrentSiteStage=null;helper.RescuePatientId=patient.Id;
-        helper.Spot=spot;helper.SetOut(spot,context.Village,now);patient.RescueByCitizenId=helper.Id;
+        helper.RescueJourney=journey;
+        helper.Spot=journey.PositionAt(now);helper.Trip=null;patient.RescueByCitizenId=helper.Id;
     }
 
     /// <summary>Tasks a citizen takes weapons for: work where beasts attack, and guard duty.</summary>
@@ -327,6 +329,30 @@ public static class CycleEngine
         }
 
         citizen.CycleSettled = true;
+        if (citizen.CurrentTaskId == RescueRules.TaskId)
+        {
+            var renownBefore = citizen.Renown;
+            var delivered = citizen.RescueJourney is { } journey && (journey.PatientIsTsar
+                ? RescueRules.AdmitTsar(citizen, context.Village, journey.ArrivesAt)
+                : context.RescuePatient is { } patient && RescueRules.Admit(patient, context.Village, journey.ArrivesAt, citizen));
+            if (!delivered)
+            {
+                if (citizen.RescueJourney is {PatientIsTsar:true} failed && context.Village.TsarRescueByCitizenId == citizen.Id)
+                { context.Village.TsarSpot=failed.PositionAt(now); context.Village.TsarRescueByCitizenId=null; }
+                RescueRules.Cancel(citizen, context.RescuePatient, now, context.Village);
+            }
+            citizen.RescuePatientId = null;
+            if (citizen.RescueJourney is { } completed)
+            {
+                completed.CompletedAt ??= now;
+                citizen.Spot = completed.PositionAt(now); citizen.IdleSpot = citizen.Spot; citizen.Trip = null;
+            }
+            var deliveryRenown = citizen.Renown - renownBefore;
+            var rescueReport = Finish(citizen, context.Village, RescueRules.TaskId,
+                Stat.Endurance, Stat.Strength, Skill.Hauling, 1, delivered ? 1 : 0,
+                delivered && Eat(citizen, context.Village, now), [], [], 0, 0, false, !delivered);
+            return rescueReport with { RenownGained = rescueReport.RenownGained + deliveryRenown };
+        }
         if (citizen.CurrentTechnologyId is not null)
         {
             return SettleResearch(citizen, context, now);

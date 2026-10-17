@@ -1,3 +1,7 @@
+import fencesDay from '../assets/fences/day.json'
+import fencesDayUrl from '../assets/fences/day.png'
+import fencesNight from '../assets/fences/night.json'
+import fencesNightUrl from '../assets/fences/night.png'
 import constructionUrl from '../assets/construction/hut.png'
 import constructionFrames from '../assets/construction/hut.json'
 import { appPath } from '../paths'
@@ -60,18 +64,20 @@ export class TileSet {
   private readonly art: Spritesheet
   private readonly cache = new Map<string, Texture>()
   private readonly night: Record<string, Texture>
+  private readonly fences: {day:Record<string,Texture>;night:Record<string,Texture>}
   private readonly construction: Texture
   private readonly constructionCache = new Map<string, Texture>()
 
-  private constructor(sources: Record<SheetName, TextureSource>, art: Spritesheet, night: Record<string, Texture>, construction: Texture) {
+  private constructor(sources: Record<SheetName, TextureSource>, art: Spritesheet, night: Record<string, Texture>, construction: Texture, fences:{day:Record<string,Texture>;night:Record<string,Texture>}) {
     this.sources = sources
     this.art = art
     this.night = night
     this.construction = construction
+    this.fences=fences
   }
 
   static async load(): Promise<TileSet> {
-    const [entries, art, night, construction] = await Promise.all([
+    const [entries, art, night, construction,fences] = await Promise.all([
       Promise.all(
         (Object.keys(SHEETS) as SheetName[]).map(async (name) => {
           const texture = await Assets.load<Texture>(SHEETS[name].url)
@@ -98,8 +104,19 @@ export class TileSet {
         return Object.assign({}, ...sheets)
       })(),
       Assets.load<Texture>(constructionUrl).then(texture => { texture.source.scaleMode = 'nearest'; return texture }),
+      (async()=>{
+        const maps=await Promise.all([[fencesDayUrl,fencesDay],[fencesNightUrl,fencesNight]].map(async([url,data])=>{
+          const texture=await Assets.load<Texture>(url as string);texture.source.scaleMode='nearest'
+          const sheet=new Spritesheet(texture,data as typeof fencesDay);await sheet.parse();return sheet.textures
+        }))
+        return {day:maps[0],night:maps[1]}
+      })(),
     ])
-    return new TileSet(Object.fromEntries(entries) as Record<SheetName, TextureSource>, art, night, construction)
+    return new TileSet(Object.fromEntries(entries) as Record<SheetName, TextureSource>, art, night, construction,fences)
+  }
+
+  fenceFrame(level:number,shape:string,night=false):Texture {
+    return this.fences[night?'night':'day'][`${level>=3?'stone':'logs'}-${shape}`]
   }
 
   constructionFrame(name: keyof typeof constructionFrames): Texture {

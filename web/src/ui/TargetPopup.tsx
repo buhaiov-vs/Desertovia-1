@@ -1,3 +1,4 @@
+import {canUpgradeBuilding} from '../buildingLabels'
 import { buildingNumber } from './buildingLabel'
 import { SiteActions } from './SiteActions'
 import { useState } from 'react'
@@ -194,7 +195,7 @@ export function TargetPopup({
       <div className="target-popup-body">
         {home?.ownerAccountId&&<section className="small"><p>{i18n.language==='ru'?'Владелец':'Owner'}: {home.ownerName??'—'}{home.builtAt&&` · ${new Date(home.builtAt).toLocaleDateString(i18n.language)}`}</p><p>{i18n.language==='ru'?'Занято мест':'Occupied beds'}: {home.occupied}/{home.beds}</p>{home.ownerAccountId===citizen.accountId&&citizen.homePlotId!==home.plotId&&<button disabled={pending||home.occupied>=home.beds} onClick={()=>void operate('housing')}>{i18n.language==='ru'?'Заселиться':'Move in'}</button>}</section>}
         {operationError&&<p className="error">{operationError}</p>}
-        {target.kind==='building'&&ruler&&!village.structures.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&!village.storages.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&<div className="civic-actions"><button disabled={pending} onClick={()=>void operate('upgrade')}>Улучшить</button>
+        {target.kind==='building'&&ruler&&!village.structures.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&!village.storages.some(s=>s.plotId===target.plotId&&s.ownerAccountId)&&<div className="civic-actions"><button disabled={pending||!canUpgradeBuilding(village,target.plotId)} onClick={()=>void operate('upgrade')}>Улучшить</button>
           {confirm?<><span>Подтвердить медленную разборку?</span><button onClick={()=>void operate('demolish')}>Снести</button><button onClick={()=>setConfirm(false)}>Отмена</button></>:<button onClick={()=>setConfirm(true)}>Снести</button>}</div>}
         {site&&<SiteActions site={site} actorId={citizen.accountId} tsar={false} onAction={operation=>onCivic(site.plotId,operation)}/>}
         {blockedBank&&<p className="warning">Сначала постройте Царский мост.</p>}

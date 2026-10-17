@@ -6,6 +6,10 @@ public static class BuildingNumbers
     /// <summary>Allocate village-wide monotonic numbers, retaining the identity throughout upgrades.</summary>
     public static void Ensure(Village village)
     {
+        EnsureGlobal(village);BuildingLabels.Ensure(village);
+    }
+    private static void EnsureGlobal(Village village)
+    {
         var allNumbers = village.Structures.Select(s=>s.Number).Concat(village.Storages.Select(s=>s.Number)).Concat(village.Sites.Select(s=>s.Number)).ToArray();
         if (allNumbers.All(n=>n>0) && village.BuildingSequence >= allNumbers.DefaultIfEmpty().Max()) return;
         var plots = village.Structures.Select(s => (s.PlotId, s.BuiltAt, s.Number))

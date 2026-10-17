@@ -13,6 +13,16 @@ public sealed class RaidBattle
     public required string Sector { get; set; }
     public string Tactic { get; set; } = "entry";
     public string Composition { get; set; } = "mixed";
+    public RaidSettings? Settings { get; set; }
+    public Guid? EventId { get; set; }
+    public Guid? InitiatedBy { get; set; }
+    public bool ManualOverride { get; set; }
+    public DateTimeOffset? FirstContactAt { get; set; }
+    public DateTimeOffset? LastContactAt { get; set; }
+    public double PlayerHealthLost { get; set; }
+    public List<RaidLootBudget> LootBudgets { get; set; } = [];
+    public int RemediesUsed { get; set; }
+    public string? Result { get; set; }
     public int Seed { get; set; }
     public double ThreatBudget { get; set; }
     public int ReadyDefenders { get; set; }
@@ -38,6 +48,7 @@ public sealed class RaidBattle
 
 public sealed class RaidUnit
 {
+    public EnemyKind? Enemy { get; set; }
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public string Variant { get; set; } = "regular";
     public double X { get; set; }
@@ -81,11 +92,14 @@ public sealed class RaidFighter
     public double Health { get; set; }
     public double MaximumHealth { get; set; }
     public double DamageDealt { get; set; }
+    public double? RangedDamage { get; set; }
+    public double DamageTaken { get; set; }
     public int Kills { get; set; }
     public int RenownEarned { get; set; }
     public ResourceKind? Weapon { get; set; }
     public ResourceKind? Armor { get; set; }
     public int Arrows { get; set; }
+    public int ArrowsSpent { get; set; }
     public bool Wounded { get; set; }
     public bool Guard { get; set; }
     public bool Active { get; set; }
@@ -110,4 +124,25 @@ public sealed class RaidBattleEvent
     public required string Kind { get; set; }
     public required string Target { get; set; }
     public DateTimeOffset At { get; set; }
+}
+
+public sealed class RaidLootBudget
+{
+    public required string PlotId { get; set; }
+    public ResourceKind Kind { get; set; }
+    public int Limit { get; set; }
+    public int Taken { get; set; }
+}
+public sealed class RaidSummary
+{
+    public double ContactSeconds { get; set; }
+    public int Participants { get; set; }
+    public double PlayerHealthLost { get; set; }
+    public int RemediesUsed { get; set; }
+    public int ArrowsSpent { get; set; }
+    public int BrokenItems { get; set; }
+    public int PropertyDamage { get; set; }
+    public int WallDamage { get; set; }
+    public double NextCoefficient { get; set; }
+    public string Reason { get; set; } = "";
 }

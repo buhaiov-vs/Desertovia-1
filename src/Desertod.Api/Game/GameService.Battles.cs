@@ -45,7 +45,7 @@ public sealed partial class GameService
             people.FirstOrDefault(c=>c.Id==f.CitizenId)?.Name??"")).ToArray(),
         raid.Loot.Select(g=>new Desertod.Domain.Catalog.ResourceAmount(g.Kind,g.Amount)).ToArray(),
         raid.Stolen.Select(g=>new Desertod.Domain.Catalog.ResourceAmount(g.Kind,g.Amount)).ToArray(),
-        battle.Damage.Where(d=>d.Amount>0).Select(d=>d.PlotId).ToArray(),raid.Outcome==RaidOutcome.Repelled?RaidRules.RepelledMorale:RaidRules.LostMorale) {EngineVersion=2};
+        battle.Damage.Where(d=>d.Amount>0).Select(d=>d.PlotId).ToArray(),raid.Outcome==RaidOutcome.Repelled?RaidRules.RepelledMorale:raid.Outcome==RaidOutcome.Lost?RaidRules.LostMorale:0) {EngineVersion=2,Summary=raid.Summary,Outcome=raid.Outcome};
 
     private static IReadOnlyList<Desertod.Domain.Catalog.ResourceKind> BattleBroken(RaidFighter fighter,IReadOnlyList<Citizen> people)
     {
@@ -80,7 +80,7 @@ public sealed partial class GameService
                 if(battle.Phase=="Warning")throw new GameRuleException("battle.notActive","The battle has not started.");
                 var own=battle.Fighters.SingleOrDefault(f=>tsar?f.IsTsar&&f.AccountId==actor:!f.IsTsar&&f.CitizenId==citizen!.Id)
                     ??throw new GameRuleException("battle.notActive","You are not actively fighting.");
-                if(order.Mode=="heal")BattleActions.Heal(village,tsar?null:citizen,own,order.RequestId??Guid.Empty,now);
+                if(order.Mode=="heal") { if(BattleActions.Heal(village,tsar?null:citizen,own,order.RequestId??Guid.Empty,now))battle.RemediesUsed++; }
                 else BattleActions.Retreat(battle,own,new RaidNavigation(village));
                 battle.Revision++;db.AuditActor=actor;db.AuditOperation="battle-"+order.Mode;
                 await db.SaveChangesAsync(ct);changes.Mark(villageId);
@@ -134,6 +134,19 @@ public sealed partial class GameService
             await notifier.BattleUpdated(slug,battle,village.Fortifications);return true;
         },ct);
     }
+
+    public async Task<VillageStateDto> UpgradeFortificationsAsync(string slug,Guid actor,CancellationToken ct) =>
+        await WithVillageAsync(await FindVillageIdAsync(slug,ct),async db=>
+        {
+            var village=await LoadVillageAsync(db,slug,ct);await RequireRulerAsync(db,village,actor,ct);
+            var completed=await db.VillageProjects.Where(p=>p.VillageId==village.Id&&p.Status==ProjectStatus.Completed).Select(p=>p.DefinitionId).ToListAsync(ct);
+            Fortifications.Ensure(village,completed);
+            var now=time.GetUtcNow();var order=FortificationUpgrades.Request(village,actor,now);
+            if(village.OwnerAccountId==actor)FortificationUpgrades.Begin(village,order,now);
+            db.AuditActor=actor;db.AuditOperation="fortification-upgrade";
+            await db.SaveChangesAsync(ct);changes.Mark(village.Id);
+            return await BuildStateAsync(db,village,now,ct);
+        },ct);
 
     public async Task SetGateAsync(string slug,Guid actor,GateOrder order,CancellationToken ct) =>
         await WithVillageAsync(await FindVillageIdAsync(slug,ct),async db=>

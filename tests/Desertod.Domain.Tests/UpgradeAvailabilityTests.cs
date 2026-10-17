@@ -6,7 +6,8 @@ namespace Desertod.Domain.Tests;
 public sealed class UpgradeAvailabilityTests
 {
     [Theory]
-    [InlineData(BuildingKind.Hut,1,"building.upgradeUnsupported")]
+    [InlineData(BuildingKind.Library,1,"building.upgradeUnsupported")]
+    [InlineData(BuildingKind.Hut,3,"building.maxLevel")]
     [InlineData(BuildingKind.Hospital,1,"building.hospitalUpgrade")]
     [InlineData(BuildingKind.Hospital,3,"building.maxLevel")]
     [InlineData(BuildingKind.Longhouse,3,"building.maxLevel")]

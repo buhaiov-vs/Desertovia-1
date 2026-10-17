@@ -186,11 +186,11 @@ public static class CombatRules
             return false;
         }
 
-        Injure(citizen, TimeSpan.FromMinutes(enemy.InjuryMinutes), now);
+        Injure(citizen, TimeSpan.FromMinutes(enemy.InjuryMinutes), now, rewardEligible: true);
         return true;
     }
 
-    public static void Injure(Citizen citizen, TimeSpan duration, DateTimeOffset now)
+    public static void Injure(Citizen citizen, TimeSpan duration, DateTimeOffset now, bool rewardEligible = false)
     {
         var until = now + duration;
         if (citizen.InjuredUntil is not { } current || current < until)
@@ -199,6 +199,8 @@ public static class CombatRules
             citizen.IdleSpot=citizen.Spot??citizen.Trip?.To??citizen.IdleSpot;
             if (!citizen.CycleSettled && citizen.CycleEndsAt > now) citizen.RecoveryPausedAt ??= now;
             citizen.WoundedAt = now;citizen.HospitalizedAt = null;citizen.RescueByCitizenId=null;
+            citizen.RescueRewardEligible = rewardEligible;
+            citizen.RescueRequestedAt = null;
         }
     }
 

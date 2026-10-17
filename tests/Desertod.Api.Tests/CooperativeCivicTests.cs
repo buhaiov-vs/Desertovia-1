@@ -88,26 +88,35 @@ public sealed class CooperativeCivicTests(DesertodApiFactory factory)
         await AssertRuleBrokenAsync(await player.Client.PostAsJsonAsync(village.Path+"/me/task",new{taskId="chop-wood",spot=new{x=40,y=17}}),"bridge.closed");
     }
 
-    [Fact] public async Task Wounded_can_be_carried_once_without_healing_or_losing_items()
+    [Fact] public async Task Wounded_is_delivered_once_and_recovers_faster_without_losing_items()
     {
         var village=await players.FoundVillageAsync("Rescue Town");var helper=await players.JoinAsync(village,"Rescuer");var patient=await players.JoinAsync(village,"Wounded");
         var until=DateTimeOffset.FromUnixTimeMilliseconds(factory.Clock.GetUtcNow().AddHours(1).ToUnixTimeMilliseconds());
         await using(var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync())
         {
             var p=await db.Citizens.SingleAsync(c=>c.Id==patient.Id);p.InjuredUntil=until;p.WoundedAt=factory.Clock.GetUtcNow();
+            p.RescueRewardEligible=true;
+            var v=await db.Villages.SingleAsync(v=>v.Id==p.VillageId);
+            v.Structures.Add(new(){Kind=BuildingKind.Hospital,PlotId="20,15",BuiltAt=factory.Clock.GetUtcNow()});
             p.IdleSpot=new(12,16);p.Carry(Desertod.Domain.Catalog.ResourceKind.Wood,3);await db.SaveChangesAsync();
         }
         var started=await OkJsonAsync(await helper.Client.PostAsync(village.Path+$"/rescue/{patient.Id}",null));
         Assert.Equal("rescue-wounded",started.GetProperty("taskId").GetString());
         await AssertRuleBrokenAsync(await helper.Client.PostAsync(village.Path+$"/rescue/{patient.Id}",null),"task.cycleRunning");
-        factory.Clock.Advance(TimeSpan.FromMinutes(30));
+        var arrival=started.GetProperty("cycleEndsAt").GetDateTimeOffset();
+        factory.Clock.Advance(arrival-factory.Clock.GetUtcNow()+TimeSpan.FromSeconds(1));
         await OkJsonAsync(await helper.Client.GetAsync(village.Path+"/me"));
         await factory.Services.GetRequiredService<Desertod.Api.Game.GameService>().RefreshHospitalAsync(default);
         await using var check=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
         var saved=await check.Citizens.SingleAsync(c=>c.Id==patient.Id);
-        Assert.NotNull(saved.HospitalizedAt);Assert.Equal(until,saved.InjuredUntil);Assert.Equal(3,saved.Carried(Desertod.Domain.Catalog.ResourceKind.Wood));
+        Assert.NotNull(saved.HospitalizedAt);Assert.True(saved.InjuredUntil<until);
+        var expected=saved.HospitalizedAt!.Value+TimeSpan.FromTicks((long)((until-saved.HospitalizedAt.Value).Ticks*.25));
+        Assert.True(Math.Abs((saved.InjuredUntil!.Value-expected).TotalMilliseconds)<1);
+        Assert.Equal(3,saved.Carried(Desertod.Domain.Catalog.ResourceKind.Wood));
+        Assert.True((await check.Citizens.SingleAsync(c=>c.Id==helper.Id)).Renown>=2);
+        await AssertRuleBrokenAsync(await helper.Client.PostAsync(village.Path+$"/rescue/{patient.Id}",null),"rescue.notNeeded");
     }
-    [Fact] public async Task Orderlies_evacuate_an_unclaimed_patient_after_five_minutes()
+    [Fact] public async Task Nobody_automatically_admits_an_unclaimed_patient_after_five_minutes()
     {
         var village=await players.FoundVillageAsync("Orderlies");var patient=await players.JoinAsync(village);
         await using(var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync())
@@ -117,6 +126,45 @@ public sealed class CooperativeCivicTests(DesertodApiFactory factory)
         factory.Clock.Advance(TimeSpan.FromMinutes(6));
         await factory.Services.GetRequiredService<Desertod.Api.Game.GameService>().RefreshHospitalAsync(default);
         await using var check=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
-        var saved=await check.Citizens.SingleAsync(c=>c.Id==patient.Id);Assert.NotNull(saved.HospitalizedAt);Assert.True(saved.InjuredUntil>factory.Clock.GetUtcNow());
+        var saved=await check.Citizens.SingleAsync(c=>c.Id==patient.Id);Assert.Null(saved.HospitalizedAt);Assert.True(saved.InjuredUntil>factory.Clock.GetUtcNow());
+    }
+
+    [Fact] public async Task Wounded_requests_help_once_per_minute_without_being_admitted()
+    {
+        var village=await players.FoundVillageAsync("Help request");var patient=await players.JoinAsync(village);
+        await using(var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync())
+        {
+            var p=await db.Citizens.SingleAsync(c=>c.Id==patient.Id);
+            p.InjuredUntil=factory.Clock.GetUtcNow().AddHours(1);p.WoundedAt=factory.Clock.GetUtcNow();await db.SaveChangesAsync();
+        }
+        await OkJsonAsync(await patient.Client.PostAsync(village.Path+"/rescue/request",null));
+        await OkJsonAsync(await patient.Client.PostAsync(village.Path+"/rescue/request",null));
+        await using var check=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var saved=await check.Citizens.SingleAsync(c=>c.Id==patient.Id);
+        Assert.NotNull(saved.RescueRequestedAt);Assert.Null(saved.HospitalizedAt);
+        Assert.Equal(1,await check.ChatMessages.CountAsync(m=>m.VillageId==saved.VillageId&&m.CitizenId==patient.Id));
+    }
+
+    [Fact] public async Task Tsar_can_request_help_and_be_carried_without_a_second_character()
+    {
+        var village=await players.FoundVillageAsync("Royal rescue");var helper=await players.JoinAsync(village);
+        Guid actor=default;
+        await players.ArrangeVillageAsync(village.Slug,(v,now)=>
+        {
+            actor=v.OwnerAccountId;v.TsarWoundedAt=now;v.TsarInjuredUntil=now.AddMinutes(40);
+            v.TsarRescueRewardEligible=true;v.TsarSpot=new(16.5,16.5);
+            v.Structures.Add(new(){Kind=BuildingKind.Hospital,PlotId="20,15",BuiltAt=now});
+        });
+        await OkJsonAsync(await village.Tsar.PostAsync(village.Path+"/rescue/request",null));
+        var started=await OkJsonAsync(await helper.Client.PostAsync(village.Path+$"/rescue/{actor}",null));
+        var arrival=started.GetProperty("cycleEndsAt").GetDateTimeOffset();
+        factory.Clock.Advance(arrival-factory.Clock.GetUtcNow()+TimeSpan.FromSeconds(1));
+        await OkJsonAsync(await helper.Client.GetAsync(village.Path+"/me"));
+        await using var check=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var saved=await check.Villages.SingleAsync(v=>v.Slug==village.Slug);
+        Assert.NotNull(saved.TsarHospitalizedAt);Assert.Null(saved.TsarRescueByCitizenId);
+        Assert.True(saved.TsarInjuredUntil<saved.TsarWoundedAt!.Value.AddMinutes(20));
+        Assert.False(await check.Citizens.AnyAsync(c=>c.AccountId==actor));
+        Assert.True((await check.Citizens.SingleAsync(c=>c.Id==helper.Id)).Renown>=2);
     }
 }

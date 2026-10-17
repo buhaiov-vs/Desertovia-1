@@ -940,7 +940,7 @@ public sealed partial class GameService(
             }
             if(battle.Deferred)
             {
-                battle.Deferred=false;battle.StartsAt=now;battle.LastTickAt=now;battle.EndsAt=now.AddMinutes(4);raid.StrikesAt=now;
+                battle.Deferred=false;battle.StartsAt=now;battle.LastTickAt=now;battle.EndsAt=now.AddSeconds(battle.Settings?.DurationSeconds??240);raid.StrikesAt=now;
                 battle.Revision++;changed=true;updated.Add(battle);
                 foreach(var unit in battle.Units)unit.NextAttackAt=now.AddSeconds(2);
                 var priorRaid=village.Raids.Where(r=>r.Id!=raid.Id&&r.AnnouncedAt==raid.AnnouncedAt&&r.Wave<raid.Wave).OrderByDescending(r=>r.Wave).FirstOrDefault();
@@ -1040,8 +1040,9 @@ public sealed partial class GameService(
             if(citizen.RescuePatientId is {} patientId)
             {
                 var patient=await db.Citizens.SingleOrDefaultAsync(c=>c.Id==patientId&&c.VillageId==village.Id,cancellationToken);
-                if(patient?.RescueByCitizenId==citizen.Id)patient.RescueByCitizenId=null;
-                citizen.RescuePatientId=null;
+                RescueRules.Cancel(citizen,patient,now,village);
+                if(village.TsarRescueByCitizenId==citizen.Id)
+                {village.TsarSpot=citizen.IdleSpot;village.TsarRescueByCitizenId=null;}
             }
             CycleEngine.Cancel(citizen, now, village);
             await db.SaveChangesAsync(cancellationToken);
@@ -1354,6 +1355,7 @@ public sealed partial class GameService(
             .OrderBy(p => p.CompletedAt)
             .Select(p => p.DefinitionId)
             .ToListAsync(cancellationToken);
+        Fortifications.Ensure(village,completedProjects);
 
         // Active citizens, plus anyone still in a cycle whatever their status: working counts include them.
         var citizens = await db.Citizens.AsNoTracking()
@@ -1394,9 +1396,14 @@ public sealed partial class GameService(
 
         var recentSince = now - GameRules.RecentActivityWindow;
         var working = citizens.Where(c => c.IsWorking).ToList();
+        Citizen? rescuePatient = null;
+        var rescuer = db.Citizens.Local.FirstOrDefault(c => c.Id == citizenId);
+        if (rescuer?.RescuePatientId is { } rescueId)
+            rescuePatient = await db.Citizens.SingleOrDefaultAsync(c => c.Id == rescueId && c.VillageId == village.Id, cancellationToken);
         var work = new WorkContext
         {
             Village = village,
+            RescuePatient = rescuePatient,
             SiteWork = siteWork,
             Project = project,
             CompletedProjects = completedProjects.ToHashSet(),
@@ -1429,7 +1436,8 @@ public sealed partial class GameService(
             .Where(a => a.Id == village.OwnerAccountId)
             .Select(a => new { a.DisplayName, a.Character })
             .SingleAsync(cancellationToken);
-        var tsar = new TsarDto(owner.Character?.Name ?? owner.DisplayName, owner.Character?.Appearance, village.TsarSpot, village.TsarInjuredUntil);
+        var tsar = new TsarDto(owner.Character?.Name ?? owner.DisplayName, owner.Character?.Appearance, village.TsarSpot, village.TsarInjuredUntil)
+            { AccountId=village.OwnerAccountId, HospitalizedAt=village.TsarHospitalizedAt, RescueByCitizenId=village.TsarRescueByCitizenId, RescueRequestedAt=village.TsarRescueRequestedAt };
         var trips = await LoadTripsAsync(db, village.Id, cancellationToken);
         var shownSince = now - DungeonRules.ShownAfterEnd;
         var dungeon = await db.DungeonRuns.AsNoTracking()
@@ -1446,7 +1454,9 @@ public sealed partial class GameService(
                 ? residents.FirstOrDefault(c=>c.AccountId==id)?.Name??ownerNames.GetValueOrDefault(id):null}).ToArray(),
             Battles = (await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==village.Id && (b.FinishedAt==null || b.FinishedAt>=now.AddSeconds(-15))).OrderBy(b=>b.StartsAt).ToListAsync(cancellationToken)).Select(b=>b.ToBattleDto()).ToArray(),
             Fortifications = village.Fortifications,
+            FortificationUpgrade=FortificationUpgrades.Quote(village),
             KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),
+            NextKingdomArea=KingdomRules.Level(village)<3?KingdomRules.AreaForLevel(Math.Max(1,KingdomRules.Level(village))+1):null,
             CivicOrders = village.CivicOrders,
             DefeatedAt=village.DefeatedAt,
             Relocations=village.Structures.Where(h=>ShelterRules.Beds(h)>0).Select(h=>new RelocationDto(h.PlotId,

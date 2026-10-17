@@ -33,7 +33,7 @@ public sealed record RaidReport(
     IReadOnlyList<ResourceAmount> Loot,
     IReadOnlyList<ResourceAmount> Stolen,
     IReadOnlyList<string> DamagedPlots,
-    double MoraleChange) { public int EngineVersion { get; init; } }
+    double MoraleChange) { public int EngineVersion { get; init; } public RaidSummary? Summary { get; init; } public RaidOutcome? Outcome { get; init; } }
 
 /// <summary>
 /// Attacks on the camp. Some nights beasts come out of the woods; the Tsar can call the dead up for the viewers.

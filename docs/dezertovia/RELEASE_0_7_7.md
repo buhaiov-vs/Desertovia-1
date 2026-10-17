@@ -1,3 +1,28 @@
+# 0.7.7 INSTALLED and independently verified — 17 October 2026
+
+Owner D-087 authorized installation no earlier05:30UTC/07:30Europe/Oslo.
+Fresh preflight39006496030 SUCCESS; install39006543221 SUCCESS;
+independent check39006763680 SUCCESS at2026-10-17T05:34:46.7429731Z.
+LIVE game44b4e426cdfdd9bb72621a9febeb624130a8d6e2, bot payload source
+d462e634df7ac49efd45b1ab3bc09e49fd11796b. Exact CI38979407726 and38980131645
+rechecked authenticated: completed/success/attempt1; tested/merged trees match.
+119→119profiles,0lost profiles/progress;121accounts and121login bindings retained.
+26migrations includingPlayerFeedback077; all4building-number checks0;24public
+frontend chunks and feedback live version0.7.7 verified. PostgreSQL dump restore
+catalog verified; SQLite/config/code/profile backups retained privately.
+14protected bot modules/configurations/quarantine/AI budget and directorPropose
+preserved. Only civic_notifications.py/feedback_context.py replaced in bot.
+No synthetic messages, model probes, forced raids, payments or progress resets.
+No natural battle timing sample at finalcheck: physical-phone FPS still unverified.
+Do not reinstall or replay older requests. Earlier READY/NOTINSTALLED entries
+below describe preparation, not the current runtime.
+
+Actual receipts: [result](RELEASE_0_7_7_RESULT.json).
+Installation: https://github.com/desertod666/bolig-agent/actions/runs/39006543221
+Independent check: https://github.com/desertod666/bolig-agent/actions/runs/39006763680
+
+## История подготовки и состав изменений
+
 # 0.7.7 — READY, установка запланирована, ещё не установлено
 
 Разрешение владельца D-087: запуск **17 октября 2026 в07:30 Europe/Oslo

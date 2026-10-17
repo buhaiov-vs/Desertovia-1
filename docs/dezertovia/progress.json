@@ -1350,7 +1350,7 @@
   },
   "player_feedback_077": {
     "decision": "D-087",
-    "status": "ready_scheduled_not_installed",
+    "status": "released",
     "version": "0.7.7",
     "earliest_install_utc": "2026-10-17T05:30:00Z",
     "timezone": "Europe/Oslo",
@@ -1366,7 +1366,7 @@
       "dry_work_and_roaming_paths"
     ],
     "release_plan": "PLAYER_FEEDBACK_0_7_7.md",
-    "live_changed": false,
+    "live_changed": true,
     "local_checks": {
       "domain": 439,
       "api": 251,
@@ -1390,6 +1390,24 @@
       "docker": "pass",
       "local_numbering_sql": "pass"
     },
-    "release_record": "RELEASE_0_7_7.md"
+    "release_record": "RELEASE_0_7_7.md",
+    "preflight_run": 39006496030,
+    "installation_run": 39006543221,
+    "independent_check_run": 39006763680,
+    "checked_at": "2026-10-17T05:34:46.7429731Z",
+    "preservation": {
+      "profiles_before": 119,
+      "profiles_after": 119,
+      "lost_profiles_or_progress": 0,
+      "accounts_preserved": 121,
+      "login_bindings_preserved": 121
+    },
+    "building_numbers": {
+      "sequenceTooSmall": 0,
+      "unassigned": 0,
+      "duplicatePlots": 0,
+      "duplicateNumbers": 0
+    },
+    "preservation_receipt": "RELEASE_0_7_7_RESULT.json"
   }
 }

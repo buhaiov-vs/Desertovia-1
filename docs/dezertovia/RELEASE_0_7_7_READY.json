@@ -1,9 +1,9 @@
 {
   "version": "0.7.7",
   "decision": "D-087",
-  "state": "ready_scheduled_not_installed",
+  "state": "installed_independently_verified",
   "source_ready": true,
-  "installed": false,
+  "installed": true,
   "not_before_utc": "2026-10-17T05:30:00+00:00",
   "scheduled_local": "2026-10-17 07:30 Europe/Oslo",
   "live_baseline_sha": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d",
@@ -41,7 +41,10 @@
     "local_numbering_sql": "pass"
   },
   "reviewed_at_utc": "2026-10-16T23:23:03.527026+00:00",
-  "live_preflight_pending": true,
-  "installation_run": null,
-  "independent_check_run": null
+  "live_preflight_pending": false,
+  "installation_run": 39006543221,
+  "independent_check_run": 39006763680,
+  "preflight_run": 39006496030,
+  "checked_at": "2026-10-17T05:34:46.7429731Z",
+  "preservation_receipt": "RELEASE_0_7_7_RESULT.json"
 }

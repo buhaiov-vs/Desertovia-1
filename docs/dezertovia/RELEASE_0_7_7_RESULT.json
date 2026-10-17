@@ -1,0 +1,61 @@
+{
+  "phase": "post077_verified",
+  "version": "0.7.7",
+  "game_sha": "44b4e426cdfdd9bb72621a9febeb624130a8d6e2",
+  "bot_sha": "d462e634df7ac49efd45b1ab3bc09e49fd11796b",
+  "building_numbers": {
+    "sequenceTooSmall": 0,
+    "unassigned": 0,
+    "duplicatePlots": 0,
+    "duplicateNumbers": 0
+  },
+  "progress": {
+    "profiles_before": 119,
+    "profiles_after": 119,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 121,
+    "login_bindings_preserved": 121
+  },
+  "migrations": 26,
+  "director_mode": "Propose",
+  "pending_notice_states": [
+    {
+      "state": "Sent",
+      "count": 1
+    }
+  ],
+  "telegram_civic_deliveries_confirmed": 44,
+  "frontend": {
+    "version": "0.7.7",
+    "game_chunk": true,
+    "checked_chunks": 24,
+    "transient_http_retries": 0
+  },
+  "feedback_live_version_verified": true,
+  "protected_modules_preserved": true,
+  "configurations_preserved": true,
+  "quarantine_mode": "quarantine",
+  "protected_module_count": 14,
+  "postgres_backup": {
+    "created": true,
+    "restore_catalog_verified": true,
+    "before_game": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d",
+    "candidate": "44b4e426cdfdd9bb72621a9febeb624130a8d6e2"
+  },
+  "sqlite_backup": true,
+  "combat_diagnostics": {
+    "legacy_duties": {
+      "unfinished": 0,
+      "medicallyPaused": 0
+    },
+    "recent_timing_samples": [],
+    "forced_raid": false
+  },
+  "synthetic_messages": 0,
+  "test_payments": 0,
+  "forced_raids": 0,
+  "checked_at": "2026-10-17T05:34:46.7429731Z",
+  "preflight_run": 39006496030,
+  "install_run": 39006543221,
+  "independent_check_run": 39006763680
+}

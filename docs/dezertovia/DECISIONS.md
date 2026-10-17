@@ -1,3 +1,10 @@
+D-087 deployment17Oct2026: LIVE0.7.7 exact44b4e426, botd462e634.
+Freshpreflight39006496030/install39006543221/independentcheck39006763680 SUCCESS.
+119profiles/121login bindings retained,0progresslosses;26migrations, building
+numbers all4checks0; backups/configs/14protected modules/Propose/budget/quarantine
+preserved. No forced raids/messages/payments/model probes/resets.
+See RELEASE_0_7_7.md and RELEASE_0_7_7_RESULT.json. Previous schedule is completed.
+
 ## D-087 · отзывы игроков и постоянные номера, 17.10
 
 Владелец выбрал реализацию ближайшего пакета и установку **17.10.2026 07:30

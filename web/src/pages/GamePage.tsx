@@ -1071,7 +1071,6 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
               joining={joining}
               joinError={joinError}
               feed={live.feed}
-              onCallUndead={(enemy, size) => undeadAction(() => api.callUndead(slug, enemy, size))}
               onCancelUndead={() => undeadAction(() => api.cancelUndead(slug))}
               undeadError={undeadError}
               onOpenDungeon={() => dungeonAction(() => api.openDungeon(slug))}

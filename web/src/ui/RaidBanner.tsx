@@ -1,17 +1,11 @@
-import { useState } from 'react'
+import { RaidEditor } from './RaidEditor'
 import {
   comingRaids,
-  RAID_SIZES,
-  UNDEAD,
   type Catalog,
   type CitizenSummary,
-  type EnemyKind,
-  type RaidSize,
   type VillageState,
 } from '../api'
 import { useI18n } from '../i18n'
-
-const UNDEAD_WARNING_MINUTES = 3
 
 function countdown(milliseconds: number) {
   const seconds = Math.max(0, Math.ceil(milliseconds / 1000))
@@ -56,22 +50,22 @@ export function RaidBanner({
 
 /** The Tsar's control of the undead event, with the record of the last raids. */
 export function UndeadPanel({
+  catalog,
   village,
   pending,
   error,
-  onCall,
+  onVillage,
   onCancel,
 }: {
   village: VillageState
   pending: boolean
   error: string | null
-  onCall: (enemy: EnemyKind, size: RaidSize) => void
+  catalog:Catalog
+  onVillage: (v:VillageState) => void
   onCancel: () => void
 }) {
   const i18n = useI18n()
   const { t } = i18n
-  const [enemy, setEnemy] = useState<EnemyKind>('Zombie')
-  const [size, setSize] = useState<RaidSize>('Small')
   const coming = village.raids.some((raid) => raid.outcome === 'Pending' && raid.source === 'Undead')
   const history = village.raids
     .filter((raid) => raid.outcome !== 'Pending' && raid.resolvedAt !== null)
@@ -79,7 +73,6 @@ export function UndeadPanel({
   return (
     <section className="card">
       <h3>{t('undead.title')}</h3>
-      <p className="small">{t('undead.hint', { minutes: UNDEAD_WARNING_MINUTES })}</p>
       {coming ? (
         <>
           <p className="small">{t('undead.coming')}</p>
@@ -89,35 +82,7 @@ export function UndeadPanel({
         </>
       ) : (
         <>
-          <div className="chips" role="radiogroup" aria-label={t('undead.enemy')}>
-            {UNDEAD.map((kind) => (
-              <button
-                key={kind}
-                role="radio"
-                aria-checked={enemy === kind}
-                className={`chip ${enemy === kind ? 'active' : ''}`}
-                onClick={() => setEnemy(kind)}
-              >
-                {i18n.enemy(kind)}
-              </button>
-            ))}
-          </div>
-          <div className="chips" role="radiogroup" aria-label={t('undead.size')}>
-            {RAID_SIZES.map((option) => (
-              <button
-                key={option}
-                role="radio"
-                aria-checked={size === option}
-                className={`chip ${size === option ? 'active' : ''}`}
-                onClick={() => setSize(option)}
-              >
-                {t(`undead.size.${option}`)}
-              </button>
-            ))}
-          </div>
-          <button className="primary" disabled={pending} onClick={() => onCall(enemy, size)}>
-            {t('undead.call')}
-          </button>
+          <RaidEditor enemies={catalog.enemies} village={village} pending={pending} onVillage={onVillage}/>
         </>
       )}
       {error && <p className="error">{error}</p>}
@@ -129,10 +94,15 @@ export function UndeadPanel({
           {history.map((raid) => (
             <li key={raid.id}>
               {new Date(raid.resolvedAt!).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })} —{' '}
-              {i18n.enemy(raid.enemy)} × {raid.count}: {t(`raid.result.${raid.outcome as 'Repelled' | 'Lost' | 'Cancelled'}`)}
+              {i18n.enemy(raid.enemy)} × {raid.count}: {t(`raid.result.${raid.outcome as 'Repelled' | 'Lost' | 'Cancelled' | 'PropertyDamaged'}`)}
               {raid.stolen.length > 0 && ` · ${t('raid.stolen', { goods: i18n.goods(raid.stolen) })}`}
               {raid.loot.length > 0 && ` · ${t('raid.loot', { goods: i18n.goods(raid.loot) })}`}
               {raid.injured > 0 && ` · ✚ ${raid.injured}`}
+              {raid.summary&&<details><summary>{i18n.language==='ru'?'Итоги боя':'Battle summary'}</summary>
+                <p className="small">{Math.round(raid.summary.contactSeconds)} {i18n.language==='ru'?'сек контакта · участников':'seconds in contact · participants'}: {raid.summary.participants} · HP −{Math.round(raid.summary.playerHealthLost)} · ✚ {raid.summary.remediesUsed} · 🏹 {raid.summary.arrowsSpent}</p>
+                <p className="small">{i18n.language==='ru'?'Урон зданиям / стенам':'Building / wall damage'}: {raid.summary.propertyDamage} / {raid.summary.wallDamage} · {i18n.language==='ru'?'сломано предметов':'broken items'}: {raid.summary.brokenItems}</p>
+                <p className="small">{raid.summary.reason} · {Math.round(raid.summary.nextCoefficient*100)}%</p>
+              </details>}
             </li>
           ))}
         </ul>

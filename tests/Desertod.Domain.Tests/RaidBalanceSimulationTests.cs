@@ -39,7 +39,7 @@ public sealed class RaidBalanceSimulationTests(ITestOutputHelper output)
         for(var second=1;second<=330&&b.FinishedAt is null;second++)
         {
             RaidSimulation.Tick(v,raid,b,guards,ids,b.StartsAt.AddSeconds(second));
-            Assert.InRange(b.DamageDone,0,RaidSimulation.PlunderDamageLimit);
+            Assert.InRange(b.DamageDone,0,b.Settings?.PropertyLimit??RaidSimulation.PlunderDamageLimit);
             Assert.All(b.Units,u=>{
                 Assert.InRange(u.Health,0,u.MaximumHealth);
                 Assert.False(AuthoredTerrain.Blocked(terrain[AuthoredTerrain.Index((int)Math.Floor(u.X),(int)Math.Floor(u.Y))]));

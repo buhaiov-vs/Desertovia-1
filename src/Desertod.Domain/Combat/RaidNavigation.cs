@@ -30,7 +30,7 @@ public sealed class RaidNavigation
         crowd=battle.Units.Where(u=>u.Alive).ToArray();
         bystanders=battle.Fighters.Where(f=>f.Active&&f.Health>0).ToArray();
         intentions.Clear();density.Clear();aversion.Clear();routes.Clear();
-        for(var i=0;i<battle.Units.Count;i++)aversion[battle.Units[i].Id]=MonsterBrain.Profile(enemy,battle.Units[i].Variant,i).CrowdAversion;
+        for(var i=0;i<battle.Units.Count;i++)aversion[battle.Units[i].Id]=MonsterBrain.Profile(EnemyCatalog.Get(battle.Units[i].Enemy??enemy.Kind),battle.Units[i].Variant,i).CrowdAversion;
         foreach(var u in crowd)
         {var tile=((int)Math.Floor(u.X),(int)Math.Floor(u.Y));density[tile]=density.GetValueOrDefault(tile)+1;}
     }

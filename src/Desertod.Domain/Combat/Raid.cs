@@ -17,6 +17,7 @@ public enum RaidOutcome
     Repelled,
     Lost,
     Cancelled,
+    PropertyDamaged,
 }
 
 /// <summary>How many of the undead the Tsar calls: more of them, in more waves.</summary>
@@ -50,6 +51,8 @@ public sealed class Raid
     public int Killed { get; set; }
     public int Defenders { get; set; }
     public int Injured { get; set; }
+    public RaidSummary? Summary { get; set; }
+    public bool? HeavyDefeat { get; set; }
     public int DamagedBuildings { get; set; }
     public List<RaidGood> Stolen { get; set; } = [];
     public List<RaidGood> Loot { get; set; } = [];

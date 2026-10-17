@@ -1,4 +1,4 @@
-import {test,expect} from './fixtures'
+import {test,expect} from './fixtures.js'
 
 test('wounded can request help without spam and sees remaining real time',async({page})=>{
   await page.goto('/e2e/rescue-harness.html')

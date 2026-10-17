@@ -134,6 +134,15 @@ public static class GameEndpoints
         player.MapPost("/villages/{slug}/me/heal", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.HealAsync(slug, user.RequireAccountId(), cancellationToken));
 
+        player.MapGet("/villages/{slug}/raid-editor", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.GetRaidEditorAsync(slug, user.RequireAccountId(), ct));
+        player.MapPost("/villages/{slug}/raid-editor/preview", (string slug, Desertod.Domain.Combat.RaidSettings settings, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.PreviewRaidAsync(slug, user.RequireAccountId(), settings, ct));
+        player.MapPost("/villages/{slug}/raid-editor/launch", (string slug, RaidLaunchRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.LaunchRaidAsync(slug, user.RequireAccountId(), request, ct));
+        player.MapPut("/villages/{slug}/raid-editor/presets", (string slug, RaidPresetRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.SaveRaidPresetAsync(slug, user.RequireAccountId(), request, ct));
+
         player.MapPost("/villages/{slug}/undead", (string slug, CallUndeadRequest request, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.CallUndeadAsync(slug, user.RequireAccountId(), request, cancellationToken));
 

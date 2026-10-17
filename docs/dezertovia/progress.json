@@ -1620,12 +1620,23 @@
         "browser_desktop_phone": 8,
         "frontend_build": "pass",
         "state": "branch_tested_not_installed"
+      },
+      {
+        "packet": "raid_editor_and_adaptive_difficulty",
+        "domain_full_initial": 480,
+        "domain_focused_final": 15,
+        "api_broad": 25,
+        "api_final": 4,
+        "browser_desktop_phone": 4,
+        "typescript": "pass",
+        "state": "branch_tested_not_installed"
       }
     ],
     "completed_packets": [
       "owner_feedback",
-      "social_rescue"
+      "social_rescue",
+      "raid_editor_and_adaptive_difficulty"
     ],
-    "next_packet": "raid_editor_and_adaptive_difficulty"
+    "next_packet": "building_type_numbers_food_and_space"
   }
 }

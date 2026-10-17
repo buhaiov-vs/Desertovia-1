@@ -14,6 +14,8 @@ namespace Desertod.Domain.Entities;
 
 public sealed class Village
 {
+    public RaidAdaptation RaidAdaptation { get; set; } = new();
+    public List<SavedRaidPreset> RaidPresets { get; set; } = [];
     public const int NameMinimumLength = 3;
     public const int NameMaximumLength = 64;
     public const int DescriptionMaximumLength = 280;

@@ -940,7 +940,7 @@ public sealed partial class GameService(
             }
             if(battle.Deferred)
             {
-                battle.Deferred=false;battle.StartsAt=now;battle.LastTickAt=now;battle.EndsAt=now.AddMinutes(4);raid.StrikesAt=now;
+                battle.Deferred=false;battle.StartsAt=now;battle.LastTickAt=now;battle.EndsAt=now.AddSeconds(battle.Settings?.DurationSeconds??240);raid.StrikesAt=now;
                 battle.Revision++;changed=true;updated.Add(battle);
                 foreach(var unit in battle.Units)unit.NextAttackAt=now.AddSeconds(2);
                 var priorRaid=village.Raids.Where(r=>r.Id!=raid.Id&&r.AnnouncedAt==raid.AnnouncedAt&&r.Wave<raid.Wave).OrderByDescending(r=>r.Wave).FirstOrDefault();

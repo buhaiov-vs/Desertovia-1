@@ -30,8 +30,8 @@
   /workspace/bot079-record вместо текущих веток. Других агентов не запускать.
 - .NET: /workspace/dotnet/dotnet, SDK 10.0.300; использовать DOTNET_ROOT.
   Не запускать Vite build и .NET static assets build одновременно.
-- Python-зависимости этого worktree пока не установлены: создать локальную venv
-  по requirements, не считать старые 891 tests новым PASS.
+- Python-зависимости установлены в /workspace/bot079-final/.venv; полный
+  актуальный набор 894 tests PASS, не подменять старым 891 tests.
 - Сохранять proxy/CA и auth; ключи/сырые отзывы/БД не выводить и не коммитить.
 
 ## Пакеты реализации и контрольные точки
@@ -40,13 +40,13 @@
 | --- | --- | --- |
 | FB-01 | Настоящий capture просьб владельца до Helper.answer, номер только после commit, источник/проект/версия, idempotent Telegram message, обычный разговор/настройки не поглощаются | BRANCH: 894 bot PASS, 40 focused PASS |
 | FB-02 | Неполный «баг:» требует описания; не обещать запись без содержания; не выдумывать отсутствующий screenshot | BRANCH: empty-prefix clarification tested; media remains existing |
-| MED-01 | Убрать RescueSweep auto-Admit через 5 минут; конечное уличное самолечение | TODO |
-| RESCUE-01 | Реальный путь от текущей позиции, подбор и переноска в доступную больницу без 5-минутного CraftLength и без окна допуска после ранения | TODO |
-| RESCUE-02 | При приёме однократно остаётся 25% оставшегося срока; ранее прошедшее время сохраняется, не удлинять уличный baseline | TODO |
-| RESCUE-03 | +2 славы и обычный XP за реальную полезную доставку один раз на эпизод; не двойная зарплата, не реальные свечи/Dcoin | TODO |
-| RESCUE-04 | Два спасателя/отмена/перезапуск/ранение помощника/выздоровление в пути; нет вечной брони, offline не отменяет серверную работу | TODO |
-| RESCUE-05 | Царь как существующий actor; внешнее лечение только через его источник, не подменять paid-duel таймер | TODO |
-| RESCUE-UI | Попросить помощь/маркер/короткое сообщение без спама, отнести/статус спасателя; улица видна, палата внутри, реальное время | TODO |
+| MED-01 | Убрать RescueSweep auto-Admit через 5 минут; конечное уличное самолечение | BRANCH 8d94003 |
+| RESCUE-01 | Реальный путь от текущей позиции, подбор и переноска в доступную больницу без 5-минутного CraftLength и без окна допуска после ранения | BRANCH 8d94003 |
+| RESCUE-02 | При приёме однократно остаётся 25% оставшегося срока; ранее прошедшее время сохраняется, не удлинять уличный baseline | BRANCH 8d94003 |
+| RESCUE-03 | +2 славы и обычный XP за реальную полезную доставку один раз на эпизод; не двойная зарплата, не реальные свечи/Dcoin | BRANCH 8d94003 |
+| RESCUE-04 | Два спасателя/отмена/перезапуск/ранение помощника/выздоровление в пути; нет вечной брони, offline не отменяет серверную работу | BRANCH 8d94003 |
+| RESCUE-05 | Царь как существующий actor; внешнее лечение только через его источник, не подменять paid-duel таймер | BRANCH 8d94003 |
+| RESCUE-UI | Попросить помощь/маркер/короткое сообщение без спама, отнести/статус спасателя; улица видна, палата внутри, реальное время | BRANCH 8d94003 |
 | RAID-EDIT | БОСС-ФАЙТ (1–2, до 3), Смешанный бой, Орда (до 48 одновременно); редактировать и сохранять собственные пресеты | TODO |
 | RAID-CONFIG | Виды/число/доли/HP/урон игрокам и имуществу/скорость/сторона/волны/предупреждение/таймер/отступление/кража/босс-фаза и удар | TODO |
 | RAID-PREVIEW | Безопасный preview без волн/списаний/модели, auto и owner-only manual override, явная оценка риска, единичный запуск | TODO |
@@ -159,3 +159,59 @@ reviewable PR, не заменять tested source текущим main. На с�
   It stays separate from the social-rescue commit. Finish preset planner/API/UI,
   immutable per-battle settings/individual species and full adaptive block before
   calling 0.7.11 ready. Remaining NUM/FOOD/WALL/SPACE/XP/KNOW/COOK/art still TODO.
+
+### RAID packet — current uncommitted work after 8d94003
+
+- RaidSettings snapshot/planner, owner API/UI editor, per-unit Enemy, waves,
+  permanent compact RaidLaunchReceipts (details may expire after14days), saved
+  presets8, explicit automatic vs manual, no silent boss downgrade in editor.
+  Legacy automatic director uses the same config, restricted Validate(false).
+- Adaptive coefficient .75–1.5: 2 easy +10%, heavy−18%; 10 recent records,
+  actual participation, armour/health pool/energy readiness, dynamic cap up1200.
+  Cancelled/manual/legacy incomplete fights excluded. Frozen announced stats;
+  48 actor cap, spare budget spent on quality. PropertyDamaged outcome separated
+  from heavy Lost. Legacy property-only Lost no longer forces2h rest.
+- Settings control damage/speed/side/mixed species/tactics/waves/timers/retreat/
+  loss limits and boss windup/cooldown/phase. Deferred wave now keeps duration.
+  LootBudgets snapshot per storage/resource; only living escaping carrier takes
+  remaining share, total event cap; mixed species loot uses actual killed kinds.
+  Summary records contact/HP/heals/arrows/equipment/property/wall/adaptation.
+- Read-only preview MUST NOT use WithVillageAsync: FinishAccountingAsync flushes
+  unsaved tracked changes. New ReadRaidEditorAsync disposable context bypasses
+  accounting; no SaveChanges/event/payment/model. Add palisade-completed preview
+  regression to prove Ensure geometry is not persisted. This was found in review.
+- Migrations: 20261017102505_RaidEditor0711 + RaidLossAccounting0711 + empty
+  RaidParticipation0711 metadata sync. FIRST migration default RaidAdaptation
+  explicitly contains Coefficient1 and empty lists (not generated empty{}).
+- Full Domain480 PASS /tmp/patch0711-raid-domain-full.log. TypeScript full build
+  PASS /tmp/patch0711-editor-ts5.log. Fixed previous rescue harness tsconfig node
+  exclusion and fixtures import; full tsc-b now checked, not just app config.
+- First API editor2/3 PASS; failed launch case was its test deleting AsNoTracking
+  owned JSON via RemoveRange (unknown ordinal). Fixed fixture with ExecuteDelete;
+  real launch/save/stop already succeeded. Broader repeat currently running:
+  /tmp/patch0711-raid-api2.log (session77751), don't claim pass until inspected.
+- First browser run could not find buttons: forgot built-harness Vite input,
+  returned app fallback. Added raidEditor rolldown input; interrupted that failed
+  run deliberately. Rerun4cases phone+desktop after restart. No UI pass yet.
+- imagegen draft completed, source /workspace/generated_images/exec-3c022954-
+  1730-4931-84fb-dff695f7f151.png, tool result functions.store key
+  patch0711_fence_generation. References tiny-town + night/buildings-a.
+  Output2172x724 differs requested1024x256, tiles inset/nonseamless. DRAFT ONLY,
+  not yet packed/accepted/integrated. Need real atlas geometry and map/day/night
+  inspection. Do not present the generated sheet as finished textures.
+- Still finish raid validation/DB legacy migration/browser/preview regression,
+  loot-share test, owner summary/director explanation. Then commit/push packet.
+  NUM/FOOD/WALL/SPACE/XP/KNOW/COOK remain unimplemented, not dropped. Version
+  files/runtime still0.7.9. No deployment request or installation for0.7.11.
+
+- RAID final checkpoint: full Domain480 PASS plus15 focused (including4 added
+  theft/participation/quality cases), broad API25 PASS. Final API4 PASS verifies
+  exact idempotent settings conflict, pure preview even with a completed palisade,
+  retained receipt after history expiry and legacy JSON upgrade/default1.
+  Browser4 PASS phone+desktop; latest full TS PASS; lint no errors. Logs:
+  /tmp/patch0711-raid-api-final.log, /tmp/patch0711-raid-browser2.log,
+  /tmp/patch0711-raid-domain-last.log, /tmp/patch0711-raid-ts-final.log.
+  Reviewed phone screenshot: inputs fit; select theme matched parchment afterwards.
+  New editor lint warnings fixed (internal preset function, effect dependencies).
+  Draft fence source copied to art/generated/fence-0-7-11 with explicit rejection
+  of its atlas geometry; NOT integrated. Next implementation packet NUM/FOOD/SPACE.

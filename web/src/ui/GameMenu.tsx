@@ -12,9 +12,7 @@ import {
   type BuildingDefinition,
   type Catalog,
   type Citizen,
-  type EnemyKind,
   type Me,
-  type RaidSize,
   type Task,
   type VillageState,
 } from '../api'
@@ -86,7 +84,6 @@ export interface MenuProps {
   joining: boolean
   joinError: string | null
   feed: FeedEntry[]
-  onCallUndead: (enemy: EnemyKind, size: RaidSize) => void
   onCancelUndead: () => void
   undeadError: string | null
   onOpenDungeon: () => void
@@ -248,10 +245,11 @@ export function GameMenu(props: MenuProps) {
               )}
               {tsar && (
                 <UndeadPanel
+                  catalog={catalog}
                   village={village}
                   pending={pending}
                   error={props.undeadError}
-                  onCall={props.onCallUndead}
+                  onVillage={props.onVillage}
                   onCancel={props.onCancelUndead}
                 />
               )}

@@ -7,6 +7,7 @@ using Desertod.Domain.Entities;
 using Desertod.Domain.Projects;
 using Desertod.Domain.Quests;
 using Desertod.Domain.World;
+using Desertod.Domain.Combat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -49,17 +50,26 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
     public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
     public DbSet<MarketLot> MarketLots => Set<MarketLot>();
 
+    public DbSet<RaidLaunchReceipt> RaidLaunchReceipts => Set<RaidLaunchReceipt>();
     public DbSet<Desertod.Domain.Combat.RaidBattle> RaidBattles => Set<Desertod.Domain.Combat.RaidBattle>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<RaidLaunchReceipt>(receipt=>
+        {
+            receipt.HasKey(r=>new{r.VillageId,r.Id});
+            receipt.HasOne<Village>().WithMany().HasForeignKey(r=>r.VillageId).OnDelete(DeleteBehavior.Cascade);
+            receipt.OwnsOne(r=>r.Settings,settings=>{settings.ToJson();MapRaidSettings(settings);});
+        });
         modelBuilder.Entity<Desertod.Domain.Combat.RaidBattle>(battle =>
         {
             battle.HasKey(b=>b.Id);
             battle.HasOne<Desertod.Domain.Entities.Village>().WithMany().HasForeignKey(b=>b.VillageId).OnDelete(DeleteBehavior.Cascade);
             battle.HasIndex(b=>new { b.VillageId, b.FinishedAt });
-            battle.OwnsMany(b=>b.Units, unit=> { unit.ToJson(); unit.Ignore(u=>u.Position); unit.Ignore(u=>u.Alive); });
+            battle.OwnsMany(b=>b.Units, unit=> { unit.ToJson(); unit.Ignore(u=>u.Position); unit.Ignore(u=>u.Alive); unit.Property(u=>u.Enemy).HasConversion<string>(); });
+            battle.OwnsOne(b=>b.Settings, settings=>{settings.ToJson();MapRaidSettings(settings);});
             battle.OwnsMany(b=>b.Fighters, fighter=> { fighter.ToJson(); fighter.Ignore(f=>f.Position); fighter.Ignore(f=>f.ActorId); fighter.Property(f=>f.Weapon).HasConversion<string>(); fighter.Property(f=>f.Armor).HasConversion<string>(); });
+            battle.OwnsMany(b=>b.LootBudgets,loot=>{loot.ToJson();loot.Property(l=>l.Kind).HasConversion<string>();});
             battle.OwnsMany(b=>b.Damage, damage=>damage.ToJson());
             battle.OwnsMany(b=>b.Events, events=>events.ToJson());
         });
@@ -193,6 +203,8 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             });
             village.OwnsMany(v => v.Forecasts, forecast => forecast.ToJson());
             village.OwnsMany(v => v.Fortifications, wall => { wall.ToJson(); wall.Ignore(f=>f.Blocks); });
+            village.OwnsOne(v=>v.RaidAdaptation,a=>{a.ToJson();a.OwnsMany(x=>x.Recent);a.OwnsMany(x=>x.Participation);});
+            village.OwnsMany(v=>v.RaidPresets,preset=>{preset.ToJson();preset.OwnsOne(p=>p.Settings,settings=>MapRaidSettings(settings));});
             village.OwnsMany(v => v.Raids, raid =>
             {
                 raid.ToJson();
@@ -200,6 +212,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 raid.Property(r => r.Enemy).HasConversion<string>();
                 raid.Property(r => r.Outcome).HasConversion<string>();
                 raid.Ignore(r => r.IsPending);
+                raid.OwnsOne(r=>r.Summary);
                 raid.OwnsMany(r => r.ApproachPath);
                 raid.OwnsMany(r => r.Stolen, good => good.Property(g => g.Kind).HasConversion<string>());
                 raid.OwnsMany(r => r.Loot, good => good.Property(g => g.Kind).HasConversion<string>());
@@ -364,6 +377,12 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             });
             run.Property<uint>("Version").IsRowVersion();
         });
+    }
+
+    private static void MapRaidSettings<TOwner>(OwnedNavigationBuilder<TOwner, RaidSettings> settings) where TOwner : class
+    {
+        settings.Property(s=>s.Enemy).HasConversion<string>();
+        settings.OwnsMany(s=>s.Species,species=>species.Property(s=>s.Enemy).HasConversion<string>());
     }
 
     private static void MapTrip<TOwner>(OwnedNavigationBuilder<TOwner, Trip> trip)

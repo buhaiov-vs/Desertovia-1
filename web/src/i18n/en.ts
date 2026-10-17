@@ -693,11 +693,13 @@ export const en = {
     'raid.none': 'No raids yet.',
     'raid.result.Repelled': 'repelled',
     'raid.result.Cancelled': 'Undead put to sleep by the Tsar',
+    'raid.propertyDamaged': '{enemy} raid repelled with property losses',
+    'raid.result.PropertyDamaged': 'repelled with property losses',
     'raid.result.Lost': 'lost',
     'notify.raidTitle': 'Raid: {enemy}!',
     'notify.raidBody': 'They strike in {minutes} min. Keep watch to defend the village.',
     'notify.raidOverTitle': 'Raid over',
-    'undead.title': 'Undead event',
+    'undead.title': 'Raids',
     'undead.hint':
       'Send waves of the dead against the village for your stream. Citizens get {minutes} min of warning; keepers of the watch fight them.',
     'undead.enemy': 'Who rises',
@@ -706,7 +708,7 @@ export const en = {
     'undead.size.Medium': 'Medium: 2 waves',
     'undead.size.Large': 'Large: 3 waves',
     'undead.call': 'Raise the dead',
-    'undead.cancel': 'Lay them to rest',
+    'undead.cancel': 'Stop raid (all waves)',
     'undead.coming': 'The dead are on their way.',
     'building.damaged': 'Damaged {percent}%: works slower until repaired',
     'dungeon.deadLands': 'Dead Lands',
@@ -1215,6 +1217,14 @@ export const en = {
   } as Record<string, { ruler: string; citizen: string }>,
 
   errors: {
+    "raid.requestConflict": "This launch identifier was used with different settings. Refresh the preview.",
+    "raid.settings": "Invalid settings: check ranges and composition shares (100% total).",
+    "raid.unaffordable": "This composition exceeds the automatic budget. Reduce its strength or select manual mode.",
+    "raid.pending": "A raid is already announced. Finish or cancel it first.",
+    "raid.presetName": "Enter a preset name of 1–48 characters.",
+    "raid.presetGone": "The preset no longer exists. Reload the list.",
+    "raid.presetLimit": "Up to eight presets can be saved.",
+
     'monastery.distance': 'Come to the monastery courtyard first.',
     'monastery.knowledge': 'Discover herb lore first.',
     'monastery.cooldown': 'Wait six hours after the previous contract.',

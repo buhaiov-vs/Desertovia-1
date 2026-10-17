@@ -166,8 +166,8 @@ public sealed class MonsterBehaviorTests(ITestOutputHelper output)
                 timings.Add(metrics.ElapsedMs);searches=Math.Max(searches,metrics.PathSearches);
                 Assert.InRange(metrics.PathNodes,0,(count+1)*5100);
             });
-            Assert.InRange(b.DamageDone,0,RaidSimulation.PlunderDamageLimit);
-            Assert.InRange(b.Damage.Where(d=>d.PlotId.StartsWith("wall:")).Sum(d=>d.Amount),0,RaidSimulation.WallDamageLimit);
+            Assert.InRange(b.DamageDone,0,b.Settings?.PropertyLimit??RaidSimulation.PlunderDamageLimit);
+            Assert.InRange(b.Damage.Where(d=>d.PlotId.StartsWith("wall:")).Sum(d=>d.Amount),0,b.Settings?.WallLimit??RaidSimulation.WallDamageLimit);
         }
         Assert.InRange(searches,1,count);
         var nav=new RaidNavigation(v);

@@ -312,12 +312,12 @@ export class EnemyLayer {
     for(const battle of this.battles){
       if(['Warning','Cancelled','Finished'].includes(battle.phase))continue
       const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
-      const height=(variant:string)=>enemyHeight(kind)*(variant==='boss'?1.7:variant==='strong'?1.35:variant==='weak' ? .85 : 1)
+      const height=(variant:string,unitKind:EnemyKind=kind)=>enemyHeight(unitKind)*(variant==='boss'?1.7:variant==='strong'?1.35:variant==='weak' ? .85 : 1)
       const at=(u:RaidBattle['units'][number])=>this.liveViews.get(u.id)?.actor.position??{x:u.x*TILE,y:u.y*TILE}
       const unit=battle.units.filter(u=>{
         const p=at(u),dy=y-p.y
-        return u.health>0&&!u.exitedAt&&Math.abs(p.x-x)<=TILE*.8&&dy>=-height(u.variant)-4&&dy<=6
-      }).sort((a,b)=>Math.hypot(at(a).x-x,at(a).y-height(a.variant)/2-y)-Math.hypot(at(b).x-x,at(b).y-height(b.variant)/2-y))[0]
+        return u.health>0&&!u.exitedAt&&Math.abs(p.x-x)<=TILE*.8&&dy>=-height(u.variant,u.enemy??kind)-4&&dy<=6
+      }).sort((a,b)=>Math.hypot(at(a).x-x,at(a).y-height(a.variant,a.enemy??kind)/2-y)-Math.hypot(at(b).x-x,at(b).y-height(b.variant,b.enemy??kind)/2-y))[0]
       if(unit){this.selectedUnit=unit.id;return{battleId:battle.id,unitId:unit.id}}
     }
     return null
@@ -372,7 +372,7 @@ export class EnemyLayer {
           if(warning.key!==key){warning.key=key;warning.view.clear().circle(0,0,1.65*TILE).fill({color:0xff5d32,alpha:.18}).stroke({color:0xff9c40,width:2})}
           warning.view.position.set(u.strikeX*TILE,u.strikeY*TILE);warning.view.zIndex=warning.view.y-.5
         }
-        draw(u.id,u.x,u.y,u.health,u.maximumHealth,kind,u.variant,u.health<=0,['Fighting','Breaching','Raiding'].includes(u.state)&&u.nextAttackAt?Date.parse(u.nextAttackAt)-3000:0,u.diedAt?Date.parse(u.diedAt):now)
+        draw(u.id,u.x,u.y,u.health,u.maximumHealth,u.enemy??kind,u.variant,u.health<=0,['Fighting','Breaching','Raiding'].includes(u.state)&&u.nextAttackAt?Date.parse(u.nextAttackAt)-3000:0,u.diedAt?Date.parse(u.diedAt):now)
       }
       for(const f of battle.fighters)if(!battle.finishedAt&&f.active&&f.health>0)draw('guard:'+(f.isTsar?f.accountId:f.citizenId),f.x,f.y,f.health,f.maximumHealth,null,'regular',false)
     }

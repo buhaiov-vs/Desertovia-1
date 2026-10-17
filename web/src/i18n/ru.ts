@@ -693,11 +693,13 @@ export const ru: Dictionary = {
     'raid.none': 'Нападений пока не было.',
     'raid.result.Repelled': 'отбито',
     'raid.result.Cancelled': 'Нежить усыплена царём',
+    'raid.propertyDamaged': 'Атака {enemy} отражена с ущербом имуществу',
+    'raid.result.PropertyDamaged': 'отражено с ущербом имуществу',
     'raid.result.Lost': 'проиграно',
     'notify.raidTitle': 'Нападение: {enemy}!',
     'notify.raidBody': 'Ударят через {minutes} мин. Встаньте в дозор, чтобы защитить город.',
     'notify.raidOverTitle': 'Нападение окончено',
-    'undead.title': 'Нашествие нежити',
+    'undead.title': 'Набеги',
     'undead.hint':
       'Пошлите на город волны мертвецов для трансляции. Горожане узнают за {minutes} мин; бьются с ними те, кто стоит в дозоре.',
     'undead.enemy': 'Кто восстанет',
@@ -706,7 +708,7 @@ export const ru: Dictionary = {
     'undead.size.Medium': 'Средне: 2 волны',
     'undead.size.Large': 'Много: 3 волны',
     'undead.call': 'Поднять мертвецов',
-    'undead.cancel': 'Упокоить',
+    'undead.cancel': 'Остановить набег (все волны)',
     'undead.coming': 'Мертвецы идут на город.',
     'building.damaged': 'Повреждено {percent}%: работает медленнее, пока не починят',
     'dungeon.deadLands': 'Мёртвые земли',
@@ -1212,6 +1214,14 @@ export const ru: Dictionary = {
   },
 
   errors: {
+    "raid.requestConflict": "Этот код запуска уже использован с другими настройками. Обнови предпросмотр.",
+    "raid.settings": "Некорректные настройки: проверь диапазоны и доли состава (в сумме 100%).",
+    "raid.unaffordable": "Этот состав не помещается в автоматический бюджет. Уменьши силу или выбери ручной режим.",
+    "raid.pending": "Уже объявлен набег. Дождись завершения или отмени его.",
+    "raid.presetName": "Введи название пресета от 1 до 48 символов.",
+    "raid.presetGone": "Пресет больше не существует. Обнови список.",
+    "raid.presetLimit": "Можно сохранить до восьми пресетов.",
+
     'monastery.distance': 'Сначала придите в монастырский двор.',
     'monastery.knowledge': 'Сначала изучите травничество.',
     'monastery.cooldown': 'Следующее поручение доступно через 6 часов после прошлого.',

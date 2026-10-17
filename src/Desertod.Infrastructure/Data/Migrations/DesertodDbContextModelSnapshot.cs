@@ -714,10 +714,19 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("LastEnergyDrinkAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("LastMealAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("MarriageCheckedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("MarriedSince")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("MealKind")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("MealUntil")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
@@ -1396,6 +1405,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .IsRequired();
 
                             b1.Property<DateTimeOffset>("NextAttackAt");
+
+                            b1.Property<double?>("RangedDamage");
 
                             b1.Property<int>("RenownEarned");
 
@@ -2519,6 +2530,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<string>("Id");
 
+                            b1.Property<int>("Level");
+
                             b1.Property<bool>("Open");
 
                             b1.Property<int>("X");
@@ -3131,6 +3144,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .ValueGeneratedOnAdd();
 
                             b1.Property<int>("Done");
+
+                            b1.Property<int>("KnowledgeWork");
 
                             b1.Property<DateTimeOffset?>("ResearchedAt");
 

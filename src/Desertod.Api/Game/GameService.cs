@@ -1355,6 +1355,7 @@ public sealed partial class GameService(
             .OrderBy(p => p.CompletedAt)
             .Select(p => p.DefinitionId)
             .ToListAsync(cancellationToken);
+        Fortifications.Ensure(village,completedProjects);
 
         // Active citizens, plus anyone still in a cycle whatever their status: working counts include them.
         var citizens = await db.Citizens.AsNoTracking()
@@ -1453,6 +1454,7 @@ public sealed partial class GameService(
                 ? residents.FirstOrDefault(c=>c.AccountId==id)?.Name??ownerNames.GetValueOrDefault(id):null}).ToArray(),
             Battles = (await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==village.Id && (b.FinishedAt==null || b.FinishedAt>=now.AddSeconds(-15))).OrderBy(b=>b.StartsAt).ToListAsync(cancellationToken)).Select(b=>b.ToBattleDto()).ToArray(),
             Fortifications = village.Fortifications,
+            FortificationUpgrade=FortificationUpgrades.Quote(village),
             KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),
             NextKingdomArea=KingdomRules.Level(village)<3?KingdomRules.AreaForLevel(Math.Max(1,KingdomRules.Level(village))+1):null,
             CivicOrders = village.CivicOrders,

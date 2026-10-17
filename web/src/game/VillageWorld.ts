@@ -1,3 +1,5 @@
+import {FortificationView} from './FortificationView'
+import {wallVisualStage} from './fortificationState'
 import {buildingOrdinal,buildingSuffix} from '../buildingLabels'
 import { combatDiagnostics } from './combatDiagnostics'
 import { sameStaticVillage } from './combatSnapshot'
@@ -264,7 +266,7 @@ export class VillageWorld {
   private buildingViews: Container[] = []
   private readonly fighterSamples=new Map<string,FighterSample>()
   private readonly damageViews = new Map<string, {damage:number; view:Container}>()
-  private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction>()
+  private readonly litBuildings = new Set<BuildingLighting | HutConstruction | HospitalConstruction | FortificationView>()
   /** Names above buildings and sites, kept at screen size; `x` and `y` are the top centre of the plot in world pixels. */
   private buildingLabels: Array<{ text: Text; x: number; y: number }> = []
   private wardCaption:Text|null=null
@@ -1385,7 +1387,7 @@ export class VillageWorld {
     const project = state.project
     const key = JSON.stringify([
       state.completedProjects,
-      state.fortifications?.map(f=>[f.id,f.damage>=100,f.open]),state.bridgeRuinedAt,
+      state.fortifications?.map(f=>[f.id,wallVisualStage(f),f.open,f.level??1]),state.bridgeRuinedAt,
       project?.definitionId,
       project?.phase,
       project ? project.surveyDone : 0,
@@ -1477,16 +1479,25 @@ export class VillageWorld {
     if (completed.has(PALISADE.id) || palisadeActive) {
       const fraction = completed.has(PALISADE.id) ? 1 : project!.buildDone / Math.max(project!.buildRequired, 1)
       const standing = Math.floor(fraction * PALISADE.pieces.length + 1e-6)
-      PALISADE.pieces.forEach((piece, index) => {
+      const advanced=new Set((state.fortifications??[]).filter(f=>(f.level??1)>=2).map(f=>f.id))
+      PALISADE.pieces.forEach((piece,index)=>{
         const wall=state.fortifications?.find(f=>f.x===piece.x&&f.y===piece.y)
-        if(wall&&wall.damage>=100)return
-        if (index < standing) add(this.tileSprite(piece.tile, piece.x, piece.y))
-        else if (palisadeActive && index % 4 === 0) add(this.tileSprite(town(47), piece.x, piece.y))
+        if(wall&&(advanced.has(wall.id)||wall.damage>=100))return
+        if(index<standing)add(this.tileSprite(piece.x===27&&(state.fortifications??[]).some(f=>f.x===28&&f.y===piece.y)?town(45):piece.tile,piece.x,piece.y))
+        else if(palisadeActive&&index%4===0)add(this.tileSprite(town(47),piece.x,piece.y))
       })
-      for(const wall of state.fortifications??[])if(wall.x>=28&&wall.damage<100&&!wall.gate)
-        add(this.tileSprite(PALISADE.pieces.find(p=>p.y===wall.y)?.tile??town(56),wall.x,wall.y))
-      if (palisadeActive) add(this.tileSprite(town(83), PALISADE.yard.x - 1, PALISADE.yard.y - 1))
-      for(const gate of state.fortifications??[])if(gate.gate&&!gate.open&&gate.damage<100)add(this.tileSprite(town(56),gate.x,gate.y))
+      for(const wall of state.fortifications??[]){
+        if(advanced.has(wall.id)){
+          if(wall.gate&&wall.open&&wall.damage<100)continue
+          const view=new FortificationView(this.tiles,wall,state.fortifications??[])
+          view.setNight(this.nightAmount);this.litBuildings.add(view)
+          view.once('destroyed',()=>this.litBuildings.delete(view));add(view)
+        }else if(wall.damage<100){
+          if(wall.x>=28&&!wall.gate)add(this.tileSprite(town(wall.x<(Math.max(...(state.fortifications??[]).filter(f=>f.y===wall.y).map(f=>f.x)))?45:82),wall.x,wall.y))
+          if(wall.gate&&!wall.open)add(this.tileSprite(town(56),wall.x,wall.y))
+        }
+      }
+      if(palisadeActive)add(this.tileSprite(town(83),PALISADE.yard.x-1,PALISADE.yard.y-1))
     }
 
     // Gold vein: nuggets in the outcrop thin out as it is dug; an empty vein is bare grey rock.

@@ -135,6 +135,19 @@ public sealed partial class GameService
         },ct);
     }
 
+    public async Task<VillageStateDto> UpgradeFortificationsAsync(string slug,Guid actor,CancellationToken ct) =>
+        await WithVillageAsync(await FindVillageIdAsync(slug,ct),async db=>
+        {
+            var village=await LoadVillageAsync(db,slug,ct);await RequireRulerAsync(db,village,actor,ct);
+            var completed=await db.VillageProjects.Where(p=>p.VillageId==village.Id&&p.Status==ProjectStatus.Completed).Select(p=>p.DefinitionId).ToListAsync(ct);
+            Fortifications.Ensure(village,completed);
+            var now=time.GetUtcNow();var order=FortificationUpgrades.Request(village,actor,now);
+            if(village.OwnerAccountId==actor)FortificationUpgrades.Begin(village,order,now);
+            db.AuditActor=actor;db.AuditOperation="fortification-upgrade";
+            await db.SaveChangesAsync(ct);changes.Mark(village.Id);
+            return await BuildStateAsync(db,village,now,ct);
+        },ct);
+
     public async Task SetGateAsync(string slug,Guid actor,GateOrder order,CancellationToken ct) =>
         await WithVillageAsync(await FindVillageIdAsync(slug,ct),async db=>
         {

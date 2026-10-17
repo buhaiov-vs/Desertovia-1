@@ -58,6 +58,7 @@ public static class WorldMap
         ["deer-woods"] = new(-3, 21.5),
         ["bird-grove"] = new(21, 23.5),
         ["gate"] = new(1, 13),
+        ["fortifications"] = new(2.5,10.5),
     };
 
     /// <summary>The camp land west of the river, short of the reeds on its bank. A whole plot must fit inside.</summary>
@@ -101,6 +102,7 @@ public static class WorldMap
     /// <summary>Where a citizen stands to drop goods into a building or work on its site.</summary>
     public static TilePoint Yard(string plotId)
     {
+        if(plotId=="fortifications")return Places[plotId];
         var plot = PlotPosition(plotId) ?? Places[Camp];
         return new TilePoint(plot.X + PlotWidth / 2.0, plot.Y + PlotHeight - 0.5);
     }

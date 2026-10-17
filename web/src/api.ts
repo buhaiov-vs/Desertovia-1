@@ -352,7 +352,8 @@ export type RaidSource = 'Night' | 'Undead'
 export type RaidOutcome = 'Pending' | 'Repelled' | 'Lost' | 'Cancelled' | 'PropertyDamaged'
 
 /** An attack on the way, or a fought one kept for the record. */
-export interface Fortification { id:string; x:number; y:number; gate:boolean; open:boolean; damage:number }
+export interface FortificationQuote {level:number;nextLevel:number|null;sections:number;strength:number;damaged:number;work:number;materials:ResourceAmount[];blockedBy:string|null;readyAfterBattle:boolean}
+export interface Fortification { id:string; x:number; y:number; gate:boolean; open:boolean; damage:number; level?:number }
 export interface RaidUnit {
   enemy?:EnemyKind|null; id:string; variant:'weak'|'regular'|'strong'|'boss'; x:number; y:number; health:number; maximumHealth:number;
   attack:number; speed:number; range:number; state:string; targetKind:string|null; targetId:string|null;
@@ -639,6 +640,8 @@ export interface TechnologyState {
   required: number
   hands: number
   crewNeeded: number
+  knowledgeWork?:number
+  knowledgeCost?:number
 }
 
 /** A vote on the next discovery. It closes once more than half of the present citizens voted; away ones are not counted. */
@@ -959,6 +962,7 @@ export interface VillageState {
   defeatedAt?:string|null
   relocations?:{plotId:string;residents:number;available:number}[]
   battles?: RaidBattle[]
+  fortificationUpgrade?:FortificationQuote|null
   fortifications?: Fortification[]
   kingdomArea?: TileArea
   nextKingdomArea?:{x:number;y:number;width:number;height:number}|null
@@ -1180,6 +1184,9 @@ export interface SkillValue {
 }
 
 export interface Citizen {
+  mealKind?: string | null
+  mealUntil?: string | null
+  mealReadyAt?: string | null
   vigorEnergy?: number
   vigorCooldownMinutes?: number
   accountId?: string
@@ -1286,6 +1293,7 @@ export interface CycleReport {
 /** Events of one village since the last `villageEvents` message, in order; only the latest summary per citizen. */
 export interface VillageEvents {
   battles?: RaidBattle[]
+  fortificationUpgrade?:FortificationQuote|null
   fortifications?: Fortification[] | null
   cycles: CycleReport[]
   projects: ProjectCompletion[]
@@ -1508,12 +1516,15 @@ export const api = {
   startJob: (slug: string, plotId: string, stage: number, jobId: string) =>
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/job`, { plotId, stage, jobId }),
   dropLoad: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drop`),
+  investKnowledge: (slug:string,technologyId:string)=>request<VillageState>('POST',`/api/villages/${encodeURIComponent(slug)}/research/knowledge`,{technologyId}),
+  eatMeal: (slug:string,resource:string)=>request<Citizen>('POST',`/api/villages/${encodeURIComponent(slug)}/me/meal`,{resource}),
   eat: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/eat`),
   drink: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drink`),
   hospital: (slug: string) => request<HospitalStatus>('GET', `/api/villages/${encodeURIComponent(slug)}/hospital`),
   hospitalHeal: (slug: string, payment: HospitalPayment) => request<HospitalReceipt>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/heal`, payment),
   hospitalUpgrade: (slug: string, plot: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/${encodeURIComponent(plot)}/upgrade`),
   heal: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/heal`),
+  upgradeFortifications: (slug:string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/fortifications/upgrade`),
   raidEditor: (slug:string) => request<RaidEditorView>('GET', `/api/villages/${encodeURIComponent(slug)}/raid-editor`),
   previewRaid: (slug:string, settings:RaidSettings) => request<RaidPreview>('POST', `/api/villages/${encodeURIComponent(slug)}/raid-editor/preview`, settings),
   launchRaid: (slug:string, requestId:string, settings:RaidSettings) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/raid-editor/launch`, {requestId,settings}),

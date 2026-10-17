@@ -138,9 +138,9 @@ public sealed partial class GameService
                 combat = new { engineVersion=2, readiness, adaptation = new { village.RaidAdaptation.Coefficient, village.RaidAdaptation.Reason }, warningSeconds = RaidRules.UndeadWarning.TotalSeconds,
                     raidObjective = "Разорение зданий, недостроев, заборов и запасов; игроки — мешающие защитники. Орда/элита/босс используют один бюджет, боссы предупреждают тяжёлые удары.",
                     profiles = EnemyCatalog.Enemies.Where(e => e.Undead && !e.DungeonOnly).SelectMany(e=>RaidBalance.Compositions.Where(profile=>RaidBalance.NormalizeComposition(e.Kind,profile,readiness.Budget)==profile).Select(profile=>new{enemy=e.Kind.ToString(),profile,count=RaidBalance.Count(e.Kind,profile,readiness.Budget)})),
-                    fortifications = new {standing=village.Fortifications.Count(f=>f.Blocks),
-                        gates=village.Fortifications.Where(f=>f.Gate).Select(f=>new{f.X,f.Y,f.Open,f.Damage}),
-                        weaknesses=village.Fortifications.Where(f=>f.Damage>0).OrderByDescending(f=>f.Damage).Take(8).Select(f=>new{f.X,f.Y,f.Damage})},
+                    fortifications = new {tiers=village.Fortifications.GroupBy(f=>Math.Clamp(f.Level,1,3)).Select(g=>new{level=g.Key,sections=g.Count()}),standing=village.Fortifications.Count(f=>f.Blocks),
+                        gates=village.Fortifications.Where(f=>f.Gate).Select(f=>new{f.X,f.Y,f.Open,f.Damage,f.Level}),
+                        weaknesses=village.Fortifications.Where(f=>f.Damage>0).OrderByDescending(f=>f.Damage).Take(8).Select(f=>new{f.X,f.Y,f.Damage,f.Level})},
                     recentBattles = await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==villageId&&b.FinishedAt!=null&&b.Phase!="Cancelled").OrderByDescending(b=>b.FinishedAt).Take(3).Select(b=>new{b.Sector,b.Composition,b.DamageDone,b.ReadyDefenders,b.ThreatBudget}).ToListAsync(ct),
                     uncertainty = "Готовность определяет ограниченный бюджет при объявлении. Отдельные HP, атаки по расстоянию; геометрия и подготовка влияют на исход. Новая подготовка не усиливает объявленных врагов." },
                 workActivity = new {

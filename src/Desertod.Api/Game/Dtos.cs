@@ -117,7 +117,11 @@ public sealed record TechnologyStateDto(
     int Done,
     int Required,
     int Hands,
-    int CrewNeeded);
+    int CrewNeeded)
+{
+    public int KnowledgeWork {get;init;}
+    public int KnowledgeCost {get;init;}
+}
 
 public sealed record PollOptionDto(string TechnologyId, int Votes);
 
@@ -198,6 +202,7 @@ public sealed record VillageStateDto(
     DungeonDto? Dungeon)
 {
     public TileArea KingdomArea { get; init; } = WorldMap.BuildArea;
+    public FortificationQuote? FortificationUpgrade { get; init; }
     public int CastleLevel { get; init; }
     public TileArea? NextKingdomArea { get; init; }
     public DateTimeOffset? DefeatedAt { get; init; }
@@ -372,6 +377,9 @@ public sealed record CitizenDto(
     public IReadOnlyDictionary<string, double>? ActionEnergyCosts { get; init; }
     public string? DefenseSector { get; init; }
     public DateTimeOffset? DefenseReadyAt { get; init; }
+    public ResourceKind? MealKind {get;init;}
+    public DateTimeOffset? MealUntil {get;init;}
+    public DateTimeOffset? MealReadyAt {get;init;}
     public int VigorEnergy { get; init; } = 8;
     public int VigorCooldownMinutes { get; init; } = 240;
     public string? HomePlotId { get; init; }
@@ -535,7 +543,8 @@ public static class DtoMapper
                     progress?.Done ?? 0,
                     technology.Cycles,
                     progress?.Hands.Count ?? 0,
-                    TechnologyRules.CrewNeeded(technology, context.RecentCitizenCount));
+                    TechnologyRules.CrewNeeded(technology, context.RecentCitizenCount)) {KnowledgeWork=progress?.KnowledgeWork??0,
+                        KnowledgeCost=TechnologyRules.KnowledgeWorkAvailable(village,technology)*TechnologyRules.KnowledgePerCycle};
             })
             .ToList(),
         village.Poll?.ToDto(electorate),
@@ -743,7 +752,7 @@ public static class DtoMapper
         citizen.Armor,
         citizen.Arrows,
         Math.Round(CombatRules.Power(citizen), 1), citizen.Recovery)
-        { VigorEnergy = village.VigorEnergy, VigorCooldownMinutes = village.VigorCooldownMinutes, AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
+        { MealKind=citizen.MealKind,MealUntil=citizen.MealUntil,MealReadyAt=citizen.LastMealAt+PreparedMeals.Cooldown, VigorEnergy = village.VigorEnergy, VigorCooldownMinutes = village.VigorCooldownMinutes, AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
             .Concat(BuildingCatalog.Jobs.Select(job => new KeyValuePair<string, double>(job.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.JobCost(village, job, now), now))))
             .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value),
             DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,

@@ -9,6 +9,8 @@ public static class ResourceNames
         ResourceKind.IronIngot => "iron",
         ResourceKind.ResearchPoints => "knowledge",
         ResourceKind.LeatherArmor => "leather armor",
+        ResourceKind.Porridge => "grain porridge",
+        ResourceKind.Stew => "hearty stew",
         ResourceKind.VigorDrink => "vigor drink",
         _ => kind.ToString().ToLowerInvariant(),
     };

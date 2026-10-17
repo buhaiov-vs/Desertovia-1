@@ -142,7 +142,7 @@ public sealed class RaidNavigation
                 if(!Dry(n.Item1,n.Item2)||solid.Contains(n))continue;
                 var wall=walls.GetValueOrDefault(n);
                 if(wall?.Blocks==true&&!canBreach)continue;
-                var nextCost=cost[p]+1+(wall?.Blocks==true?(100-wall.Damage)*(preferBreach ? .06 : .35):0)
+                var nextCost=cost[p]+1+(wall?.Blocks==true?(100-wall.Damage)*wall.Strength*(preferBreach ? .06 : .35):0)
                     +density.GetValueOrDefault(n)*crowdWeight;
                 if(cost.TryGetValue(n,out var old)&&old<=nextCost)continue;
                 cost[n]=nextCost;previous[n]=p;

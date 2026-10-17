@@ -854,6 +854,8 @@ export const en = {
     Feathers: 'Feathers',
     Flax: 'Flax',
     Grain: 'Grain',
+    Porridge: 'Grain porridge',
+    Stew: 'Hearty stew',
     VigorDrink: 'Vigor drinks',
     Spear: 'Spears',
     Bow: 'Bows',
@@ -946,6 +948,7 @@ export const en = {
   } as Record<string, string>,
 
   buildings: {
+    FortificationUpgrade: {name: 'Fortification upgrade', description: 'Materials and work reinforce the existing perimeter without repairing damage.'},
     Castle: { name: 'Royal castle', description: 'The Tsar’s residence. Upgrades open new land for the kingdom.' },
     Hospital: { name: 'Hospital', description: 'Duel recovery and first-aid training.' },
     Heap: { name: 'Heap', description: 'A fenced patch of ground for any goods. Small and messy.' },
@@ -980,6 +983,7 @@ export const en = {
   } as Record<string, { name: string; description: string }>,
 
   stages: {
+    reinforce: 'Reinforcement',
     dismantle:'Dismantling', upgrade:'Storage upgrade', expand:'Housing expansion',
     ground: 'Ground',
     foundation: 'Foundation',
@@ -1034,6 +1038,8 @@ export const en = {
   } as Record<string, string>,
 
   tasks: {
+    'cook-porridge': 'Cook grain porridge',
+    'cook-stew': 'Cook hearty stew',
     'learn-first-aid': 'Study first aid',
     'practice-first-aid': 'Practice first aid',
     'chop-wood': 'Gather wood',
@@ -1217,6 +1223,9 @@ export const en = {
   } as Record<string, { ruler: string; citizen: string }>,
 
   errors: {
+    "defense.raidPending": "Wait for all raid waves to end before upgrading fortifications.",
+    "defense.upgradeWorking": "A fortification upgrade is already under construction.",
+    "defense.upgradeTechnology": "Carpentry is required; stone also requires Mining.",
     "raid.requestConflict": "This launch identifier was used with different settings. Refresh the preview.",
     "raid.settings": "Invalid settings: check ranges and composition shares (100% total).",
     "raid.unaffordable": "This composition exceeds the automatic budget. Reduce its strength or select manual mode.",

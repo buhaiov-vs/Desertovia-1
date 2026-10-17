@@ -1097,6 +1097,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
               onCarry={carry}
               onDrop={drop}
               onEat={eat}
+              onCitizen={applyCitizen}
               onTake={takeFromStorage}
               onClose={() => setPanel('none')}
             />

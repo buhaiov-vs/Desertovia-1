@@ -32,7 +32,7 @@ public sealed partial class GameService
             var number=village.Structures.FirstOrDefault(s=>s.PlotId==order.PlotId)?.Number
                 ??village.Storages.FirstOrDefault(s=>s.PlotId==order.PlotId)?.Number;
             return new(order.Id, village.Slug, owner, author, order.Operation, kind?.ToString() ?? "Building", order.PlotId,
-                number,number is {} n?BuildingLabels.Visible(village).GetValueOrDefault(n):null);
+                number,order.BuildingKind==BuildingKind.FortificationUpgrade?0:number is {} n?BuildingLabels.Visible(village).GetValueOrDefault(n):null);
         }, ct);
 
     public Task<bool> CompleteCivicNoticeAsync(Guid villageId, Guid orderId, string state, CancellationToken ct) =>

@@ -230,6 +230,31 @@ public static class TechnologyRules
         return (Math.Max(amount, newHand ? 1 : 0), discovered);
     }
 
+    public const int KnowledgePerCycle = 5;
+    public static int KnowledgeWorkAvailable(Village village,TechnologyDefinition technology)
+    {
+        var progress=ProgressOf(village,technology.Id);
+        return Current(village)?.Id==technology.Id&&progress is {KnowledgeWork:0,Hands.Count:>0}
+            &&PlotOf(village,technology.ResearchedAt) is {} plot
+            &&(village.Structures.Any(s=>s.PlotId==plot&&s.Damage<100&&s.RuinedAt is null)||village.Storages.Any(s=>s.PlotId==plot&&s.Damage<100&&s.RuinedAt is null))
+            ?Math.Min((int)Math.Ceiling(technology.Cycles*.25),Remaining(technology,progress)):0;
+    }
+
+    /// <summary>One bounded grant to the elected discovery. Never creates a research hand or rewards.</summary>
+    public static bool InvestKnowledge(Village village,string technologyId,int recentCitizens,DateTimeOffset now)
+    {
+        var technology=Find(technologyId);
+        var progress=ProgressOf(village,technologyId);
+        if(progress?.KnowledgeWork>0)return false; // replay: including after discovery/new election
+        var work=KnowledgeWorkAvailable(village,technology);
+        if(work==0)throw new GameRuleException("research.knowledgeUnavailable","Choose a discovery, build its workplace and begin ordinary research first.");
+        var price=work*KnowledgePerCycle;
+        if(village.Knowledge<price)throw new GameRuleException("research.knowledgeInsufficient","There are not enough research points.");
+        village.Knowledge-=price;progress!.KnowledgeWork=work;progress.Done+=work;
+        if(Remaining(technology,progress)==0&&progress.Hands.Count>=CrewNeeded(technology,recentCitizens))progress.ResearchedAt=now;
+        return true;
+    }
+
     public static int Remaining(TechnologyDefinition technology, TechnologyProgress progress) =>
         Math.Max(0, technology.Cycles - progress.Done);
 

@@ -125,6 +125,10 @@ public static class GameEndpoints
         player.MapPost("/villages/{slug}/me/drop", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.DropLoadAsync(slug, user.RequireAccountId(), cancellationToken));
 
+        player.MapPost("/villages/{slug}/research/knowledge", (string slug,KnowledgeInvestment request,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
+            game.InvestKnowledgeAsync(slug,user.RequireAccountId(),request,ct));
+        player.MapPost("/villages/{slug}/me/meal", (string slug,MealRequest request,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
+            game.EatMealAsync(slug,user.RequireAccountId(),request,ct));
         player.MapPost("/villages/{slug}/me/eat", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.EatAsync(slug, user.RequireAccountId(), cancellationToken));
 
@@ -133,6 +137,9 @@ public static class GameEndpoints
 
         player.MapPost("/villages/{slug}/me/heal", (string slug, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.HealAsync(slug, user.RequireAccountId(), cancellationToken));
+
+        player.MapPost("/villages/{slug}/fortifications/upgrade", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
+            game.UpgradeFortificationsAsync(slug,user.RequireAccountId(),ct));
 
         player.MapGet("/villages/{slug}/raid-editor", (string slug, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
             game.GetRaidEditorAsync(slug, user.RequireAccountId(), ct));

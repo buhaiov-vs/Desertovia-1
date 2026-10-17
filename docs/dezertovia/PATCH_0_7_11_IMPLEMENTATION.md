@@ -56,12 +56,12 @@
 | RAID-LOSS | Масштабируемый ущерб (начальный ориентир 180–360), забор/кражи/износ, конечное восстановление, живой носитель и однократные списания | BRANCH bc02048 |
 | RAID-TACTICS | Роли/обходы/проломы/2 узких входа/цели; до 4мин обычный/6мин осада, различать отступление; без model calls на тике | BRANCH bc02048 |
 | RAID-REPORT | Фактические участники/HP/лечение/ранения/урон/кражи/стрелы/износ и причина следующей сложности; Propose/одобрение сохраняются | BRANCH bc02048 |
-| NUM-01 | Стабильные видимые номера по типу, единственный без номера; старый глобальный ID/история/ремонт/заявки не ломаются | TODO |
-| FOOD-01/02 | Больше полезного расхода после замеров, один голод, ноша/личное/общественное по правилам; ручная еда и переключения без reload | TODO |
-| WALL-01 | Дерево→брёвна→камень, параметры/работа/ремонт/ворота/навигация; не бесплатное исцеление старой стены, железо позже | TODO |
-| WALL-ART | Общий масштаб/палитра/обводка/пиксели, день/ночь, прямые/углы/окончания/ворота/повреждения/разрушение | TODO |
-| SPACE-01 | Обнаруживаемость расширения замком, улучшения вместимости жилья/складов, без перемещения построек/самозабора, без обещания полной карты ×2 | TODO |
-| XP-01/KNOW-01/COOK-01 | После P0/P1: боевой XP силы/ловкости, исследования в открытия/рецепты, 2–3 блюда без бесконечного сложения | TODO |
+| NUM-01 | Стабильные видимые номера по типу, единственный без номера; старый глобальный ID/история/ремонт/заявки не ломаются | BRANCH 22b4164 |
+| FOOD-01/02 | Больше полезного расхода после замеров, один голод, ноша/личное/общественное по правилам; ручная еда и переключения без reload | BRANCH 22b4164 |
+| WALL-01 | Дерево→брёвна→камень, параметры/работа/ремонт/ворота/навигация; не бесплатное исцеление старой стены, железо позже | WIP implemented, checks below |
+| WALL-ART | Общий масштаб/палитра/обводка/пиксели, день/ночь, прямые/углы/окончания/ворота/повреждения/разрушение | BRANCH art reviewed; browser final pending |
+| SPACE-01 | Обнаруживаемость расширения замком, улучшения вместимости жилья/складов, без перемещения построек/самозабора, без обещания полной карты ×2 | BRANCH 22b4164 |
+| XP-01/KNOW-01/COOK-01 | После P0/P1: боевой XP силы/ловкости, исследования в открытия/рецепты, 2–3 блюда без бесконечного сложения | WIP implemented, validation pending |
 | REG-01 | Свежая проверка старых еды/ремонта/склада/личного жилья, камыша/квеста/воды/рывков по воспроизведению | TODO |
 
 Каждый пакет заканчивать кодом + подходящими регрессионными тестами + записью
@@ -249,3 +249,67 @@ reviewable PR, не заменять tested source текущим main. На с�
   Next fence packet detailed entry/exit decisions saved in
   FORTIFICATIONS_0_7_11_IMPLEMENTATION.md. No fence code implemented yet; avoid
   catalog-only projects that cannot start while the main story project is active.
+
+### WALL / art WIP — checkpoint after context compaction
+
+- Uncommitted implementation now exists (supersedes prior “no fence code” note):
+  FortificationUpgrades quote/request/begin/paid staged work/apply after all waves;
+  owner API, governor CivicOrder, menu costs/reasons; 1/2/3.5 strength and preserved
+  Damage/open/geometry; no fake building/property target; river endcaps inherit tier.
+- Migration33 FortificationLevels0711 backfills only absent/invalid Level to1.
+  Domain7 PASS; API4 PASS including actual PostgreSQL legacy JSON preservation,
+  completed work reload/deferred application and governor approval/recheck.
+  Full TypeScript PASS (/tmp/patch0711-fence-ts5.log).
+- Second imagegen source revision-source.png mechanically packed with explicit
+  rectangles into matching day/night128x64 atlases. check-atlas.mjs PASS32frames,
+  straight seams, mask drift44/4283 (1.03%). Day base remains opaque during dusk.
+  Actual map browser6cases now running /tmp/patch0711-fence-browser.log; screenshots
+  not reviewed yet, ART NOT ACCEPTED. Draft1 remains rejected.
+- Next: inspect phone/PC day/night/gates/bank, bot notice/tests, regression suite;
+  update FORTIFICATIONS spec/README, commit/push. Then XP/KNOW/COOK, full checks,
+  reviewable PR/package. No0.7.11 deployment date/request/runtime change.
+
+### WALL and P2 concurrent validation checkpoint
+
+- WALL fullDomain499 PASS + final7 PASS (dismantle now returns null/no false built
+  speech), API4 PASS, bot15 PASS, fullTS PASS. Actual map phone/desktop log/stone
+  day/night and bank reviewed: outlines/palette/scale retained, no emission.
+- Browser second run5/6 PASS; phone multi-material screenshot case exceeded60s
+  while taking the final capture, no assertion/runtime error. Split into separate
+  material tests and export scaleCSS to reduce screenshot cost. Combined8fence+
+  4P2 browser now running /tmp/patch0711-fence-p2-browser.log; no PASS claim yet.
+- P2 code now uncommitted: CombatTraining finite10statXP/wave based on real HP and
+  nullable RangedDamage measured at each actual hit; existing RewardsGranted
+  settlement; cancelled/manual override excluded; cap/talent/CatchUp preserved.
+  Dungeon already has separate statXP, no double grant.
+- TechnologyProgress.KnowledgeWork bounds a single investment to25% work,5RP/cycle,
+  chosen technology + existing real research hands + functional workplace + role.
+  It adds no hands and does not bypass crew. Replays after discovery/election free.
+- PreparedMeals two ordinary paid catalog tasks (Bakery/Baking porridge and
+  Tavern/Brewing stew),2new output goods using existing raw inputs. Own portion,
+ 20min effect/30min cooldown, mutually exclusive, wounded/exhausted blocked;
+  work×.9 or raid damage×1.05, no instant HP/energy. Shared quote/deduction hook.
+  UI in Inventory/Technology menu; hub reloads own citizen after consumption.
+- Migration34 ProgressionAndMeals0711 adds3nullable Citizen fields and only missing
+  Research.KnowledgeWork0, RangedDamage nullable ownedJSON metadata; old goods/stats
+  untouched. Full migration/reload and concurrent API tests running.
+- Initial P2Domain14/15 PASS, mixed weapon expectation5/5 was wrong for55%dexterity
+  with away-from-zero rounding (correct4/6); fixed and added actual hit/buff tests.
+  Exact rerun pending. API /tmp/patch0711-p2-api1.log; TS3 PASS. Keep failures honest.
+- Still need P2 domain/API/browser completion, fullREG/CI/lint/build/Docker and
+  reviewable PR/package. No0.7.11 live request/date; all source changes uninstalled.
+
+- P2 fullDomain516 PASS (/tmp/patch0711-domain-full-final.log); frontend build0.7.11
+  PASS (/tmp/patch0711-frontend-final.log), lint completed without errors (existing
+  warnings retained). Main/canonical remote heads rechecked unchanged0df8eb9/e0dc839.
+  API first6/8 had2 timestamp-fixture failures, corrected with persisted baseline;
+  complete API rerun /tmp/patch0711-api-full-final.log currently running.
+- To avoid repeated expensive screenshot encoding on the CPU-rendered phone,
+  fences capture is now opt-in DESERTOD_ART_CAPTURE=1. Already inspected day/night
+  map snapshots remain valid; automatic checks still instantiate real VillageWorld,
+  test opacity/material/damage-stage/gates and assert no browser runtime errors.
+  Third screenshot-heavy run deliberately interrupted after2desktop cases; final
+  combined12checks /tmp/patch0711-fence-p2-browser-final.log still in progress.
+- Bot full rerun898expected NOT claimed pass: /tmp/patch0711-bot-full-final.log.
+  Version0.7.11 and bilingual notes added in feature branch only. Release doc
+  RELEASE_0_7_11.md records34migrations/five-filefuturebotpayload/no deploymentdate.

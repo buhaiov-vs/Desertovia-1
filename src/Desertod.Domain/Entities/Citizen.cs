@@ -67,6 +67,9 @@ public sealed class Citizen
     public DateTimeOffset EnergyUpdatedAt { get; set; }
 
     /// <summary>Last vigor drink; the next one waits for <see cref="GameRules.VigorDrinkCooldown"/>.</summary>
+    public ResourceKind? MealKind { get; set; }
+    public DateTimeOffset? MealUntil { get; set; }
+    public DateTimeOffset? LastMealAt { get; set; }
     public DateTimeOffset? LastDrinkAt { get; set; }
     public DateTimeOffset? LastEnergyDrinkAt { get; set; }
 

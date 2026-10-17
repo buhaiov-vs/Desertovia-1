@@ -92,6 +92,7 @@ public sealed class RaidFighter
     public double Health { get; set; }
     public double MaximumHealth { get; set; }
     public double DamageDealt { get; set; }
+    public double? RangedDamage { get; set; }
     public double DamageTaken { get; set; }
     public int Kills { get; set; }
     public int RenownEarned { get; set; }

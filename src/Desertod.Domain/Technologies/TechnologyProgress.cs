@@ -7,6 +7,7 @@ public sealed class TechnologyProgress
 
     /// <summary>Research work done, in cycles of a researcher with every stat at 0.</summary>
     public int Done { get; set; }
+    public int KnowledgeWork { get; set; }
 
     /// <summary>Set once the technology is discovered.</summary>
     public DateTimeOffset? ResearchedAt { get; set; }

@@ -1,4 +1,5 @@
 using Desertod.Domain.Catalog;
+using Desertod.Domain.Combat;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Storage;
@@ -27,6 +28,9 @@ public static class BuildingOperations
     {
         var original=BuildingCatalog.Get(site.Kind);
         StageJob Haul(string id,int amount)=>new(id,amount);
+        if(site.Operation==FortificationUpgrades.Operation)return original with {Stages=[new("reinforce","Fortification reinforcement",3,
+            site.TargetLevel==2?[Haul("bring-logs",240),Haul("bring-planks",80),new("raise-posts",site.OperationWork)]
+                :[Haul("bring-stones",400),Haul("bring-logs",80),Haul("bring-planks",80),new("raise-posts",site.OperationWork)])]};
         if(site.Operation=="castle-upgrade") return original with { Stages = original.Stages.Select(stage => stage with {
             Jobs = stage.Jobs.Select(job => BuildingCatalog.FindJob(job.JobId)?.Kind == JobKind.Labor
                 ? job with { Amount = checked(job.Amount * (1 << (site.TargetLevel - 1))) } : job).ToArray() }).ToArray() };
@@ -57,6 +61,7 @@ public static class BuildingOperations
 
     public static CivicOrder Request(Village village,Guid actor,string plot,string operation,DateTimeOffset now)
     {
+        if(plot==FortificationUpgrades.Plot&&operation=="upgrade")return FortificationUpgrades.Request(village,actor,now);
         if(operation=="upgrade"&&village.DefeatedAt is not null)throw new GameRuleException("village.defeated","Restore the royal castle first.");
         if(operation is not ("demolish" or "upgrade")) throw new GameRuleException("building.operation","Unknown building action.");
         if(village.CivicOrders.Any(o=>o.PlotId==plot&&o.Status is "pending" or "working"))
@@ -104,6 +109,8 @@ public static class BuildingOperations
     public static void Approve(Village village,CivicOrder order,IReadOnlyList<Citizen> citizens,DateTimeOffset now)
     {
         if(order.Status!="pending") throw new GameRuleException("building.orderProcessed","This application was already processed.");
+        if(order.PlotId==FortificationUpgrades.Plot&&order.Operation=="upgrade"&&order.BuildingKind==BuildingKind.FortificationUpgrade)
+        {FortificationUpgrades.Begin(village,order,now);return;}
         if (order.Operation == "build")
         {
             var kindToBuild = order.BuildingKind ?? throw new GameRuleException("building.notAvailable", "Select a building.");

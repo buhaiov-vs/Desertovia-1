@@ -13,6 +13,8 @@ public sealed class Fortification
     public bool Gate { get; set; }
     public bool Open { get; set; }
     public int Damage { get; set; }
+    public int Level { get; set; } = 1;
+    public double Strength => Level>=3?3.5:Level==2?2:1;
     public bool Blocks => Damage < CombatRules.MaximumDamage && (!Gate || !Open);
 }
 
@@ -23,7 +25,7 @@ public static class Fortifications
     {
         if (!completed.Contains(ProjectCatalog.Palisade)) return;
         void Add(int x, int y, bool gate = false) => village.Fortifications.Add(new()
-            { Id = $"wall:{x},{y}", X = x, Y = y, Gate = gate, Open = gate });
+            { Id = $"wall:{x},{y}", X = x, Y = y, Gate = gate, Open = gate, Level=Math.Max(1,FortificationUpgrades.Level(village)) });
         if (village.Fortifications.Count == 0)
         {
             for (var y = -1; y <= 26; y++) Add(-1, y, y is >= 12 and <= 14);

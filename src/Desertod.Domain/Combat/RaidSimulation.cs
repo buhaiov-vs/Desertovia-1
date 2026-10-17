@@ -143,9 +143,10 @@ public static class RaidSimulation
         if(weapon?.Arrows>0){citizen.Arrows=Math.Max(0,citizen.Arrows-1);fighter.ArrowsSpent++;}
         fighter.Arrows=citizen.Arrows;
         var multiplier=village.Has(BuildingKind.Barracks)?RaidRules.BarracksMultiplier:1;
-        var hit=Math.Min(target.Health,Math.Max(1,CombatRules.Power(citizen)*multiplier*.85));
+        var hit=Math.Min(target.Health,Math.Max(1,CombatRules.Power(citizen)*multiplier*.85*PreparedMeals.AttackMultiplier(citizen,at)));
         Contact(battle,at);
         target.Health=Math.Max(0,target.Health-hit);fighter.DamageDealt+=hit;
+        fighter.RangedDamage=(fighter.RangedDamage??0)+(weapon?.Kind==ResourceKind.Bow?hit:0);
         if(battle.Phase=="Approaching")battle.Phase="Fighting";
         if(target.Health>0)return;
         target.State="Dead";target.DiedAt=at;fighter.Kills++;
@@ -178,6 +179,7 @@ public static class RaidSimulation
         var hit=Math.Min(target.Health,Desertod.Domain.Dungeons.HeroClassCatalog.VoivodeDamage);
         Contact(battle,at);
         target.Health=Math.Max(0,target.Health-hit);fighter.DamageDealt+=hit;
+
         battle.Event("hit",target.Id.ToString(),at);
         if(target.Health<=0){target.State="Dead";target.DiedAt=at;fighter.Kills++;battle.Event("enemy_down",target.Id.ToString(),at);}
         if(battle.Phase=="Approaching")battle.Phase="Fighting";
@@ -370,7 +372,7 @@ public static class RaidSimulation
     }
 
     private static IEnumerable<string> Targets(Village v) => v.Structures.Select(s=>s.PlotId)
-        .Concat(v.Storages.Select(s=>s.PlotId)).Concat(v.Sites.Select(s=>s.PlotId)).Concat(v.BridgeOpened||v.BridgeRuinedAt is not null?new[]{RuinRules.RoyalBridge}:[]).Distinct();
+        .Concat(v.Storages.Select(s=>s.PlotId)).Concat(v.Sites.Where(s=>s.Kind!=BuildingKind.FortificationUpgrade).Select(s=>s.PlotId)).Concat(v.BridgeOpened||v.BridgeRuinedAt is not null?new[]{RuinRules.RoyalBridge}:[]).Distinct();
 
     private static void BreakWall(RaidUnit unit,Fortification wall,RaidBattle battle,EnemyDefinition enemy,DateTimeOffset at)
     {
@@ -378,7 +380,7 @@ public static class RaidSimulation
         if(unit.NextAttackAt>at)return;
         unit.NextAttackAt=at.AddSeconds(3);
         var added=Math.Min(100-wall.Damage,Math.Min(WallLimit(battle)-(int)WallDamage(battle),
-            enemy.Damage>0?Math.Max(1,(int)Math.Round(enemy.Damage*.35*(battle.Settings?.PropertyMultiplier??1)*(unit.Variant=="boss"?2.5:unit.Variant=="strong"?1.5:1))):0));
+            enemy.Damage>0?Math.Max(1,(int)Math.Round(enemy.Damage*.35/wall.Strength*(battle.Settings?.PropertyMultiplier??1)*(unit.Variant=="boss"?2.5:unit.Variant=="strong"?1.5:1))):0));
         if(added<=0)return;
         wall.Damage+=added;
         Contact(battle,at);
@@ -442,6 +444,7 @@ public static class RaidSimulation
             var reward=i==contributors.Count-1?remaining:(int)Math.Floor(raid.Killed*RaidRules.RenownPerKill*f.DamageDealt/Math.Max(1,total));
             remaining-=reward;c.Renown+=reward;f.RenownEarned=reward;
             if (!cancelled || raid.Killed > 0) SkillRules.AddExperience(c,Skill.Guarding,CombatRules.FightExperience);
+            if(!cancelled&&!battle.ManualOverride)CombatTraining.Grant(c,f);
             // Equipment wears once per encounter, not once per server tick. Arrows were consumed by actual shots.
             var random=new Random(battle.Seed^c.Id.GetHashCode());
             if(c.Weapon is {} w && random.NextDouble()<(ArmoryCatalog.Weapon(w)?.BreakChance??0)){c.Weapon=null;broken++;}

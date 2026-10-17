@@ -26,7 +26,7 @@ public static class SiteManagement
         if (!(site.OwnerAccountId==actor || site.OwnerAccountId is null && tsar || tsar && LegacyConflict(site)))
             throw new GameRuleException("building.private","Only the owner or the Tsar of a conflicting plot can dismantle this site.");
         if (site.Operation=="site-demolish") return;
-        if (site.Operation is not null) throw new GameRuleException("building.busy","Finish the current building operation first.");
+        if (site.Operation is not null&&site.Operation!=Desertod.Domain.Combat.FortificationUpgrades.Operation) throw new GameRuleException("building.busy","Finish the current building operation first.");
         var investment=new List<StoredGood>();BuildingOperations.AddInvestment(site,investment);
         site.Salvage=investment.Where(g=>g.Amount>=4).Select(g=>new StoredGood{Kind=g.Kind,Amount=g.Amount/4}).ToList();
         site.OperationWork=Math.Max(3,(int)Math.Ceiling(site.Progress

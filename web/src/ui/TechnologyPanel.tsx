@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  api,
   builtKinds,
   type Catalog,
   type Citizen,
@@ -89,6 +90,7 @@ export function TechnologyPanel({
   disabled,
   onPoll,
   onResearch,
+  onVillage,
 }: {
   catalog: Catalog
   village: VillageState
@@ -99,6 +101,7 @@ export function TechnologyPanel({
   /** Opens the open vote, or lets the rulers call one. */
   onPoll: () => void
   onResearch: () => void
+  onVillage?: (v:VillageState)=>void
 }) {
   const i18n = useI18n()
   const { t } = i18n
@@ -130,6 +133,7 @@ export function TechnologyPanel({
         )}
       </section>
 
+      {ruler&&current&&<KnowledgeInvestmentCard village={village} disabled={disabled} onVillage={onVillage}/>}
       <section className="card">
         <h3>{t('tech.tree')}</h3>
         <p className="small muted">{t('tech.treeHint')}</p>
@@ -298,4 +302,18 @@ function TechnologyCard({
       </span>
     </div>
   )
+}
+
+function KnowledgeInvestmentCard({village,disabled,onVillage}:{village:VillageState;disabled:boolean;onVillage?:(v:VillageState)=>void}){
+ const i18n=useI18n(),ru=i18n.language==='ru',[busy,setBusy]=useState(false),[error,setError]=useState('')
+ const progress=village.technologies.find(t=>t.id===village.currentResearch)
+ const cost=progress?.knowledgeCost??0,stock=village.resources.find(r=>r.kind==='ResearchPoints')?.amount??0
+ return <section className="card"><h3>{ru?'Применить знания':'Apply knowledge'}</h3>
+  <p className="small">{ru?'Очки исследований ускоряют выбранное голосованием открытие один раз, максимум на 25%. Исследовательское здание, обычная работа и участие жителей обязательны.':'Research points speed up the elected discovery once, by up to 25%. Its workplace, ordinary research and required participants remain necessary.'}</p>
+  <p>{ru?'Очков исследований':'Research points'}: {stock}</p>
+  {(progress?.knowledgeWork??0)>0?<p role="status">{ru?'Знания уже вложены в это открытие.':'Knowledge already applied to this discovery.'}</p>:<>
+   <button disabled={disabled||busy||!onVillage||cost===0||stock<cost} onClick={async()=>{if(busy)return;setBusy(true);setError('');try{onVillage?.(await api.investKnowledge(village.slug,village.currentResearch!))}catch(e){setError(i18n.error(e))}finally{setBusy(false)}}}>{ru?'Вложить':'Invest'} {cost} · +{cost/5} {ru?'работы':'work'}</button>
+   {cost===0&&<p className="small muted">{ru?'Нужно начать исследование в нужном здании. Если работа уже готова, должны поучаствовать другие жители.':'Start ordinary research at its workplace first. If work is already complete, more citizens must participate.'}</p>}
+  </>}{error&&<p className="error" role="alert">{error}</p>}
+ </section>
 }

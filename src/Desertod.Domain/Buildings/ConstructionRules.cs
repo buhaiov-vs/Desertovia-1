@@ -230,7 +230,12 @@ public static class ConstructionRules
             return null;
         }
 
-        if(BuildingOperations.Finish(village,site,now,worker))return site.Kind;
+        if(site.Operation==Desertod.Domain.Combat.FortificationUpgrades.Operation)
+        {
+            Desertod.Domain.Combat.FortificationUpgrades.ApplyReady(village);
+            return village.Sites.Contains(site)?null:site.Kind;
+        }
+        if(BuildingOperations.Finish(village,site,now,worker))return site.Operation is "demolish" or "site-demolish"?null:site.Kind;
         var application = village.CivicOrders.SingleOrDefault(o => o.Id == site.OrderId);
         if (application is not null) application.Status = "completed";
         village.Sites.Remove(site);

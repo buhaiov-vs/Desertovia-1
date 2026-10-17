@@ -34,6 +34,7 @@ public enum BuildingKind
     Hospital,
     Longhouse,
     Castle,
+    FortificationUpgrade,
 }
 
 public enum JobKind
@@ -144,6 +145,7 @@ public static class BuildingCatalog
 
     public static IReadOnlyList<BuildingDefinition> Buildings { get; } =
     [
+        new(BuildingKind.FortificationUpgrade, "Fortifications upgrade", "Reinforce the existing perimeter through materials and construction work.", [], []),
         new(BuildingKind.Longhouse, "Communal house", "A shared home with room for twelve, expandable to twenty-eight.", [BuildingKind.Hut],
             [Stage("foundation", "Foundation", 3, Job("bring-stones",60), Job("clear-ground",15)),
              Stage("frame", "Frame", 3, Job("bring-logs",60), Job("bring-planks",12), Job("raise-posts",25)),

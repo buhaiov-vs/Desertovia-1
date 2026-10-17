@@ -1,3 +1,4 @@
+import {wallVisualStage} from './fortificationState'
 import type { VillageState } from '../api'
 /** SignalR combat packets share all other state. A new wall DTO alone need not rebuild the world. */
 export function sameStaticVillage(before:VillageState|null,next:VillageState){
@@ -6,7 +7,7 @@ export function sameStaticVillage(before:VillageState|null,next:VillageState){
   if(key==='battles'||key==='fortifications')continue
   if(before[key]!==next[key])return false
  }
- // Partial damage has no visual/collision change; a breach, gate or layout change still rebuilds.
+ // Only material/damage-stage/gate/layout changes rebuild, never every damage point.
  const a=before.fortifications??[],b=next.fortifications??[]
- return a.length===b.length&&a.every((wall,i)=>wall.id===b[i].id&&wall.x===b[i].x&&wall.y===b[i].y&&(wall.damage>=100)===(b[i].damage>=100)&&wall.open===b[i].open&&wall.gate===b[i].gate)
+ return a.length===b.length&&a.every((wall,i)=>wall.id===b[i].id&&wall.x===b[i].x&&wall.y===b[i].y&&wallVisualStage(wall)===wallVisualStage(b[i])&&(wall.level??1)===(b[i].level??1)&&wall.open===b[i].open&&wall.gate===b[i].gate)
 }

@@ -854,6 +854,8 @@ export const ru: Dictionary = {
     Feathers: 'Перья',
     Flax: 'Лён',
     Grain: 'Зерно',
+    Porridge: 'Зерновая каша',
+    Stew: 'Сытная похлёбка',
     VigorDrink: 'Бодрящий взвар',
     Spear: 'Копья',
     Bow: 'Луки',
@@ -944,6 +946,7 @@ export const ru: Dictionary = {
   },
 
   buildings: {
+    FortificationUpgrade: {name: 'Улучшение укреплений', description: 'Материалы и работа для усиления существующего забора без ремонта повреждений.'},
     Castle: { name: 'Царский замок', description: 'Резиденция царя. Улучшения открывают новые земли царства.' },
     Hospital: { name: 'Больница', description: 'Лечение после дуэлей и обучение первой помощи.' },
     Heap: { name: 'Склад', description: 'Огороженный клочок земли для любого добра. Мала и неопрятна.' },
@@ -978,6 +981,7 @@ export const ru: Dictionary = {
   },
 
   stages: {
+    reinforce: 'Укрепление',
     dismantle:'Разборка', upgrade:'Улучшение склада', expand:'Расширение жилья',
     ground: 'Площадка',
     foundation: 'Основание',
@@ -1032,6 +1036,8 @@ export const ru: Dictionary = {
   },
 
   tasks: {
+    'cook-porridge': 'Варить зерновую кашу',
+    'cook-stew': 'Готовить сытную похлёбку',
     'learn-first-aid': 'Изучать первую помощь',
     'practice-first-aid': 'Практиковать первую помощь',
     'chop-wood': 'Собирать дерево',
@@ -1214,6 +1220,9 @@ export const ru: Dictionary = {
   },
 
   errors: {
+    "defense.raidPending": "Дождись окончания всех волн набега перед улучшением укреплений.",
+    "defense.upgradeWorking": "Укрепления уже улучшаются. Открой площадку в разделе «Стройка».",
+    "defense.upgradeTechnology": "Нужно плотницкое дело, а для камня также горное дело.",
     "raid.requestConflict": "Этот код запуска уже использован с другими настройками. Обнови предпросмотр.",
     "raid.settings": "Некорректные настройки: проверь диапазоны и доли состава (в сумме 100%).",
     "raid.unaffordable": "Этот состав не помещается в автоматический бюджет. Уменьши силу или выбери ручной режим.",

@@ -20,7 +20,10 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         foreach (var entry in ChangeTracker.Entries<Village>().Where(e => e.State != EntityState.Deleted).ToArray())
+        {
+            FortificationUpgrades.ApplyReady(entry.Entity);
             Desertod.Domain.Buildings.BuildingNumbers.Ensure(entry.Entity);
+        }
         var count = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         SuccessfulSaves++;
         return count;
@@ -202,7 +205,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 poll.OwnsMany(p => p.Ballots);
             });
             village.OwnsMany(v => v.Forecasts, forecast => forecast.ToJson());
-            village.OwnsMany(v => v.Fortifications, wall => { wall.ToJson(); wall.Ignore(f=>f.Blocks); });
+            village.OwnsMany(v => v.Fortifications, wall => { wall.ToJson(); wall.Ignore(f=>f.Blocks);wall.Ignore(f=>f.Strength); });
             village.OwnsMany(v=>v.BuildingDisplayNumbers,n=>n.ToJson());
             village.OwnsOne(v=>v.RaidAdaptation,a=>{a.ToJson();a.OwnsMany(x=>x.Recent);a.OwnsMany(x=>x.Participation);});
             village.OwnsMany(v=>v.RaidPresets,preset=>{preset.ToJson();preset.OwnsOne(p=>p.Settings,settings=>MapRaidSettings(settings));});

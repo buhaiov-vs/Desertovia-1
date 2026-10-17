@@ -16,5 +16,5 @@ public static class WorkEnergy
         WeatherRules.EnergyCost(village, true, now) * (job.Kind == JobKind.Labor ? 2 : 1.25);
 
     public static double WithMedical(Citizen citizen, double price, DateTimeOffset now) =>
-        price * (citizen.HasMedicalEffect("snorers", now) ? 1.2 : 1);
+        price * (citizen.HasMedicalEffect("snorers", now) ? 1.2 : 1) * PreparedMeals.WorkMultiplier(citizen,now);
 }

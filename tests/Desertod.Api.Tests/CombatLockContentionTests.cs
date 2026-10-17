@@ -17,6 +17,10 @@ public sealed class CombatLockContentionTests(DesertodApiFactory factory) : IDis
     private static long nextUid=700000;
     private Task<DesertodDbContext> Db()=>factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
     public void Dispose()=>factory.Hospital.Reset();
+    // Общий HospitalWorker продолжает опрашивать другие деревни. Проверяем весь
+    // набор жителей этой деревни: лишний житель в принудительном запросе всё ещё ошибка.
+    private long[][] RequestsFor(long[] residents,long ruler)=>factory.Hospital.StatusRequests
+        .Where(ids=>ids.Any(id=>residents.Contains(id)||id==ruler)).ToArray();
 
     private async Task<(FoundedVillage Village,Resident[] Residents,Guid VillageId,Guid BattleId,long[] Uids,long TsarUid)> Setup()
     {
@@ -43,12 +47,14 @@ public sealed class CombatLockContentionTests(DesertodApiFactory factory) : IDis
         var s=await Setup();factory.Hospital.Enabled=true;
         var path=s.Village.Path+$"/battles/{s.BattleId}/order";
         Assert.Equal(HttpStatusCode.OK,(await s.Residents[0].Client.PutAsJsonAsync(path,new{mode="hold"})).StatusCode);
-        Assert.Equal(s.Uids.Take(1),Assert.Single(factory.Hospital.StatusRequests));
+        Assert.Equal(s.Uids.Take(1),Assert.Single(RequestsFor(s.Uids,s.TsarUid)));
         // This must be a fresh forced check even though the preceding click was healthy.
         if(unavailable)factory.Hospital.Fail=true;
         else {var now=factory.Clock.GetUtcNow().ToUnixTimeSeconds();factory.Hospital.States[s.Uids[0]]=new(s.Uids[0].ToString(),"new-injury",now,now+3600,now,0,0,[]);}
         await AssertRuleBrokenAsync(await s.Residents[0].Client.PutAsJsonAsync(path,new{mode="hold"}),"hospital.unavailable");
-        Assert.All(factory.Hospital.StatusRequests,ids=>Assert.Equal(s.Uids.Take(1),ids));
+        var checks=RequestsFor(s.Uids,s.TsarUid);
+        Assert.Equal(2,checks.Length);
+        Assert.All(checks,ids=>Assert.Equal(s.Uids.Take(1),ids));
         await using var db=await Db();var others=await db.Citizens.Where(c=>c.VillageId==s.VillageId&&c.Id!=s.Residents[0].Id).ToListAsync();
         Assert.All(others,c=>Assert.Null(c.Recovery));
     }
@@ -58,7 +64,7 @@ public sealed class CombatLockContentionTests(DesertodApiFactory factory) : IDis
     {
         var s=await Setup();factory.Hospital.Enabled=true;
         Assert.Equal(HttpStatusCode.OK,(await s.Village.Tsar.PutAsJsonAsync(s.Village.Path+$"/battles/{s.BattleId}/order",new{mode="hold"})).StatusCode);
-        Assert.Equal(new[]{s.TsarUid},Assert.Single(factory.Hospital.StatusRequests));
+        Assert.Equal(new[]{s.TsarUid},Assert.Single(RequestsFor(s.Uids,s.TsarUid)));
     }
 
     [Fact]

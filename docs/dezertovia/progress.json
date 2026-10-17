@@ -1450,7 +1450,7 @@
   "monster_behavior": {
     "decision": "D-091",
     "recorded_on": "2026-10-17",
-    "state": "implemented_locally_verified_exact_ci_pending",
+    "state": "release_candidate_checks_in_progress",
     "plan": "MONSTER_BEHAVIOR_INTEGRATION.md",
     "branch": "feat/monster-behavior",
     "live_changed": false,
@@ -1461,7 +1461,7 @@
       "RVO2-CS": "8e7cf2f9bdc331fe0802cdfb10d6c19fb5b20745"
     },
     "death_backpack_losses": "design_only_not_enabled",
-    "deployment": "not_requested_for_new_package",
+    "deployment": "authorized_D-092_pending_exact_ci_preflight",
     "local_checks": {
       "domain_full_final": 460,
       "api_full": 255,
@@ -1490,6 +1490,8 @@
       ],
       "production_fps_claim": false
     },
-    "exact_ci": "pending_on_final_head"
+    "exact_ci": "pending_on_final_head",
+    "candidate_version": "0.7.9",
+    "previous_failed_ci": 39016736130
   }
 }

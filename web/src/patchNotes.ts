@@ -10,6 +10,21 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.9',date:'2026-10-17',
+    title:{ru:'Разорение деревни, орда и боссы',en:'Property raids, hordes and bosses'},
+    changes:{
+      ru:['Враги прежде всего разоряют имущество и запасы: распределяют цели, обходят толпу и делают проломы. Недострои тоже уязвимы.',
+        'Директор может предложить орду слабых, смешанный отряд, элиту или от одного до трёх живучих боссов в пределах готовности деревни.',
+        'Боссы предупреждают тяжёлый удар областью на земле и меняют фазу при потере половины здоровья.',
+        'Добычу из выбранного склада, в том числе личного, уносит только сбежавший живой враг. Ущерб и кража ограничены; потери рюкзака при поражении не добавлены.',
+        'Общие алгоритмы выбора целей и обхода толпы используются также в подземелье. Команды игроков, ранения и прогресс сохраняются.'],
+      en:['Raiders primarily attack property and supplies, distribute targets, avoid crowds and breach barriers. Unfinished buildings remain vulnerable.',
+        'The director can propose weak hordes, mixed groups, elites or one to three durable bosses within the village readiness budget.',
+        'Bosses mark heavy strikes on the ground and change phase below half health.',
+        'Only a living escaping carrier takes goods from its selected storage, including private storage. Damage and theft are bounded; no backpack death penalty was added.',
+        'Dungeons share target selection and crowd avoidance. Player orders, injuries and progress are retained.']}
+  },
+  {
     version:'0.7.8',date:'2026-10-17',
     title:{ru:'Всевышний: предложения набегов',en:'Director raid proposals'},
     changes:{

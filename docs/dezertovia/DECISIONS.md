@@ -1,3 +1,16 @@
+# D-092: owner authorized0.7.9 deployment now
+
+Owner17Oct: «Давай грузить и тестировать в игре игроками». Ship D-091 through a
+new guarded0.7.9 rollout, no further permission required. Read RELEASE_0_7_9.md.
+Previous7e50c66/CI39016736130 FAILED one API assertion contaminated by a background
+clinical poll for another village; not ready. Scope the assertion to all actors
+of the tested village and still require two forced checks, fresh injury/failure
+rejection and untouched other residents. No runtime clinical restriction weakened.
+Exact final CI, newpost079 operator/candidate, actual live preflight, PG/SQLite/
+code/config/profile backups and separate check mandatory. LIVE0.7.8 until success.
+No old rollout replay, forced test waves, synthetic player messages/model probes,
+payments or progress resets. Death backpack losses stay design only.
+
 # D-091: monster behavior implementation, NOT INSTALLED
 
 Owner17Oct authorized detailed plan and integration; property/supplies are the

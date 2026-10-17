@@ -45,7 +45,8 @@ public sealed partial class GameService
             citizens.Count(c => !Ready(c)), village.Raids.Count(r => r.IsPending), village.Sites.Count,
             village.Structures.Count(s => s.Damage > 0) + village.Storages.Count(s => s.Damage > 0),
             village.Raids.Count(r => r.Outcome == RaidOutcome.Lost && r.ResolvedAt >= now.AddHours(-2)),
-            CombatRules.IsPeaceful(village, now), state.RestUntil > now || village.Raids.Any(r => r.AnnouncedAt > now.AddHours(-1)));
+            CombatRules.IsPeaceful(village, now), state.RestUntil > now || village.Raids.Any(r => r.AnnouncedAt > now - AlmightyPolicy.RaidQuietInterval),
+            village.DefeatedAt is not null);
     }
 
     public async Task<AlmightyView> GetAlmightyAsync(string slug, Guid actor, bool enabled, CancellationToken ct) =>
@@ -95,6 +96,15 @@ public sealed partial class GameService
             var options = AlmightyPolicy.Options(facts, RaidBalance.Approaches(village)).Concat(VigorTuning.Options(village)).ToList();
             if (facts.Online >= 3 && facts.PendingRaids == 0 && facts.Patients == 0 && !await db.DungeonRuns.AnyAsync(r => r.VillageId == villageId && r.Phase != DungeonPhase.Ended, ct))
                 options.Add(new("dungeon", "Общий поход", "Открыть сбор в существующий данж. Вход добровольный, обычные правила/награды/ранения."));
+            // Любая недавняя заявка о набеге, включая отклонённую, даёт царю паузу.
+            var raidOptionIds = AlmightyPolicy.RaidOptionIds();
+            var lastRaidProposal = await db.AlmightyProposals.Where(p => p.VillageId == villageId && raidOptionIds.Contains(p.Option))
+                .MaxAsync(p => (DateTimeOffset?)p.CreatedAt, ct);
+            var lastEncounter = village.Raids.Select(r => r.ResolvedAt ?? r.AnnouncedAt)
+                .Append(village.CreatedAt).Max();
+            var raidPressure = AlmightyPolicy.RaidPressure(facts, now, lastEncounter, lastRaidProposal);
+            var fallbackRaid = raidPressure.ProposalDue ? options.FirstOrDefault(o => o.Enemy is not null && o.Composition == "mixed")
+                ?? options.FirstOrDefault(o => o.Enemy is not null) : null;
             var stock = village.Storages.SelectMany(s => s.Goods).GroupBy(g => g.Kind.ToString()).ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
             var previous = await db.AlmightyProposals.Where(p => p.VillageId == villageId).OrderByDescending(p => p.CreatedAt)
                 .Take(4).Select(p => new { p.Option, p.Status, p.Reason, p.Result }).ToListAsync(ct);
@@ -116,6 +126,10 @@ public sealed partial class GameService
             var tradingProfitToday = await db.GameWallets.Where(w=>w.VillageId==villageId && w.IncomeDay==incomeDay).SumAsync(w=>(long?)w.ProfitToday,ct) ?? 0;
             var snapshot = JsonSerializer.Serialize(new {
                 now, facts, stock, previousStock,
+                raidPressure = new { raidPressure.Eligible, raidPressure.ProposalDue, raidPressure.BlockedBy,
+                    raidPressure.NextProposalAt, lastEncounterAt = lastEncounter, approvedRestUntil = state.RestUntil, fallbackOption = fallbackRaid?.Id,
+                    minimumReadyOnline = AlmightyPolicy.MinimumReadyResidents,
+                    policy = "Набеги — обязанность директора. Недострой и повреждения не дают иммунитет; часть пациентов не запрещает набег, если онлайн достаточно боеспособных. После часа без боя предложи ограниченную волну. Любое предложение набега даёт паузу2ч, отказ царя не обходить сменой врага. Только предложение, не автоматический запуск." },
                 vigor = new { village.VigorEnergy, village.VigorCooldownMinutes,
                     tired = guardCitizens.Count(c => c.CurrentEnergy(now, village) < 8),
                     unconscious = guardCitizens.Count(c => c.ExhaustedUntil > now),
@@ -128,6 +142,10 @@ public sealed partial class GameService
                         weaknesses=village.Fortifications.Where(f=>f.Damage>0).OrderByDescending(f=>f.Damage).Take(8).Select(f=>new{f.X,f.Y,f.Damage})},
                     recentBattles = await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==villageId&&b.FinishedAt!=null&&b.Phase!="Cancelled").OrderByDescending(b=>b.FinishedAt).Take(3).Select(b=>new{b.Sector,b.Composition,b.DamageDone,b.ReadyDefenders,b.ThreatBudget}).ToListAsync(ct),
                     uncertainty = "Готовность определяет ограниченный бюджет при объявлении. Отдельные HP, атаки по расстоянию; геометрия и подготовка влияют на исход. Новая подготовка не усиливает объявленных врагов." },
+                workActivity = new {
+                    repairCycles = guardCitizens.Count(c => c.CurrentTaskId == "repair" && !c.CycleSettled && c.RecoveryPausedAt is null && c.CycleEndsAt > now),
+                    constructionCycles = guardCitizens.Count(c => c.CurrentSiteId is not null && !c.CycleSettled && c.RecoveryPausedAt is null && c.CycleEndsAt > now),
+                    interpretation = "Количество повреждений/площадок — объём оставшейся работы, не доказательство ремонта. Число циклов — назначенная работа, не подтверждение её завершения." },
                 combatControls = "manual movement and target selection; no guard duty or defense sectors",
                 economyAccuracy = "Складские остатки, не прибыль. Учёт операций только с даты startedAt; внутренние переносы не доход. Начальные остатки не заработок. Налоги/реальные свечи не менять.",
                 chat = recent.OrderBy(m => m.SentAt).Select(m => new { text = m.Text, id = m.Id, author = m.AccountId.ToString()[..8] }),
@@ -177,12 +195,28 @@ public sealed partial class GameService
                 observation.Reason = state.LastError;
             } else {
                 state.LastError = ""; state.Intent = string.IsNullOrWhiteSpace(answer.Intent) ? state.Intent : answer.Intent;
-                observation.Option = chosen.Id; observation.Reason = answer.Reason;
+                var reason = answer.Reason;
+                // Это явная страховка ритма, а не приписывание решения модели: только заявка царю.
+                using var snapshot = JsonDocument.Parse(review.Snapshot);
+                if (chosen.Enemy is null && snapshot.RootElement.TryGetProperty("raidPressure", out var pressure)
+                    && pressure.GetProperty("proposalDue").GetBoolean()
+                    && pressure.TryGetProperty("fallbackOption", out var fallback) && fallback.ValueKind == JsonValueKind.String
+                    && review.Options.FirstOrDefault(o => o.Id == fallback.GetString() && o.Enemy is not null) is { } dueRaid)
+                {
+                    chosen = dueRaid;
+                    state.Intent = "Поддерживать чередование ограниченных угроз и пауз; не ждать полного ремонта или лечения всех жителей.";
+                    reason = "Планировщик угроз: после паузы онлайн достаточно боеспособных жителей. Предлагаю ограниченный набег; недострой, повреждения и отдельные пациенты не дают бессрочную передышку. Состав будет рассчитан по текущей готовности при твоём согласии. ИИ выбрал мирное действие, поэтому это предложение создано правилом ритма. Без согласия нападение не начнётся.";
+                }
+                observation.Option = chosen.Id; observation.Reason = reason;
                 var pending = await db.AlmightyProposals.AnyAsync(p => p.VillageId == review.VillageId && p.Status == "Pending" && p.ExpiresAt > now && p.Option == chosen.Id, ct);
-                var duplicate = await db.AlmightyProposals.AnyAsync(p => p.VillageId == review.VillageId && p.Option == chosen.Id && p.CreatedAt > now.AddHours(-2) && (p.Status == "Rejected" || p.Status == "Applied"), ct);
+                var raidOptionIds = AlmightyPolicy.RaidOptionIds();
+                var duplicate = chosen.Enemy is not null
+                    ? await db.AlmightyProposals.AnyAsync(p => p.VillageId == review.VillageId && p.CreatedAt > now - AlmightyPolicy.RaidProposalInterval
+                        && raidOptionIds.Contains(p.Option), ct)
+                    : await db.AlmightyProposals.AnyAsync(p => p.VillageId == review.VillageId && p.Option == chosen.Id && p.CreatedAt > now.AddHours(-2) && (p.Status == "Rejected" || p.Status == "Applied"), ct);
                 if (state.Mode == "Propose" && chosen.Id != "none" && !pending && !duplicate && !(state.LastNoticeAt > now.AddMinutes(-30))) {
                     db.AlmightyProposals.Add(new() { VillageId = review.VillageId, ReviewId = review.Lease, Option = chosen.Id,
-                        Reason = answer.Reason, Intent = state.Intent, CreatedAt = now, ExpiresAt = now + AlmightyPolicy.ProposalLifetime, Snapshot = review.Snapshot });
+                        Reason = reason, Intent = state.Intent, CreatedAt = now, ExpiresAt = now + AlmightyPolicy.ProposalLifetime, Snapshot = review.Snapshot });
                     state.LastNoticeAt = now;
                 }
             }

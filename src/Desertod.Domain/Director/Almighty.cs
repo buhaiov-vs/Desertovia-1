@@ -65,8 +65,10 @@ public sealed class AlmightyObservation
 }
 
 public sealed record AlmightyFacts(int Population, int Online, int ReadyGuards, int Patients, int PendingRaids,
-    int BuildingSites, int DamagedBuildings, int RecentLosses, bool Peaceful, bool Resting);
+    int BuildingSites, int DamagedBuildings, int RecentLosses, bool Peaceful, bool Resting, bool Defeated = false);
 public sealed record AlmightyOption(string Id, string Title, string Effect, EnemyKind? Enemy = null, string? Sector = null, string? Composition = null);
+
+public sealed record AlmightyRaidPressure(bool Eligible, bool ProposalDue, IReadOnlyList<string> BlockedBy, DateTimeOffset NextProposalAt);
 
 public static class AlmightyPolicy
 {
@@ -74,16 +76,48 @@ public static class AlmightyPolicy
     public static readonly TimeSpan ImportantInterval = TimeSpan.FromMinutes(5);
     public static readonly TimeSpan ProposalLifetime = TimeSpan.FromMinutes(30);
     public const int DailyModelLimit = 96;
+    public static readonly TimeSpan RaidQuietInterval = TimeSpan.FromHours(1);
+    public static readonly TimeSpan RaidProposalInterval = TimeSpan.FromHours(2);
+    public const int MinimumReadyResidents = 3;
+
+    public static string[] RaidOptionIds() => EnemyCatalog.Enemies.Where(e => e.Undead && !e.DungeonOnly)
+        .SelectMany(e => {
+            var prefix = e.Kind.ToString().ToLowerInvariant() + "s";
+            return new[] { prefix + "_small" }.Concat(RaidTactics.Sectors.SelectMany(sector =>
+                new[] { prefix + "_" + sector, prefix + "_" + sector + "_swarm", prefix + "_" + sector + "_elite" }));
+        }).ToArray();
+
+    public static IReadOnlyList<string> RaidBlockers(AlmightyFacts f)
+    {
+        var blocked = new List<string>();
+        if (f.Peaceful) blocked.Add("new_village_peace");
+        if (f.Resting) blocked.Add("approved_rest_or_raid_cooldown");
+        if (f.PendingRaids > 0) blocked.Add("raid_in_progress_or_announced");
+        if (f.ReadyGuards < MinimumReadyResidents || f.Online < MinimumReadyResidents) blocked.Add("fewer_than_three_ready_online");
+        if (f.RecentLosses > 0) blocked.Add("recent_defeat");
+        if (f.Defeated) blocked.Add("village_defeated");
+        return blocked;
+    }
+
+    public static AlmightyRaidPressure RaidPressure(AlmightyFacts f, DateTimeOffset now,
+        DateTimeOffset lastEncounterAt, DateTimeOffset? lastProposalAt)
+    {
+        var next = lastEncounterAt + RaidQuietInterval;
+        if (lastProposalAt is { } proposal && proposal + RaidProposalInterval > next)
+            next = proposal + RaidProposalInterval;
+        var blockers = RaidBlockers(f);
+        return new(blockers.Count == 0, blockers.Count == 0 && now >= next, blockers, next);
+    }
     public static IReadOnlyList<AlmightyOption> Options(AlmightyFacts f, IReadOnlyList<RaidApproach>? approaches = null)
     {
         var result = new List<AlmightyOption> {
             new("none", "Наблюдать", "Не менять мир и не беспокоить царя без причины"),
             new("economy_report", "Разобрать нужды города", "Только рекомендации по известным запасам/работам; деньги и цены не меняются") };
-        if (f.Patients > 0 || f.RecentLosses > 0)
+        if (!f.Resting && (f.RecentLosses > 0 || f.Online >= MinimumReadyResidents && f.ReadyGuards < MinimumReadyResidents && f.Patients >= MinimumReadyResidents))
             result.Add(new("rest", "Передышка на 2 реальных часа", "Не назначать новые автоматические нападения; объявленные волны сохраняются"));
         if (f.BuildingSites > 0 || f.DamagedBuildings > 0)
             result.Add(new("work_notice", "Объявить о нужной работе", "Одна короткая реплика о существующей стройке/ремонте; без ускорения, выдачи ресурсов и принуждения"));
-        if (!f.Peaceful && !f.Resting && f.PendingRaids == 0 && f.Online >= 3 && f.ReadyGuards >= 1 && f.RecentLosses == 0 && f.Patients * 3 < Math.Max(1, f.Population))
+        if (RaidBlockers(f).Count == 0)
         {
             foreach (var enemy in EnemyCatalog.Enemies.Where(e => e.Undead && !e.DungeonOnly))
             {

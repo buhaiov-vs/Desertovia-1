@@ -6,10 +6,10 @@ namespace Desertod.Domain.Tests;
 
 public sealed class AlmightyTests
 {
-    private static AlmightyFacts Ready => new(10, 5, 2, 0, 0, 1, 1, 0, false, false);
-    [Fact] public void No_guard_no_online_patients_losses_peace_and_rest_block_new_undead()
+    private static AlmightyFacts Ready => new(10, 5, 5, 0, 0, 1, 1, 0, false, false);
+    [Fact] public void Only_real_readiness_and_safety_conditions_block_new_undead()
     {
-        var cases = new[] { Ready with { ReadyGuards=0 }, Ready with { Online=0 }, Ready with { Patients=5 },
+        var cases = new[] { Ready with { ReadyGuards=0 }, Ready with { Online=0 }, Ready with { ReadyGuards=2 }, Ready with { Defeated=true },
             Ready with { RecentLosses=1 }, Ready with { Peaceful=true }, Ready with { Resting=true }, Ready with { PendingRaids=1 } };
         foreach(var facts in cases) Assert.DoesNotContain(AlmightyPolicy.Options(facts), o => o.Id.Contains("small"));
         Assert.Contains(AlmightyPolicy.Options(Ready), o => o.Id == "skeletons_small");
@@ -17,11 +17,37 @@ public sealed class AlmightyTests
     [Fact] public void Advice_and_rest_never_authorize_currency_changes()
     {
         var options = AlmightyPolicy.Options(Ready with { Patients=2 });
-        Assert.Contains(options,o=>o.Id=="rest");
+        Assert.DoesNotContain(options,o=>o.Id=="rest");
         Assert.Contains(options,o=>o.Id=="economy_report");
         Assert.DoesNotContain(options,o=>o.Id.Contains("tax")||o.Id.Contains("wallet"));
         Assert.False(AlmightyPolicy.IsMode("LimitedAuto"));
     }
+    [Fact]
+    public void Patients_offline_population_damage_and_unfinished_sites_do_not_grant_immunity()
+    {
+        var facts = Ready with { Population = 150, Online = 8, ReadyGuards = 5, Patients = 100, BuildingSites = 40, DamagedBuildings = 80 };
+        Assert.Contains(AlmightyPolicy.Options(facts), o => o.Enemy is not null);
+        Assert.DoesNotContain(AlmightyPolicy.Options(facts), o => o.Id == "rest");
+        Assert.Contains(AlmightyPolicy.Options(facts with { ReadyGuards = 2 }), o => o.Id == "rest");
+    }
+
+    [Fact]
+    public void Pressure_has_a_bounded_deadline_and_respects_all_proposals_and_real_blockers()
+    {
+        var now = DateTimeOffset.UtcNow;
+        Assert.False(AlmightyPolicy.RaidPressure(Ready, now, now.AddMinutes(-59), null).ProposalDue);
+        Assert.True(AlmightyPolicy.RaidPressure(Ready, now, now.AddHours(-1), null).ProposalDue);
+        Assert.False(AlmightyPolicy.RaidPressure(Ready, now, now.AddDays(-1), now.AddMinutes(-119)).ProposalDue);
+        Assert.True(AlmightyPolicy.RaidPressure(Ready, now, now.AddDays(-1), now.AddHours(-2)).ProposalDue);
+        foreach (var facts in new[] { Ready with { Peaceful = true }, Ready with { PendingRaids = 1 },
+            Ready with { Resting = true }, Ready with { RecentLosses = 1 }, Ready with { ReadyGuards = 2 }, Ready with { Defeated = true } })
+        {
+            var pressure = AlmightyPolicy.RaidPressure(facts, now, now.AddDays(-10), null);
+            Assert.False(pressure.ProposalDue);
+            Assert.NotEmpty(pressure.BlockedBy);
+        }
+    }
+
     [Fact] public void Server_paths_do_not_cross_river_or_uncleared_obstacles_and_survive_blocked_approaches()
     {
         var village=Village.Create("tactics","Tactics",Guid.NewGuid(),DateTimeOffset.UtcNow);

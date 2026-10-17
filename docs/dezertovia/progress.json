@@ -1409,5 +1409,24 @@
       "duplicateNumbers": 0
     },
     "preservation_receipt": "RELEASE_0_7_7_RESULT.json"
+  },
+  "director_raid_pressure": {
+    "decision": "D-088",
+    "status": "verified_locally_not_installed",
+    "live_changed": false,
+    "read_only_audit_run": 39010114851,
+    "plan": "DIRECTOR_RAID_PRESSURE.md",
+    "minimum_ready_online": 3,
+    "quiet_minutes": 60,
+    "proposal_category_cooldown_minutes": 120,
+    "requires_owner_approval": true,
+    "local_checks": {
+      "domain": 441,
+      "api": 254,
+      "director_api": 13,
+      "bot_director": 12,
+      "build": "pass"
+    },
+    "full_exact_ci_required_before_release": true
   }
 }

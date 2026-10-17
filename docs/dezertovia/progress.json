@@ -1593,7 +1593,7 @@
   },
   "patch_0_7_11_implementation": {
     "decision": "D-097",
-    "state": "implemented_validation_in_progress",
+    "state": "implemented_final_exact_ci_pending",
     "branch": "feat/patch-0-7-11",
     "journal": "PATCH_0_7_11_IMPLEMENTATION.md",
     "owner_art_contract": [
@@ -1652,6 +1652,12 @@
         "frontend_build": "pass",
         "lint": "pass_with_existing_warnings",
         "state": "branch_tested_not_installed"
+      },
+      {
+        "packet": "cooperative_partial_state_regression",
+        "browser_existing_phone_desktop": 10,
+        "typescript": "pass",
+        "state": "fixed_not_installed"
       }
     ],
     "completed_packets": [
@@ -1662,7 +1668,7 @@
       "fortification_progression_and_day_night_art",
       "combat_training_research_points_and_meals"
     ],
-    "next_packet": "exact_final_ci_and_review_package",
+    "next_packet": "final_exact_ci_and_review_package",
     "public_pr": 54,
     "bot_pr": 52
   }

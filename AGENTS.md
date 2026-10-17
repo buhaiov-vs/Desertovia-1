@@ -1,3 +1,13 @@
+# 0.7.11 full-browser follow-up — validate newest source, NOT INSTALLED
+
+Fullbrowser exposed a legacy partial-state CivicPanel regression (missing storage
+array). Shared upgrade predicate now handles absent collections safely; all10
+existing cooperative desktop/phone tests and TS PASS without weakening assertions.
+CI39030967136 on9b4ece1 is superseded/cancelled, NOT ready. Read latest PATCH journal
+and PR54 checks for new exact source. BotPR52/CI39031013157 SUCCESS903 onbd2c9f2;
+its version map must also include this newer game source and rerun exactCI.
+No deployment date/request for0.7.11; preserve live0.7.9 and all previous bounds.
+
 # 0.7.11 implemented on feature branch; final validation pending, NOT INSTALLED
 
 Public draftPR54 and bot canonical draftPR52 retain all D-093–097 scope. Read

@@ -340,3 +340,28 @@ reviewable PR, не заменять tested source текущим main. На с�
   deploy/PATCH_0_7_11_PREPARATION.md commit783c66b captures future constraints.
   Preserve all progress/settings/Propose/budget/quarantine and installedappchanges.
   Stop old deployment replay. No payments/waves/messages/modelprobes/resets.
+
+### Full-browser regression found; do not use9b4ece1asready
+
+FullCI source9b4ece1/39030967136 passed516Domain/270API/frontend/Docker, but was
+cancelled after the earlier full-browser log revealed cooperative.spec failures.
+Old source118d6c6 cancelledrun had194browsercases, failed cooperative card render:
+the minimal legacy harness omits storages, and new canUpgradeBuilding read .find
+without a guard. Actual DTOs include the collection; make the shared predicate
+resilient using optional arrays, consistent with CivicPanel. This keeps all role/
+maximum-level/ruins rules and fixes the partial-state crash, not weakens assertions.
+Local cooperative10 phone/desktop now running /tmp/patch0711-cooperative-regression.log.
+
+Once it passes: commit helper+this record, new exact gameCI required; do not stop
+at the old516/270/backend successes. Update bot GAME_RELEASES with NEW finalgameSHA
+and rerun exactbotCI too. Botbd2c9f2/CI39031013157 SUCCESS903/serverSKIPPED maps old
+9b4ece1 (versionmapping only; NOT installation authority). Its PR52 marked ready
+for source review; release readiness still held by game fullbrowser checks.
+No0.7.11 livecandidate/request/date. Private receipts must use latest source.
+
+- Cooperative legacy regression FIXED: optional collection lookup in shared UI
+  upgrade predicate. Exact same10existing cooperative assertions now PASS desktop/
+  phone, including role boundaries, queue refusal, Russian errors, unsupported/max
+  upgrades, dark UI and demolition confirmation. FullTS PASS. Logs cooperative-
+  regression.log and ts-regression.log under/tmp/patch0711-. No server rule changed.
+  New final source is this commit; exactCI and botversionmapping follow.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-10-17",
-  "phase": "released_0_7_9_independently_verified",
+  "phase": "released_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -263,7 +263,7 @@
     "shared_bot_and_housing_active": true,
     "legacy_backup_exists": true
   },
-  "deployed_sha": "ad88be344908a7fb42bc434ce89aad94c92d1665",
+  "deployed_sha": "ba7050f8d0d2efc07d7523d300944e9531c3fb01",
   "launch_document": "TELEGRAM_LAUNCH.md",
   "current_change": {
     "single_world": "released",
@@ -385,7 +385,7 @@
     "public_release_header_verified": true,
     "public_bundle_version_verified": true
   },
-  "release_version": "0.5.1",
+  "release_version": "0.7.11",
   "chat_launcher_fix": {
     "decision": "D-022",
     "target_version": "0.5.1",
@@ -692,24 +692,54 @@
     }
   },
   "current_release": {
-    "version": "0.5.3",
-    "source_commit": "a980d8daeb2d3ff10609df7894444d57c8992c74",
-    "status": "released_verified",
-    "ci_run": 38736161629,
-    "domain_passed": 329,
-    "api_passed": 180,
-    "browser_passed": 71,
-    "browser_skipped": 1,
-    "profiles_before": 100,
-    "profiles_after": 100,
-    "lost_profiles_or_progress": 0,
-    "migrations": 17,
-    "hospital_enabled": true,
-    "medical_confirmed": 100,
-    "medical_unavailable": 0,
-    "test_payments": 0,
-    "test_messages": 0,
-    "documentation": "RELEASE_0_5_3.md"
+    "version": "0.7.11",
+    "authorization": "D-098",
+    "checked_at": "2026-10-17T13:25:32.5456200Z",
+    "game_sha": "ba7050f8d0d2efc07d7523d300944e9531c3fb01",
+    "bot_sha": "2d5a7ab7759bd7d50322335bbe1772267396ae5d",
+    "game_ci": 39031620418,
+    "bot_ci": 39031678709,
+    "game_merge_sha": "cc9176696291c45529cceea385f83c5524eb50c5",
+    "bot_merge_sha": "645bc0f787e9bfce424706c1690519a64b7b21f0",
+    "preflight_run": 39036214937,
+    "install_run": 39036254787,
+    "independent_check_run": 39036486712,
+    "progress": {
+      "profiles_before": 120,
+      "profiles_after": 120,
+      "lost_profiles_or_progress": 0,
+      "accounts_preserved": 122,
+      "login_bindings_preserved": 122
+    },
+    "migrations": 34,
+    "building_numbers": {
+      "sequenceTooSmall": 0,
+      "unassigned": 0,
+      "duplicatePlots": 0,
+      "duplicateNumbers": 0
+    },
+    "display_numbers": {
+      "missing": 0,
+      "duplicateGlobal": 0,
+      "duplicateFamily": 0,
+      "familyGaps": 0,
+      "invalidValue": 0
+    },
+    "feedback_origins_table": true,
+    "frontend": {
+      "version": "0.7.11",
+      "game_chunk": true,
+      "checked_chunks": 24,
+      "transient_http_retries": 0
+    },
+    "director_mode": "Propose",
+    "protected_module_count": 11,
+    "protected_modules_preserved": true,
+    "configurations_preserved": true,
+    "backup_verified": true,
+    "natural_combat_sample_available": false,
+    "status": "released_and_independently_verified",
+    "documentation": "RELEASE_0_7_11.md"
   },
   "next_work": {
     "D-051": {
@@ -984,7 +1014,7 @@
     "browser_tests_skipped": 1,
     "deployed": true
   },
-  "live_version": "0.7.2",
+  "live_version": "0.7.11",
   "candidate_version": null,
   "feedback_identity": {
     "decision": "D-072",
@@ -1592,8 +1622,8 @@
     "runtime_changed": false
   },
   "patch_0_7_11_implementation": {
-    "decision": "D-097",
-    "state": "implemented_final_exact_ci_pending",
+    "decision": "D-098",
+    "state": "released_and_independently_verified",
     "branch": "feat/patch-0-7-11",
     "journal": "PATCH_0_7_11_IMPLEMENTATION.md",
     "owner_art_contract": [
@@ -1603,14 +1633,15 @@
       "day_and_night",
       "consistent_tile_joins"
     ],
-    "runtime_changed": false,
-    "deployment_date": null,
+    "runtime_changed": true,
+    "deployment_date": "2026-10-17T13:25:32.5456200Z",
     "checks": [
       {
         "packet": "owner_feedback",
         "bot_tests": 894,
         "focused": 40,
-        "state": "pass"
+        "state": "included_in_exact_successful_release",
+        "historical_preparation_state": "pass"
       },
       {
         "packet": "social_rescue",
@@ -1619,7 +1650,8 @@
         "api_focused": 13,
         "browser_desktop_phone": 8,
         "frontend_build": "pass",
-        "state": "branch_tested_not_installed"
+        "state": "included_in_exact_successful_release",
+        "historical_preparation_state": "branch_tested_not_installed"
       },
       {
         "packet": "raid_editor_and_adaptive_difficulty",
@@ -1629,7 +1661,8 @@
         "api_final": 4,
         "browser_desktop_phone": 4,
         "typescript": "pass",
-        "state": "branch_tested_not_installed"
+        "state": "included_in_exact_successful_release",
+        "historical_preparation_state": "branch_tested_not_installed"
       },
       {
         "packet": "building_type_numbers_food_and_space",
@@ -1639,7 +1672,8 @@
         "browser_desktop_phone": 20,
         "bot_focused": 14,
         "typescript": "pass",
-        "state": "branch_tested_not_installed"
+        "state": "included_in_exact_successful_release",
+        "historical_preparation_state": "branch_tested_not_installed"
       },
       {
         "packet": "fortifications_and_progression",
@@ -1651,13 +1685,15 @@
         "typescript": "pass",
         "frontend_build": "pass",
         "lint": "pass_with_existing_warnings",
-        "state": "branch_tested_not_installed"
+        "state": "included_in_exact_successful_release",
+        "historical_preparation_state": "branch_tested_not_installed"
       },
       {
         "packet": "cooperative_partial_state_regression",
         "browser_existing_phone_desktop": 10,
         "typescript": "pass",
-        "state": "fixed_not_installed"
+        "state": "included_in_exact_successful_release",
+        "historical_preparation_state": "fixed_not_installed"
       }
     ],
     "completed_packets": [
@@ -1668,8 +1704,56 @@
       "fortification_progression_and_day_night_art",
       "combat_training_research_points_and_meals"
     ],
-    "next_packet": "final_exact_ci_and_review_package",
+    "next_packet": null,
     "public_pr": 54,
-    "bot_pr": 52
+    "bot_pr": 52,
+    "final_receipt": {
+      "version": "0.7.11",
+      "authorization": "D-098",
+      "checked_at": "2026-10-17T13:25:32.5456200Z",
+      "game_sha": "ba7050f8d0d2efc07d7523d300944e9531c3fb01",
+      "bot_sha": "2d5a7ab7759bd7d50322335bbe1772267396ae5d",
+      "game_ci": 39031620418,
+      "bot_ci": 39031678709,
+      "game_merge_sha": "cc9176696291c45529cceea385f83c5524eb50c5",
+      "bot_merge_sha": "645bc0f787e9bfce424706c1690519a64b7b21f0",
+      "preflight_run": 39036214937,
+      "install_run": 39036254787,
+      "independent_check_run": 39036486712,
+      "progress": {
+        "profiles_before": 120,
+        "profiles_after": 120,
+        "lost_profiles_or_progress": 0,
+        "accounts_preserved": 122,
+        "login_bindings_preserved": 122
+      },
+      "migrations": 34,
+      "building_numbers": {
+        "sequenceTooSmall": 0,
+        "unassigned": 0,
+        "duplicatePlots": 0,
+        "duplicateNumbers": 0
+      },
+      "display_numbers": {
+        "missing": 0,
+        "duplicateGlobal": 0,
+        "duplicateFamily": 0,
+        "familyGaps": 0,
+        "invalidValue": 0
+      },
+      "feedback_origins_table": true,
+      "frontend": {
+        "version": "0.7.11",
+        "game_chunk": true,
+        "checked_chunks": 24,
+        "transient_http_retries": 0
+      },
+      "director_mode": "Propose",
+      "protected_module_count": 11,
+      "protected_modules_preserved": true,
+      "configurations_preserved": true,
+      "backup_verified": true,
+      "natural_combat_sample_available": false
+    }
   }
 }

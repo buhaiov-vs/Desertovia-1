@@ -1,0 +1,48 @@
+{
+  "version": "0.7.11",
+  "authorization": "D-098",
+  "checked_at": "2026-10-17T13:25:32.5456200Z",
+  "game_sha": "ba7050f8d0d2efc07d7523d300944e9531c3fb01",
+  "bot_sha": "2d5a7ab7759bd7d50322335bbe1772267396ae5d",
+  "game_ci": 39031620418,
+  "bot_ci": 39031678709,
+  "game_merge_sha": "cc9176696291c45529cceea385f83c5524eb50c5",
+  "bot_merge_sha": "645bc0f787e9bfce424706c1690519a64b7b21f0",
+  "preflight_run": 39036214937,
+  "install_run": 39036254787,
+  "independent_check_run": 39036486712,
+  "progress": {
+    "profiles_before": 120,
+    "profiles_after": 120,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 122,
+    "login_bindings_preserved": 122
+  },
+  "migrations": 34,
+  "building_numbers": {
+    "sequenceTooSmall": 0,
+    "unassigned": 0,
+    "duplicatePlots": 0,
+    "duplicateNumbers": 0
+  },
+  "display_numbers": {
+    "missing": 0,
+    "duplicateGlobal": 0,
+    "duplicateFamily": 0,
+    "familyGaps": 0,
+    "invalidValue": 0
+  },
+  "feedback_origins_table": true,
+  "frontend": {
+    "version": "0.7.11",
+    "game_chunk": true,
+    "checked_chunks": 24,
+    "transient_http_retries": 0
+  },
+  "director_mode": "Propose",
+  "protected_module_count": 11,
+  "protected_modules_preserved": true,
+  "configurations_preserved": true,
+  "backup_verified": true,
+  "natural_combat_sample_available": false
+}

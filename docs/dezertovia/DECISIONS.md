@@ -824,3 +824,13 @@ D-098: владелец явно поручил «Установи». Прове
 имеет actioncheck. Новый runtime уже использует новые JSONполя; автоматический
 откат старого двигателя запрещён, особенно при незавершённых RaidBattles.
 Полная фактическая квитанция хранится в приватном ops release record.
+
+# D-099: simplify raid editor and explain rejected settings — SOURCE ONLY
+
+Owner cannot use the 0.7.11 editor; screenshot shows generic raid.settings.
+Read docs/dezertovia/RAID_EDITOR_USABILITY.md. Fix per-species100%checkbox trap,
+clear quick presets/difficulty, advanced disclosure and exact field errors before
+preview/save/launch. Keep owner multipliers (player damage4 is valid), authority,
+idempotency and safe preview. No balance change/new live wave/model/message.
+Work fix/raid-editor-clarity, local frontend checks; browser validation in progress.
+LIVE remains exact0.7.11/ba7050f/check39036486712; no new release/deploy request.

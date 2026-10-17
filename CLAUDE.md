@@ -1,3 +1,24 @@
+# D-099 clarification: all numeric raid controls are sliders
+
+Owner explicitly wants sliders instead of numeric entry and explanations of ×.
+Current source replaces number inputs and species shares with native ranges,
+readouts with ×/percent/minutes/seconds and per-field plain hints. Existing
+10browserPASS was before this change; final slider checks now10/10PASS on
+phone/desktop (1.0min), including keyboard/range limits/units/percent/save/launch.
+Finalfrontend TypeScript/build/lintPASS; both phone screenshots inspected.
+No balance/authority/runtime/version/installation change. Same PR56 branch.
+
+# D-099: simplify raid editor and explain rejected settings — SOURCE ONLY
+
+Owner cannot use the 0.7.11 editor; screenshot shows generic raid.settings.
+Read docs/dezertovia/RAID_EDITOR_USABILITY.md. Fix per-species100%checkbox trap,
+clear quick presets/difficulty, advanced disclosure and exact field errors before
+preview/save/launch. Keep owner multipliers (player damage4 is valid), authority,
+idempotency and safe preview. No balance change/new live wave/model/message.
+Work fix/raid-editor-clarity: frontend TypeScript/build/lintPASS; final10/10browser
+phone/desktopPASS31.2s, no retries. No new live installation.
+LIVE remains exact0.7.11/ba7050f/check39036486712; no new release/deploy request.
+
 # 0.7.11 установлена и независимо проверена — 17 октября 2026
 
 D-098: владелец явно поручил «Установи». Проверка завершена в13:25:32UTC

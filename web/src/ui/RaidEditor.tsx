@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, createOperationId, type EnemyKind, type EnemyDefinition, type RaidEditorView, type RaidPreview, type RaidSettings, type VillageState } from '../api'
 import { useI18n } from '../i18n'
+import { equalRaidShares, raidSettingErrors, raidSliderText, raidSliderHint } from './raidEditorSettings'
 
 function raidPreset(preset:'boss'|'mixed'|'swarm'):RaidSettings {
   return {preset,mode:'automatic',enemy:'Zombie',sector:null,count:preset==='boss'?2:preset==='swarm'?48:24,
@@ -21,32 +22,52 @@ export function RaidEditor({village,pending,onVillage,enemies}:{village:VillageS
   const [preview,setPreview]=useState<RaidPreview|null>(null)
   const [error,setError]=useState<string|null>(null)
   const [busy,setBusy]=useState(false)
+  const [advanced,setAdvanced]=useState(false)
+  const [showValidation,setShowValidation]=useState(false)
+  const fieldErrors=raidSettingErrors(settings,ru)
+  const simpleMode=settings.preset!=='elite'&&Object.entries(raidPreset(settings.preset)).every(([key,value])=>['count','enemy','sector','budgetMultiplier'].includes(key)||JSON.stringify(settings[key as keyof RaidSettings])===JSON.stringify(value))
   const [name,setName]=useState(''),[presetId,setPresetId]=useState<string|null>(null)
   const [requestId,setRequestId]=useState(createOperationId)
   const [previewKey,setPreviewKey]=useState('')
   const disabled=pending||busy
   useEffect(()=>{let stopped=false;api.raidEditor(village.slug).then(v=>{if(!stopped)setView(v)}).catch(e=>{if(!stopped)setError(i18n.error(e))});return()=>{stopped=true}},[village.slug,i18n])
   const change=(patch:Partial<RaidSettings>)=>{setSettings(s=>({...s,...patch}));setPreview(null);setPreviewKey('');setRequestId(createOperationId());setError(null)}
-  const load=(next:RaidSettings)=>{setSettings(structuredClone(next));setPreview(null);setPreviewKey('');setRequestId(createOperationId());setError(null)}
-  async function run(action:()=>Promise<void>){setBusy(true);setError(null);try{await action()}catch(e){setError(i18n.error(e))}finally{setBusy(false)}}
-  const number=(key:keyof RaidSettings,label:string,min:number,max:number,step=1)=><label className="raid-editor-field" key={key}>{label}<input aria-label={label} type="number" min={min} max={max} step={step} disabled={disabled} value={Number(settings[key])} onChange={e=>change({[key]:Number(e.target.value)})}/></label>
+  const load=(next:RaidSettings)=>{setSettings(structuredClone(next));setShowValidation(false);setPreview(null);setPreviewKey('');setRequestId(createOperationId());setError(null)}
+  async function run(action:()=>Promise<void>){if(Object.keys(fieldErrors).length){setShowValidation(true);setAdvanced(true);setError(null);return}setShowValidation(false);setBusy(true);setError(null);try{await action()}catch(e){setError(i18n.error(e))}finally{setBusy(false)}}
+  const number=(key:keyof RaidSettings,label:string,min:number,max:number,step=1)=>{
+    const value=Number(settings[key]),text=key==='count'&&settings.mode==='manual'?`${value} ${ru?'врагов в волне':'enemies per wave'}`:raidSliderText(key,value,ru)
+    return <label className="raid-editor-field raid-slider" key={key} htmlFor={`raid-${key}`}>
+      <span>{label}</span><span className="raid-slider-value">{text}</span>
+      <input id={`raid-${key}`} aria-label={label} type="range" min={min} max={max} step={step} aria-valuetext={text} aria-invalid={showValidation&&!!fieldErrors[key]} aria-describedby={`raid-help-${key}${showValidation&&fieldErrors[key]?` raid-error-${key}`:''}`} disabled={disabled} value={value} onChange={e=>change({[key]:Number(e.target.value)})}/>
+      <span id={`raid-help-${key}`} className="small muted">{raidSliderHint(key,ru)}</span>
+      {showValidation&&fieldErrors[key]&&<span id={`raid-error-${key}`} className="error small">{fieldErrors[key]}</span>}
+    </label>
+  }
   const select=(key:'enemy'|'sector'|'tactic',label:string,options:[string,string][])=><label className="raid-editor-field">{label}<select aria-label={label} disabled={disabled} value={settings[key]??''} onChange={e=>change({[key]:e.target.value||null})}>{options.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
   return <div className="raid-editor">
     <h4>{ru?'Настроить набег':'Raid editor'}</h4>
     <div className="chips" role="group" aria-label={ru?'Пресет набега':'Raid preset'}>
       {(['boss','mixed','swarm'] as const).map(p=><button key={p} disabled={disabled} className={`chip ${settings.preset===p?'active':''}`} onClick={()=>{load(raidPreset(p));setPresetId(null)}}>{p==='boss'?'БОСС-ФАЙТ':p==='mixed'?(ru?'Смешанный бой':'Mixed'):(ru?'Орда':'Horde')}</button>)}
     </div>
+    <p className="small">{ru?'Выбери тип боя, врагов и сложность, затем нажми «Предпросмотр». Он ничего не запускает.':'Choose a battle type, enemies and difficulty, then preview. Preview does not launch a raid.'}</p>
+    <label className="raid-editor-field">{ru?'Сложность':'Difficulty'}<select aria-label={ru?'Сложность':'Difficulty'} disabled={disabled} value={simpleMode&&[.75,1,1.25].includes(settings.budgetMultiplier)?String(settings.budgetMultiplier):'custom'} onChange={e=>load({...raidPreset(settings.preset==='elite'?'mixed':settings.preset),enemy:settings.enemy,sector:settings.sector,count:settings.count,budgetMultiplier:Number(e.target.value)})}>
+      <option value="0.75">{ru?'Легче':'Easier'}</option><option value="1">{ru?'Обычная':'Normal'}</option><option value="1.25">{ru?'Тяжелее':'Harder'}</option><option value="custom" disabled>{ru?'Свои настройки':'Custom settings'}</option>
+    </select></label>
+    <p className="small muted">{ru?'Выбор сложности сбрасывает дополнительные параметры на рекомендуемые. Число врагов — верхний предел: точный состав будет в предпросмотре.':'Choosing difficulty resets advanced parameters to recommended defaults. Enemy count is a maximum; preview shows the actual composition.'}</p>
+    <div className="raid-editor-grid">
+      {select('enemy',ru?'Основной вид':'Main species',availableKinds.map(k=>[k,i18n.enemy(k)]))}
+      {number('count',ru?'Врагов в волне (максимум в авто)':'Enemies per wave (maximum in auto)',1,settings.preset==='boss'?3:48)}
+      {select('sector',ru?'Сторона подхода':'Approach',[['',ru?'Автовыбор':'Automatic'],['north',ru?'Север':'North'],['west',ru?'Запад':'West'],['south',ru?'Юг':'South']])}
+    </div>
+    <details open={advanced} onToggle={e=>setAdvanced(e.currentTarget.open)}><summary>{ru?'Дополнительные настройки':'Advanced settings'}</summary>
     <label className="raid-editor-field">{ru?'Расчёт силы':'Strength calculation'}<select disabled={disabled} value={settings.mode} onChange={e=>change({mode:e.target.value as RaidSettings['mode']})}>
       <option value="automatic">{ru?'Автоматический бюджет':'Automatic budget'}</option><option value="manual">{ru?'Ручной — только владелец':'Manual — owner only'}</option>
     </select></label>
     <p className="small muted">{ru?'Авто ограничивает состав бюджетом. Ручной режим запускает выбранное число и силу, даже выше рекомендации; его результаты не меняют адаптацию.':'Automatic mode fits the budget. Manual mode uses the exact count and strength, even above the recommendation; it does not affect adaptation.'}</p>
     {view&&<p className="small">{ru?'Адаптация':'Adaptation'}: {Math.round(view.coefficient*100)}% · {view.reason}</p>}
     <div className="raid-editor-grid">
-      {select('enemy',ru?'Основной вид':'Main species',availableKinds.map(k=>[k,i18n.enemy(k)]))}
-      {number('count',ru?'Врагов в волне (максимум в авто)':'Enemies per wave (maximum in auto)',1,settings.preset==='boss'?3:48)}
-      {select('sector',ru?'Сторона подхода':'Approach',[['',ru?'Автовыбор':'Automatic'],['north',ru?'Север':'North'],['west',ru?'Запад':'West'],['south',ru?'Юг':'South']])}
       {select('tactic',ru?'Тактика':'Tactic',[['mixed',ru?'Смешанная':'Mixed'],['entry',ru?'Искать вход':'Seek entrance'],['breach',ru?'Проламывать':'Breach'],['plunder',ru?'Грабить':'Plunder'],['hunt',ru?'Давить на игроков':'Hunt players']])}
-      {settings.mode==='automatic'&&number('budgetMultiplier',ru?'Множитель бюджета':'Budget multiplier',.5,1.5,.05)}
+      {settings.mode==='automatic'&&number('budgetMultiplier',ru?'Множитель бюджета':'Budget multiplier',.5,3,.05)}
       {number('healthMultiplier',ru?'Здоровье ×':'Health ×',.25,20,.05)}
       {number('attackMultiplier',ru?'Урон игрокам ×':'Player damage ×',.25,10,.05)}
       {number('propertyMultiplier',ru?'Урон имуществу ×':'Property damage ×',.25,5,.05)}
@@ -66,9 +87,10 @@ export function RaidEditor({village,pending,onVillage,enemies}:{village:VillageS
         {number('theftFraction',ru?'Доля ресурса при краже (0,02 = 2%)':'Theft fraction (0.02 = 2%)',0,.1,.01)}
       </div>
       <p className="small">{ru?'Смешать виды (доли должны составить 100%). Без отметок используется основной вид.':'Mix species (shares must total 100%). With none selected, the main species is used.'}</p>
+      {settings.species.length>0&&<><p className="small">{ru?'Выбранные виды делятся поровну. Доли можно изменить вручную.':'Selected species share equally. You can edit the shares.'}</p><button disabled={disabled} onClick={()=>change({species:equalRaidShares(settings.species.map(s=>s.enemy))})}>{ru?'Поровну':'Equal shares'}</button><p className={fieldErrors.species?'error small':'small'}>{ru?'Сумма долей':'Total shares'}: {settings.species.reduce((sum,s)=>sum+s.percent,0)}% / 100%</p></>}
       {availableKinds.map(kind=>{const part=settings.species.find(s=>s.enemy===kind);return <div className="raid-editor-species" key={kind}>
-        <label><input type="checkbox" disabled={disabled} checked={!!part} onChange={e=>change({species:e.target.checked?[...settings.species,{enemy:kind,percent:100}]:settings.species.filter(s=>s.enemy!==kind)})}/>{i18n.enemy(kind)}</label>
-        {part&&<input aria-label={`${i18n.enemy(kind)} %`} disabled={disabled} type="number" min={1} max={100} value={part.percent} onChange={e=>change({species:settings.species.map(s=>s.enemy===kind?{...s,percent:Number(e.target.value)}:s)})}/>}
+        <label><input type="checkbox" disabled={disabled} checked={!!part} onChange={e=>change({species:equalRaidShares(e.target.checked?[...settings.species.map(s=>s.enemy),kind]:settings.species.filter(s=>s.enemy!==kind).map(s=>s.enemy))})}/>{i18n.enemy(kind)}</label>
+        {part&&<><span className="raid-slider-share">{part.percent}%</span><input aria-label={`${i18n.enemy(kind)} %`} disabled={disabled} type="range" min={1} max={100} aria-valuetext={`${part.percent}%`} value={part.percent} onChange={e=>change({species:settings.species.map(s=>s.enemy===kind?{...s,percent:Number(e.target.value)}:s)})}/></>}
       </div>})}
     </details>
     {settings.preset==='boss'&&<details><summary>{ru?'Удары и фазы босса':'Boss strikes and phases'}</summary>
@@ -81,6 +103,7 @@ export function RaidEditor({village,pending,onVillage,enemies}:{village:VillageS
         {number('bossSecondCooldownSeconds',ru?'Перерыв во второй фазе, сек':'Phase two cooldown, seconds',3,30)}
       </div>
     </details>}
+    </details>
     <div className="raid-editor-presets">
       <label>{ru?'Сохранённые пресеты':'Saved presets'}<select disabled={disabled} value={presetId??''} onChange={e=>{const p=view?.presets.find(p=>p.id===e.target.value);if(p){load(p.settings);setName(p.name);setPresetId(p.id)}else{setPresetId(null);setName('')}}}>
         <option value="">{ru?'Новый пресет':'New preset'}</option>{view?.presets.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
@@ -90,12 +113,13 @@ export function RaidEditor({village,pending,onVillage,enemies}:{village:VillageS
     </div>
     <button disabled={disabled} onClick={()=>void run(async()=>{const p=await api.previewRaid(village.slug,settings);setPreview(p);setPreviewKey(JSON.stringify(settings))})}>{ru?'Предпросмотр':'Preview'}</button>
     {preview&&<div className="raid-preview" role="status">
-      <strong>{ru?'Будет в каждой волне':'Each wave'}: {preview.count} · HP {Math.round(preview.totalHealth)} · {ru?'суммарная атака':'total attack'} {Math.round(preview.totalAttack)}</strong>
+      <strong>{ru?'Будет в каждой волне':'Each wave'}: {preview.count} · {ru?'Волн':'Waves'}: {settings.waves} · HP {Math.round(preview.totalHealth)} · {ru?'суммарная атака':'total attack'} {Math.round(preview.totalAttack)}</strong>
       <p className="small">{ru?'Сила / рекомендованный бюджет':'Strength / recommended budget'}: {preview.actualCost.toFixed(1)} / {preview.recommendedBudget.toFixed(1)} · {preview.risk==='dangerous'?(ru?'Опасный бой':'Dangerous fight'):preview.risk==='weak'?(ru?'Слабый бой':'Weak fight'):(ru?'Сопоставимый бой':'Comparable fight')}</p>
       <p className="small">{ru?'Состав':'Composition'}: {[...new Set(preview.units.map(u=>`${i18n.enemy(u.enemy)} · ${ru?({weak:'Слабый',regular:'Обычный',strong:'Сильный',boss:'Босс'} as Record<string,string>)[u.variant]:u.variant}`))].map(key=>`${key} × ${preview.units.filter(u=>`${i18n.enemy(u.enemy)} · ${ru?({weak:'Слабый',regular:'Обычный',strong:'Сильный',boss:'Босс'} as Record<string,string>)[u.variant]:u.variant}`===key).length}`).join('; ')}</p>
       {settings.mode==='manual'&&<p className="error">{ru?'Ручной эксперимент: ограничение автоматическим бюджетом отключено.':'Manual experiment: the automatic budget limit is disabled.'}</p>}
       <button className="primary" disabled={disabled||previewKey!==JSON.stringify(settings)||village.raids.some(r=>r.outcome==='Pending')} onClick={()=>void run(async()=>{onVillage(await api.launchRaid(village.slug,requestId,settings));setPreview(null)})}>{ru?'Объявить набег':'Announce raid'}</button>
     </div>}
+    {showValidation&&Object.keys(fieldErrors).length>0&&<div role="alert" className="error"><strong>{ru?'Исправь настройки:':'Fix these settings:'}</strong><ul>{Object.entries(fieldErrors).map(([key,message])=><li key={key}>{message}</li>)}</ul></div>}
     {error&&<p role="alert" className="error">{error}</p>}
   </div>
 }

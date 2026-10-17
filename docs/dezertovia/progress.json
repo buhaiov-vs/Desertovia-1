@@ -1755,5 +1755,22 @@
       "backup_verified": true,
       "natural_combat_sample_available": false
     }
+  },
+  "raid_editor_usability": {
+    "decision": "D-099",
+    "state": "implemented_locally_verified_not_installed",
+    "branch": "fix/raid-editor-clarity",
+    "runtime_changed": false,
+    "documentation": "RAID_EDITOR_USABILITY.md",
+    "frontend_build": "pass",
+    "lint": "pass_existing_warnings",
+    "browser": {
+      "passed": 10,
+      "desktop": 5,
+      "phone": 5,
+      "duration": "1.0min",
+      "retries": 0
+    },
+    "controls": "native_sliders_with_units_and_per_field_explanations"
   }
 }

@@ -64,7 +64,7 @@ public sealed class ProgressionAndMealsTests
     }
     [Fact] public void Knowledge_requires_existing_work_place_choice_prerequisites_and_budget_before_charging()
     {
-        var v=ResearchVillage();v.Knowledge=9;Assert.Equal("research.knowledgeInsufficient",Assert.Throws<GameRuleException>(()=>TechnologyRules.InvestKnowledge(v,TechnologyCatalog.Writing,3,Now)).Code);Assert.Equal(6,v.Research.Single().Done);Assert.Equal(9,v.Knowledge);
+        var v=ResearchVillage();Assert.Equal("technology.unknown",Assert.Throws<GameRuleException>(()=>TechnologyRules.InvestKnowledge(v,null!,3,Now)).Code);v.Knowledge=9;Assert.Equal("research.knowledgeInsufficient",Assert.Throws<GameRuleException>(()=>TechnologyRules.InvestKnowledge(v,TechnologyCatalog.Writing,3,Now)).Code);Assert.Equal(6,v.Research.Single().Done);Assert.Equal(9,v.Knowledge);
         v.Knowledge=100;v.Structures.Single().Damage=100;Assert.Equal(0,TechnologyRules.KnowledgeWorkAvailable(v,TechnologyCatalog.Get(TechnologyCatalog.Writing)));
         v.Structures.Single().Damage=0;v.Research.Single().Hands.Clear();Assert.Equal(0,TechnologyRules.KnowledgeWorkAvailable(v,TechnologyCatalog.Get(TechnologyCatalog.Writing)));
         v.Research.Single().AddHand(Guid.NewGuid());v.ChosenTechnology=TechnologyCatalog.Mining;Assert.Equal(0,TechnologyRules.KnowledgeWorkAvailable(v,TechnologyCatalog.Get(TechnologyCatalog.Mining)));Assert.Equal(100,v.Knowledge);

@@ -243,6 +243,7 @@ public static class TechnologyRules
     /// <summary>One bounded grant to the elected discovery. Never creates a research hand or rewards.</summary>
     public static bool InvestKnowledge(Village village,string technologyId,int recentCitizens,DateTimeOffset now)
     {
+        if(string.IsNullOrWhiteSpace(technologyId))throw new GameRuleException("technology.unknown","Choose a known discovery.");
         var technology=Find(technologyId);
         var progress=ProgressOf(village,technologyId);
         if(progress?.KnowledgeWork>0)return false; // replay: including after discovery/new election

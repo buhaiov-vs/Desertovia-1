@@ -1593,7 +1593,7 @@
   },
   "patch_0_7_11_implementation": {
     "decision": "D-097",
-    "state": "in_progress",
+    "state": "implemented_validation_in_progress",
     "branch": "feat/patch-0-7-11",
     "journal": "PATCH_0_7_11_IMPLEMENTATION.md",
     "owner_art_contract": [
@@ -1640,14 +1640,30 @@
         "bot_focused": 14,
         "typescript": "pass",
         "state": "branch_tested_not_installed"
+      },
+      {
+        "packet": "fortifications_and_progression",
+        "domain_full": 516,
+        "domain_last": 17,
+        "api_ci_source": "118d6c6",
+        "api_ci_passed": 270,
+        "browser_desktop_phone": 12,
+        "typescript": "pass",
+        "frontend_build": "pass",
+        "lint": "pass_with_existing_warnings",
+        "state": "branch_tested_not_installed"
       }
     ],
     "completed_packets": [
       "owner_feedback",
       "social_rescue",
       "raid_editor_and_adaptive_difficulty",
-      "building_type_numbers_food_and_space"
+      "building_type_numbers_food_and_space",
+      "fortification_progression_and_day_night_art",
+      "combat_training_research_points_and_meals"
     ],
-    "next_packet": "fortification_progression_and_day_night_art"
+    "next_packet": "exact_final_ci_and_review_package",
+    "public_pr": 54,
+    "bot_pr": 52
   }
 }

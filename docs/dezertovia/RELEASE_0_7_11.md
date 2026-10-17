@@ -30,7 +30,8 @@ FortificationLevels0711, ProgressionAndMeals0711. RaidAdaptation defaultCoeffici
 
 SourcebranchTG-bots feat/patch-0-7-11 на canonical
 claude/telegram-bot-chat-variety-wci5ph. В этом патче изменены app.py, db.py,
-helper.py, feedback.py, civic_notifications.py. Futurepayload НЕ ограничивается
+helper.py, feedback.py, civic_notifications.py; feedback_context.py получает
+отображение финального gameSHA→0.7.11 (шестой файл, только при совпадении liveheader). Futurepayload НЕ ограничивается
 старым feedback_context.py или прежними двумя civic файлами: новый оператор
 должен проверить actual before/after protected hashes и сохранить установленный
 AI budget/quarantine/llm/town_proxy и режим директора Propose. Нельзя заменить
@@ -43,3 +44,12 @@ preflight, PostgreSQL restorecatalog, SQLite/config/code/profile backups и
 проверки0.7.9 не заменяют эти действия. Никаких live syntheticwaves/messages/
 modelprobes/payments/resets в ходе проверки. PR draft и журнал отражают текущий
 неполный статус. CI pins/receipts вписать только после фактического результата.
+
+## Проверка перед окончательным CI
+
+516Domain + final17 PASS, API270 local/exactpreliminaryCI PASS, новые8WALL+4P2browser
+PASS на телефоне/ПК, frontend0.7.11/TS/lint/DockerPASS. Предыдущие отдельные пакеты
+имеют свои focused receipts в PATCH journal. GamePR54/botPR52 остаются draft,
+пока все обязательные jobs на финальном source не завершатся SUCCESS. Ссылки на
+финальные CI и сохранённые фактические receipts находятся в checks этих PR и
+privateops deploy/PATCH_0_7_11_PREPARATION.md; не подменять ими livepreflight.

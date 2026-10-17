@@ -58,10 +58,10 @@
 | RAID-REPORT | Фактические участники/HP/лечение/ранения/урон/кражи/стрелы/износ и причина следующей сложности; Propose/одобрение сохраняются | BRANCH bc02048 |
 | NUM-01 | Стабильные видимые номера по типу, единственный без номера; старый глобальный ID/история/ремонт/заявки не ломаются | BRANCH 22b4164 |
 | FOOD-01/02 | Больше полезного расхода после замеров, один голод, ноша/личное/общественное по правилам; ручная еда и переключения без reload | BRANCH 22b4164 |
-| WALL-01 | Дерево→брёвна→камень, параметры/работа/ремонт/ворота/навигация; не бесплатное исцеление старой стены, железо позже | WIP implemented, checks below |
-| WALL-ART | Общий масштаб/палитра/обводка/пиксели, день/ночь, прямые/углы/окончания/ворота/повреждения/разрушение | BRANCH art reviewed; browser final pending |
+| WALL-01 | Дерево→брёвна→камень, параметры/работа/ремонт/ворота/навигация; не бесплатное исцеление старой стены, железо позже | BRANCH tested, final CI pending |
+| WALL-ART | Общий масштаб/палитра/обводка/пиксели, день/ночь, прямые/углы/окончания/ворота/повреждения/разрушение | BRANCH reviewed + browser12 PASS |
 | SPACE-01 | Обнаруживаемость расширения замком, улучшения вместимости жилья/складов, без перемещения построек/самозабора, без обещания полной карты ×2 | BRANCH 22b4164 |
-| XP-01/KNOW-01/COOK-01 | После P0/P1: боевой XP силы/ловкости, исследования в открытия/рецепты, 2–3 блюда без бесконечного сложения | WIP implemented, validation pending |
+| XP-01/KNOW-01/COOK-01 | После P0/P1: боевой XP силы/ловкости, исследования в открытия/рецепты, 2–3 блюда без бесконечного сложения | BRANCH Domain516/API270/browser12 PASS; exact finalCI pending |
 | REG-01 | Свежая проверка старых еды/ремонта/склада/личного жилья, камыша/квеста/воды/рывков по воспроизведению | TODO |
 
 Каждый пакет заканчивать кодом + подходящими регрессионными тестами + записью
@@ -313,3 +313,30 @@ reviewable PR, не заменять tested source текущим main. На с�
 - Bot full rerun898expected NOT claimed pass: /tmp/patch0711-bot-full-final.log.
   Version0.7.11 and bilingual notes added in feature branch only. Release doc
   RELEASE_0_7_11.md records34migrations/five-filefuturebotpayload/no deploymentdate.
+
+### Implementation complete — final validation handoff
+
+- Game commit118d6c6b7930cd6ee4af50f1877b1c7720ad5188, draftPR54; bot41c4dd44b05849cff904f6a3d4ad411c157f5d31 draftPR52.
+- CI39030589990 preliminary exact source118d6c6: backendSUCCESS516Domain/270API,
+  frontendSUCCESS, DockerSUCCESS; browser still running. Source is NOT ready until
+  final required jobs pass. Final guard added: null/blank technologyId is a rule
+  error before lookup, not HTTP500. Latest17P2domain PASS validates this too.
+- Combined WALL/P2browser12 PASS actualphone/desktop renderer/menu;
+  /tmp/patch0711-fence-p2-browser-final.log. Outline/palette/day/night retained.
+  Ordinary screenshots opt-in; no livephysicalFPSclaim. FullTS/build0.7.11/lintPASS.
+- Full localAPI270 PASS /tmp/patch0711-api-full-final.log; corrected timestamp
+  fixtures compare persisted baseline/LastMealAt. Independent exactCIAPI270PASS.
+- Correct fullbot command is discover -s . -p test_*.py, as canonicalworkflow. An
+  earlier -s tests command omitted root tests and was interrupted (NOT fullPASS).
+  Correct rerun /tmp/patch0711-bot-canonical-full.log ongoing; CI39030600398SUCCESS
+  on41c4dd4, serverjobSKIPPED. Future versionmap change still needs new exactCI.
+- All original packets now coded; remaining work is complete final exactCI, fix
+  any failure, review PR/package, save actual receipts. Public final source will
+  be the guard/docscommit following118d6c6; verify latest head, not118d by habit.
+  Add that final gameSHA to botfeedback_context GAME_RELEASES (only maps when live
+  header matches; a candidate never claims to be installed). That makes future
+  botpayload SIX files, includingfeedback_context.py; revise protectedhashlist.
+- No0.7.11 deploycandidate/request/date created. Private ops record
+  deploy/PATCH_0_7_11_PREPARATION.md commit783c66b captures future constraints.
+  Preserve all progress/settings/Propose/budget/quarantine and installedappchanges.
+  Stop old deployment replay. No payments/waves/messages/modelprobes/resets.

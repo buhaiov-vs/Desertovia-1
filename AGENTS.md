@@ -1,3 +1,15 @@
+# 0.7.11 implemented on feature branch; final validation pending, NOT INSTALLED
+
+Public draftPR54 and bot canonical draftPR52 retain all D-093–097 scope. Read
+PATCH_0_7_11_IMPLEMENTATION.md and RELEASE_0_7_11.md (docs/dezertovia).
+Local fullDomain516 + final17 PASS, newWALL/P2browser12 PASS phone/desktop,
+TS/lint/frontendPASS. CI39030589990 on118d6c6 backend516/270 + frontend/Docker
+PASS; completebrowser still pending. A final null-ID research guard is now added
+and needs final exact CI. Do not mistake preliminary run for final readiness.
+Bot futurepayload includes app/db/helper/feedback/civic_notifications AND
+feedback_context source→version mapping; preserve actual installed budget/
+quarantine/llm/town_proxy/Propose. No0.7.11install date/request; LIVE0.7.9 below.
+
 # D-097: implement 0.7.11 now; preserve fence style/day/night
 
 Owner authorized implementation of the full retained plan, not just documentation.

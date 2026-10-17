@@ -1531,5 +1531,29 @@
     "death_backpack_losses": "deferred_not_in_next_patch",
     "director_mode": "Propose",
     "audit_run": 39020305054
+  },
+  "next_patch_feedback": {
+    "decision": "D-094",
+    "state": "planned_not_implemented",
+    "recorded_on": "2026-10-17",
+    "plan": "NEXT_PATCH_PLAN.md",
+    "review": "FEEDBACK_REVIEW_2026_10_17.md",
+    "feedback_records_read": 117,
+    "older_feedback_omitted": 0,
+    "new_feedback_ids": [
+      103,
+      117
+    ],
+    "owner_substantive_messages_recovered": 5,
+    "owner_helper_turn_limit": 12,
+    "older_owner_messages": "not_recovered_asked_owner",
+    "feedback_read_run": 39020840129,
+    "feedback_read_step": "success",
+    "feedback_workflow": "failure_artifact_storage_quota_only",
+    "owner_source_audit_run": 39020925081,
+    "runtime_changed": false,
+    "includes_previous_scope": "D-093",
+    "owner_capture_bug": "on_private_routes_owner_to_helper_before_feedback",
+    "bot_feedback_statuses_changed": false
   }
 }

@@ -1,3 +1,14 @@
+# D-094: next patch includes owner and viewer feedback, still PLAN
+
+Read `docs/dezertovia/NEXT_PATCH_PLAN.md` and `FEEDBACK_REVIEW_2026_10_17.md`.
+All 117 accepted feedback records and five substantive owner messages reviewed.
+Owner suggestions bypass feedback capture through Helper.answer; model promises
+of saving are false. FB-01 is a priority fix. Only the last 12 helper turns exist;
+older owner messages are not recovered. Owner numbering by type, medical map
+regression, food consumption, wall upgrades and space/capacity added; retain D-093.
+Do not treat old 0.7.7 reports as fresh confirmed bugs. This turn changed docs only;
+no new deployment date, runtime remains independently verified 0.7.9.
+
 # D-093: next patch scope recorded, not implemented
 
 Read `docs/dezertovia/RAID_DIFFICULTY_NEXT_PATCH.md` before the next balance work.

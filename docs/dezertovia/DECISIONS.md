@@ -1,3 +1,18 @@
+# D-091: monster behavior implementation, NOT INSTALLED
+
+Owner17Oct authorized detailed plan and integration; property/supplies are the
+primary raid objective. Read docs/dezertovia/MONSTER_BEHAVIOR_INTEGRATION.md.
+Branch feat/monster-behavior: isolated Nez UtilityAI + per-battle RVO2-CS,
+property selection/crowd costs, existing swarm/elite/mixed plus bounded1–3boss,
+telegraphed property strike/phase, director options/fresh budget, JSON migration.
+Dungeon shares the behavior/crowd adapter without enabling DungeonOnly in raids.
+Personal storage can be looted by its actual escaping carrier; existing Steals
+catalog and total24goods cap. Backpacks/death losses remain DESIGN ONLY.
+LIVE remains0.7.8/aab588f. No new rollout request, no version bump for source.
+Preserve player control/progress/medical rules/budget/Propose. No live probes,
+forced waves/messages/payments/resets. Separate exact CI/preflight/backups/check
+required for a future new release; do not replay post078 or old deployments.
+
 ## D-089 ·0.7.8 установлена по «Загрузи. Посмотрим что даст»
 
 17.10 подтверждены точные CI441Domain/254API/167browser+1skip и bot891tests;

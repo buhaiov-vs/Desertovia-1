@@ -1268,6 +1268,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<double>("BlockedSeconds");
 
+                            b1.Property<int?>("BossPhase");
+
                             b1.Property<DateTimeOffset?>("DiedAt");
 
                             b1.Property<DateTimeOffset?>("ExitedAt");
@@ -1288,10 +1290,20 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<double>("SpawnY");
 
+                            b1.Property<DateTimeOffset?>("SpecialReadyAt");
+
                             b1.Property<double>("Speed");
 
                             b1.Property<string>("State")
                                 .IsRequired();
+
+                            b1.Property<DateTimeOffset?>("StrikeAt");
+
+                            b1.Property<string>("StrikeTarget");
+
+                            b1.Property<double?>("StrikeX");
+
+                            b1.Property<double?>("StrikeY");
 
                             b1.Property<string>("TargetId");
 

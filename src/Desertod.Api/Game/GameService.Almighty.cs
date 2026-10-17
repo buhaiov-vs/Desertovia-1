@@ -93,7 +93,11 @@ public sealed partial class GameService
             if (state.CallsToday >= AlmightyPolicy.DailyModelLimit) { state.NextReviewAt = day.AddDays(1); await db.SaveChangesAsync(ct); return null; }
             var hourly = await db.AlmightyObservations.CountAsync(o => o.VillageId == villageId && o.At > now.AddHours(-1), ct);
             if (hourly >= 4) { state.NextReviewAt = now.AddMinutes(15); await db.SaveChangesAsync(ct); return null; }
-            var options = AlmightyPolicy.Options(facts, RaidBalance.Approaches(village)).Concat(VigorTuning.Options(village)).ToList();
+            var guardCitizens = await db.Citizens.Where(c => c.VillageId == villageId && c.Status == CitizenStatus.Active).ToListAsync(ct);
+            var projects = await db.VillageProjects.Where(p => p.VillageId == villageId && p.Status == Desertod.Domain.Projects.ProjectStatus.Completed).Select(p => p.DefinitionId).ToListAsync(ct);
+            Fortifications.Ensure(village,projects);
+            var readiness=RaidBalance.Assess(village,guardCitizens,online: guardCitizens.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now);
+            var options = AlmightyPolicy.Options(facts, RaidBalance.Approaches(village),readiness.Budget).Concat(VigorTuning.Options(village)).ToList();
             if (facts.Online >= 3 && facts.PendingRaids == 0 && facts.Patients == 0 && !await db.DungeonRuns.AnyAsync(r => r.VillageId == villageId && r.Phase != DungeonPhase.Ended, ct))
                 options.Add(new("dungeon", "Общий поход", "Открыть сбор в существующий данж. Вход добровольный, обычные правила/награды/ранения."));
             // Любая недавняя заявка о набеге, включая отклонённую, даёт царю паузу.
@@ -108,10 +112,6 @@ public sealed partial class GameService
             var stock = village.Storages.SelectMany(s => s.Goods).GroupBy(g => g.Kind.ToString()).ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
             var previous = await db.AlmightyProposals.Where(p => p.VillageId == villageId).OrderByDescending(p => p.CreatedAt)
                 .Take(4).Select(p => new { p.Option, p.Status, p.Reason, p.Result }).ToListAsync(ct);
-            var guardCitizens = await db.Citizens.Where(c => c.VillageId == villageId && c.Status == CitizenStatus.Active).ToListAsync(ct);
-            var projects = await db.VillageProjects.Where(p => p.VillageId == villageId && p.Status == Desertod.Domain.Projects.ProjectStatus.Completed).Select(p => p.DefinitionId).ToListAsync(ct);
-            Fortifications.Ensure(village,projects);
-            var readiness=RaidBalance.Assess(village,guardCitizens,online: guardCitizens.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now);
             var priorObservation = await db.AlmightyObservations.AsNoTracking().Where(o => o.VillageId == villageId && o.At <= now.AddMinutes(-15)).OrderByDescending(o => o.At).FirstOrDefaultAsync(ct);
             object? previousStock = null;
             if (priorObservation is not null) {
@@ -136,7 +136,8 @@ public sealed partial class GameService
                     fullDrink = "300 DZK or 3 test candles; full energy; 12 real hour cooldown; never heals injuries or unconsciousness" },
                 economy = new { startedAt = accounting?.StartedAt, accounting?.TreasuryCoins, wagesToday, tradingProfitToday, changes = economicChanges, taxMode = "preview", currency = "test dezcoins; never account candles" },
                 combat = new { engineVersion=2, readiness, warningSeconds = RaidRules.UndeadWarning.TotalSeconds,
-                    profiles = EnemyCatalog.Enemies.Where(e => e.Undead && !e.DungeonOnly).SelectMany(e=>new[]{"swarm","elite","mixed"}.Select(profile=>new{enemy=e.Kind.ToString(),profile,count=RaidBalance.Count(e.Kind,profile,readiness.Budget)})),
+                    raidObjective = "Разорение зданий, недостроев, заборов и запасов; игроки — мешающие защитники. Орда/элита/босс используют один бюджет, боссы предупреждают тяжёлые удары.",
+                    profiles = EnemyCatalog.Enemies.Where(e => e.Undead && !e.DungeonOnly).SelectMany(e=>RaidBalance.Compositions.Where(profile=>RaidBalance.NormalizeComposition(e.Kind,profile,readiness.Budget)==profile).Select(profile=>new{enemy=e.Kind.ToString(),profile,count=RaidBalance.Count(e.Kind,profile,readiness.Budget)})),
                     fortifications = new {standing=village.Fortifications.Count(f=>f.Blocks),
                         gates=village.Fortifications.Where(f=>f.Gate).Select(f=>new{f.X,f.Y,f.Open,f.Damage}),
                         weaknesses=village.Fortifications.Where(f=>f.Damage>0).OrderByDescending(f=>f.Damage).Take(8).Select(f=>new{f.X,f.Y,f.Damage})},
@@ -247,7 +248,13 @@ public sealed partial class GameService
             else {
                 var facts = await DirectorFactsAsync(db, village, state, now, ct);
                 var paths = RaidBalance.Approaches(village);
-                var allowed = AlmightyPolicy.Options(facts, paths).Concat(VigorTuning.Options(village)).FirstOrDefault(o => o.Id == p.Option);
+                double? bossBudget=null;
+                if(p.Option.EndsWith("_boss",StringComparison.Ordinal))
+                {
+                    var capable=await db.Citizens.Where(c=>c.VillageId==villageId&&c.Status==CitizenStatus.Active).ToListAsync(ct);
+                    bossBudget=RaidBalance.Assess(village,capable,capable.Where(c=>presence.IsPresent(c.Id)).Select(c=>c.Id).ToHashSet(),now).Budget;
+                }
+                var allowed = AlmightyPolicy.Options(facts, paths,bossBudget).Concat(VigorTuning.Options(village)).FirstOrDefault(o => o.Id == p.Option);
                 var approach = allowed?.Sector is { } sector ? paths.FirstOrDefault(a => a.Sector == sector) : null;
                 var permitted = allowed is not null || p.Option == "dungeon" && facts.Online >= 3 && facts.Patients == 0 && facts.PendingRaids == 0 && !await db.DungeonRuns.AnyAsync(r => r.VillageId == villageId && r.Phase != DungeonPhase.Ended, ct);
                 if (p.Option.StartsWith("vigor_", StringComparison.Ordinal))

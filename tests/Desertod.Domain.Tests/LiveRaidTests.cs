@@ -76,6 +76,7 @@ public sealed class LiveRaidTests
         var v=NewVillage();
         // Fixed terrain: random village IDs can place a pond outside this gate and test water instead of walls.
         v.Id=Guid.Parse("00000000-0000-0000-0000-000000000701");
+        v.Wilds=Wilderness.Generate(v.Id); // Геометрия должна принадлежать этому же фиксированному seed.
         Fortifications.Ensure(v,[ProjectCatalog.Palisade]);
         foreach(var gate in v.Fortifications.Where(f=>f.Gate))gate.Open=false;
         var nav=new RaidNavigation(v);var outside=new TilePoint(-2.5,13.5);var inside=new TilePoint(.5,13.5);

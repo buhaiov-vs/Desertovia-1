@@ -1446,5 +1446,30 @@
       "login_bindings_preserved": 121
     },
     "release_record": "RELEASE_0_7_8.md"
+  },
+  "monster_behavior": {
+    "decision": "D-091",
+    "recorded_on": "2026-10-17",
+    "state": "implemented_verification_in_progress",
+    "plan": "MONSTER_BEHAVIOR_INTEGRATION.md",
+    "branch": "feat/monster-behavior",
+    "live_changed": false,
+    "live_version": "0.7.8",
+    "primary_objective": "property_and_supplies",
+    "sources": {
+      "Nez": "2862974e423f1dccaed4887673cd5c241faa1c55",
+      "RVO2-CS": "8e7cf2f9bdc331fe0802cdfb10d6c19fb5b20745"
+    },
+    "death_backpack_losses": "design_only_not_enabled",
+    "deployment": "not_requested_for_new_package",
+    "local_checks": {
+      "domain_previous_full": 460,
+      "api_full": 255,
+      "browser_desktop_phone": 22,
+      "frontend_lint_build": "pass",
+      "final_domain": "running",
+      "final_api_regressions": "pending"
+    },
+    "wall_damage_limit": 300
   }
 }

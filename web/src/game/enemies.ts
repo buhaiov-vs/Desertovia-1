@@ -296,6 +296,7 @@ export class EnemyLayer {
   private liveViews=new Map<string,{actor:Graphics;bar:Graphics;health:number;hitAt:number;barKey:string;
     facing:number}>()
   private liveSamples=new Map<string,FighterSample>()
+  private warnings=new Map<string,{view:Graphics;key:string}>()
   private selectedUnit:string|null=null
   select(id:string|null){this.selectedUnit=id}
   setBattles(battles:RaidBattle[]){
@@ -311,7 +312,7 @@ export class EnemyLayer {
     for(const battle of this.battles){
       if(['Warning','Cancelled','Finished'].includes(battle.phase))continue
       const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
-      const height=(variant:string)=>enemyHeight(kind)*(variant==='strong'?1.35:variant==='weak' ? .85 : 1)
+      const height=(variant:string)=>enemyHeight(kind)*(variant==='boss'?1.7:variant==='strong'?1.35:variant==='weak' ? .85 : 1)
       const at=(u:RaidBattle['units'][number])=>this.liveViews.get(u.id)?.actor.position??{x:u.x*TILE,y:u.y*TILE}
       const unit=battle.units.filter(u=>{
         const p=at(u),dy=y-p.y
@@ -322,7 +323,7 @@ export class EnemyLayer {
     return null
   }
   private updateLive(now:number,sortDepth:boolean){
-    const shown=new Set<string>()
+    const shown=new Set<string>(),warningIds=new Set<string>()
     const draw=(id:string,x:number,y:number,hp:number,max:number,kind:EnemyKind|null,variant:string,dead:boolean,attackAt=0,deathAt=0)=>{
       shown.add(id)
       let view=this.liveViews.get(id)
@@ -336,7 +337,7 @@ export class EnemyLayer {
       const beforeX=view.actor.x,moving=!!sample&&fighterIsMoving(sample,at)
       view.actor.position.set(position.x*TILE,position.y*TILE)
       if(Math.abs(view.actor.x-beforeX)>.0001)view.facing=view.actor.x<beforeX?-1:1
-      const size=variant==='strong'?1.35:variant==='weak' ? .85 : 1
+      const size=variant==='boss'?1.7:variant==='strong'?1.35:variant==='weak' ? .85 : 1
       view.actor.scale.set(view.facing*size,size)
       const strike=Math.max(0,Math.min(1,(now-attackAt)/240))
       view.actor.rotation=dead?Math.PI/2:Math.sin(strike*Math.PI)*.15
@@ -363,10 +364,19 @@ export class EnemyLayer {
       const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
       for(const u of battle.units){
         if(u.exitedAt||u.diedAt&&now-Date.parse(u.diedAt)>10000)continue
+        if(u.health>0&&u.strikeAt&&u.strikeX!=null&&u.strikeY!=null&&battle.phase!=='Retreating'){
+          warningIds.add(u.id)
+          let warning=this.warnings.get(u.id)
+          if(!warning){warning={view:new Graphics(),key:''};this.layer.addChild(warning.view);this.warnings.set(u.id,warning)}
+          const key=`${u.strikeAt}/${u.strikeX}/${u.strikeY}`
+          if(warning.key!==key){warning.key=key;warning.view.clear().circle(0,0,1.65*TILE).fill({color:0xff5d32,alpha:.18}).stroke({color:0xff9c40,width:2})}
+          warning.view.position.set(u.strikeX*TILE,u.strikeY*TILE);warning.view.zIndex=warning.view.y-.5
+        }
         draw(u.id,u.x,u.y,u.health,u.maximumHealth,kind,u.variant,u.health<=0,['Fighting','Breaching','Raiding'].includes(u.state)&&u.nextAttackAt?Date.parse(u.nextAttackAt)-3000:0,u.diedAt?Date.parse(u.diedAt):now)
       }
       for(const f of battle.fighters)if(!battle.finishedAt&&f.active&&f.health>0)draw('guard:'+(f.isTsar?f.accountId:f.citizenId),f.x,f.y,f.health,f.maximumHealth,null,'regular',false)
     }
+    for(const [id,warning] of this.warnings)if(!warningIds.has(id)){warning.view.destroy();this.warnings.delete(id)}
     for(const [id,view] of this.liveViews)if(!shown.has(id)){view.actor.destroy();view.bar.destroy();this.liveViews.delete(id)}
   }
   private terrain: Uint8Array | null = null

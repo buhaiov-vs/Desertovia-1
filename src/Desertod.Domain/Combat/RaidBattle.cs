@@ -57,6 +57,13 @@ public sealed class RaidUnit
     public DateTimeOffset? DiedAt { get; set; }
     public DateTimeOffset? ExitedAt { get; set; }
     public double BlockedSeconds { get; set; }
+    // Nullable: JSON старого активного боя не содержит этих ключей.
+    public int? BossPhase { get; set; }
+    public double? StrikeX { get; set; }
+    public double? StrikeY { get; set; }
+    public string? StrikeTarget { get; set; }
+    public DateTimeOffset? StrikeAt { get; set; }
+    public DateTimeOffset? SpecialReadyAt { get; set; }
     public TilePoint Position => new(X, Y);
     public bool Alive => Health > 0 && ExitedAt is null;
 }

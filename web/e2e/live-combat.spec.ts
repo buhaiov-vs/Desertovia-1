@@ -107,3 +107,24 @@ test('health-only and stale packets preserve the movement timeline while discont
   expect(result.afterStale.x).toBeGreaterThan(result.half.x);expect(result.afterStale.x).toBeLessThan(11)
   expect(result.end).toEqual({x:11,y:10});expect(result.jump).toEqual({x:20,y:20})
 })
+
+
+test('boss warning is fixed to the impact point and disappears after the authoritative strike',async({page})=>{
+  await page.goto('/e2e/live-combat-harness.html');await page.waitForFunction(()=>!!(window as unknown as {combatStand:unknown}).combatStand)
+  const result=await page.evaluate(()=>{
+    type Boss={variant:string;strikeAt:string|null;strikeX:number;strikeY:number}
+    type Geometry={scale:number;warning:{x:number;y:number;width:number}|null}
+    const s=(window as unknown as {combatStand:Stand&{geometry:(id:string)=>Geometry}}).combatStand
+    const b=structuredClone(s.initial),u=b.units[0] as typeof b.units[number]&Boss
+    u.variant='boss';u.strikeAt='2026-10-15T12:00:05Z';u.strikeX=4;u.strikeY=3;u.state='Windup';b.revision++
+    s.update(b);const before=s.geometry(u.id)
+    u.x+=.5;b.revision++;s.update(b);const during=s.geometry(u.id)
+    u.strikeAt=null;u.state='Raiding';b.revision++;s.update(b)
+    return {before,during,after:s.geometry(u.id)}
+  })
+  expect(result.before.scale).toBeCloseTo(1.7)
+  expect(result.before.warning).toEqual(result.during.warning)
+  expect(result.before.warning?.x).toBe(64);expect(result.before.warning?.y).toBe(48)
+  expect(result.before.warning!.width).toBeGreaterThan(50)
+  expect(result.after.warning).toBeNull()
+})

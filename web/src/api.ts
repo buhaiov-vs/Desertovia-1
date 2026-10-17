@@ -354,9 +354,10 @@ export type RaidOutcome = 'Pending' | 'Repelled' | 'Lost' | 'Cancelled'
 /** An attack on the way, or a fought one kept for the record. */
 export interface Fortification { id:string; x:number; y:number; gate:boolean; open:boolean; damage:number }
 export interface RaidUnit {
-  id:string; variant:'weak'|'regular'|'strong'; x:number; y:number; health:number; maximumHealth:number;
+  id:string; variant:'weak'|'regular'|'strong'|'boss'; x:number; y:number; health:number; maximumHealth:number;
   attack:number; speed:number; range:number; state:string; targetKind:string|null; targetId:string|null;
   diedAt:string|null; exitedAt:string|null; nextAttackAt?:string;
+  bossPhase?:number|null; strikeX?:number|null; strikeY?:number|null; strikeAt?:string|null;
 }
 export interface RaidFighter {
   isTsar?:boolean; accountId?:string|null;

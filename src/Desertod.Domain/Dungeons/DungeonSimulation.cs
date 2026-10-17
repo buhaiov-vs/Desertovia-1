@@ -232,11 +232,14 @@ public sealed class DungeonSimulation
             }
         }
 
+        var beforeFoes=foes.Where(f=>f.IsAlive).ToDictionary(f=>f.Id,f=>new TilePoint(f.X,f.Y));
         foreach (var foe in foes.Where(f => f.IsAlive))
         {
             foe.Cooldown = Math.Max(0, foe.Cooldown - seconds);
             ActFoe(foe, seconds, events);
         }
+
+        MoveCrowd(beforeFoes,seconds);
 
         if (foes.All(f => !f.IsAlive))
         {
@@ -402,11 +405,11 @@ public sealed class DungeonSimulation
             foe.Path.Clear();
         }
 
-        foe.Target ??= heroes
-            .Where(h => h.State == HeroState.Fighting && Distance(h.X, h.Y, foe.X, foe.Y) <= foe.Definition.AggroRange)
-            .OrderBy(h => Distance(h.X, h.Y, foe.X, foe.Y))
-            .Select(h => (Guid?)h.Id)
-            .FirstOrDefault();
+        var profile=MonsterBrain.Profile(EnemyCatalog.Get(foe.Kind),foe.Kind==EnemyKind.BarrowKing?"boss":"regular",foe.Id);
+        foe.Target ??= Guid.TryParse(MonsterBrain.Choose(profile,new(foe.X,foe.Y),null,heroes
+            .Where(h=>h.State==HeroState.Fighting&&Distance(h.X,h.Y,foe.X,foe.Y)<=foe.Definition.AggroRange)
+            .Select(h=>new MonsterObjective("hero",h.Id.ToString(),new(h.X,h.Y),1,
+                foes.Count(other=>other.Id!=foe.Id&&other.Target==h.Id))))?.Id,out var selected)?selected:null;
         if (foe.Target is not { } targetId)
         {
             return;
@@ -432,6 +435,22 @@ public sealed class DungeonSimulation
         if (target.Health <= 0)
         {
             KnockOut(target, foe, events);
+        }
+    }
+
+    private void MoveCrowd(IReadOnlyDictionary<int,TilePoint> before,double seconds)
+    {
+        var alive=foes.Where(f=>f.IsAlive).ToArray();
+        var actors=alive.Select(f=>new CrowdActor(f.Id,before[f.Id],new(f.X,f.Y),
+            before[f.Id].DistanceTo(new(f.X,f.Y))>.001?f.Definition.Speed:0,f.Kind==EnemyKind.BarrowKing?.3:.2)).ToList();
+        var blocker=-1;
+        foreach(var h in heroes.Where(h=>h.State==HeroState.Fighting))actors.Add(new(blocker--,new(h.X,h.Y),new(h.X,h.Y),0));
+        var positions=MonsterCrowd.Move(actors,seconds,(from,to)=>MonsterCrowd.CanTraverse(from,to,Dungeon.IsWalkable));
+        foreach(var foe in alive)
+        {
+            var next=positions[foe.Id];
+            if(next.DistanceTo(new(foe.X,foe.Y))>.05)foe.Path.Clear();
+            foe.X=next.X;foe.Y=next.Y;
         }
     }
 

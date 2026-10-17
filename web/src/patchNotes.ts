@@ -10,6 +10,17 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.8',date:'2026-10-17',
+    title:{ru:'Всевышний: предложения набегов',en:'Director raid proposals'},
+    changes:{
+      ru:['Недострой, повреждения и отдельные пациенты больше не дают деревне бессрочный иммунитет при достаточном числе боеспособных игроков онлайн.',
+        'После часа без боя директор предлагает ограниченный набег. Каждая заявка даёт два часа паузы для всех вариантов; отказ нельзя обойти сменой врага.',
+        'Нападение требует согласия царя и повторной проверки условий. Реальные передышки, защита новичков и восстановление после проигрыша сохраняются.'],
+      en:['Unfinished buildings, damage and individual patients no longer grant blanket immunity when enough capable residents are online.',
+        'After a quiet hour the director proposes a bounded raid. Every proposal pauses the whole category for two hours; switching enemies cannot bypass rejection.',
+        'Raids still require owner approval and fresh readiness checks. Approved rest, newcomer protection and recovery after defeat remain.']}
+  },
+  {
     version:'0.7.7',date:'2026-10-17',
     title:{ru:'Питание, жильё и адресная работа',en:'Meals, homes and selected work targets'},
     changes:{

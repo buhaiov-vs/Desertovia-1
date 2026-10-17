@@ -1412,8 +1412,8 @@
   },
   "director_raid_pressure": {
     "decision": "D-088",
-    "status": "verified_locally_not_installed",
-    "live_changed": false,
+    "status": "released",
+    "live_changed": true,
     "read_only_audit_run": 39010114851,
     "plan": "DIRECTOR_RAID_PRESSURE.md",
     "minimum_ready_online": 3,
@@ -1427,6 +1427,24 @@
       "bot_director": 12,
       "build": "pass"
     },
-    "full_exact_ci_required_before_release": true
+    "full_exact_ci_required_before_release": true,
+    "version": "0.7.8",
+    "authorization": "D-089",
+    "game_sha": "aab588f93dd71c074f50d056ea7d3bcba814e842",
+    "bot_sha": "3903ee140342605992e9d29260b0c9bab2c8e4a3",
+    "game_ci": 39011042846,
+    "bot_ci": 39011057542,
+    "preflight_run": 39012284286,
+    "installation_run": 39012337683,
+    "independent_check_run": 39012556053,
+    "checked_at": "2026-10-17T07:09:16.5232290Z",
+    "preservation": {
+      "profiles_before": 119,
+      "profiles_after": 119,
+      "lost_profiles_or_progress": 0,
+      "accounts_preserved": 121,
+      "login_bindings_preserved": 121
+    },
+    "release_record": "RELEASE_0_7_8.md"
   }
 }

@@ -1,3 +1,21 @@
+# 0.7.8 INSTALLED and independently verified —17Oct2026
+
+Owner D-089 «Загрузи. Посмотрим что даст» authorized immediate rollout.
+LIVE gameaab588f93dd71c074f50d056ea7d3bcba814e842, bot two-file payload source
+3903ee140342605992e9d29260b0c9bab2c8e4a3. Exact CI39011042846 SUCCESS441Domain/254API/
+167browser+1normal skip/frontend/Docker; botCI39011057542 SUCCESS891tests/serverSKIPPED.
+24operator guardsPASS. Freshpreflight39012284286, install39012337683 and independent
+check39012556053 SUCCESS at2026-10-17T07:09:16.5232290Z.
+119→119profiles,0progresslosses,121accounts/loginbindings preserved;26migrations,
+24frontendchunks/feedback0.7.8/building numbers all4checks0. ActualPGdump restore
+catalog verified; SQLite/code/config/profile/identity backups retained privately.
+Only almighty.py and feedback_context.py replaced.14other modules/configs/
+AI budget/quarantine/Propose retained. Threat proposals after1quiet hour when
+at least3capable online,2hcategory pause after any proposal; owner approval and
+fresh checks retained. No synthetic messages/raids/payments/model probes/resets.
+Natural director behavior is to be observed on scheduled reviews, not forced.
+No reinstallation/old request replay. Earlier READY/source-only notes historical.
+
 # D-089: owner authorized0.7.8 installation now
 
 Latest owner: «Загрузи. Посмотрим что даст». This authorizes guarded installation

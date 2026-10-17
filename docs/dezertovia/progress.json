@@ -1511,5 +1511,25 @@
     },
     "release_record": "RELEASE_0_7_9.md",
     "natural_live_battle_observed": false
+  },
+  "next_raid_difficulty_patch": {
+    "decision": "D-093",
+    "recorded_on": "2026-10-17",
+    "state": "planned_not_implemented",
+    "plan": "RAID_DIFFICULTY_NEXT_PATCH.md",
+    "live_version": "0.7.9",
+    "live_changed": false,
+    "version_assigned": false,
+    "deployment_scheduled": false,
+    "implementation_order": [
+      "outcome_cooldown_reporting",
+      "readiness_adaptive_budget",
+      "property_theft_equipment_costs",
+      "group_tactics_event_duration_retreat_director_explanations"
+    ],
+    "numbers": "initial_targets_require_simulation",
+    "death_backpack_losses": "deferred_not_in_next_patch",
+    "director_mode": "Propose",
+    "audit_run": 39020305054
   }
 }

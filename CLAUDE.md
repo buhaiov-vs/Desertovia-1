@@ -1,3 +1,12 @@
+# D-093: next patch scope recorded, not implemented
+
+Read `docs/dezertovia/RAID_DIFFICULTY_NEXT_PATCH.md` before the next balance work.
+Owner requested adding the discussed difficulty table to the nearest patch.
+Outcome/cooldown/reporting first; adaptive readiness and budget next; then property
+losses, consumables and group tactics. Numbers are initial simulation targets.
+Backpack death losses remain deferred. No runtime/configuration/version changes,
+no new deployment date. LIVE remains independently verified 0.7.9 below.
+
 # 0.7.9 installed and independently verified — 17 October 2026
 
 Owner D-092 authorized deployment and testing by players. Verified at

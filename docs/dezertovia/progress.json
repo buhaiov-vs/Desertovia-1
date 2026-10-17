@@ -263,7 +263,7 @@
     "shared_bot_and_housing_active": true,
     "legacy_backup_exists": true
   },
-  "deployed_sha": "ba7050f8d0d2efc07d7523d300944e9531c3fb01",
+  "deployed_sha": "55094d52755eb074e8074e41374a9ec5fd3a96ed",
   "launch_document": "TELEGRAM_LAUNCH.md",
   "current_change": {
     "single_world": "released",
@@ -693,17 +693,12 @@
   },
   "current_release": {
     "version": "0.7.11",
-    "authorization": "D-098",
-    "checked_at": "2026-10-17T13:25:32.5456200Z",
-    "game_sha": "ba7050f8d0d2efc07d7523d300944e9531c3fb01",
-    "bot_sha": "2d5a7ab7759bd7d50322335bbe1772267396ae5d",
-    "game_ci": 39031620418,
-    "bot_ci": 39031678709,
-    "game_merge_sha": "cc9176696291c45529cceea385f83c5524eb50c5",
-    "bot_merge_sha": "645bc0f787e9bfce424706c1690519a64b7b21f0",
-    "preflight_run": 39036214937,
-    "install_run": 39036254787,
-    "independent_check_run": 39036486712,
+    "checked_at": "2026-10-17T14:21:38.6374261Z",
+    "game_sha": "55094d52755eb074e8074e41374a9ec5fd3a96ed",
+    "bot_sha": "092390d83cf9c1e6a110633f5fb02b340742688f",
+    "preflight_run": 39040135022,
+    "install_run": 39040182761,
+    "independent_check_run": 39040394389,
     "progress": {
       "profiles_before": 120,
       "profiles_after": 120,
@@ -725,21 +720,33 @@
       "familyGaps": 0,
       "invalidValue": 0
     },
-    "feedback_origins_table": true,
     "frontend": {
       "version": "0.7.11",
+      "slider_editor": true,
       "game_chunk": true,
       "checked_chunks": 24,
       "transient_http_retries": 0
     },
     "director_mode": "Propose",
-    "protected_module_count": 11,
+    "protected_module_count": 16,
     "protected_modules_preserved": true,
     "configurations_preserved": true,
+    "authorization": "D-100",
+    "game_ci": 39038955924,
+    "bot_ci": 39039077720,
     "backup_verified": true,
-    "natural_combat_sample_available": false,
-    "status": "released_and_independently_verified",
-    "documentation": "RELEASE_0_7_11.md"
+    "status": "installed_and_independently_verified",
+    "checks": {
+      "domain": 516,
+      "api": 270,
+      "browser_passed": 199,
+      "browser_normal_skip": 1,
+      "bot": 903,
+      "operator": 31,
+      "local_editor_browser_passed": 10,
+      "frontend": "pass",
+      "docker": "pass"
+    }
   },
   "next_work": {
     "D-051": {
@@ -1758,9 +1765,9 @@
   },
   "raid_editor_usability": {
     "decision": "D-099",
-    "state": "implemented_locally_verified_not_installed",
+    "state": "installed_and_independently_verified",
     "branch": "fix/raid-editor-clarity",
-    "runtime_changed": false,
+    "runtime_changed": true,
     "documentation": "RAID_EDITOR_USABILITY.md",
     "frontend_build": "pass",
     "lint": "pass_existing_warnings",
@@ -1771,6 +1778,63 @@
       "duration": "1.0min",
       "retries": 0
     },
-    "controls": "native_sliders_with_units_and_per_field_explanations"
+    "controls": "native_sliders_with_units_and_per_field_explanations",
+    "receipt": {
+      "version": "0.7.11",
+      "checked_at": "2026-10-17T14:21:38.6374261Z",
+      "game_sha": "55094d52755eb074e8074e41374a9ec5fd3a96ed",
+      "bot_sha": "092390d83cf9c1e6a110633f5fb02b340742688f",
+      "preflight_run": 39040135022,
+      "install_run": 39040182761,
+      "independent_check_run": 39040394389,
+      "progress": {
+        "profiles_before": 120,
+        "profiles_after": 120,
+        "lost_profiles_or_progress": 0,
+        "accounts_preserved": 122,
+        "login_bindings_preserved": 122
+      },
+      "migrations": 34,
+      "building_numbers": {
+        "sequenceTooSmall": 0,
+        "unassigned": 0,
+        "duplicatePlots": 0,
+        "duplicateNumbers": 0
+      },
+      "display_numbers": {
+        "missing": 0,
+        "duplicateGlobal": 0,
+        "duplicateFamily": 0,
+        "familyGaps": 0,
+        "invalidValue": 0
+      },
+      "frontend": {
+        "version": "0.7.11",
+        "slider_editor": true,
+        "game_chunk": true,
+        "checked_chunks": 24,
+        "transient_http_retries": 0
+      },
+      "director_mode": "Propose",
+      "protected_module_count": 16,
+      "protected_modules_preserved": true,
+      "configurations_preserved": true,
+      "authorization": "D-100",
+      "game_ci": 39038955924,
+      "bot_ci": 39039077720,
+      "backup_verified": true,
+      "status": "installed_and_independently_verified",
+      "checks": {
+        "domain": 516,
+        "api": 270,
+        "browser_passed": 199,
+        "browser_normal_skip": 1,
+        "bot": 903,
+        "operator": 31,
+        "local_editor_browser_passed": 10,
+        "frontend": "pass",
+        "docker": "pass"
+      }
+    }
   }
 }

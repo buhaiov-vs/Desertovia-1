@@ -1,0 +1,57 @@
+{
+  "version": "0.7.11",
+  "checked_at": "2026-10-17T14:21:38.6374261Z",
+  "game_sha": "55094d52755eb074e8074e41374a9ec5fd3a96ed",
+  "bot_sha": "092390d83cf9c1e6a110633f5fb02b340742688f",
+  "preflight_run": 39040135022,
+  "install_run": 39040182761,
+  "independent_check_run": 39040394389,
+  "progress": {
+    "profiles_before": 120,
+    "profiles_after": 120,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 122,
+    "login_bindings_preserved": 122
+  },
+  "migrations": 34,
+  "building_numbers": {
+    "sequenceTooSmall": 0,
+    "unassigned": 0,
+    "duplicatePlots": 0,
+    "duplicateNumbers": 0
+  },
+  "display_numbers": {
+    "missing": 0,
+    "duplicateGlobal": 0,
+    "duplicateFamily": 0,
+    "familyGaps": 0,
+    "invalidValue": 0
+  },
+  "frontend": {
+    "version": "0.7.11",
+    "slider_editor": true,
+    "game_chunk": true,
+    "checked_chunks": 24,
+    "transient_http_retries": 0
+  },
+  "director_mode": "Propose",
+  "protected_module_count": 16,
+  "protected_modules_preserved": true,
+  "configurations_preserved": true,
+  "authorization": "D-100",
+  "game_ci": 39038955924,
+  "bot_ci": 39039077720,
+  "backup_verified": true,
+  "status": "installed_and_independently_verified",
+  "checks": {
+    "domain": 516,
+    "api": 270,
+    "browser_passed": 199,
+    "browser_normal_skip": 1,
+    "bot": 903,
+    "operator": 31,
+    "local_editor_browser_passed": 10,
+    "frontend": "pass",
+    "docker": "pass"
+  }
+}

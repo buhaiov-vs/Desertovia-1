@@ -1,3 +1,36 @@
+# D-100: редактор набегов с ползунками установлен и независимо проверен
+
+Версия остаётся0.7.11; это UIhotfix D-099 по команде владельца «Грузи».
+Проверено2026-10-17T14:21:38.6374261Z. Прежние NOTREADY/NOTINSTALLED ниже — история.
+Game exact55094d52755eb074e8074e41374a9ec5fd3a96ed; bot exact092390d83cf9c1e6a110633f5fb02b340742688f.
+Exact gameCI39038955924 иbotCI39039077720 attempt1 SUCCESS; game516Domain/
+270API/199browser+1штатныйskip, frontend/lint/DockerPASS;
+bot903tests/serverSKIPPED;31operator guardsPASS. Mergeдеревья равны testedsource.
+Actualpreflight39040135022, install39040182761 и отдельный
+independentcheck39040394389 SUCCESS. Новыйraidui0711flow; старые
+post0711andolderrequests не повторялись. Currentraidui0711requestactioncheck.
+
+120→120профилей,0потерь навыков/характеристик/славы;
+122аккаунтов/122привязок сохранены.
+34миграции без изменения схемы. Глобальные номера/семейныйреестр безошибок.
+Publicfrontend0.7.11/24JSchunks, новыеsliderJSmarkers
+и liveSHAlookupбатюшки подтверждены. FreshPGdump restorecatalog+SQLite/code/
+config/profile/identity/combat backups сохранены приватно. Инвентари/профили не
+сбрасывались; обычная игра продолжалась. Толькоfeedback_context.py runtimeбота
+заменён: mappingновогоSHA;16othermodules/AIbudget/quarantine/config/Propose
+сохранены. Серверныйsrc tree равен прежнему; баланс/формулы/DBschema прежние.
+
+Установлены: Босс/Смешанный/Орда, быстрый выбор сложности, свёрнутые advanced;
+все числовые поля и доли видов — nativeползунки с единицами/пояснениями ×;
+общая сумма100%, Поровну, точные ошибки до preview/save/launch; прежниеmanual
+presets/idempotency/ownerlimits сохранены. Все5деревенскихвидов доступнывладельцу,
+DungeonOnlyвраги исключены. Новые боевые пробы/модели/сообщения/платежи не запускали.
+Не делать performanceзаявлений без естественного боя/замеров телефона.
+
+Не переустанавливать и не подставлятьmain/mergeSHA вместо exacttestedsource.
+Новый выпуск требует отдельного свежегоcandidate/preflight/backups/check.
+Нельзя автоматически откатывать двигатель через activeRaids/newJSON.
+
 > D-099: source-only редактор набегов — [план/причина/проверка](RAID_EDITOR_USABILITY.md). LIVE0.7.11 прежний.
 
 # 0.7.11 установлена и независимо проверена — 17 октября 2026

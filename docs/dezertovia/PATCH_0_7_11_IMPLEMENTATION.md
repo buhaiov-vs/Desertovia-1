@@ -244,3 +244,8 @@ reviewable PR, не заменять tested source текущим main. На с�
 - Detailed choices/calibration: NUMBERING_FOOD_SPACE_0_7_11.md.
   Next: WALL progression/repair/navigation + accepted seamless day/night art;
   then XP/KNOW/COOK and full regression/package. Art draft still NOT accepted.
+
+- NUM/FOOD/SPACE committed22b4164, bot notice changea1d153d, pushed feature branches.
+  Next fence packet detailed entry/exit decisions saved in
+  FORTIFICATIONS_0_7_11_IMPLEMENTATION.md. No fence code implemented yet; avoid
+  catalog-only projects that cannot start while the main story project is active.

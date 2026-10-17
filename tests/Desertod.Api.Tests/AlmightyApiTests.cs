@@ -107,8 +107,11 @@ public sealed class AlmightyApiTests(DesertodApiFactory factory)
     public async Task Fresh_rest_conditions_are_rechecked_and_duplicate_approval_does_not_extend_the_timer()
     {
         var v=await players.FoundVillageAsync("Director recovery");
-        var resident=await players.JoinAsync(v,"Patient");
-        await players.ArrangeCitizenAsync(resident.Id,(c,now)=>c.InjuredUntil=now.AddHours(1));
+        for (var i = 0; i < 3; i++) {
+            var resident=await players.JoinAsync(v,"Patient"+i);
+            await players.ArrangeCitizenAsync(resident.Id,(c,now)=>c.InjuredUntil=now.AddHours(1));
+            factory.Services.GetRequiredService<CitizenPresence>().Touch(resident.Id,v.Slug);
+        }
         await using var db=await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
         var id=await db.Villages.Where(x=>x.Slug==v.Slug).Select(x=>x.Id).SingleAsync();
         var game=factory.Services.GetRequiredService<GameService>();
@@ -182,6 +185,81 @@ public sealed class AlmightyApiTests(DesertodApiFactory factory)
         var review=await factory.Services.GetRequiredService<GameService>().BeginAlmightyReviewAsync(city.Id,default);
         Assert.NotNull(review);Assert.Contains(review.Options,o=>o.Composition=="elite");
         Assert.InRange(review.Snapshot.Length,1,36000);
+    }
+
+    [Fact]
+    public async Task Overdue_raid_gets_an_explicit_pacing_proposal_even_if_model_keeps_waiting_for_repairs()
+    {
+        var v = await players.FoundVillageAsync("Director pressure");
+        for (var i = 0; i < 4; i++) {
+            var resident = await players.JoinAsync(v, "Ready"+i);
+            factory.Services.GetRequiredService<CitizenPresence>().Touch(resident.Id, v.Slug);
+        }
+        await using var db = await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var city = await db.Villages.SingleAsync(x => x.Slug == v.Slug);
+        city.CreatedAt = factory.Clock.GetUtcNow().AddDays(-10);
+        city.RaidsPlannedPeriod = long.MaxValue;
+        await db.SaveChangesAsync();
+        var game = factory.Services.GetRequiredService<GameService>();
+        var review = (await game.BeginAlmightyReviewAsync(city.Id, default))!;
+        Assert.True(JsonDocument.Parse(review.Snapshot).RootElement.GetProperty("raidPressure").GetProperty("proposalDue").GetBoolean());
+        await game.CompleteAlmightyReviewAsync(review, new("none", "Ждём ремонта и окончания стройки.", "Ждать всех."), default);
+        var proposal = await db.AlmightyProposals.AsNoTracking().SingleAsync(x => x.VillageId == city.Id);
+        Assert.Contains(review.Options, o => o.Id == proposal.Option && o.Enemy is not null);
+        Assert.Contains("Планировщик угроз", proposal.Reason);
+        Assert.Empty((await db.Villages.AsNoTracking().SingleAsync(x => x.Id == city.Id)).Raids);
+        await game.DecideAlmightyAsync(proposal.Id, city.OwnerAccountId, null, false, default);
+        // Отказ не обходится новым врагом и новая модель не должна навязать ещё одну заявку.
+        var state = await db.AlmightyStates.SingleAsync(x => x.VillageId == city.Id);
+        state.NextReviewAt = factory.Clock.GetUtcNow(); state.LastNoticeAt = null;
+        await db.SaveChangesAsync();
+        var second = (await game.BeginAlmightyReviewAsync(city.Id, default))!;
+        Assert.False(JsonDocument.Parse(second.Snapshot).RootElement.GetProperty("raidPressure").GetProperty("proposalDue").GetBoolean());
+        var otherRaid = second.Options.First(o => o.Enemy is not null && o.Id != proposal.Option);
+        await game.CompleteAlmightyReviewAsync(second, new(otherRaid.Id, "Другой враг.", "Атака."), default);
+        Assert.Single(await db.AlmightyProposals.AsNoTracking().Where(x => x.VillageId == city.Id).ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task Invalid_model_answer_does_not_start_the_pacing_fallback_or_create_a_raid()
+    {
+        var v = await players.FoundVillageAsync("Pressure model failure");
+        for (var i = 0; i < 4; i++) {
+            var resident = await players.JoinAsync(v, "Ready"+i);
+            factory.Services.GetRequiredService<CitizenPresence>().Touch(resident.Id, v.Slug);
+        }
+        await using var db = await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var city = await db.Villages.SingleAsync(x => x.Slug == v.Slug);
+        city.CreatedAt = factory.Clock.GetUtcNow().AddDays(-10); city.RaidsPlannedPeriod = long.MaxValue;
+        await db.SaveChangesAsync();
+        var game = factory.Services.GetRequiredService<GameService>();
+        var review = (await game.BeginAlmightyReviewAsync(city.Id, default))!;
+        await game.CompleteAlmightyReviewAsync(review, new("none", "", "", "budget.shared"), default);
+        Assert.Empty(await db.AlmightyProposals.Where(x => x.VillageId == city.Id).ToArrayAsync());
+        Assert.Empty((await db.Villages.AsNoTracking().SingleAsync(x => x.Id == city.Id)).Raids);
+    }
+
+    [Fact]
+    public async Task Raid_proposal_rechecks_ready_online_residents_on_owner_approval()
+    {
+        var v = await players.FoundVillageAsync("Pressure approval recheck");
+        var residents = new List<Guid>();
+        for (var i = 0; i < 4; i++) {
+            var resident = await players.JoinAsync(v, "Ready"+i); residents.Add(resident.Id);
+            factory.Services.GetRequiredService<CitizenPresence>().Touch(resident.Id, v.Slug);
+        }
+        await using var db = await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+        var city = await db.Villages.SingleAsync(x => x.Slug == v.Slug);
+        city.CreatedAt = factory.Clock.GetUtcNow().AddDays(-10); city.RaidsPlannedPeriod = long.MaxValue;
+        await db.SaveChangesAsync();
+        var game = factory.Services.GetRequiredService<GameService>();
+        var review = (await game.BeginAlmightyReviewAsync(city.Id, default))!;
+        await game.CompleteAlmightyReviewAsync(review, new("none", "Ничего не делать.", "Ждать."), default);
+        var proposal = await db.AlmightyProposals.AsNoTracking().SingleAsync(x => x.VillageId == city.Id);
+        foreach (var id in residents) await players.ArrangeCitizenAsync(id,(c,now)=>c.InjuredUntil=now.AddHours(1));
+        await game.DecideAlmightyAsync(proposal.Id, city.OwnerAccountId, null, true, default);
+        Assert.Equal("Superseded", (await db.AlmightyProposals.AsNoTracking().SingleAsync(x => x.Id == proposal.Id)).Status);
+        Assert.Empty((await db.Villages.AsNoTracking().SingleAsync(x => x.Id == city.Id)).Raids);
     }
 
 }

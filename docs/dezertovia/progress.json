@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "recorded_on": "2026-10-16",
-  "phase": "released_0_7_6_independently_verified",
+  "recorded_on": "2026-10-17",
+  "phase": "released_0_7_9_independently_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
@@ -18,7 +18,8 @@
     "release_0_7_3": "672d72e167dd477f925df6394ecc5b188d3924ff",
     "release_0_7_4": "74adbe8c1d778f0751a755a4b36dbefe6f16a405",
     "release_0_7_5": "374323f8c3ef519694497371716e611d3396ee43",
-    "release_0_7_6": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d"
+    "release_0_7_6": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d",
+    "release_0_7_9": "7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -1450,18 +1451,18 @@
   "monster_behavior": {
     "decision": "D-091",
     "recorded_on": "2026-10-17",
-    "state": "release_candidate_checks_in_progress",
+    "state": "released_independently_verified",
     "plan": "MONSTER_BEHAVIOR_INTEGRATION.md",
     "branch": "feat/monster-behavior",
-    "live_changed": false,
-    "live_version": "0.7.8",
+    "live_changed": true,
+    "live_version": "0.7.9",
     "primary_objective": "property_and_supplies",
     "sources": {
       "Nez": "2862974e423f1dccaed4887673cd5c241faa1c55",
       "RVO2-CS": "8e7cf2f9bdc331fe0802cdfb10d6c19fb5b20745"
     },
     "death_backpack_losses": "design_only_not_enabled",
-    "deployment": "authorized_D-092_pending_exact_ci_preflight",
+    "deployment": "installed_and_separately_checked_D-092",
     "local_checks": {
       "domain_full_final": 460,
       "api_full": 255,
@@ -1490,8 +1491,25 @@
       ],
       "production_fps_claim": false
     },
-    "exact_ci": "pending_on_final_head",
+    "exact_ci": "success",
     "candidate_version": "0.7.9",
-    "previous_failed_ci": 39016736130
+    "previous_failed_ci": 39016736130,
+    "game_sha": "7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8",
+    "bot_sha": "b72fa1711b58062caf13cb80b315a5b01f2a5506",
+    "game_ci": 39017965139,
+    "bot_ci": 39018066817,
+    "preflight_run": 39019126424,
+    "installation_run": 39019193847,
+    "independent_check_run": 39019429338,
+    "checked_at": "2026-10-17T08:59:55.1357468Z",
+    "preservation": {
+      "profiles_before": 119,
+      "profiles_after": 119,
+      "lost_profiles_or_progress": 0,
+      "accounts_preserved": 121,
+      "login_bindings_preserved": 121
+    },
+    "release_record": "RELEASE_0_7_9.md",
+    "natural_live_battle_observed": false
   }
 }

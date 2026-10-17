@@ -1,0 +1,71 @@
+{
+  "phase": "post079_verified",
+  "version": "0.7.9",
+  "game_sha": "7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8",
+  "bot_sha": "b72fa1711b58062caf13cb80b315a5b01f2a5506",
+  "building_numbers": {
+    "sequenceTooSmall": 0,
+    "unassigned": 0,
+    "duplicatePlots": 0,
+    "duplicateNumbers": 0
+  },
+  "progress": {
+    "profiles_before": 119,
+    "profiles_after": 119,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 121,
+    "login_bindings_preserved": 121
+  },
+  "combat_preservation": {
+    "existing_battles_preserved": 0,
+    "existing_enemy_ids_and_health_checked": 0
+  },
+  "migrations": 27,
+  "director_mode": "Propose",
+  "pending_notice_states": [],
+  "telegram_civic_deliveries_confirmed": 45,
+  "frontend": {
+    "version": "0.7.9",
+    "game_chunk": true,
+    "checked_chunks": 24,
+    "transient_http_retries": 0
+  },
+  "feedback_live_version_verified": true,
+  "protected_modules_preserved": true,
+  "configurations_preserved": true,
+  "quarantine_mode": "quarantine",
+  "protected_module_count": 15,
+  "postgres_backup": {
+    "created": true,
+    "file": "desertod-2026-10-17_0858.dump",
+    "restore_catalog_verified": true,
+    "before_game": "aab588f93dd71c074f50d056ea7d3bcba814e842",
+    "candidate": "7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8"
+  },
+  "sqlite_backup": true,
+  "director_policy": {
+    "quiet_minutes": 60,
+    "proposal_pause_minutes": 120,
+    "minimum_ready_online": 3,
+    "requires_owner_approval": true
+  },
+  "combat_diagnostics": {
+    "legacy_duties": {
+      "unfinished": 0,
+      "medicallyPaused": 0
+    },
+    "recent_timing_samples": [],
+    "forced_raid": false
+  },
+  "synthetic_messages": 0,
+  "test_payments": 0,
+  "forced_raids": 0,
+  "checked_at": "2026-10-17T08:59:55.1357468Z",
+  "preflight_run": 39019126424,
+  "install_run": 39019193847,
+  "independent_check_run": 39019429338,
+  "game_ci": 39017965139,
+  "bot_ci": 39018066817,
+  "game_merge_sha": "49ecb4de220ecf6d7d5915bfcc4bc69edfd5f360",
+  "bot_merge_sha": "6ac9b8dd1fe5eb0d81bc39838b31ef383d1d6f7c"
+}

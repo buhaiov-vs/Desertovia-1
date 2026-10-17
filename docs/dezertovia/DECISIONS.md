@@ -1,3 +1,33 @@
+# 0.7.9 installed and independently verified — 17 October 2026
+
+Owner D-092 authorized deployment and testing by players. Verified at
+2026-10-17 08:59:55 UTC (10:59:55 Europe/Oslo).
+
+- Installed game: `7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8`.
+- Bot payload source: `b72fa1711b58062caf13cb80b315a5b01f2a5506`; only
+  `feedback_context.py` replaced; 15 protected modules preserved.
+- Exact game CI 39017965139: SUCCESS, 460 domain, 255 API, 169 browser tests,
+  one normal skip; lint, frontend build and Docker passed.
+- Exact bot CI 39018066817: SUCCESS, 891 tests; server job intentionally skipped.
+  All 27 rollout operator guards passed.
+- Public PR 53 merged as `49ecb4de`; bot canonical PR 51 as `6ac9b8dd`.
+  Both merged trees equal their tested source trees.
+- Fresh preflight 39019126424, installation 39019193847 and separate independent
+  check 39019429338: SUCCESS.
+- All 119 profiles, progress, 121 accounts and 121 login bindings preserved.
+  All four building-number checks report zero errors; 27 migrations applied,
+  including MonsterBehavior; 24 frontend chunks and feedback version checked.
+- Fresh PostgreSQL dump restore catalog verified; SQLite, code, configuration,
+  profile, identity and combat backups retained privately. AI budget, quarantine,
+  configuration and director Propose mode preserved.
+- Property raids, crowd behavior and bosses are live. Backpack death losses
+  remain design only. No forced waves, messages, model probes, payments or resets.
+- There was no active battle at upgrade and no natural combat timing sample at
+  final check. Actual phone performance still requires player observation.
+
+Do not reinstall or replay requests. The current post079 request is `action=check`.
+Earlier READY, NOT INSTALLED and preparation entries below are historical.
+
 # D-092: owner authorized0.7.9 deployment now
 
 Owner17Oct: «Давай грузить и тестировать в игре игроками». Ship D-091 through a

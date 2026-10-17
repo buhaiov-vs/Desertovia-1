@@ -8,7 +8,7 @@ import {ApiError,api,type VillageState,type Citizen,type Me,type Catalog} from '
 import '../src/index.css'
 const initial={id:'test',slug:'test',name:'Тестовая деревня',structures:[],sites:[],housing:[{plotId:'1,1',beds:12,occupied:11,level:1}],civicOrders:[{id:'order',plotId:'1,1',operation:'upgrade',requestedBy:'governor',partnerAccountId:null,partnerAccepted:false,status:'pending'}]} as unknown as VillageState
 const upgradeError=new URLSearchParams(location.search).get('upgradeError')
-if(upgradeError)initial.structures=[{kind:upgradeError==='maximum'?'Longhouse':upgradeError==='hospital'?'Hospital':'Hut',level:upgradeError==='maximum'?3:1,plotId:'1,1'}] as VillageState['structures']
+if(upgradeError)initial.structures=[{kind:upgradeError==='maximum'?'Longhouse':upgradeError==='hospital'?'Hospital':'Library',level:upgradeError==='maximum'?3:1,plotId:'1,1'}] as VillageState['structures']
 const buildMode=new URLSearchParams(location.search).has('build')
 const applications={...initial,civicOrders:[{id:'build-order',plotId:'9,11',operation:'build',buildingKind:'Hospital',requestedBy:'governor',partnerAccountId:null,partnerAccepted:false,status:'pending'}]} as VillageState
 const fullVillage={...applications,resources:[],completedProjects:[],technologies:[],storages:[],sites:[{kind:'LeanTo',stages:[],progress:0,stage:0,plotId:'1,1'},{kind:'LeanTo',stages:[],progress:0,stage:0,plotId:'5,1'},{kind:'LeanTo',stages:[],progress:0,stage:0,plotId:'9,1'}]} as unknown as VillageState

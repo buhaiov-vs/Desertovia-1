@@ -1,3 +1,4 @@
+import {buildingOrdinal,buildingSuffix} from '../buildingLabels'
 import { combatDiagnostics } from './combatDiagnostics'
 import { sameStaticVillage } from './combatSnapshot'
 import { receiveFighterSample, fighterPositionAt, fighterIsMoving, type FighterSample } from './fighterSamples'
@@ -809,7 +810,7 @@ export class VillageWorld {
     const ward=this.village?.structures.find(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
     const wardPlot=ward?this.plot(ward.plotId):null
     if(!this.wardCaption){this.wardCaption=new Text({text:'',style:{fontFamily:LABEL_FONT,fontSize:11,fontWeight:'700',fill:0xffe9b0,stroke:{color:0x1b1206,width:3}}});this.wardCaption.anchor.set(.5,1);this.screen.addChild(this.wardCaption)}
-    this.wardCaption.text=`${wardPlot?`Больница${ward?.number ? ` №${ward.number}` : ''}`:'Лазарет'} · На лечении: ${admitted.length}`
+    this.wardCaption.text=`${wardPlot?`Больница${buildingSuffix(ward)}`:'Лазарет'} · На лечении: ${admitted.length}`
     this.wardCaption.visible=admitted.length>0
     this.wardCaptionAt={x:(wardPlot?wardPlot.x+1.5:CAMPFIRE.x)*TILE,y:(wardPlot?wardPlot.y:CAMPFIRE.y-1)*TILE-3}
     const seen = new Set<string>([PRIEST_ID, TSAR_ID])
@@ -1014,9 +1015,9 @@ export class VillageWorld {
     }
     const key = JSON.stringify([
       this.buildingDefinitions.size,
-      village.storages.map((s) => [s.kind, s.plotId, s.number, !!s.ruinedAt, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
-      village.structures.map((s) => [s.kind, s.plotId, s.number, !!s.ruinedAt]),
-      village.sites.map(site=>[siteVisualKey(site),site.number,!!site.ruinedAt]),
+      village.storages.map((s) => [s.kind, s.plotId, s.number, s.displayNumber, !!s.ruinedAt, s.slots.map((slot) => [slot.kind, Math.ceil(slot.fill * 4)])]),
+      village.structures.map((s) => [s.kind, s.plotId, s.number, s.displayNumber, !!s.ruinedAt]),
+      village.sites.map(site=>[siteVisualKey(site),site.number,site.displayNumber,!!site.ruinedAt]),
       village.fields.map((bed) => {
         const plant = cropTile(bed.crop ?? '', bed.growth, isRipe(bed))
         return [bed.plotId, bed.crop, plant && tileKey(plant), this.isWet(bed)]
@@ -1062,7 +1063,7 @@ export class VillageWorld {
       const view = this.finishedView(structure.kind, plot.x, plot.y)
       if(structure.ruinedAt){view.alpha=.3;const rubble=this.damageView(structure.plotId,100,plot.x,plot.y);add(rubble)}
       add(view)
-      if (structure.kind !== 'Hospital'||structure.ruinedAt) name(structure.kind, false, view,1,!!structure.ruinedAt,structure.number)
+      if (structure.kind !== 'Hospital'||structure.ruinedAt) name(structure.kind, false, view,1,!!structure.ruinedAt,buildingOrdinal(structure))
       const beds = village.fields.filter((bed) => bed.plotId === structure.plotId)
       if (beds.length > 0) add(this.bedsView(beds, plot.x, plot.y))
     }
@@ -1074,7 +1075,7 @@ export class VillageWorld {
       const view = this.finishedView(storage.kind, plot.x, plot.y)
       if(storage.ruinedAt)view.alpha=.3
       add(view)
-      name(storage.kind, true, view,1,!!storage.ruinedAt,storage.number)
+      name(storage.kind, true, view,1,!!storage.ruinedAt,buildingOrdinal(storage))
       add(this.goodsYard(storage, definition, plot.x, plot.y))
     }
 
@@ -1084,7 +1085,7 @@ export class VillageWorld {
       const view = this.siteView(site, plot.x, plot.y)
       if(site.ruinedAt)view.alpha=.3
       add(view)
-      name(site.kind, false, view, 0.7,!!site.ruinedAt,site.number)
+      name(site.kind, false, view, 0.7,!!site.ruinedAt,buildingOrdinal(site))
     }
 
     const covered = new Set<string>()

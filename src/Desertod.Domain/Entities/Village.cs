@@ -14,6 +14,7 @@ namespace Desertod.Domain.Entities;
 
 public sealed class Village
 {
+    public List<BuildingDisplayNumber> BuildingDisplayNumbers { get; set; } = [];
     public RaidAdaptation RaidAdaptation { get; set; } = new();
     public List<SavedRaidPreset> RaidPresets { get; set; } = [];
     public const int NameMinimumLength = 3;

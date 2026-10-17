@@ -203,6 +203,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             });
             village.OwnsMany(v => v.Forecasts, forecast => forecast.ToJson());
             village.OwnsMany(v => v.Fortifications, wall => { wall.ToJson(); wall.Ignore(f=>f.Blocks); });
+            village.OwnsMany(v=>v.BuildingDisplayNumbers,n=>n.ToJson());
             village.OwnsOne(v=>v.RaidAdaptation,a=>{a.ToJson();a.OwnsMany(x=>x.Recent);a.OwnsMany(x=>x.Participation);});
             village.OwnsMany(v=>v.RaidPresets,preset=>{preset.ToJson();preset.OwnsOne(p=>p.Settings,settings=>MapRaidSettings(settings));});
             village.OwnsMany(v => v.Raids, raid =>

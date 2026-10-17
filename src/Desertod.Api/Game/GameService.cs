@@ -1454,6 +1454,7 @@ public sealed partial class GameService(
             Battles = (await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==village.Id && (b.FinishedAt==null || b.FinishedAt>=now.AddSeconds(-15))).OrderBy(b=>b.StartsAt).ToListAsync(cancellationToken)).Select(b=>b.ToBattleDto()).ToArray(),
             Fortifications = village.Fortifications,
             KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),
+            NextKingdomArea=KingdomRules.Level(village)<3?KingdomRules.AreaForLevel(Math.Max(1,KingdomRules.Level(village))+1):null,
             CivicOrders = village.CivicOrders,
             DefeatedAt=village.DefeatedAt,
             Relocations=village.Structures.Where(h=>ShelterRules.Beds(h)>0).Select(h=>new RelocationDto(h.PlotId,

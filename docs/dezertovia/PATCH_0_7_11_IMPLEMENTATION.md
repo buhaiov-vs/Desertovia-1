@@ -47,15 +47,15 @@
 | RESCUE-04 | Два спасателя/отмена/перезапуск/ранение помощника/выздоровление в пути; нет вечной брони, offline не отменяет серверную работу | BRANCH 8d94003 |
 | RESCUE-05 | Царь как существующий actor; внешнее лечение только через его источник, не подменять paid-duel таймер | BRANCH 8d94003 |
 | RESCUE-UI | Попросить помощь/маркер/короткое сообщение без спама, отнести/статус спасателя; улица видна, палата внутри, реальное время | BRANCH 8d94003 |
-| RAID-EDIT | БОСС-ФАЙТ (1–2, до 3), Смешанный бой, Орда (до 48 одновременно); редактировать и сохранять собственные пресеты | TODO |
-| RAID-CONFIG | Виды/число/доли/HP/урон игрокам и имуществу/скорость/сторона/волны/предупреждение/таймер/отступление/кража/босс-фаза и удар | TODO |
-| RAID-PREVIEW | Безопасный preview без волн/списаний/модели, auto и owner-only manual override, явная оценка риска, единичный запуск | TODO |
-| RAID-PERSIST | Полная неизменная конфигурация/инициатор/история; старый JSON совместим, отмена всех волн, эксперименты не искажают адаптацию | TODO |
-| RAID-OUTCOME | Отделить ущерб от разгрома; 50 зданию/100 стенам не означают тяжёлое поражение и запрет на 2ч | TODO |
-| RAID-ADAPT | HP/броня/реальная оборона; после двух лёгких +10%, после тяжёлого −15–20%, ориентир 75–150%, потолок по развитию | TODO |
-| RAID-LOSS | Масштабируемый ущерб (начальный ориентир 180–360), забор/кражи/износ, конечное восстановление, живой носитель и однократные списания | TODO |
-| RAID-TACTICS | Роли/обходы/проломы/2 узких входа/цели; до 4мин обычный/6мин осада, различать отступление; без model calls на тике | TODO |
-| RAID-REPORT | Фактические участники/HP/лечение/ранения/урон/кражи/стрелы/износ и причина следующей сложности; Propose/одобрение сохраняются | TODO |
+| RAID-EDIT | БОСС-ФАЙТ (1–2, до 3), Смешанный бой, Орда (до 48 одновременно); редактировать и сохранять собственные пресеты | BRANCH bc02048 |
+| RAID-CONFIG | Виды/число/доли/HP/урон игрокам и имуществу/скорость/сторона/волны/предупреждение/таймер/отступление/кража/босс-фаза и удар | BRANCH bc02048 |
+| RAID-PREVIEW | Безопасный preview без волн/списаний/модели, auto и owner-only manual override, явная оценка риска, единичный запуск | BRANCH bc02048 |
+| RAID-PERSIST | Полная неизменная конфигурация/инициатор/история; старый JSON совместим, отмена всех волн, эксперименты не искажают адаптацию | BRANCH bc02048 |
+| RAID-OUTCOME | Отделить ущерб от разгрома; 50 зданию/100 стенам не означают тяжёлое поражение и запрет на 2ч | BRANCH bc02048 |
+| RAID-ADAPT | HP/броня/реальная оборона; после двух лёгких +10%, после тяжёлого −15–20%, ориентир 75–150%, потолок по развитию | BRANCH bc02048 |
+| RAID-LOSS | Масштабируемый ущерб (начальный ориентир 180–360), забор/кражи/износ, конечное восстановление, живой носитель и однократные списания | BRANCH bc02048 |
+| RAID-TACTICS | Роли/обходы/проломы/2 узких входа/цели; до 4мин обычный/6мин осада, различать отступление; без model calls на тике | BRANCH bc02048 |
+| RAID-REPORT | Фактические участники/HP/лечение/ранения/урон/кражи/стрелы/износ и причина следующей сложности; Propose/одобрение сохраняются | BRANCH bc02048 |
 | NUM-01 | Стабильные видимые номера по типу, единственный без номера; старый глобальный ID/история/ремонт/заявки не ломаются | TODO |
 | FOOD-01/02 | Больше полезного расхода после замеров, один голод, ноша/личное/общественное по правилам; ручная еда и переключения без reload | TODO |
 | WALL-01 | Дерево→брёвна→камень, параметры/работа/ремонт/ворота/навигация; не бесплатное исцеление старой стены, железо позже | TODO |
@@ -215,3 +215,32 @@ reviewable PR, не заменять tested source текущим main. На с�
   New editor lint warnings fixed (internal preset function, effect dependencies).
   Draft fence source copied to art/generated/fence-0-7-11 with explicit rejection
   of its atlas geometry; NOT integrated. Next implementation packet NUM/FOOD/SPACE.
+
+### NUM / FOOD / SPACE checkpoint
+
+- BuildingLabels.cs separate permanent registry keyed by unchanged global Number.
+  Per-family1..N; unique type hides suffix via displayNumber0. Demolished registry
+  entries retained; upgrade keeps identity; WoodPile/Woodyard etc share lineage.
+  Village DTO/map/cards/lists/storage/Telegram use displayNumber; oldNumber intact.
+- Additive migration20261017104253_BuildingDisplayNumbers0711 (32 total) has SQL
+  backfill into NEW column only; never rewrites old JSON/Number/Sequence/resources.
+  Actual PostgreSQL downgrade/re-upgrade test passed; new allocation continues both
+  sequences and preserves owners/goods. Bot civic_notifications supports optional
+  displayNumber0 and legacy fallback;14 focused tests PASS (3 new).
+- Food1/3 finished cycles vs1/5; real CycleEngine15/30/36-cycle checks cost5/10/12,
+  no idle/offline repeat. Existing origin/cost-basis/medical/manual meal guards kept.
+  UI text no longer claims the existing Eat button is unnecessary; sources correct.
+- Hut4/6/8 beds, Longhouse12/24/36, specialized upgraded stores120/resource,
+  GreatGranary240. Hut upgrades now real staged/costed operations. Existing damage,
+  coordinates, supplies/owners/housing assignments retained. NextKingdomArea shown
+  using existing castle expansion, no moving walls or doubling full map.
+- Shared UI upgrade predicate prevents unavailable actions in cards/private wallet.
+  FullDomain492 PASS; API19 focused +3 initial including migration PASS;
+  browser20 phone/desktop PASS; fullTS PASS. Initial fullDomain485/488 had3 old
+  expectations (Longhouse20, Granary100, Hutunsupported); changed those tests to
+  new intended capacities/availability; retained unsupported Library/maxHut cases.
+- Logs /tmp/patch0711-label-food-domain-all-final.log, label-food-api-final.log,
+  label-api.log, label-food-browser.log, label-ui-ts2.log, label-bot.log.
+- Detailed choices/calibration: NUMBERING_FOOD_SPACE_0_7_11.md.
+  Next: WALL progression/repair/navigation + accepted seamless day/night art;
+  then XP/KNOW/COOK and full regression/package. Art draft still NOT accepted.

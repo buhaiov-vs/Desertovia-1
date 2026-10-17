@@ -2188,6 +2188,32 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsMany("Desertod.Domain.Buildings.BuildingDisplayNumber", "BuildingDisplayNumbers", b1 =>
+                        {
+                            b1.Property<Guid>("VillageId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<string>("Family")
+                                .IsRequired();
+
+                            b1.Property<int>("GlobalNumber");
+
+                            b1.Property<int>("Value");
+
+                            b1.HasKey("VillageId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Villages");
+
+                            b1
+                                .ToJson("BuildingDisplayNumbers")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VillageId");
+                        });
+
                     b.OwnsMany("Desertod.Domain.Buildings.CivicOrder", "CivicOrders", b1 =>
                         {
                             b1.Property<Guid>("VillageId");
@@ -3323,6 +3349,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Navigation("Ravine");
                         });
+
+                    b.Navigation("BuildingDisplayNumbers");
 
                     b.Navigation("CivicOrders");
 

@@ -1630,13 +1630,24 @@
         "browser_desktop_phone": 4,
         "typescript": "pass",
         "state": "branch_tested_not_installed"
+      },
+      {
+        "packet": "building_type_numbers_food_and_space",
+        "domain_full": 492,
+        "api_focused": 19,
+        "api_initial_including_migration": 3,
+        "browser_desktop_phone": 20,
+        "bot_focused": 14,
+        "typescript": "pass",
+        "state": "branch_tested_not_installed"
       }
     ],
     "completed_packets": [
       "owner_feedback",
       "social_rescue",
-      "raid_editor_and_adaptive_difficulty"
+      "raid_editor_and_adaptive_difficulty",
+      "building_type_numbers_food_and_space"
     ],
-    "next_packet": "building_type_numbers_food_and_space"
+    "next_packet": "fortification_progression_and_day_night_art"
   }
 }

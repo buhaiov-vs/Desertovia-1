@@ -485,6 +485,7 @@ export interface FieldBed {
   /** Plot of the farm. */
   plotId: string
   number?: number
+  displayNumber?: number
   index: number
   /** Null while the bed is empty. */
   crop: CropKind | null
@@ -798,6 +799,7 @@ export interface Site {
   kind: BuildingKind
   plotId: string
   number?: number
+  displayNumber?: number
   stage: number
   /** 0 to 1. */
   progress: number
@@ -811,6 +813,7 @@ export interface Structure {
   kind: BuildingKind
   plotId: string
   number?: number
+  displayNumber?: number
   /** Harm done by raiders, 0 to `rules.maximumDamage`. */
   damage: number
 }
@@ -829,6 +832,7 @@ export interface Storage {
   kind: StorageKind
   plotId: string
   number?: number
+  displayNumber?: number
   goods: ResourceAmount[]
   slots: StorageSlot[]
   /** Harm done by raiders, 0 to `rules.maximumDamage`. */
@@ -957,6 +961,7 @@ export interface VillageState {
   battles?: RaidBattle[]
   fortifications?: Fortification[]
   kingdomArea?: TileArea
+  nextKingdomArea?:{x:number;y:number;width:number;height:number}|null
   castleLevel?: number
   civicOrders?: CivicOrder[]
   housing?: Housing[]

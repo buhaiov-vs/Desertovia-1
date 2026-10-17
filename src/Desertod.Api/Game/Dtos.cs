@@ -25,6 +25,7 @@ public sealed record StorageSlotDto(ResourceKind Kind, double Fill);
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
 public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<ResourceAmount> Goods, IReadOnlyList<StorageSlotDto> Slots, int Damage)
 {
+    public int DisplayNumber { get; init; }
     public int Number { get; init; }
     public Guid? OwnerAccountId { get; init; }
     public DateTimeOffset? RuinedAt { get; init; }
@@ -33,7 +34,7 @@ public sealed record StorageDto(StorageKind Kind, string PlotId, IReadOnlyList<R
 }
 
 /// <param name="Damage">Harm done by raiders, 0 to <see cref="CombatRules.MaximumDamage"/>.</param>
-public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1) { public int Number { get; init; } public Guid? OwnerAccountId { get; init; } public DateTimeOffset? RuinedAt { get; init; } }
+public sealed record StructureDto(BuildingKind Kind, string PlotId, int Damage, int Level = 1) { public int Number { get; init; } public int DisplayNumber { get; init; } public Guid? OwnerAccountId { get; init; } public DateTimeOffset? RuinedAt { get; init; } }
 
 /// <summary>An attack on the way, or a fought one kept for the record.</summary>
 /// <param name="AnnouncedAt">Players see an attack on the way from then on; clients hide it before.</param>
@@ -67,6 +68,7 @@ public sealed record SiteDto(BuildingKind Kind, string PlotId, int Stage, double
 {
     public int Damage { get; init; }
     public DateTimeOffset? RuinedAt { get; init; }
+    public int DisplayNumber { get; init; }
     public int Number { get; init; }
     public Guid? OwnerAccountId { get; init; }
     public Guid? PlacedByAccountId { get; init; }
@@ -197,6 +199,7 @@ public sealed record VillageStateDto(
 {
     public TileArea KingdomArea { get; init; } = WorldMap.BuildArea;
     public int CastleLevel { get; init; }
+    public TileArea? NextKingdomArea { get; init; }
     public DateTimeOffset? DefeatedAt { get; init; }
     public IReadOnlyList<RelocationDto> Relocations { get; init; } = [];
     public IReadOnlyList<CivicOrder> CivicOrders { get; init; } = [];
@@ -483,7 +486,10 @@ public static class DtoMapper
         TsarDto tsar,
         IReadOnlyList<Trip> citizenTrips,
         DungeonRun? dungeon,
-        DateTimeOffset now) => new(
+        DateTimeOffset now)
+    {
+        var labels=BuildingLabels.Visible(village);
+        return new(
         village.Id,
         village.Slug,
         village.Name,
@@ -502,10 +508,10 @@ public static class DtoMapper
                 s.PlotId,
                 (s.OwnerAccountId is null ? s.Goods : []).OrderBy(g => g.Kind).Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
                 s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList(),
-                s.Damage) { Number = s.Number, OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt })
+                s.Damage) { Number = s.Number, DisplayNumber=labels.GetValueOrDefault(s.Number), OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt })
             .ToList(),
-        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level) { Number = s.Number, OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt }).ToList(),
-        village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount, context)).ToList(),
+        village.Structures.Select(s => new StructureDto(s.Kind, s.PlotId, s.Damage, s.Level) { Number = s.Number, DisplayNumber=labels.GetValueOrDefault(s.Number), OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt }).ToList(),
+        village.Sites.OrderBy(s => s.PlacedAt).Select(s => s.ToDto(context.RecentCitizenCount, context) with {DisplayNumber=labels.GetValueOrDefault(s.Number)}).ToList(),
         context.Project is { } project ? project.ToDto(context) : null,
         completedProjects,
         quests
@@ -549,6 +555,7 @@ public static class DtoMapper
         village.Raids.OrderBy(r => r.StrikesAt).Select(r => r.ToDto()).ToList(),
         village.Wilds?.ToDto(),
         dungeon?.ToDto());
+    }
 
     public static WildsDto ToDto(this Wilds wilds) => new(
         wilds.Ravine.Select(s => new RavineSpanDto(s.X, s.Top, s.Height)).ToList(),

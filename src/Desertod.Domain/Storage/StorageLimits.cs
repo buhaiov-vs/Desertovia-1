@@ -8,9 +8,9 @@ public static class StorageLimits
     {
         StorageKind.Heap => 10,
         StorageKind.WoodPile or StorageKind.StonePile or StorageKind.DryingRack => 30,
-        StorageKind.Woodyard or StorageKind.StoneYard or StorageKind.Granary => 60,
+        StorageKind.Woodyard or StorageKind.StoneYard or StorageKind.Granary => 120,
         StorageKind.Treasury => 100,
-        StorageKind.GreatGranary => 100,
+        StorageKind.GreatGranary => 240,
         _ => 20,
     };
     public static int? Total(StorageKind kind) => kind switch

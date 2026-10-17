@@ -69,7 +69,7 @@ public static class BuildingOperations
         var structure = village.Structures.SingleOrDefault(s=>s.PlotId==plot);
         var storage = village.Storages.SingleOrDefault(s=>s.PlotId==plot);
         if(operation=="upgrade" && (structure?.RuinedAt is not null||storage?.RuinedAt is not null))throw new GameRuleException("building.ruined","Restore the ruins first.");
-        if (operation == "upgrade" && !(structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse, Level: < 3 }
+        if (operation == "upgrade" && !(structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse or BuildingKind.Hut, Level: < 3 }
             || storage is not null && StorageLimits.Upgrade(storage.Kind) is not null))
             throw UpgradeUnavailable(structure, storage);
         if (actor != village.OwnerAccountId) RequireRequestCapacity(village, privateOwner);
@@ -81,7 +81,7 @@ public static class BuildingOperations
     {
         if (structure is {Kind: BuildingKind.Hospital, Level: < 3})
             return new("building.hospitalUpgrade", "The Tsar can upgrade the hospital from its hospital card.");
-        var atMaximum = structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse or BuildingKind.Hospital, Level: >= 3 }
+        var atMaximum = structure is { Kind: BuildingKind.Castle or BuildingKind.Longhouse or BuildingKind.Hut or BuildingKind.Hospital, Level: >= 3 }
             || storage is { Kind: StorageKind.Woodyard or StorageKind.StoneYard or StorageKind.Granary };
         return atMaximum
             ? new("building.maxLevel", "The building has reached its maximum upgrade level.")
@@ -146,7 +146,7 @@ public static class BuildingOperations
         else if(structure is {Kind:BuildingKind.Castle,Level:<3})
         {site.Operation="castle-upgrade";site.TargetLevel=structure.Level+1;site.Scale=Math.Pow(2,structure.Level);}
         else if(storage is not null&&StorageLimits.Upgrade(storage.Kind) is not null) site.Operation="storage-upgrade";
-        else if(structure is {Kind:BuildingKind.Longhouse,Level:<3})
+        else if(structure is {Kind:BuildingKind.Longhouse or BuildingKind.Hut,Level:<3})
         {site.Operation="housing-upgrade";site.TargetLevel=structure.Level+1;}
         else throw UpgradeUnavailable(structure, storage);
         village.Sites.Add(site);order.Status="working";order.ApprovedAt=now;

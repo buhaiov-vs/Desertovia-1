@@ -40,3 +40,43 @@ export function raidSettingErrors(s: RaidSettings, ru: boolean): Partial<Record<
     errors.species=ru?`Состав видов: сейчас ${total}%, нужно 100%. Нажми «Поровну» или измени доли.`:`Species total: ${total}%; 100% required. Choose “Equal shares” or edit the shares.`
   return errors
 }
+
+export function raidSliderText(key: keyof RaidSettings, value: number, ru: boolean): string {
+  const n = (x: number) => new Intl.NumberFormat(ru?'ru-RU':'en-US',{maximumFractionDigits:2}).format(x)
+  if (key.endsWith('Multiplier')) return value===1 ? (ru?'×1 — обычное значение':'×1 — normal') : `×${n(value)} — ${n(value*100)}% ${ru?'от обычного':'of normal'}`
+  if (key.endsWith('Seconds')) return value>=60 ? `${Math.floor(value/60)} ${ru?'мин':'min'}${value%60?` ${value%60} ${ru?'с':'s'}`:''}` : `${value} ${ru?'с':'s'}`
+  if (key==='retreatSurvivorFraction') return value===0 ? (ru?'Не отступать по численности':'No survivor-count retreat') : `${n(value*100)}% ${ru?'врагов осталось':'enemies remaining'}`
+  if (key==='theftFraction') return `${n(value*100)}% ${ru?'запаса ресурса':'of resource stock'}`
+  if (key.endsWith('Percent')) return `${n(value)}%`
+  if (key==='count') return `${ru?'До':'Up to'} ${n(value)} ${ru?'врагов в волне':'enemies per wave'}`
+  if (key==='waves') return `${ru?'Волн':'Waves'}: ${n(value)}`
+  if (key==='lootLimit') return `${n(value)} ${ru?'ед. ресурсов':'resource units'}`
+  return `${n(value)} ${ru?'ед. урона':'damage points'}`
+}
+
+export function raidSliderHint(key: keyof RaidSettings, ru: boolean): string {
+  const hints: Partial<Record<keyof RaidSettings,[string,string]>> = {
+    count:['В авто это максимум: реальное число покажет предпросмотр. В ручном режиме — точное число.','Automatic mode uses this maximum; preview shows the real count. Manual mode uses this exact count.'],
+    budgetMultiplier:['Общая сила набега относительно состояния деревни. Авто распределит её между числом и мощью врагов.','Total raid strength relative to the village. Automatic mode distributes it between count and enemy power.'],
+    healthMultiplier:['Запас здоровья врагов. Например, ×2 делает их вдвое живучее.','Enemy health. For example, ×2 doubles their health.'],
+    attackMultiplier:['Урон врагов по игрокам. Например, ×2 удваивает урон обычных ударов.','Enemy damage against players. For example, ×2 doubles ordinary hit damage.'],
+    propertyMultiplier:['Урон врагов постройкам и укреплениям. Не меняет здоровье игроков.','Enemy damage against buildings and fortifications. Does not change player health.'],
+    speedMultiplier:['Скорость передвижения врагов. ×0,5 — вдвое медленнее, ×2 — вдвое быстрее.','Enemy movement speed. ×0.5 is half speed; ×2 is double speed.'],
+    weakPercent:['Доля слабых врагов. Остаток после слабых и сильных займут обычные.','Share of weak enemies. Regular enemies fill the remainder after weak and strong.'],
+    elitePercent:['Доля сильных врагов. Вместе со слабыми не больше 100%.','Share of strong enemies. Weak and strong shares together cannot exceed 100%.'],
+    waves:['Сколько групп придёт одна за другой.','How many successive groups will arrive.'],
+    warningSeconds:['Время на подготовку до прихода первой волны.','Preparation time before the first wave arrives.'],
+    waveIntervalSeconds:['Промежуток между объявленным приходом соседних волн.','Time between the scheduled arrivals of successive waves.'],
+    durationSeconds:['Предельное время боя одной волны.','Maximum battle time for one wave.'],
+    retreatSurvivorFraction:['При этой доле оставшихся врагов начинается отступление. Ноль отключает этот порог.','Retreat begins at this remaining-enemy share. Zero disables this threshold.'],
+    propertyLimit:['Максимальный суммарный урон зданиям за волну. Ноль запрещает этот урон.','Maximum total building damage per wave. Zero prevents this damage.'],
+    wallLimit:['Максимальный суммарный урон укреплениям за волну.','Maximum total fortification damage per wave.'],
+    lootLimit:['Общий потолок украденных ресурсов за волну. Ноль отключает кражи.','Total stolen-resource cap per wave. Zero disables theft.'],
+    theftFraction:['Доля выбранного ресурса на складе при краже. Применяется и общий предел краж.','Share of a selected stored resource stolen. The total theft cap also applies.'],
+    bossWarningSeconds:['Сколько видно предупреждение перед тяжёлым ударом босса.','Warning time before the boss heavy strike.'],
+    bossSecondWarningSeconds:['Предупреждение удара во второй фазе босса.','Strike warning time in the boss second phase.'],
+    bossCooldownSeconds:['Пауза между тяжёлыми ударами босса.','Pause between boss heavy strikes.'],
+    bossSecondCooldownSeconds:['Пауза между ударами во второй фазе босса.','Pause between strikes in the boss second phase.'],
+  }
+  return hints[key]?.[ru?0:1]??''
+}

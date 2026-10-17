@@ -1768,8 +1768,9 @@
       "passed": 10,
       "desktop": 5,
       "phone": 5,
-      "duration_seconds": 31.2,
+      "duration": "1.0min",
       "retries": 0
-    }
+    },
+    "controls": "native_sliders_with_units_and_per_field_explanations"
   }
 }

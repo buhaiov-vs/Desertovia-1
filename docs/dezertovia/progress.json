@@ -1450,7 +1450,7 @@
   "monster_behavior": {
     "decision": "D-091",
     "recorded_on": "2026-10-17",
-    "state": "implemented_verification_in_progress",
+    "state": "implemented_locally_verified_exact_ci_pending",
     "plan": "MONSTER_BEHAVIOR_INTEGRATION.md",
     "branch": "feat/monster-behavior",
     "live_changed": false,
@@ -1463,13 +1463,33 @@
     "death_backpack_losses": "design_only_not_enabled",
     "deployment": "not_requested_for_new_package",
     "local_checks": {
-      "domain_previous_full": 460,
+      "domain_full_final": 460,
       "api_full": 255,
+      "api_regression_final": 32,
       "browser_desktop_phone": 22,
       "frontend_lint_build": "pass",
-      "final_domain": "running",
-      "final_api_regressions": "pending"
+      "database_model_and_legacy_json": "pass"
     },
-    "wall_damage_limit": 300
+    "wall_damage_limit": 300,
+    "pull_request": "https://github.com/desertod666/Desertovia/pull/53",
+    "full_raid_120s_timings_ms": {
+      "units": [
+        16,
+        32,
+        48
+      ],
+      "p95": [
+        8.8,
+        15.7,
+        29.4
+      ],
+      "maximum": [
+        40.9,
+        26.2,
+        38.1
+      ],
+      "production_fps_claim": false
+    },
+    "exact_ci": "pending_on_final_head"
   }
 }

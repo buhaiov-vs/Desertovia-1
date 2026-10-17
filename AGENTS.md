@@ -2,6 +2,8 @@
 
 Owner17Oct authorized detailed plan and integration; property/supplies are the
 primary raid objective. Read docs/dezertovia/MONSTER_BEHAVIOR_INTEGRATION.md.
+PR53 draft; local460Domain/255API+32regression/22browser/lint/build PASS.
+Exact full CI pending on final head; no READY claim or installation.
 Branch feat/monster-behavior: isolated Nez UtilityAI + per-battle RVO2-CS,
 property selection/crowd costs, existing swarm/elite/mixed plus bounded1–3boss,
 telegraphed property strike/phase, director options/fresh budget, JSON migration.

@@ -95,9 +95,12 @@ public static class RaidBalance
             var spawn=chosen.Sector=="west"?new TilePoint(chosen.Entry.X-row,chosen.Entry.Y+offset)
                 :new TilePoint(chosen.Entry.X+offset,chosen.Entry.Y+(chosen.Sector=="north"?-row:row));
             var p=nav.NearestFree(spawn,p=>nav.IsOutside(p,chosen.Sector) && battle.Units.All(u=>u.Position.DistanceTo(p)>=.7));
+            // Цена босса расходуется прежде всего на живучесть, а не на мгновенное убийство игрока.
+            var healthFactor=variant=="boss"?factor*factor*.75:factor;
+            var attackFactor=variant=="boss"?Factor("strong"):factor;
             battle.Units.Add(new(){Variant=variant,X=p.X,Y=p.Y,SpawnX=p.X,SpawnY=p.Y,
-                Health=(12+baseCost*2)*factor,MaximumHealth=(12+baseCost*2)*factor,
-                Attack=(1.5+baseCost*.4)*factor,Speed=raid.Enemy==EnemyKind.Zombie?.55:.75,
+                Health=(12+baseCost*2)*healthFactor,MaximumHealth=(12+baseCost*2)*healthFactor,
+                Attack=(1.5+baseCost*.4)*attackFactor,Speed=raid.Enemy==EnemyKind.Zombie?.55:.75,
                 NextAttackAt=raid.StrikesAt.AddSeconds(2+i%3)});
             remaining-=cost;
         }

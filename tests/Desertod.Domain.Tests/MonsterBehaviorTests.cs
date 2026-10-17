@@ -55,6 +55,11 @@ public sealed class MonsterBehaviorTests(ITestOutputHelper output)
         Assert.Equal(RaidBalance.Count(raid.Enemy,composition,b.ThreatBudget),b.Units.Count);
         Assert.True(b.Units.Sum(u=>EnemyCatalog.Get(raid.Enemy).Power*Math.Pow(RaidBalance.Factor(u.Variant),2))<=b.ThreatBudget+.001);
         if(composition=="boss"){Assert.InRange(b.Units.Count,1,3);Assert.All(b.Units,u=>Assert.Equal("boss",u.Variant));}
+        if(composition=="boss")
+        {
+            Assert.All(b.Units,u=>Assert.True(u.MaximumHealth>100));
+            Assert.All(b.Units,u=>Assert.Equal((1.5+EnemyCatalog.Get(raid.Enemy).Power*.4)*RaidBalance.Factor("strong"),u.Attack));
+        }
         var before=b.Units.Select(u=>(u.Id,u.Health,u.X,u.Y)).ToArray();
         Assert.False(RaidSimulation.Tick(v,raid,b,citizens,online,Now.AddSeconds(1)));
         Assert.Equal(before,b.Units.Select(u=>(u.Id,u.Health,u.X,u.Y)).ToArray());

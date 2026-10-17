@@ -1,3 +1,18 @@
+# D-096: 0.7.11 adds social rescue and owner raid editor, still PLAN
+
+Read `docs/dezertovia/RESCUE_AND_RAID_CONTROLS_0_7_11.md` and the full
+`NEXT_PATCH_PLAN.md`. Owner requests rescue at any time before recovery, without
+an eligibility timeout. Remove automatic 5-minute admission; only physical arrival
+in a working hospital grants a one-time reduction of remaining wound time.
+Initial proposal: 25% remaining time and +2 renown for a useful completed rescue;
+no permanent dependence on other players, no repeat reward/healing or paid-currency
+addition. Handle the tsar and external recovery without inventing authority.
+Owner gets editable BOSS / mixed / swarm presets, auto and manual controls,
+preview/saved configurations, explicit owner-only above-recommended settings;
+director retains bounded Propose. Max 48 simultaneous units; freeze announced
+settings; cancel all waves of an event. This supersedes older rescue auto-admission
+and restricted start controls. Other D-093–095 scope remains. Docs only, no deploy.
+
 # D-095: next patch target 0.7.11; retain 0.7 series through 0.7.99
 
 Owner explicitly selected 0.7.11 for the next patch. Then count 0.7.12, 0.7.13,

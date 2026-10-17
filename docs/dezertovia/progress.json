@@ -1569,5 +1569,26 @@
     "plan": "NEXT_PATCH_PLAN.md",
     "state": "planned_not_implemented",
     "runtime_changed": false
+  },
+  "rescue_and_raid_editor": {
+    "decision": "D-096",
+    "target_version": "0.7.11",
+    "state": "planned_not_implemented",
+    "plan": "RESCUE_AND_RAID_CONTROLS_0_7_11.md",
+    "rescue_eligibility_timeout": false,
+    "remove_automatic_admission_after_five_minutes": true,
+    "hospital_remaining_time_factor_proposal": 0.25,
+    "rescue_renown_proposal": 2,
+    "repeat_reward_or_healing": false,
+    "presets": [
+      "boss",
+      "mixed",
+      "swarm"
+    ],
+    "presets_editable": true,
+    "owner_manual_mode": true,
+    "director_owner_override": false,
+    "maximum_simultaneous_units": 48,
+    "runtime_changed": false
   }
 }

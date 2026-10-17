@@ -1519,7 +1519,7 @@
     "plan": "RAID_DIFFICULTY_NEXT_PATCH.md",
     "live_version": "0.7.9",
     "live_changed": false,
-    "version_assigned": false,
+    "version_assigned": true,
     "deployment_scheduled": false,
     "implementation_order": [
       "outcome_cooldown_reporting",
@@ -1530,7 +1530,8 @@
     "numbers": "initial_targets_require_simulation",
     "death_backpack_losses": "deferred_not_in_next_patch",
     "director_mode": "Propose",
-    "audit_run": 39020305054
+    "audit_run": 39020305054,
+    "target_version": "0.7.11"
   },
   "next_patch_feedback": {
     "decision": "D-094",
@@ -1554,6 +1555,19 @@
     "runtime_changed": false,
     "includes_previous_scope": "D-093",
     "owner_capture_bug": "on_private_routes_owner_to_helper_before_feedback",
-    "bot_feedback_statuses_changed": false
+    "bot_feedback_statuses_changed": false,
+    "target_version": "0.7.11"
+  },
+  "next_patch_version_policy": {
+    "decision": "D-095",
+    "next_planned_version": "0.7.11",
+    "series": "0.7",
+    "increment": "third_integer_component",
+    "continue_through": "0.7.99",
+    "automatic_minor_or_major_bump": false,
+    "after_99": "not_selected",
+    "plan": "NEXT_PATCH_PLAN.md",
+    "state": "planned_not_implemented",
+    "runtime_changed": false
   }
 }

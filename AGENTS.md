@@ -1,3 +1,12 @@
+# D-095: next patch target 0.7.11; retain 0.7 series through 0.7.99
+
+Owner explicitly selected 0.7.11 for the next patch. Then count 0.7.12, 0.7.13,
+etc. through 0.7.99; do not jump to 0.8 or 1.0 for small changes. Compare integer
+version components; no policy beyond 0.7.99 selected yet. Full retained scope:
+`docs/dezertovia/NEXT_PATCH_PLAN.md`, including D-093 difficulty and D-094 feedback.
+This is planning/version policy only; no runtime/version-file/deploy changes,
+no installation date. Historical release receipts must not be rewritten.
+
 # D-094: next patch includes owner and viewer feedback, still PLAN
 
 Read `docs/dezertovia/NEXT_PATCH_PLAN.md` and `FEEDBACK_REVIEW_2026_10_17.md`.

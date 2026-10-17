@@ -1590,5 +1590,21 @@
     "director_owner_override": false,
     "maximum_simultaneous_units": 48,
     "runtime_changed": false
+  },
+  "patch_0_7_11_implementation": {
+    "decision": "D-097",
+    "state": "in_progress",
+    "branch": "feat/patch-0-7-11",
+    "journal": "PATCH_0_7_11_IMPLEMENTATION.md",
+    "owner_art_contract": [
+      "matching_pixel_style",
+      "outline",
+      "palette",
+      "day_and_night",
+      "consistent_tile_joins"
+    ],
+    "runtime_changed": false,
+    "deployment_date": null,
+    "checks": []
   }
 }

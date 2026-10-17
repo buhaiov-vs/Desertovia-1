@@ -38,8 +38,8 @@
 
 | Код | Что выполнить | Статус на начало D-097 |
 | --- | --- | --- |
-| FB-01 | Настоящий capture просьб владельца до Helper.answer, номер только после commit, источник/проект/версия, idempotent Telegram message, обычный разговор/настройки не поглощаются | TODO |
-| FB-02 | Неполный «баг:» требует описания; не обещать запись без содержания; не выдумывать отсутствующий screenshot | TODO |
+| FB-01 | Настоящий capture просьб владельца до Helper.answer, номер только после commit, источник/проект/версия, idempotent Telegram message, обычный разговор/настройки не поглощаются | BRANCH: 894 bot PASS, 40 focused PASS |
+| FB-02 | Неполный «баг:» требует описания; не обещать запись без содержания; не выдумывать отсутствующий screenshot | BRANCH: empty-prefix clarification tested; media remains existing |
 | MED-01 | Убрать RescueSweep auto-Admit через 5 минут; конечное уличное самолечение | TODO |
 | RESCUE-01 | Реальный путь от текущей позиции, подбор и переноска в доступную больницу без 5-минутного CraftLength и без окна допуска после ранения | TODO |
 | RESCUE-02 | При приёме однократно остаётся 25% оставшегося срока; ранее прошедшее время сохраняется, не удлинять уличный baseline | TODO |
@@ -124,3 +124,38 @@ reviewable PR, не заменять tested source текущим main. На с�
 - D-097: прочитаны актуальные инструкции; созданы обе feat/patch-0-7-11.
   Реализация начата с фиксации спецификации/графики/контекста. Проверки кода
   ещё не выполнены. LIVE по последнему verified receipt остаётся 0.7.9.
+
+- FB-01/02: app/feedback/helper/db, SQLite origin receipt атомарно с отзывом,
+  forget удаляет receipt. Восемь новых тестов; 40 адресных PASS. Первый полный
+  прогон 893/894 из-за старой фикстуры с одинаковым message_id для разных текстов;
+  исправлена уникальность сообщений, повторный полный прогон 894 PASS (145s).
+  Сообщения/база рабочего бота не менялись.
+- MED/RESCUE: серверная первая версия в работе; 11 Domain rescue/hospital PASS.
+  Новые поля ещё требуют миграции; UI/царь/просьба помощи и полные проверки
+  не закончены. Не выдавать частичный пакет за готовую 0.7.11.
+
+- Social rescue packet implemented in branch: no automatic admission; saved
+  physical A* route with real bridge/gates, pickup/arrival, 75% remaining-time
+  cut once, +2 renown for eligible enemy wounds, zero reward for admin wounds.
+  Paid work resumes once; helper injury drops patient at current battle position.
+  Tsar uses existing account/village fields, no persisted extra Citizen.
+  Help request is a rate-limited in-game chat action, not Telegram messaging.
+  Frontend shows actual rescue route/status and hides admitted patients indoors.
+- Additive migration 20261017100421_SocialRescue0711: nullable rescue JSON/dates
+  and false-default reward flags, no profile/data rewrite. 28 migrations now.
+- Checks: full Domain first pass 466 PASS; latest focused rescue/hospital/live
+  raid 31 PASS including 3 additional cases; API civic/hospital 13 PASS;
+  browser rescue/patients 8 PASS across desktop/phone; frontend build and TS PASS.
+  First browser attempt did not run cases because Chromium was missing; installed
+  the matching Chromium and the repeated 8-case suite passed. Full bot 894 PASS.
+- Browser test DB: local Docker patch0711-e2e-postgres, localhost:55471,
+  database desertod_e2e, dev credentials already in playwright config. Never live.
+  Test logs /tmp/patch0711-rescue-*.log, /tmp/patch0711-domain-rescue.log,
+  /tmp/patch0711-bot-tests-final.log. Node modules symlink to monster-behavior/web.
+- Old art/generated/project-palisade-01 README explicitly rejects those draft
+  tiles (haze/seams/scale); DO NOT silently integrate them as the new wall art.
+  Inspected current tiny-town, hut preview and night buildings-a atlas as refs.
+- Next packet: RaidSettings.cs skeleton started but NOT yet wired/tested.
+  It stays separate from the social-rescue commit. Finish preset planner/API/UI,
+  immutable per-battle settings/individual species and full adaptive block before
+  calling 0.7.11 ready. Remaining NUM/FOOD/WALL/SPACE/XP/KNOW/COOK/art still TODO.

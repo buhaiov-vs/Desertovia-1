@@ -63,6 +63,8 @@ public static class GameEndpoints
             game.CivicDecisionAsync(slug, user.RequireAccountId(), id, request, ct));
         player.MapPost("/villages/{slug}/rescue/{patientId:guid}", (string slug,Guid patientId,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
             game.RescueAsync(slug,user.RequireAccountId(),patientId,ct));
+        player.MapPost("/villages/{slug}/rescue/request", (string slug,ClaimsPrincipal user,GameService game,CancellationToken ct)=>
+            game.RequestRescueAsync(slug,user.RequireAccountId(),ct));
         player.MapGet("/catalog", (CatalogDto catalog) => catalog);
 
         player.MapGet("/villages/public", async (GameService game, IConfiguration config, CancellationToken cancellationToken) =>

@@ -254,7 +254,7 @@ public static class DungeonRules
         Wear(citizen, outcome.FoesHit, random, hero.Broken);
         if (outcome.KnockedOut && outcome.Killer is { } killer)
         {
-            CombatRules.Injure(citizen, TimeSpan.FromMinutes(EnemyCatalog.Get(killer).InjuryMinutes), now);
+            CombatRules.Injure(citizen, TimeSpan.FromMinutes(EnemyCatalog.Get(killer).InjuryMinutes), now, rewardEligible:true);
         }
 
         ReturnGear(citizen, village, hero);

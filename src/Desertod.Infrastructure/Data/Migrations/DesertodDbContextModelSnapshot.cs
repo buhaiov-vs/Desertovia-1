@@ -694,6 +694,12 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<Guid?>("RescuePatientId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTimeOffset?>("RescueRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("RescueRewardEligible")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid?>("ReservedProjectId")
                         .HasColumnType("uuid");
 
@@ -898,14 +904,29 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .HasMaxLength(48)
                         .HasColumnType("character varying(48)");
 
+                    b.Property<DateTimeOffset?>("TsarHospitalizedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("TsarInjuredUntil")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TsarRescueByCitizenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("TsarRescueRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("TsarRescueRewardEligible")
+                        .HasColumnType("boolean");
 
                     b.Property<double?>("TsarSpotX")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("TsarSpotY")
                         .HasColumnType("double precision");
+
+                    b.Property<DateTimeOffset?>("TsarWoundedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -1704,6 +1725,62 @@ namespace Desertod.Infrastructure.Data.Migrations
                                 .HasForeignKey("CitizenId");
                         });
 
+                    b.OwnsOne("Desertod.Domain.Rules.RescueJourney", "RescueJourney", b1 =>
+                        {
+                            b1.Property<Guid>("CitizenId");
+
+                            b1.Property<DateTimeOffset>("ArrivesAt");
+
+                            b1.Property<DateTimeOffset?>("CompletedAt");
+
+                            b1.Property<bool>("Delivered");
+
+                            b1.Property<string>("HospitalPlotId")
+                                .IsRequired();
+
+                            b1.Property<Guid>("PatientId");
+
+                            b1.Property<bool>("PatientIsTsar");
+
+                            b1.Property<DateTimeOffset>("PickupAt");
+
+                            b1.Property<DateTimeOffset?>("WoundedAt");
+
+                            b1.HasKey("CitizenId");
+
+                            b1.ToTable("Citizens");
+
+                            b1
+                                .ToJson("RescueJourney")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CitizenId");
+
+                            b1.OwnsMany("Desertod.Domain.Rules.RescueStep", "Steps", b2 =>
+                                {
+                                    b2.Property<Guid>("RescueJourneyCitizenId");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<DateTimeOffset>("At");
+
+                                    b2.Property<double>("X");
+
+                                    b2.Property<double>("Y");
+
+                                    b2.HasKey("RescueJourneyCitizenId", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Citizens");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("RescueJourneyCitizenId");
+                                });
+
+                            b1.Navigation("Steps");
+                        });
+
                     b.OwnsMany("Desertod.Domain.Skills.SkillProgress", "Skills", b1 =>
                         {
                             b1.Property<Guid>("CitizenId");
@@ -1780,6 +1857,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Navigation("PersonalGoods");
 
                     b.Navigation("Recovery");
+
+                    b.Navigation("RescueJourney");
 
                     b.Navigation("Skills");
 

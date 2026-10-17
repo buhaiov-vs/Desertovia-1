@@ -1002,6 +1002,10 @@ export interface Wilds {
 }
 
 export interface Tsar {
+  accountId?:string|null
+  hospitalizedAt?:string|null
+  rescueByCitizenId?:string|null
+  rescueRequestedAt?:string|null
   injuredUntil?:string|null
   name: string
   /** Null until the owner creates their character. */
@@ -1043,7 +1047,20 @@ export interface HospitalStatus {
 export interface HospitalPayment { patientId: string; code: string; requestId: string; expectedPrice: number; episodeId: string }
 export interface HospitalReceipt { state: string; error: string | null; until: number | null; price: number | null; cutSeconds: number | null }
 
+export interface RescueJourney {
+  patientId:string
+  patientIsTsar:boolean
+  hospitalPlotId:string
+  pickupAt:string
+  arrivesAt:string
+  completedAt?:string|null
+  delivered:boolean
+  steps:{x:number;y:number;at:string}[]
+}
+
 export interface CitizenSummary {
+  rescueJourney?:RescueJourney|null
+  rescueRequestedAt?:string|null
   defenseSector?: string | null
   defenseReadyAt?: string | null
   hospitalizedAt?:string|null
@@ -1430,6 +1447,7 @@ export const api = {
   almightyMode: (slug: string, mode: string) => request<void>('PUT', `/api/villages/${encodeURIComponent(slug)}/director/mode`, { mode }),
   almightyVote: (slug: string, id: string, accept: boolean) => request<{result:string}>('POST', `/api/villages/${encodeURIComponent(slug)}/director/${id}/vote`, { accept }),
   rescue: (slug:string, id:string)=>request<Citizen>('POST',`/api/villages/${encodeURIComponent(slug)}/rescue/${id}`),
+  requestRescue: (slug:string)=>request<boolean>('POST',`/api/villages/${encodeURIComponent(slug)}/rescue/request`),
   civic: (slug:string, plotId:string, operation:string, partnerAccountId?:string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic`, {plotId,operation,partnerAccountId}),
   civicDecision: (slug:string, id:string, approve:boolean) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/civic/${id}`, {approve}),
   sramoslav: (slug: string, text: string) => request<{text: string; ai: boolean}>('POST', `/api/villages/${slug}/sramoslav`, { text }),

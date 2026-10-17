@@ -91,11 +91,14 @@ public static class RaidSimulation
         foreach(var c in people)
         {
             if (battle.Fighters.Any(f => f.IsTsar && f.AccountId == c.AccountId)) continue;
-            var position=c.Trip?.PositionAt(at)??c.Spot??c.IdleSpot??WorldMap.Places[WorldMap.Camp];
+            var position=c.RescueJourney is {CompletedAt:null} rescue?rescue.PositionAt(at)
+                :c.Trip?.PositionAt(at)??c.Spot??c.IdleSpot??WorldMap.Places[WorldMap.Camp];
             var inDanger=online.Contains(c.Id)&&CanFight(c,at)&&battle.Units.Any(u=>u.Alive&&u.Position.DistanceTo(position)<4);
             var existing=battle.Fighters.SingleOrDefault(f=>f.CitizenId==c.Id);
             if(existing is not null)
             {
+                if(c.RescueJourney is {CompletedAt:null})
+                {existing.X=position.X;existing.Y=position.Y;existing.DestinationX=null;existing.DestinationY=null;}
                 if(existing.Mode=="withdrawn"){existing.Active=false;continue;}
                 if(existing.Mode=="retreating"){existing.Active=CanFight(c,at)&&existing.Health>0;continue;}
                 existing.Guard=false;existing.Active=CanFight(c,at)&&existing.Health>0&&(existing.Active||inDanger);
@@ -113,7 +116,8 @@ public static class RaidSimulation
     private static void FightCitizen(Village village,Raid raid,RaidBattle battle,RaidFighter fighter,
         Citizen citizen,IReadOnlyDictionary<Guid,Citizen> battlePeople,RaidNavigation nav,DateTimeOffset at)
     {
-        if (MoveOrder(fighter, nav)) return;
+        var carrying=citizen.RescueJourney is {CompletedAt:null};
+        if (!carrying && MoveOrder(fighter, nav)) return;
         var weapon=CombatRules.UsableWeapon(citizen);
         var range=weapon?.Kind==ResourceKind.Bow?5:1.45;
         var target=battle.Units.FirstOrDefault(u=>u.Id==fighter.TargetUnitId&&u.Alive);
@@ -126,7 +130,7 @@ public static class RaidSimulation
         var distance=target.Position.DistanceTo(fighter.Position);
         if(distance>range || !nav.ClearShot(fighter.Position,target.Position))
         {
-            if(selected&&fighter.Mode!="hold")nav.Move(fighter,target.Position,1);
+            if(selected&&fighter.Mode!="hold"&&!carrying)nav.Move(fighter,target.Position,1);
             return;
         }
         if(fighter.NextAttackAt>at)return;
@@ -319,7 +323,9 @@ public static class RaidSimulation
             {
                 victim.Active=false;victim.Wounded=true;
                 village.TsarInjuredUntil=at.AddMinutes(enemy.InjuryMinutes);
-                village.TsarSpot=RescueRules.Ward(village);village.TsarTrip=null;
+                village.TsarWoundedAt=at;village.TsarHospitalizedAt=null;village.TsarRescueByCitizenId=null;village.TsarRescueRewardEligible=true;
+                village.TsarRescueRequestedAt=null;
+                village.TsarSpot=victim.Position;village.TsarTrip=null;
                 battle.Event("wounded",victim.ActorId.ToString(),at);
             }
             return;
@@ -330,8 +336,9 @@ public static class RaidSimulation
         if(victim.Health<=0)
         {
             victim.Active=false;victim.Wounded=true;
-            CombatRules.Injure(c,TimeSpan.FromMinutes(enemy.InjuryMinutes),at);
-            c.IdleSpot=victim.Position;
+            CombatRules.Injure(c,TimeSpan.FromMinutes(enemy.InjuryMinutes),at,rewardEligible:true);
+            c.IdleSpot=victim.Position;c.Spot=victim.Position;c.Trip=null;
+            if(c.RescuePatientId is {} patientId)RescueRules.Cancel(c,people.GetValueOrDefault(patientId),at,village);
             battle.Event("wounded",c.Id.ToString(),at);
         }
     }

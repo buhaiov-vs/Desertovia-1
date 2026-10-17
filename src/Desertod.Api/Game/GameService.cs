@@ -1040,8 +1040,9 @@ public sealed partial class GameService(
             if(citizen.RescuePatientId is {} patientId)
             {
                 var patient=await db.Citizens.SingleOrDefaultAsync(c=>c.Id==patientId&&c.VillageId==village.Id,cancellationToken);
-                if(patient?.RescueByCitizenId==citizen.Id)patient.RescueByCitizenId=null;
-                citizen.RescuePatientId=null;
+                RescueRules.Cancel(citizen,patient,now,village);
+                if(village.TsarRescueByCitizenId==citizen.Id)
+                {village.TsarSpot=citizen.IdleSpot;village.TsarRescueByCitizenId=null;}
             }
             CycleEngine.Cancel(citizen, now, village);
             await db.SaveChangesAsync(cancellationToken);
@@ -1394,9 +1395,14 @@ public sealed partial class GameService(
 
         var recentSince = now - GameRules.RecentActivityWindow;
         var working = citizens.Where(c => c.IsWorking).ToList();
+        Citizen? rescuePatient = null;
+        var rescuer = db.Citizens.Local.FirstOrDefault(c => c.Id == citizenId);
+        if (rescuer?.RescuePatientId is { } rescueId)
+            rescuePatient = await db.Citizens.SingleOrDefaultAsync(c => c.Id == rescueId && c.VillageId == village.Id, cancellationToken);
         var work = new WorkContext
         {
             Village = village,
+            RescuePatient = rescuePatient,
             SiteWork = siteWork,
             Project = project,
             CompletedProjects = completedProjects.ToHashSet(),
@@ -1429,7 +1435,8 @@ public sealed partial class GameService(
             .Where(a => a.Id == village.OwnerAccountId)
             .Select(a => new { a.DisplayName, a.Character })
             .SingleAsync(cancellationToken);
-        var tsar = new TsarDto(owner.Character?.Name ?? owner.DisplayName, owner.Character?.Appearance, village.TsarSpot, village.TsarInjuredUntil);
+        var tsar = new TsarDto(owner.Character?.Name ?? owner.DisplayName, owner.Character?.Appearance, village.TsarSpot, village.TsarInjuredUntil)
+            { AccountId=village.OwnerAccountId, HospitalizedAt=village.TsarHospitalizedAt, RescueByCitizenId=village.TsarRescueByCitizenId, RescueRequestedAt=village.TsarRescueRequestedAt };
         var trips = await LoadTripsAsync(db, village.Id, cancellationToken);
         var shownSince = now - DungeonRules.ShownAfterEnd;
         var dungeon = await db.DungeonRuns.AsNoTracking()

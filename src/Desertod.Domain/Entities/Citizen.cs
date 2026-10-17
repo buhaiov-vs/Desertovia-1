@@ -42,6 +42,9 @@ public sealed class Citizen
     public Guid? RescueByCitizenId { get; set; }
     public int? SupervisedProgress { get; set; }
     public Guid? RescuePatientId { get; set; }
+    public RescueJourney? RescueJourney { get; set; }
+    public bool RescueRewardEligible { get; set; }
+    public DateTimeOffset? RescueRequestedAt { get; set; }
     public int ExhaustedCycles { get; set; }
     public DateTimeOffset? ExhaustedUntil { get; set; }
 

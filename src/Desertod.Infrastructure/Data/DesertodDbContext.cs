@@ -255,6 +255,7 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                 appearance.Property(a => a.Gender).HasConversion<string>();
             });
             citizen.OwnsOne(c => c.Recovery, recovery => recovery.ToJson());
+            citizen.OwnsOne(c => c.RescueJourney, rescue => { rescue.ToJson(); rescue.OwnsMany(r => r.Steps); });
             citizen.Property(c => c.Name).HasMaxLength(32);
             citizen.Property(c => c.Subtitle).HasMaxLength(Citizen.SubtitleMaximumLength);
             citizen.Property(c => c.Status).HasConversion<string>().HasMaxLength(16);

@@ -160,6 +160,7 @@ interface Walker {
   normalSubtitle:string
   carrierId:string|null
   pickupAt:number
+  rescueJourney:CitizenSummary['rescueJourney']
 }
 
 interface Bubble {
@@ -566,7 +567,9 @@ export class VillageWorld {
     walker.label.text = tsar.name
     walker.injuredUntil = tsar.injuredUntil ? Date.parse(tsar.injuredUntil) : 0
     walker.normalSubtitle=this.tsarTitle
-    if(walker.injuredUntil>Date.now()){walker.inHospital=true;walker.wardVisible=true;walker.treatmentCause='После боя'}
+    walker.inHospital=walker.injuredUntil>Date.now()&&!!tsar.hospitalizedAt
+    walker.carrierId=tsar.rescueByCitizenId??null
+    if(walker.injuredUntil>Date.now()){walker.wardVisible=true;walker.treatmentCause='После боя'}
     walker.staying = true
     // Battle positions already drive this walker. Replanning a civilian route to
     // the stale Tsar spot on every combat snapshot can search the whole map.
@@ -855,8 +858,9 @@ export class VillageWorld {
       if(injured){walker.label.style.wordWrap=true;walker.label.style.breakWords=true;walker.label.style.wordWrapWidth=112;walker.label.style.align='center';walker.subtitle.style.wordWrap=true;walker.subtitle.style.wordWrapWidth=120;walker.subtitle.style.align='center'}
       walker.treatmentCause=duel?'после дуэли':'после боя'
       walker.carrierId=citizen.rescueByCitizenId??null
-      walker.pickupAt=citizen.rescuePatientId&&citizen.cycleStartedAt&&citizen.cycleEndsAt?
-        Date.parse(citizen.cycleStartedAt)+(Date.parse(citizen.cycleEndsAt)-Date.parse(citizen.cycleStartedAt))*.6:0
+      walker.rescueJourney=citizen.rescueJourney??null
+      walker.pickupAt=walker.rescueJourney&&!walker.rescueJourney.completedAt?Date.parse(walker.rescueJourney.pickupAt):0
+      if(injured&&!walker.inHospital&&!walker.carrierId&&citizen.rescueRequestedAt)walker.treatmentCause='Просит помощи'
       if(injured){walker.working=false;walker.roaming=false;walker.hunt=null;walker.way=[];walker.targetX=walker.x;walker.targetY=walker.y}
       if (injured) walker.staying = true
       let icon: { key: string; tile: TileRef | null } | null = null
@@ -1640,7 +1644,7 @@ export class VillageWorld {
       sleepsAt: null,
       way: [],
       injuredUntil: 0,
-      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,
+      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,rescueJourney:null,
     }
     this.walkers.set(id, walker)
     return walker
@@ -2185,12 +2189,23 @@ export class VillageWorld {
         walker.wanderAt = this.elapsed + 4 + Math.random() * 6
       }
 
-      if(walker.pickupAt>0&&now>=walker.pickupAt&&walker.working){
-        const hospital=this.village?.structures.find(s=>s.kind==='Hospital'&&!s.ruinedAt&&s.damage<100)
-        const plot=hospital?this.plot(hospital.plotId):null
-        walker.targetX=(plot?plot.x+1.5:CAMPFIRE.x)*TILE
-        walker.targetY=(plot?plot.y+3:CAMPFIRE.y+1)*TILE
-        walker.way=[];speed=WALK_SPEED*.5
+      if(walker.rescueJourney&&!walker.rescueJourney.completedAt&&!hurt){
+        const steps=walker.rescueJourney.steps
+        let before=steps[0]
+        let position=before?{x:before.x,y:before.y}:null
+        for(const after of steps.slice(1)){
+          if(now<Date.parse(after.at)){
+            const share=Math.max(0,Math.min(1,(now-Date.parse(before.at))/Math.max(1,Date.parse(after.at)-Date.parse(before.at))))
+            position={x:before.x+(after.x-before.x)*share,y:before.y+(after.y-before.y)*share};break
+          }
+          before=after;position={x:after.x,y:after.y}
+        }
+        if(position){
+          const dx=position.x*TILE-walker.x
+          if(Math.abs(dx)>.01)walker.sprite.scale.x=dx<0?-1:1
+          walker.x=position.x*TILE;walker.y=position.y*TILE
+          walker.targetX=walker.x;walker.targetY=walker.y;walker.way=[]
+        }
       }
       const combatant=combatants.get(walker.id)
       if(combatant&&!hurt){
@@ -2221,7 +2236,7 @@ export class VillageWorld {
 
       if(hurt&&walker.carrierId){
         const carrier=this.walkers.get(walker.carrierId)
-        if(carrier?.working&&carrier.pickupAt>0&&now>=carrier.pickupAt){walker.x=carrier.x+5;walker.y=carrier.y-4;walker.bed.visible=false}
+        if(carrier?.rescueJourney&&!carrier.rescueJourney.completedAt&&carrier.pickupAt>0&&now>=carrier.pickupAt){walker.x=carrier.x+5;walker.y=carrier.y-4;walker.bed.visible=false}
       }
       walker.bed.position.set(Math.round(walker.x),Math.round(walker.y))
       walker.bed.zIndex=walker.y+.4

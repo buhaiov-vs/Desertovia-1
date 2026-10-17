@@ -1605,6 +1605,27 @@
     ],
     "runtime_changed": false,
     "deployment_date": null,
-    "checks": []
+    "checks": [
+      {
+        "packet": "owner_feedback",
+        "bot_tests": 894,
+        "focused": 40,
+        "state": "pass"
+      },
+      {
+        "packet": "social_rescue",
+        "domain_full_initial": 466,
+        "domain_focused_final": 31,
+        "api_focused": 13,
+        "browser_desktop_phone": 8,
+        "frontend_build": "pass",
+        "state": "branch_tested_not_installed"
+      }
+    ],
+    "completed_packets": [
+      "owner_feedback",
+      "social_rescue"
+    ],
+    "next_packet": "raid_editor_and_adaptive_difficulty"
   }
 }

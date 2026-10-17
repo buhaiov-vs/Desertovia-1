@@ -1446,5 +1446,52 @@
       "login_bindings_preserved": 121
     },
     "release_record": "RELEASE_0_7_8.md"
+  },
+  "monster_behavior": {
+    "decision": "D-091",
+    "recorded_on": "2026-10-17",
+    "state": "release_candidate_checks_in_progress",
+    "plan": "MONSTER_BEHAVIOR_INTEGRATION.md",
+    "branch": "feat/monster-behavior",
+    "live_changed": false,
+    "live_version": "0.7.8",
+    "primary_objective": "property_and_supplies",
+    "sources": {
+      "Nez": "2862974e423f1dccaed4887673cd5c241faa1c55",
+      "RVO2-CS": "8e7cf2f9bdc331fe0802cdfb10d6c19fb5b20745"
+    },
+    "death_backpack_losses": "design_only_not_enabled",
+    "deployment": "authorized_D-092_pending_exact_ci_preflight",
+    "local_checks": {
+      "domain_full_final": 460,
+      "api_full": 255,
+      "api_regression_final": 32,
+      "browser_desktop_phone": 22,
+      "frontend_lint_build": "pass",
+      "database_model_and_legacy_json": "pass"
+    },
+    "wall_damage_limit": 300,
+    "pull_request": "https://github.com/desertod666/Desertovia/pull/53",
+    "full_raid_120s_timings_ms": {
+      "units": [
+        16,
+        32,
+        48
+      ],
+      "p95": [
+        8.8,
+        15.7,
+        29.4
+      ],
+      "maximum": [
+        40.9,
+        26.2,
+        38.1
+      ],
+      "production_fps_claim": false
+    },
+    "exact_ci": "pending_on_final_head",
+    "candidate_version": "0.7.9",
+    "previous_failed_ci": 39016736130
   }
 }

@@ -16,6 +16,37 @@ public sealed class RaidNavigation
     private readonly uint seed;
     private readonly byte[] terrain;
     private readonly Dictionary<(int X, int Y), bool> land = [];
+    private RaidUnit[] crowd = [];
+    private RaidFighter[] bystanders = [];
+    private readonly Dictionary<Guid, TilePoint> intentions = [];
+    private readonly Dictionary<(int,int),int> density = [];
+    private double crowdWeight;
+    private readonly Dictionary<Guid,double> aversion = [];
+    private readonly Dictionary<(int X,int Y,int GoalX,int GoalY,bool Breach,bool Prefer,double Crowd),TilePoint> routes = [];
+
+    public void BeginCrowd(RaidBattle battle,EnemyDefinition enemy)
+    {
+        crowd=battle.Units.Where(u=>u.Alive).ToArray();
+        bystanders=battle.Fighters.Where(f=>f.Active&&f.Health>0).ToArray();
+        intentions.Clear();density.Clear();aversion.Clear();routes.Clear();
+        for(var i=0;i<battle.Units.Count;i++)aversion[battle.Units[i].Id]=MonsterBrain.Profile(enemy,battle.Units[i].Variant,i).CrowdAversion;
+        foreach(var u in crowd)
+        {var tile=((int)Math.Floor(u.X),(int)Math.Floor(u.Y));density[tile]=density.GetValueOrDefault(tile)+1;}
+    }
+    public void ResolveCrowd()
+    {
+        var actors=crowd.Where(u=>u.Alive).Select((u,i)=>new CrowdActor(i,u.Position,intentions.GetValueOrDefault(u.Id,u.Position),
+            intentions.ContainsKey(u.Id)?u.Speed:0,u.Variant=="boss"?.3:.2)).ToList();
+        var units=crowd.Where(u=>u.Alive).ToArray();
+        actors.AddRange(bystanders.Select((f,i)=>new CrowdActor(units.Length+i,f.Position,f.Position,0)));
+        var moved=MonsterCrowd.Move(actors,1,(from,to)=>MonsterCrowd.CanTraverse(from,to,Pass));
+        for(var i=0;i<units.Length;i++)
+        {
+            var unit=units[i];var p=moved[i];
+            if(intentions.ContainsKey(unit.Id))unit.BlockedSeconds=unit.Position.DistanceTo(p)<.02?unit.BlockedSeconds+1:0;
+            unit.X=p.X;unit.Y=p.Y;
+        }
+    }
 
     public RaidNavigation(Village village)
     {
@@ -89,6 +120,9 @@ public sealed class RaidNavigation
         var start=((int)Math.Floor(from.X),(int)Math.Floor(from.Y));
         var end=((int)Math.Floor(target.X),(int)Math.Floor(target.Y));
         if(start==end)return target;
+        var originalEnd=end;
+        (int,int,int,int,bool,bool,double) Key((int,int) tile)=>(tile.Item1,tile.Item2,originalEnd.Item1,originalEnd.Item2,canBreach,preferBreach,crowdWeight);
+        if(routes.TryGetValue(Key(start),out var cached))return cached;
         PathSearches++;
         var queue=new PriorityQueue<(int,int),double>();queue.Enqueue(start,0);
         var cost=new Dictionary<(int,int),double>{{start,0}};
@@ -98,12 +132,15 @@ public sealed class RaidNavigation
         {
             PathNodes++;
             if(p==end){found=true;break;}
+            // Уже проверенный суффикс маршрута соседа: не искать тот же путь48раз.
+            if(routes.ContainsKey(Key(p))){end=p;found=true;break;}
             foreach(var n in new[]{(p.Item1+1,p.Item2),(p.Item1-1,p.Item2),(p.Item1,p.Item2+1),(p.Item1,p.Item2-1)})
             {
                 if(!Dry(n.Item1,n.Item2)||solid.Contains(n))continue;
                 var wall=walls.GetValueOrDefault(n);
                 if(wall?.Blocks==true&&!canBreach)continue;
-                var nextCost=cost[p]+1+(wall?.Blocks==true?(100-wall.Damage)*(preferBreach ? .06 : .35):0);
+                var nextCost=cost[p]+1+(wall?.Blocks==true?(100-wall.Damage)*(preferBreach ? .06 : .35):0)
+                    +density.GetValueOrDefault(n)*crowdWeight;
                 if(cost.TryGetValue(n,out var old)&&old<=nextCost)continue;
                 cost[n]=nextCost;previous[n]=p;
                 queue.Enqueue(n,nextCost+Math.Abs(n.Item1-end.Item1)+Math.Abs(n.Item2-end.Item2));
@@ -111,16 +148,24 @@ public sealed class RaidNavigation
         }
         if(!found){BlockedPaths++;return null;}
         var step=end;
-        while(previous[step]!=start)step=previous[step];
-        return new TilePoint(step.Item1+.5,step.Item2+.5);
+        while(previous.TryGetValue(step,out var prior))
+        {
+            routes[Key(prior)]=new TilePoint(step.Item1+.5,step.Item2+.5);
+            if(prior==start)break;
+            step=prior;
+        }
+        return routes.TryGetValue(Key(start),out var result)?result:null;
     }
     public bool Move(RaidUnit unit,TilePoint goal,double seconds,bool canBreach,bool preferBreach,out Fortification? barrier)
     {
         barrier=null;
+        crowdWeight=aversion.GetValueOrDefault(unit.Id,1)*(preferBreach?.6:2);
         var next=Next(unit.Position,goal,canBreach,preferBreach);
+        crowdWeight=0;
         if(next is null)return false;
         var wall=Barrier((int)Math.Floor(next.Value.X),(int)Math.Floor(next.Value.Y));
         if(wall?.Blocks==true){barrier=wall;return true;}
+        if(crowd.Length>0){intentions[unit.Id]=next.Value;return true;}
         var p=Step(unit.Position,next.Value,unit.Speed*seconds);unit.X=p.X;unit.Y=p.Y;return true;
     }
     public void Move(RaidFighter fighter,TilePoint goal,double seconds)

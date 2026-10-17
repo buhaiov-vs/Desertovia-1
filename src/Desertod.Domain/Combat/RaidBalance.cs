@@ -11,6 +11,7 @@ public sealed record RaidReadiness(int Guards,int Reserves,double Power,double B
 public static class RaidBalance
 {
     public const int MaximumUnits=48;
+    public static readonly string[] Compositions = ["mixed", "swarm", "elite", "boss"];
     public static RaidReadiness Assess(Village village,IReadOnlyList<Citizen> citizens,IReadOnlySet<Guid> online,DateTimeOffset now,int waves=1)
     {
         var healthy=citizens.Where(c=>c.Status==CitizenStatus.Active && c.RecoveryPausedAt is null
@@ -42,18 +43,19 @@ public static class RaidBalance
         }
         return result;
     }
-    public static string Variant(string composition,int index) => composition=="swarm"?"weak":composition=="elite"?"strong":index%4==0?"strong":index%3==0?"weak":"regular";
+    public static string Variant(string composition,int index) => composition=="boss"?"boss":composition=="swarm"?"weak":composition=="elite"?"strong":index%4==0?"strong":index%3==0?"weak":"regular";
     private static string AffordableVariant(EnemyKind enemy,string composition,int index,double remaining)
     {
         var desired=Variant(composition,index);
         if(index>0||EnemyCatalog.Get(enemy).Power*Math.Pow(Factor(desired),2)<=remaining)return desired;
         return EnemyCatalog.Get(enemy).Power<=remaining?"regular":"weak";
     }
-    public static double Factor(string variant)=>variant=="strong"?1.7:variant=="weak"?.65:1;
+    public static double Factor(string variant)=>variant=="boss"?3.2:variant=="strong"?1.7:variant=="weak"?.65:1;
     public static int Count(EnemyKind enemy,string composition,double budget)
     {
+        composition=NormalizeComposition(enemy,composition,budget);
         var count=0;var remaining=budget;
-        while(count<MaximumUnits)
+        while(count<(composition=="boss"?3:MaximumUnits))
         {
             var cost=EnemyCatalog.Get(enemy).Power*Math.Pow(Factor(AffordableVariant(enemy,composition,count,remaining)),2);
             if(remaining<cost&&count>0)break;
@@ -61,6 +63,8 @@ public static class RaidBalance
         }
         return count;
     }
+    public static string NormalizeComposition(EnemyKind enemy,string composition,double budget) =>
+        composition=="boss" && budget<EnemyCatalog.Get(enemy).Power*Math.Pow(Factor("boss"),2)?"elite":composition;
     public static RaidBattle Prepare(Village village,Raid raid,IReadOnlyList<Citizen> citizens,
         IReadOnlyCollection<string> completed,IReadOnlySet<Guid> online,DateTimeOffset now,string? sector=null,string? composition=null)
     {
@@ -76,10 +80,10 @@ public static class RaidBalance
         var battle=new RaidBattle{Id=raid.Id,VillageId=village.Id,Sector=chosen.Sector,Seed=seed,
             ScheduledAt=raid.StrikesAt,StartsAt=raid.StrikesAt,LastTickAt=raid.StrikesAt,EndsAt=raid.StrikesAt.AddMinutes(4),
             ThreatBudget=budget,ReadyDefenders=readiness.Guards,AvailableReserves=readiness.Reserves,
-            Composition=composition is "swarm" or "elite" or "mixed"?composition:new[]{"swarm","elite","mixed"}[seed%3],Tactic=seed%2==0?"entry":"breach"};
+            Composition=NormalizeComposition(raid.Enemy,composition is "swarm" or "elite" or "mixed" or "boss"?composition:new[]{"swarm","elite","mixed"}[seed%3],budget),Tactic=seed%2==0?"entry":"breach"};
         var baseCost=EnemyCatalog.Get(raid.Enemy).Power;
         var remaining=budget;
-        while(battle.Units.Count<MaximumUnits)
+        while(battle.Units.Count<(battle.Composition=="boss"?3:MaximumUnits))
         {
             var i=battle.Units.Count;
             var variant=AffordableVariant(raid.Enemy,battle.Composition,i,remaining);
@@ -91,9 +95,12 @@ public static class RaidBalance
             var spawn=chosen.Sector=="west"?new TilePoint(chosen.Entry.X-row,chosen.Entry.Y+offset)
                 :new TilePoint(chosen.Entry.X+offset,chosen.Entry.Y+(chosen.Sector=="north"?-row:row));
             var p=nav.NearestFree(spawn,p=>nav.IsOutside(p,chosen.Sector) && battle.Units.All(u=>u.Position.DistanceTo(p)>=.7));
+            // Цена босса расходуется прежде всего на живучесть, а не на мгновенное убийство игрока.
+            var healthFactor=variant=="boss"?factor*factor*.75:factor;
+            var attackFactor=variant=="boss"?Factor("strong"):factor;
             battle.Units.Add(new(){Variant=variant,X=p.X,Y=p.Y,SpawnX=p.X,SpawnY=p.Y,
-                Health=(12+baseCost*2)*factor,MaximumHealth=(12+baseCost*2)*factor,
-                Attack=(1.5+baseCost*.4)*factor,Speed=raid.Enemy==EnemyKind.Zombie?.55:.75,
+                Health=(12+baseCost*2)*healthFactor,MaximumHealth=(12+baseCost*2)*healthFactor,
+                Attack=(1.5+baseCost*.4)*attackFactor,Speed=raid.Enemy==EnemyKind.Zombie?.55:.75,
                 NextAttackAt=raid.StrikesAt.AddSeconds(2+i%3)});
             remaining-=cost;
         }

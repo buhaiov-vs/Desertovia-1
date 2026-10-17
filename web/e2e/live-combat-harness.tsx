@@ -29,6 +29,11 @@ api.battleOrder=async(_slug,_id,target,mode)=>{orders.push({target,mode})}
 Object.assign(window,{combatStand:{
  update:(next:RaidBattle,time=now+2000)=>{enemies.setBattles([next]);enemies.update(.2,time,true);return {children:layer.children.length,positions:layer.children.map(c=>[c.x,c.y]),rotations:layer.children.map(c=>c.rotation)}},
  terrain:(seed:number,wilds:Parameters<typeof buildLayout>[1])=>Array.from(buildLayout(seed,wilds).terrain,k=>[Terrain.Water,Terrain.Mountain,Terrain.Ravine].includes(k as 2|7|8)?1:k===Terrain.Marsh?2:0),
+ geometry:(id:string)=>{
+  const internals=enemies as unknown as {liveViews:Map<string,{actor:Container}>;warnings:Map<string,{view:Graphics}>}
+  const actor=internals.liveViews.get(id)!.actor,warning=internals.warnings.get(id)?.view
+  return {scale:Math.abs(actor.scale.x),warning:warning?{x:warning.x,y:warning.y,width:warning.width}:null}
+ },
  initial:structuredClone(battle),orders,mergeBattles,currentEnergy,receiveFighterSample,fighterPositionAt,
  frames:()=>{
   const bars=layer.children.filter(child=>child instanceof Graphics)

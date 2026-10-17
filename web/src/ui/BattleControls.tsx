@@ -29,7 +29,7 @@ export function BattleControls({ village, battle, unit, citizen, tsar=false, acc
     attempted.current=key;void order()
   },[canOrder,battle.id,unit.id,selectionToken,attempted,order])
   return <aside className="battle-controls" aria-label={ru?'Выбранный противник':'Selected enemy'}>
-    <header><strong>{raid?i18n.enemy(raid.enemy):ru?'Противник':'Enemy'} · {ru?({weak:'Слабый',regular:'Обычный',strong:'Сильный'}[unit.variant]):unit.variant}</strong><button type="button" className="close" aria-label={i18n.t('close')} onClick={e=>{e.stopPropagation();onClose()}}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg></button></header>
+    <header><strong>{raid?i18n.enemy(raid.enemy):ru?'Противник':'Enemy'} · {ru?({weak:'Слабый',regular:'Обычный',strong:'Сильный',boss:'Босс'}[unit.variant]):unit.variant}</strong><button type="button" className="close" aria-label={i18n.t('close')} onClick={e=>{e.stopPropagation();onClose()}}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg></button></header>
     <p className="small">{phases[unit.state]??unit.state} · ♥ {Math.ceil(unit.health)}/{Math.ceil(unit.maximumHealth)}</p>
     <progress value={unit.health} max={unit.maximumHealth} aria-label={ru?'Здоровье врага':'Enemy health'}/>
     {fighter&&<p className="small">{ru?'Моё здоровье':'My health'}: {Math.ceil(fighter.health)}/{fighter.maximumHealth} · {ru?'Урон':'Damage'} {Math.round(fighter.damageDealt)}{fighter.arrows?` · ➶ ${fighter.arrows}`:''}</p>}

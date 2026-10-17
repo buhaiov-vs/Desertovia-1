@@ -45,6 +45,7 @@ export function RaidBanner({
           enemy: i18n.enemy(raid.enemy),
           time: countdown(Date.parse(raid.strikesAt) - now),
         })}
+        {battle?.composition==='boss'&&<span> · {i18n.language==='ru'?'Боссы':'Boss fight'}</span>}
         {raid.entrySector && <span> · {i18n.language === 'ru' ? 'Подход' : 'Approach'}: {(i18n.language==='ru'?({north:'Север',west:'Запад',south:'Юг'} as Record<string,string>):({north:'North',west:'West',south:'South'} as Record<string,string>))[raid.entrySector] ?? raid.entrySector}</span>}
         {raid.waves > 1 && <span className="muted"> · {t('raid.wave', { wave: raid.wave, waves: raid.waves })}</span>}
       </div>

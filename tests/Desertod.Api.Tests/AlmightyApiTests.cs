@@ -183,7 +183,7 @@ public sealed class AlmightyApiTests(DesertodApiFactory factory)
         for(var i=0;i<20;i++)db.ChatMessages.Add(Desertod.Domain.Chat.ChatMessage.Write(city.Id,city.OwnerAccountId,null,"Царь",new string('я',120),now.AddSeconds(-20+i)));
         await db.SaveChangesAsync();
         var review=await factory.Services.GetRequiredService<GameService>().BeginAlmightyReviewAsync(city.Id,default);
-        Assert.NotNull(review);Assert.Contains(review.Options,o=>o.Composition=="elite");
+        Assert.NotNull(review);Assert.Contains(review.Options,o=>o.Composition=="elite");Assert.Contains(review.Options,o=>o.Composition=="boss");
         Assert.InRange(review.Snapshot.Length,1,36000);
     }
 

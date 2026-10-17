@@ -84,7 +84,7 @@ public static class AlmightyPolicy
         .SelectMany(e => {
             var prefix = e.Kind.ToString().ToLowerInvariant() + "s";
             return new[] { prefix + "_small" }.Concat(RaidTactics.Sectors.SelectMany(sector =>
-                new[] { prefix + "_" + sector, prefix + "_" + sector + "_swarm", prefix + "_" + sector + "_elite" }));
+                new[] { prefix + "_" + sector, prefix + "_" + sector + "_swarm", prefix + "_" + sector + "_elite", prefix + "_" + sector + "_boss" }));
         }).ToArray();
 
     public static IReadOnlyList<string> RaidBlockers(AlmightyFacts f)
@@ -108,7 +108,7 @@ public static class AlmightyPolicy
         var blockers = RaidBlockers(f);
         return new(blockers.Count == 0, blockers.Count == 0 && now >= next, blockers, next);
     }
-    public static IReadOnlyList<AlmightyOption> Options(AlmightyFacts f, IReadOnlyList<RaidApproach>? approaches = null)
+    public static IReadOnlyList<AlmightyOption> Options(AlmightyFacts f, IReadOnlyList<RaidApproach>? approaches = null, double? raidBudget = null)
     {
         var result = new List<AlmightyOption> {
             new("none", "Наблюдать", "Не менять мир и не беспокоить царя без причины"),
@@ -126,12 +126,13 @@ public static class AlmightyPolicy
                     $"Предупреждение3 реальные минуты; живой бой с отдельными врагами. Состав ограничен готовностью деревни при объявлении; ранение{enemy.InjuryMinutes} реальных минут. Обычные награды и ремонтируемый ущерб.", enemy.Kind));
                 foreach (var approach in approaches ?? [])
                 {
-                    foreach(var profile in new[]{"mixed","swarm","elite"})
+                    foreach(var profile in RaidBalance.Compositions)
                     {
+                        if(profile=="boss" && (raidBudget is not {} budget || RaidBalance.NormalizeComposition(enemy.Kind,profile,budget)!=profile))continue;
                         var id=prefix+"_"+approach.Sector+(profile=="mixed"?"":"_"+profile);
-                        var label=profile=="swarm"?"много слабых":profile=="elite"?"немного сильных":"смешанный состав";
+                        var label=profile=="swarm"?"много слабых":profile=="elite"?"немного сильных":profile=="boss"?"1–3 босса, тяжёлые удары с предупреждением":"смешанный состав";
                         result.Add(new(id,enemy.Name+": "+approach.Sector+", "+label,
-                            "Одна сторона, отдельные враги, проход через вход или пролом. Общий бюджет по готовности при объявлении, без скрытого усиления после подготовки.",
+                            "Цель — разорить имущество и запасы, а не охотиться за жителями. Одна сторона, обход толпы или пролом, отдельные цели. Общий бюджет по готовности при объявлении, без скрытого усиления после подготовки.",
                             enemy.Kind,approach.Sector,profile));
                     }
                 }

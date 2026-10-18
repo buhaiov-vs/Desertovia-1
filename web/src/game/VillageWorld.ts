@@ -8,6 +8,7 @@ import { playerNamesVisible, PREFERENCES_EVENT } from '../gamePreferences'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
 import { BuildingLighting, hasPreparedBuilding, preparedBuildingBounds } from './BuildingLighting'
+import { registerReportCanvas } from '../reports/capture'
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
 import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type Tsar, type VillageState, type Wilds } from '../api'
@@ -206,6 +207,9 @@ const groundLevel = (kind: string, y: number) => (kind === ROPE_BRIDGE ? y * TIL
 
 export class VillageWorld {
   private readonly constructionRoofs = new WeakMap<Container, { x: number; y: number }>()
+  private reportObscured = false
+  private menuObscured = false
+  private reportCaptureCleanup: (() => void) | null = null
   private readonly app: Application
   private readonly tiles: TileSet
   private readonly painter: CharacterPainter
@@ -308,6 +312,7 @@ export class VillageWorld {
     window.addEventListener(PREFERENCES_EVENT, this.onPreferences)
     window.addEventListener('storage', this.onPreferences)
     this.app = app
+    this.reportCaptureCleanup = registerReportCanvas(app.canvas, () => app.renderer.extract.canvas({ target: app.stage, frame: app.screen, resolution: 1 }) as HTMLCanvasElement, visible => { this.reportObscured = visible; this.setObscured(this.menuObscured) })
     this.tiles = tiles
     this.painter = painter
 
@@ -368,6 +373,7 @@ export class VillageWorld {
   }
 
   destroy() {
+    this.reportCaptureCleanup?.()
     combatDiagnostics.stop()
     window.removeEventListener(PREFERENCES_EVENT, this.onPreferences)
     window.removeEventListener('storage', this.onPreferences)
@@ -632,6 +638,8 @@ export class VillageWorld {
   /** Null follows the village's day and night. */
   /** A dimmed map behind a modal needs fewer frames, leaving the phone responsive to controls. */
   setObscured(obscured: boolean) {
+    this.menuObscured = obscured
+    obscured ||= this.reportObscured
     this.app.ticker.maxFPS = obscured ? 8 : window.matchMedia('(pointer: coarse)').matches ? 30 : 60
     combatDiagnostics.context(obscured,this.app.ticker.maxFPS)
   }

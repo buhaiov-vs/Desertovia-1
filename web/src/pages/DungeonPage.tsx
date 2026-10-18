@@ -1,3 +1,4 @@
+import { useReportContext } from '../reports/context'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type DungeonRunView, type DungeonSnapshot, type Me } from '../api'
@@ -41,6 +42,7 @@ function DungeonView() {
   const { view, snapshot, error, moveTo, attack, heal } = useDungeonRun(runId)
   const hostRef = useRef<HTMLDivElement>(null)
   const [world, setWorld] = useState<DungeonWorld | null>(null)
+  useReportContext(() => ({ slug, page: 'dungeon', dungeonId: runId }))
 
   useEffect(() => {
     const host = hostRef.current

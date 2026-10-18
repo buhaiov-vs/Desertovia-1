@@ -32,6 +32,8 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
     public Guid? AuditActor { get; set; }
     public string? AuditOperation { get; set; }
 
+    public DbSet<PlayerReport> PlayerReports => Set<PlayerReport>();
+
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
     public DbSet<PasswordLogin> PasswordLogins => Set<PasswordLogin>();
@@ -58,6 +60,18 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<PlayerReport>(b =>
+        {
+            b.HasKey(r => r.Id);
+            b.Property(r => r.Kind).HasMaxLength(16);
+            b.Property(r => r.Text).HasMaxLength(2000);
+            b.Property(r => r.Fingerprint).HasMaxLength(64);
+            b.Property(r => r.DeliveryState).HasMaxLength(16);
+            b.HasIndex(r => new { r.AccountId, r.CreatedAt });
+            b.HasIndex(r => new { r.DeliveryState, r.NextAttemptAt });
+            b.HasOne<Account>().WithMany().HasForeignKey(r => r.AccountId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<Village>().WithMany().HasForeignKey(r => r.VillageId).OnDelete(DeleteBehavior.SetNull);
+        });
         modelBuilder.Entity<RaidLaunchReceipt>(receipt=>
         {
             receipt.HasKey(r=>new{r.VillageId,r.Id});

@@ -1423,10 +1423,11 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
+async function request<T>(method: string, url: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const response = await fetch(appPath(url), {
     method,
     credentials: 'same-origin',
+    signal,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
@@ -1518,6 +1519,8 @@ export interface EconomyView {
   privateStorages: {plotId: string; kind: string; goods: {resource:string; amount:number; sharpen?:number}[]}[]
 }
 export const api = {
+  submitReport: (body: {id:string;kind:string;text:string;slug:string|null;capturedAt:string;screen:unknown;screenshot:string|null}) =>
+    request<{id:string;state:string;screenshotIncluded?:boolean}>('POST', '/api/reports', body, AbortSignal.timeout(20000)),
   economy: (slug: string, before?: string, asset?: string) => request<EconomyView>('GET', `/api/villages/${encodeURIComponent(slug)}/economy?${new URLSearchParams({...before ? {before} : {}, ...asset ? {asset} : {}})}`),
   economyAction: (slug: string, body: EconomyRequest) => request<EconomyView>('POST', `/api/villages/${encodeURIComponent(slug)}/economy`, body).then(result=>{
     window.dispatchEvent(new CustomEvent('desertovia-wallet-changed',{detail:{slug,coins:result.coins,testCandles:result.testCandles}}));return result

@@ -1,3 +1,15 @@
+# In-game reports — IN PROGRESS, NOT INSTALLED18Oct2026
+
+Owner: small non-text «!» above map/menus, bug/complaint/suggestion with current
+screen and account/version context. Explicit clarification: Cancel/close discards
+all draft data; no server/bot/file/browser storage before Send. Capture before
+opening the form, preview/remove image, fallback without image; game and Dungeon.
+Authenticated server identity, bounded allowlisted context/JPEG, durable PG outbox,
+idempotent receipt and owner-only bot ZIP including JSON/text/optional image.
+No model calls, gameplay mutations or synthetic live messages. Source/tests only;
+no new deployment authorization. Preserve current0.7.14 and parallel bot news work.
+See docs/dezertovia/IN_GAME_REPORTS.md. Historical records below.
+
 #0.7.13 установлена и независимо проверена — 18 октября 2026
 
 Проверено в13:56UTC/15:56Осло. Gameexact`a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3`,

@@ -2174,10 +2174,12 @@
     }
   },
   "in_game_reports": {
-    "status": "implementation_in_progress",
+    "status": "final_safari_capture_validation",
     "installed": false,
     "draft": "memory_only_until_explicit_send",
     "cancel": "discard_all",
-    "guide": "IN_GAME_REPORTS.md"
+    "guide": "IN_GAME_REPORTS.md",
+    "prior_ci": 39166485172,
+    "safari_capture": "disable clone-only animations; assert actual menu JPEG opacity"
   }
 }

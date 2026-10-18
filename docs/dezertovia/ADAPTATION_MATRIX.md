@@ -1,3 +1,13 @@
+# Safari capture follow-up — FINAL CHECKS PENDING, NOT INSTALLED
+
+Visual review found WebKit restarting cloned menu entrance animations, blending
+HUD through the screenshot. Capture now disables animations/transitions only in
+the detached clone; live UI stays unchanged. Regression checks actual JPEG menu
+pixels, not just file existence. Fixture waits for initial account load before
+API login/navigation. Prior f0027ff CI39166485172 passed533/287/226+2skip/4unit/
+lint/build/Docker, bot6f9e71e CI39166484124 passed1096. Final game source must
+pass again after this image fix; no install request or runtime change. History below.
+
 # In-game reports — IN PROGRESS, NOT INSTALLED18Oct2026
 
 Owner: small non-text «!» above map/menus, bug/complaint/suggestion with current

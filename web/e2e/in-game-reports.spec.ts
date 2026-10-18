@@ -6,6 +6,8 @@ test.use({serviceWorkers:'block'})
 
 async function village(page: import('@playwright/test').Page) {
   await page.goto('/')
+  // Settle initial account loading before API login/navigation, including WebKit.
+  await expect(page.locator('section.login')).toBeVisible()
   await page.request.post('/auth/dev-login', {data:{name:uniqueName('report')}})
   await page.request.post('/api/me/character', {data:{name:'Report tester',appearance:{body:'Female',style:0,skinTone:0,hairColor:0,outfitColor:0}}})
   const created = await (await page.request.post('/api/villages', {data:{name:uniqueName('Report village'),isPrivate:false}})).json()
@@ -20,6 +22,11 @@ const form = (page: import('@playwright/test').Page) => page.getByRole('dialog',
 test('small symbol stays above actual menu; cancel, X and Escape discard unsent screenshots',async({page},info)=>{
   test.slow()
   await village(page);await openMenu(page)
+  await expect.poll(()=>page.locator('.modal-backdrop').evaluate(el=>getComputedStyle(el).opacity)).toBe('1')
+  const expected = await page.locator('.modal.menu').evaluate(el=>{
+    const rect=el.getBoundingClientRect()
+    return {x:rect.x+9,y:rect.y+rect.height*.55,width:innerWidth,color:getComputedStyle(el).backgroundColor.match(/\d+/g)!.slice(0,3).map(Number)}
+  })
   const writes: string[]=[]
   page.on('request',r=>{if(r.url().includes('/api/reports'))writes.push(r.method())})
   const storageBefore=await page.evaluate(()=>({local:{...localStorage},session:{...sessionStorage}}))
@@ -31,6 +38,9 @@ test('small symbol stays above actual menu; cancel, X and Escape discard unsent 
   const bytes=Buffer.from(source!.split(',')[1],'base64')
   expect(bytes.length).toBeLessThanOrEqual(350000)
   const stats=await sharp(bytes).stats();expect(stats.entropy).toBeGreaterThan(2)
+  const meta=await sharp(bytes).metadata(),scale=meta.width!/expected.width
+  const pixel=await sharp(bytes).removeAlpha().extract({left:Math.round(expected.x*scale),top:Math.round(expected.y*scale),width:1,height:1}).raw().toBuffer()
+  for(let channel=0;channel<3;channel++)expect(Math.abs(pixel[channel]-expected.color[channel]),'Menu must remain opaque in the captured image').toBeLessThan(18)
   await writeFile(info.outputPath('captured-menu.jpg'),bytes)
   await page.screenshot({path:info.outputPath('report-form.png')})
   await form(page).getByLabel('Описание').fill('Do not send this cancelled draft')

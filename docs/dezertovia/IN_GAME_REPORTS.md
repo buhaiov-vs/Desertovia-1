@@ -50,3 +50,10 @@ falls back to structured report. Screenshot can contain visible game chat: playe
 sees preview and may remove it. User typed text is sent only after explicit submit.
 A submit already acknowledged by server is a real report; closing receipt does
 not retract it. No code here is deployed by writing this source.
+
+## Safari follow-up
+
+Визуальная проверка после первого зелёного CI нашла перезапуск CSS-анимации
+меню в клоне WebKit: просвечивали слои HUD. Отключаем animation/transition
+только в клоне, не в живой игре. Новый browser assertion сравнивает настоящий
+пиксель JPEG с непрозрачным фоном меню. Ожидаем финальные проверки нового SHA.

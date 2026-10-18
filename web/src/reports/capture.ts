@@ -30,6 +30,11 @@ export async function captureReportScreen(): Promise<string> {
       backgroundColor: '#34230f', logging: false, imageTimeout: 3000,
       ignoreElements: element => element.hasAttribute('data-report-exclude') || element.tagName === 'IFRAME' || element.classList.contains('login') || element.classList.contains('telegram-confirm'),
       onclone: doc => {
+        // Cloning restarts CSS entrance animations in WebKit. Capture fully visible menus,
+        // without changing the live page's animation or persisting a screenshot anywhere.
+        const still = doc.createElement('style')
+        still.textContent = '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}'
+        doc.head.appendChild(still)
         // html2canvas does not honour the browser's collapsed-details layout by itself.
         for (const details of doc.querySelectorAll('details')) {
           const summary = details.querySelector<HTMLElement>(':scope > summary')

@@ -7,7 +7,7 @@ import { receiveFighterSample, fighterPositionAt, fighterIsMoving, type FighterS
 import { playerNamesVisible, PREFERENCES_EVENT } from '../gamePreferences'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
-import { BuildingLighting, hasPreparedBuilding } from './BuildingLighting'
+import { BuildingLighting, hasPreparedBuilding, preparedBuildingBounds } from './BuildingLighting'
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
 import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type Tsar, type VillageState, type Wilds } from '../api'
@@ -709,6 +709,11 @@ export class VillageWorld {
     this.worldPickable = pickable
   }
 
+  /** Yellow outline follows the sprite. The plot underneath stays the full yard for walking and placement. */
+  private shownBuildingArea(kind: string, x: number, y: number): TileArea {
+    return preparedBuildingBounds(kind, x, y) ?? footprint(x, y)
+  }
+
   /** Outlines tiles of the map; null removes the outline. */
   setSelection(area: TileArea | null) {
     this.selection.clear()
@@ -738,7 +743,7 @@ export class VillageWorld {
     for (const site of village.sites) {
       const plot = this.plot(site.plotId)
       const area = plot && footprint(plot.x, plot.y)
-      if (area && inside(area)) return { kind: 'site', plotId: site.plotId, building: site.kind, area }
+      if (plot && area && inside(area)) return { kind: 'site', plotId: site.plotId, building: site.kind, area: this.shownBuildingArea(site.kind, plot.x, plot.y) }
     }
     const buildings = [
       ...village.structures.map((structure) => ({ plotId: structure.plotId, building: structure.kind, storage: false })),
@@ -751,7 +756,7 @@ export class VillageWorld {
     for (const building of buildings) {
       const plot = this.plot(building.plotId)
       const area = plot && footprint(plot.x, plot.y)
-      if (area && inside(area)) return { kind: 'building', ...building, area }
+      if (plot && area && inside(area)) return { kind: 'building', ...building, area: this.shownBuildingArea(building.building, plot.x, plot.y) }
     }
 
     const project = village.project

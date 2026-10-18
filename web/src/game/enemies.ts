@@ -173,6 +173,7 @@ const LOOKS: Record<EnemyKind, EnemyLook> = {
     ],
     colors: { h: 0x9ab8c8, k: 0x1a2a3a },
   },
+  /** Stand-in figure until the owner supplies the barrow king's animation frames. */
   BarrowKing: {
     speed: 12,
     hop: 0.5,

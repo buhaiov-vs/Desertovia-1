@@ -232,6 +232,7 @@ export class DungeonWorld {
   private walkable: boolean[] = []
   private width = 0
   private height = 0
+  private floor = 0
   private myHeroId: string | null = null
   private handlers: DungeonPickHandlers | null = null
   private elapsed = 0
@@ -285,16 +286,8 @@ export class DungeonWorld {
     this.view = view
     this.myHeroId = view.myHeroId
     if (firstTime) {
-      this.width = view.width
-      this.height = view.height
-      this.walkable = [...view.tiles].map((digit) => WALKABLE.includes(DUNGEON_TILES[Number(digit)] ?? 'Rock'))
-      this.ground.clear()
-      ;[...view.tiles].forEach((digit, index) =>
-        drawTile(this.ground, DUNGEON_TILES[Number(digit)] ?? 'Rock', index % view.width, Math.floor(index / view.width)),
-      )
-      this.centerX = view.entrance.x + 0.5
-      this.centerY = view.entrance.y + 0.5
-      this.scale = this.defaultScale()
+      this.floor = 0
+      this.showMap(view.width, view.height, view.tiles, view.entrance)
     }
     view.heroes.forEach((hero, index) => {
       let figure = this.heroes.get(hero.id)
@@ -309,7 +302,31 @@ export class DungeonWorld {
     this.layoutCamera()
   }
 
+  private showMap(width: number, height: number, tiles: string, entrance: { x: number; y: number }) {
+    this.width = width
+    this.height = height
+    this.walkable = [...tiles].map((digit) => WALKABLE.includes(DUNGEON_TILES[Number(digit)] ?? 'Rock'))
+    this.ground.clear()
+    ;[...tiles].forEach((digit, index) =>
+      drawTile(this.ground, DUNGEON_TILES[Number(digit)] ?? 'Rock', index % width, Math.floor(index / width)),
+    )
+    this.centerX = entrance.x + 0.5
+    this.centerY = entrance.y + 0.5
+    this.scale = this.defaultScale()
+    this.layoutCamera()
+  }
+
+  private clearFoes() {
+    for (const foe of this.foes.values()) foe.view.destroy({ children: true })
+    this.foes.clear()
+  }
+
   setSnapshot(snapshot: DungeonSnapshot) {
+    if (snapshot.floor !== this.floor) {
+      this.floor = snapshot.floor
+      this.clearFoes()
+      this.showMap(snapshot.width, snapshot.height, snapshot.tiles, snapshot.entrance)
+    }
     for (const hero of snapshot.heroes) {
       const figure = this.heroes.get(hero.id)
       if (!figure) continue
@@ -532,6 +549,7 @@ export class DungeonWorld {
       move(hero)
       drawBar(hero.bar, hero.health / Math.max(1, hero.maximumHealth), hero.id === this.myHeroId ? 0xffd23a : 0x60c040)
       hero.skull.visible = hero.state === 'Fleeing'
+      hero.view.visible = hero.state !== 'Left'
       hero.view.alpha = hero.state === 'Left' ? Math.max(0, hero.view.alpha - seconds) : 1
     }
     for (const [id, foe] of this.foes) {

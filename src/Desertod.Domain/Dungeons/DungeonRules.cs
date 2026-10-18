@@ -52,7 +52,7 @@ public static class DungeonRules
             OpenedAt = now,
             GatheringEndsAt = now + Gathering,
             Seed = seed,
-            Foes = dungeon.Spawns.Count,
+            Foes = dungeon.TotalFoes,
             Heroes = [new DungeonHero { AccountId = village.OwnerAccountId, Name = tsarName, Class = HeroClass.Voivode }],
         };
     }

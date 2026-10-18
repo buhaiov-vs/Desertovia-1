@@ -37,12 +37,47 @@ public class DungeonTests
     public void DeadLands_EveryFoeCanBeReachedFromTheEntrance()
     {
         var dungeon = DungeonCatalog.Get(DungeonCatalog.DeadLands);
-        var entrance = ((int)dungeon.Entrance.X, (int)dungeon.Entrance.Y);
 
-        Assert.Equal(48, dungeon.Width);
-        Assert.Equal(32, dungeon.Height);
-        Assert.Contains(dungeon.Spawns, s => s.Kind == EnemyKind.BarrowKing);
-        Assert.All(dungeon.Spawns, spawn => Assert.NotNull(DungeonPathfinder.Find(dungeon, entrance, (spawn.X, spawn.Y))));
+        Assert.Equal(3, dungeon.Floors.Count);
+        Assert.Equal(dungeon.Floors.Sum(floor => floor.Spawns.Count), dungeon.TotalFoes);
+        Assert.DoesNotContain(dungeon.Floors[0].Spawns, spawn => spawn.Kind == EnemyKind.BarrowKing);
+        Assert.DoesNotContain(dungeon.Floors[1].Spawns, spawn => spawn.Kind == EnemyKind.BarrowKing);
+        Assert.Equal([EnemyKind.BarrowKing], dungeon.Floors[2].Spawns.Select(spawn => spawn.Kind));
+        Assert.All(dungeon.Floors, floor =>
+        {
+            var entrance = ((int)floor.Entrance.X, (int)floor.Entrance.Y);
+            Assert.All(floor.Spawns, spawn => Assert.NotNull(DungeonPathfinder.Find(floor, entrance, (spawn.X, spawn.Y))));
+        });
+    }
+
+    [Fact]
+    public void AFallenHero_LivesAndStaysBehind_WhileTheSurvivorFacesTheBoss()
+    {
+        var woods = DungeonCatalog.Parse("woods", "Woods", ["TTTTTTTTTT", "Er.......T", "TTTTTTTTTT"], TimeSpan.FromMinutes(15));
+        var barrow = DungeonCatalog.Parse("barrow", "Barrow", ["TTTTTTTTTT", "E.......KT", "TTTTTTTTTT"], TimeSpan.FromMinutes(15));
+        var course = DungeonCatalog.Expedition("run", "Run", TimeSpan.FromMinutes(15), woods, barrow);
+        var fallen = Fighter(health: 30, damage: 1);
+        var survivor = Fighter(health: 200, damage: 1000);
+        var simulation = new DungeonSimulation(course, [fallen, survivor]);
+        simulation.Hero(fallen.Id)!.State = HeroState.Fleeing;
+        simulation.Hero(fallen.Id)!.Health = 0;
+        simulation.Attack(survivor.Id, 0);
+
+        Run(simulation, 2);
+
+        Assert.Equal(1, simulation.Floor);
+        Assert.Equal(DungeonOutcome.Pending, simulation.Outcome);
+        Assert.Equal(HeroState.Left, simulation.Hero(fallen.Id)!.State);
+        Assert.Equal(HeroState.Fighting, simulation.Hero(survivor.Id)!.State);
+        Assert.Equal(200, simulation.Hero(survivor.Id)!.Health);
+        Assert.Equal(EnemyKind.BarrowKing, Assert.Single(simulation.Foes, foe => foe.IsAlive).Kind);
+
+        simulation.Attack(survivor.Id, 0);
+        Run(simulation, 20);
+
+        Assert.Equal(DungeonOutcome.Victory, simulation.Outcome);
+        Assert.True(simulation.OutcomeOf(simulation.Hero(fallen.Id)!).KnockedOut);
+        Assert.False(simulation.OutcomeOf(simulation.Hero(survivor.Id)!).KnockedOut);
     }
 
     [Fact]

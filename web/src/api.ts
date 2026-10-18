@@ -293,6 +293,13 @@ export interface DungeonSnapshot {
   heroes: DungeonHeroSnapshot[]
   foes: DungeonFoeSnapshot[]
   events: DungeonEvent[]
+  /** Zero on the first floor. */
+  floor: number
+  floorCount: number
+  width: number
+  height: number
+  tiles: string
+  entrance: TilePoint
 }
 
 /** Tiles of a dungeon map, by the digit the server sends for each. */

@@ -55,6 +55,11 @@ public sealed class DungeonDefinition
     public required IReadOnlyList<DungeonSpawn> Spawns { get; init; }
     public required TimeSpan TimeLimit { get; init; }
 
+    /// <summary>Later floors of one expedition. Empty when this map is the whole run.</summary>
+    public IReadOnlyList<DungeonDefinition> Floors { get; init; } = [];
+
+    public int TotalFoes => Floors.Count > 0 ? Floors.Sum(floor => floor.Spawns.Count) : Spawns.Count;
+
     public DungeonTile TileAt(int x, int y) => Tiles[y * Width + x];
 
     public bool Inside(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
@@ -66,41 +71,53 @@ public static class DungeonCatalog
 {
     public const string DeadLands = "dead-lands";
 
-    /// <summary>Dead woods west of the land, a graveyard in the middle and the barrow of a dead king in the east.</summary>
-    private static readonly string[] DeadLandsRows =
+    /// <summary>One expedition: dead woods, then the graveyard, then the barrow king alone.</summary>
+    private static readonly string[] WoodsRows =
     [
-        "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-        "T...,.....T....T......,....TT.....,........RR..T",
-        "T.,....T..........,..r....................R..,.T",
-        "T.........,..T............T....,...gg.g........T",
-        "TT..................T..............g..g...z....T",
-        "T....,....r...............,........g.gg........T",
-        "T..T..............,.........T............,..T..T",
-        "T.........T...........T...........b............T",
-        "T..,..............i...........,..........s.....T",
-        "T..........,..............T.......T............T",
-        "TT...T...............b.........................T",
-        "T.........ffff.ff..........,......ffff.ff......T",
-        "T..,......f......f..,.............f......f..w..T",
-        "T.........f.g.g..f........T.......f.g.g..f.....T",
-        "T.............z.......................s........T",
-        "T....,....f.g.g..f.......,........f.g.g..f..mmmT",
-        "E.........f......f................f..h...f..mKmT",
-        "T.........ff.ffff.f...........b...ffffff.f..m.mT",
-        "T.,...................r.............,.....z....T",
-        "T....T....................T....................T",
-        "T........r............,..........T.........,...T",
-        "TT................T..........i............T....T",
-        "T...,.....T.......................g.g.g........T",
-        "T......................s....,.............h....T",
-        "T..T......,.......................g.g.g........T",
-        "T.............z.....T.......b..............,...T",
-        "T.,.........................T.......w..........T",
-        "T.........T...,...........................T....T",
-        "T....T................r..........T...,.........T",
-        "T...,.........T.....................T......,...T",
-        "T................T........,.............T......T",
-        "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+        "TTTTTTTTTTTTTTTTTTTT",
+        "T..................T",
+        "T..r....z..........T",
+        "T.......r.....i....T",
+        "T..T........z......T",
+        "E...........r......T",
+        "T.....i............T",
+        "T..r........T......T",
+        "T........z.........T",
+        "T..................T",
+        "T.....r............T",
+        "TTTTTTTTTTTTTTTTTTTT",
+    ];
+
+    private static readonly string[] GravesRows =
+    [
+        "TTTTTTTTTTTTTTTTTTTT",
+        "T.g.g..............T",
+        "T....s.............T",
+        "T..........h.......T",
+        "T.g.g..............T",
+        "T........ffff......T",
+        "E..................T",
+        "T...s..............T",
+        "T.............h....T",
+        "T......w...........T",
+        "T..g.g......s...w..T",
+        "TTTTTTTTTTTTTTTTTTTT",
+    ];
+
+    private static readonly string[] BarrowRows =
+    [
+        "TTTTTTTTTTTTTTTT",
+        "TmmmmmmmmmmmmmmT",
+        "Tm.............T",
+        "Tm.............T",
+        "Tm.....m.m.....T",
+        "Tm.....mKm.....T",
+        "E..............T",
+        "Tm.....m.m.....T",
+        "Tm.............T",
+        "Tm.............T",
+        "TmmmmmmmmmmmmmmT",
+        "TTTTTTTTTTTTTTTT",
     ];
 
     public static IReadOnlyDictionary<EnemyKind, DungeonFoe> Foes { get; } = new Dictionary<EnemyKind, DungeonFoe>
@@ -126,7 +143,37 @@ public static class DungeonCatalog
             ]),
     };
 
-    public static IReadOnlyList<DungeonDefinition> Dungeons { get; } = [Parse(DeadLands, "Dead Lands", DeadLandsRows, TimeSpan.FromMinutes(15))];
+    public static IReadOnlyList<DungeonDefinition> Dungeons { get; } = [DeadLandsCourse()];
+
+    /// <summary>Several maps played in order as one run. The first map is what viewers see before the fight.</summary>
+    public static DungeonDefinition Expedition(string id, string name, TimeSpan timeLimit, params DungeonDefinition[] floors)
+    {
+        var first = floors[0];
+        return new DungeonDefinition
+        {
+            Id = id,
+            Name = name,
+            Width = first.Width,
+            Height = first.Height,
+            Tiles = first.Tiles,
+            Entrance = first.Entrance,
+            Spawns = first.Spawns,
+            TimeLimit = timeLimit,
+            Floors = floors,
+        };
+    }
+
+    private static DungeonDefinition DeadLandsCourse()
+    {
+        var limit = TimeSpan.FromMinutes(15);
+        return Expedition(
+            DeadLands,
+            "Dead Lands",
+            limit,
+            Parse("dead-lands-woods", "Dead woods", WoodsRows, limit),
+            Parse("dead-lands-graves", "Graveyard", GravesRows, limit),
+            Parse("dead-lands-barrow", "Barrow", BarrowRows, limit));
+    }
 
     public static DungeonDefinition? Find(string id) => Dungeons.FirstOrDefault(d => d.Id == id);
 

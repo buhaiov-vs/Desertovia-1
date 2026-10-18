@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "recorded_on": "2026-10-17",
+  "recorded_on": "2026-10-18",
   "phase": "released_verified",
   "architecture": "adapt_existing_dotnet_react_pixi",
   "source_commits": {
     "engineering_base": "492cf29162c2fc08ee9204589fcde3109fa76904",
     "legacy_042": "21f831ae08a0dc10a8c3c11de2f4b048a326decf",
     "legacy_043_unreleased": "6897f76c2d8fa0b6fbfb0ce7e26048d997e4a0e6",
-    "latest_upstream_inspected": "e23bc943bac17e55d4d5a0b0805d07d53de02108",
+    "latest_upstream_inspected": "e30fc988c957b339ba1e7a172d5d70b0d3f59025",
     "release_0_5_3": "a980d8daeb2d3ff10609df7894444d57c8992c74",
     "release_0_6": "143bf9ad569d2bc01d43356c8fc21467c59e544a",
     "release_0_6_1": "61d726c184315d54c3d2c86b4984954bf818e31b",
@@ -19,7 +19,8 @@
     "release_0_7_4": "74adbe8c1d778f0751a755a4b36dbefe6f16a405",
     "release_0_7_5": "374323f8c3ef519694497371716e611d3396ee43",
     "release_0_7_6": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d",
-    "release_0_7_9": "7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8"
+    "release_0_7_9": "7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8",
+    "release_0_7_12": "56a62381eb33b35e401e1766c2f4525d2709b361"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -1602,7 +1603,7 @@
   },
   "next_patch_version_policy": {
     "decision": "D-095",
-    "next_planned_version": "0.7.11",
+    "next_planned_version": "0.7.13",
     "series": "0.7",
     "increment": "third_integer_component",
     "continue_through": "0.7.99",
@@ -1841,5 +1842,84 @@
         "docker": "pass"
       }
     }
+  },
+  "latest_upstream_repository": "buhaiov-vs/Desertovia-1",
+  "release_0_7_12": {
+    "version": "0.7.12",
+    "state": "installed_and_independently_verified",
+    "observed_at_utc": "2026-10-18T09:49:17+00:00",
+    "observed_at_oslo": "2026-10-18T11:49:17+02:00",
+    "game_sha": "56a62381eb33b35e401e1766c2f4525d2709b361",
+    "bot_payload_sha": "d0f82a617a3a76830862942d3decd4708cfc8b9d",
+    "upstream_sha": "e30fc988c957b339ba1e7a172d5d70b0d3f59025",
+    "game_merge_sha": "895e8629a6d59f2512b7636293bc935b86f6d32e",
+    "game_ci": 39114746891,
+    "bot_ci": 39114759689,
+    "preflight_run": 39116333730,
+    "install_run": 39116370847,
+    "check_run": 39116734143,
+    "checks": {
+      "domain": 533,
+      "api": 272,
+      "browser_passed": 212,
+      "browser_normal_skip": 2,
+      "bot": 968,
+      "operator": 37,
+      "lint": "pass",
+      "build": "pass",
+      "docker": "pass"
+    },
+    "preservation": {
+      "profiles_before": 138,
+      "profiles_after": 138,
+      "lost_profiles_or_progress": 0,
+      "accounts_preserved": 141,
+      "login_bindings_preserved": 141
+    },
+    "migrations": 37,
+    "building_numbers": {
+      "sequenceTooSmall": 0,
+      "unassigned": 0,
+      "duplicatePlots": 0,
+      "duplicateNumbers": 0
+    },
+    "display_numbers": {
+      "missing": 0,
+      "duplicateGlobal": 0,
+      "duplicateFamily": 0,
+      "familyGaps": 0,
+      "invalidValue": 0
+    },
+    "protected_actual_bot_files": 115,
+    "bot_runtime_payload": [
+      "feedback_context.py"
+    ],
+    "configurations_preserved": true,
+    "director_mode": "Propose",
+    "quarantine_preserved": true,
+    "backups": {
+      "postgres": true,
+      "restore_catalog_verified": true,
+      "sqlite": true,
+      "sqlite_integrity": "ok",
+      "code": true,
+      "configurations": true,
+      "profiles": true
+    },
+    "frontend": {
+      "version": "0.7.12",
+      "slider_editor": true,
+      "upstream_music_control": true,
+      "game_chunk": true,
+      "checked_chunks": 24,
+      "transient_http_retries": 0
+    },
+    "equipment_schema_verified": true,
+    "aspnet_runtime_minimum": "10.0.13",
+    "forced_raids": 0,
+    "model_probes": 0,
+    "synthetic_messages": 0,
+    "test_payments": 0,
+    "natural_postrelease_combat_performance_measured": false
   }
 }

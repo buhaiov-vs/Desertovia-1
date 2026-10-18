@@ -1,3 +1,26 @@
+# D-101:0.7.12 УСТАНОВЛЕНА И НЕЗАВИСИМО ПРОВЕРЕНА18Oct2026
+
+Проверка подтверждена18Oct09:49UTC (11:49Europe/Oslo). Результат установлен,
+а не толькоREADY/scheduled. Исторические NOTINSTALLED/HOLD ниже не текущий статус.
+Gameexact56a62381eb33b35e401e1766c2f4525d2709b361; botpayloadexactd0f82a617a3a76830862942d3decd4708cfc8b9d,
+ТОЛЬКОfeedback_context.py. GameCI39114746891 SUCCESS533Domain/272API/
+212browser+2штатныхskip,lint/build/DockerPASS. BotCI39114759689 SUCCESS968tests,
+serverSKIPPED;37operator guardsPASS. Upstream e30fc98 принят с исправлениями.
+Actualpreflight39116333730, install39116370847 и independentcheck39116734143 SUCCESS.
+138→138профилей,0потерь навыков/характеристик/славы;141аккаунт/141привязка
+сохранены.37миграций, оба реестра номеров без ошибок, frontend0.7.12/24chunks.
+Фактические PGdump/restorecatalog,SQLite integrityok,code/config/profile backups
+приватны.115otheractualbotfiles/configs сохранены, включая параллельные picker/
+login/Игрища/persona/reader; Propose/AIbudget/quarantine сохранены.
+Выпущены заточка+3,3этажаDungeon,музыка,resume,видимостьofflineбойца,
+голодныйXPпо старту,контраст/квесты/пути/обводки/перерисовка. Заточка вобщественной
+кузнице; личныйторговыйинвентарь пока не хранит+N. Ночные сценариидиректора—PLAN.
+Плавность естественногонабега после обновления не измерялась; не обещать FPS.
+Текущийpost0712request=check; не переустанавливать и не повторять старые requests.
+Новые изменения — отдельный проверенный source/preflight/backups/check; версия
+далее0.7.13…0.7.99, без автоматического0.8/1.0. Сообщений/пробных волн/платежей/
+сбросов/форсированныхмодельныхпроб не запускалось.
+
 # V-01–V-06 в исходниках, не установлены
 
 17.10.2026: тёмный текст складов, голодный опыт по старту цикла, пропуск перерисовки

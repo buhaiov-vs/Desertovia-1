@@ -1,6 +1,7 @@
 import { test, expect, openMenu, uniqueName } from './fixtures.ts'
 import { writeFile } from 'node:fs/promises'
 import sharp from 'sharp'
+import { GAME_VERSION } from '../src/version.ts'
 
 test.use({serviceWorkers:'block'})
 
@@ -24,8 +25,10 @@ test('small symbol stays above actual menu; cancel, X and Escape discard unsent 
   await village(page);await openMenu(page)
   await expect.poll(()=>page.locator('.modal-backdrop').evaluate(el=>getComputedStyle(el).opacity)).toBe('1')
   const expected = await page.locator('.modal.menu').evaluate(el=>{
-    const rect=el.getBoundingClientRect()
-    return {x:rect.x+9,y:rect.y+rect.height*.55,width:innerWidth,color:getComputedStyle(el).backgroundColor.match(/\d+/g)!.slice(0,3).map(Number)}
+    const body=el.querySelector('.modal-body')!
+    const rect=body.getBoundingClientRect()
+    // Sample the empty inner padding, clear of the wood border and text/cards.
+    return {x:rect.x+4,y:rect.y+rect.height*.55,width:innerWidth,color:getComputedStyle(el).backgroundColor.match(/\d+/g)!.slice(0,3).map(Number)}
   })
   const writes: string[]=[]
   page.on('request',r=>{if(r.url().includes('/api/reports'))writes.push(r.method())})
@@ -38,10 +41,10 @@ test('small symbol stays above actual menu; cancel, X and Escape discard unsent 
   const bytes=Buffer.from(source!.split(',')[1],'base64')
   expect(bytes.length).toBeLessThanOrEqual(350000)
   const stats=await sharp(bytes).stats();expect(stats.entropy).toBeGreaterThan(2)
+  await writeFile(info.outputPath('captured-menu.jpg'),bytes)
   const meta=await sharp(bytes).metadata(),scale=meta.width!/expected.width
   const pixel=await sharp(bytes).removeAlpha().extract({left:Math.round(expected.x*scale),top:Math.round(expected.y*scale),width:1,height:1}).raw().toBuffer()
   for(let channel=0;channel<3;channel++)expect(Math.abs(pixel[channel]-expected.color[channel]),'Menu must remain opaque in the captured image').toBeLessThan(18)
-  await writeFile(info.outputPath('captured-menu.jpg'),bytes)
   await page.screenshot({path:info.outputPath('report-form.png')})
   await form(page).getByLabel('Описание').fill('Do not send this cancelled draft')
   await form(page).getByRole('button',{name:'Отмена',exact:true}).click()
@@ -71,7 +74,7 @@ test('explicit submit includes snapshot context; retry reuses the entire origina
   await form(page).getByRole('button',{name:'Отправить',exact:true}).click()
   await expect(page.getByRole('dialog',{name:'Отчёт сохранён'})).toBeVisible()
   expect(attempts).toHaveLength(2);expect(attempts[0]).toEqual(attempts[1])
-  expect(attempts[0]).toMatchObject({slug,kind:'bug',text:'Menu failed',screen:{page:'village',menu:'menu:village',clientVersion:'0.7.14'}})
+  expect(attempts[0]).toMatchObject({slug,kind:'bug',text:'Menu failed',screen:{page:'village',menu:'menu:village',clientVersion:GAME_VERSION}})
   expect(typeof attempts[0].screenshot).toBe('string')
   expect(attempts[0]).not.toHaveProperty('accountId')
   await expect(page.locator('.report-preview')).toHaveCount(0)

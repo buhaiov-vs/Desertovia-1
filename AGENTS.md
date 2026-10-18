@@ -1,3 +1,17 @@
+#0.7.15 installation authorized — FINAL CHECKS PENDING, NOT INSTALLED
+
+Owner18Oct2026: «Сразу грузи на сервер в гитхаб оба РЕПО наших».
+Both game and batyushka source/GitHub installation authorized; no reconfirmation.
+Small ! above menus and Dungeon, bug/complaint/suggestion, pre-form JPEG,
+authenticated identity/version/context, durable outbox and owner-only ZIP.
+Cancel/X/Escape erase memory draft without server/bot/browser/file storage.
+Stamp0.7.15; final exact game/bot CI, fresh actual protected baseline and new
+post0715 report→backups/deploy→separatecheck required. Preserve actual unrelated
+bot news/vision, configs, Propose/budgets/quarantine and all player progress.
+Only almighty.py,feedback.py,feedback_context.py,new game_feedback.py botpayload.
+No synthetic production reports/messages/waves/model probes/payments/resets.
+Prior green CIs do not replace final pins. Historical status follows.
+
 # Safari capture follow-up — FINAL CHECKS PENDING, NOT INSTALLED
 
 Visual review found WebKit restarting cloned menu entrance animations, blending

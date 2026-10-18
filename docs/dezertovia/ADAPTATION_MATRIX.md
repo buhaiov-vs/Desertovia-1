@@ -1,3 +1,5 @@
+> Dungeon response fix verified_source: exact d9ad3c4, CI39129933021 SUCCESS533Domain/278API/212browser+2skip/4clientunit; PR63 merged с идентичным деревом. Не установлен. Подробнее DUNGEON_INPUT_LATENCY.md.
+
 # Dungeon input latency — SOURCE ONLY, 18Oct2026
 
 | Проблема | Точки | Изменение | Проверка |

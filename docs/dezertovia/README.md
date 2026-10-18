@@ -1,3 +1,5 @@
+> **Dungeon fix проверен и слит, НЕ УСТАНОВЛЕН:** PR63, exact CI39129933021 SUCCESS. [Проверки и границы](DUNGEON_INPUT_LATENCY.md). LIVE0.7.12/56a6238 не менялся.
+
 > **18Oct2026 — Dungeon response fix, SOURCE ONLY:** [причины и проверки](DUNGEON_INPUT_LATENCY.md). Runtime0.7.12 не менялся.
 
 > **LIVE0.7.12:** [установлена и независимо проверена](RELEASE_0_7_12.md), install39116370847/check39116734143 SUCCESS;138профилей сохранены. Старые REVIEW/READY ниже — история.

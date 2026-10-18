@@ -1923,14 +1923,23 @@
     "natural_postrelease_combat_performance_measured": false
   },
   "dungeon_input_latency": {
-    "status": "source_only",
+    "status": "verified_source_not_installed",
     "branch": "fix/dungeon-input-latency",
     "record": "docs/dezertovia/DUNGEON_INPUT_LATENCY.md",
-    "local_api_pass": 17,
+    "local_api_pass": 278,
     "client_unit_pass": 4,
     "typescript_build": "pass",
-    "full_ci": "pending",
+    "full_ci": "39129933021 success attempt1",
     "installed": false,
-    "live_source": "56a62381eb33b35e401e1766c2f4525d2709b361"
+    "live_source": "56a62381eb33b35e401e1766c2f4525d2709b361",
+    "source_sha": "d9ad3c4f5dba2bcf0218c33cd604b4e7f3b95f1e",
+    "merge_sha": "fb500b8626bc0ef03f93b8f87c984d7edd6e5170",
+    "focused_api_pass": 17,
+    "domain_ci_pass": 533,
+    "api_ci_pass": 278,
+    "browser_ci_pass": 212,
+    "browser_ci_skip": 2,
+    "original_code_regressions_failed": 6,
+    "restored_focused_api_pass": 17
   }
 }

@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using Desertod.Domain.Catalog;
 using Desertod.Domain.Entities;
+using Desertod.Domain.Rules;
 using Desertod.Domain.Storage;
 using Desertod.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

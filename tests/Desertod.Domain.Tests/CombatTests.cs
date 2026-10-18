@@ -15,6 +15,17 @@ namespace Desertod.Domain.Tests;
 public class CombatTests
 {
     [Fact]
+    public void Private_sharpening_cannot_mix_personal_inputs_with_communal_weapons()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.Sword, 1);
+        var citizen = NewCitizen(village);
+        citizen.CyclePrivateOutput = true;
+        Assert.Equal("sharpen.communal", Assert.Throws<GameRuleException>(() => WeaponSharpening.Check(citizen, village, ResourceKind.Sword)).Code);
+        Assert.Equal(1, village.Stock(ResourceKind.Sword));
+        Assert.Null(citizen.Weapon);
+    }
+    [Fact]
     public void Arrows_do_not_create_a_bow_when_none_is_available()
     {
         var village = NewVillage();

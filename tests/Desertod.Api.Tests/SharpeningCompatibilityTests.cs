@@ -36,7 +36,7 @@ public sealed class SharpeningMigrationTests
         await db.GetService<IMigrator>().MigrateAsync("20261017114745_ProgressionAndMeals0711");
         await db.Database.ExecuteSqlRawAsync("""
             UPDATE "Citizens" SET "Load"=(SELECT jsonb_agg(g-'Sharpen') FROM jsonb_array_elements("Load") g);
-            UPDATE "Villages" SET "Storages"=(SELECT jsonb_agg(jsonb_set(s,'{Goods}',
+            UPDATE "Villages" SET "Storages"=(SELECT jsonb_agg(jsonb_set(s,ARRAY['Goods'],
               COALESCE((SELECT jsonb_agg(g-'Sharpen') FROM jsonb_array_elements(s->'Goods') g),'[]'::jsonb)))
               FROM jsonb_array_elements("Storages") s);
             """);
@@ -72,14 +72,15 @@ public sealed class SharpeningApiTests(DesertodApiFactory factory)
         await using (var db = await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync())
         {
             var v = await db.Villages.SingleAsync(v => v.Slug == city.Slug);
-            v.Store(ResourceKind.Sword, 1, 3);
+            v.Storages.Add(StorageBuilding.Create(StorageKind.TownHall, "13,5", factory.Clock.GetUtcNow()));
+            Assert.Equal(1, v.Store(ResourceKind.Sword, 1, 3));
             var citizen = await db.Citizens.SingleAsync(c => c.Id == player.Id);
             var wallet = await db.GameWallets.SingleAsync(w => w.AccountId == citizen.AccountId && w.VillageId == v.Id);
             wallet.Coins = 1000; await db.SaveChangesAsync();
         }
         await Players.AssertRuleBrokenAsync(await player.Client.PostAsJsonAsync(city.Path + "/economy",
             new { requestId = Guid.NewGuid(), action = "buy-stock", resource = "Sword", amount = 1 }), "inventory.stockMissing");
-        await players.ArrangeVillageAsync(city.Slug, (v, now) => v.Store(ResourceKind.Sword, 1));
+        await players.ArrangeVillageAsync(city.Slug, (v, now) => Assert.Equal(1, v.Store(ResourceKind.Sword, 1)));
         await Players.OkJsonAsync(await player.Client.PostAsJsonAsync(city.Path + "/economy",
             new { requestId = Guid.NewGuid(), action = "buy-stock", resource = "Sword", amount = 1 }));
         await using var check = await factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();

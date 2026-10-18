@@ -1391,6 +1391,7 @@ export const en = {
     'task.unknown': 'Unknown task "{taskId}".',
     'storage.missingInput': 'Not enough {resource} in storage.',
     'sharpen.maximum': 'The smith cannot make this weapon any sharper.',
+    'sharpen.communal': 'Use the communal smithy. The personal trading inventory does not yet retain weapon edges.',
     'sharpen.holding': 'Put the other weapon back into storage before sharpening.',
     'sharpen.weapon': 'A sword, a spear or an arrow can be sharpened.',
     'hunt.noAnimals': 'The game here is hunted out. Give the animals time to come back.',

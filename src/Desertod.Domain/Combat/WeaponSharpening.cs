@@ -22,6 +22,12 @@ public static class WeaponSharpening
     /// <summary>Throws when this citizen cannot grind one of these pieces right now.</summary>
     public static void Check(Citizen citizen, Village village, ResourceKind kind)
     {
+        // Личный торговый инвентарь пока не умеет хранить качество оружия.
+        if (citizen.CyclePrivateOutput)
+        {
+            throw new GameRuleException("sharpen.communal", "Use the communal smithy to sharpen weapons.");
+        }
+
         if (!IsSharpenable(kind))
         {
             throw new GameRuleException("sharpen.weapon", "A sword, a spear or an arrow can be sharpened.");

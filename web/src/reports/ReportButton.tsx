@@ -91,7 +91,7 @@ export function ReportButton() {
       <div className="report-dialog" role="dialog" aria-modal="true" aria-labelledby="report-title" ref={dialog}>
         <header><h2 id="report-title">{receipt ? 'Отчёт сохранён' : 'Обратная связь'}</h2>
           <button type="button" className="report-close" aria-label="Закрыть отчёт" disabled={sending} onClick={close}>×</button></header>
-        {receipt ? <><p>Обращение №{receipt.slice(0, 8)} принято. Батюшка передаст его владельцу.</p>
+        {receipt ? <><p>Обращение №{receipt.slice(0, 8)} принято. Батюшка включит его в общий ежедневный отчёт.</p>
           <p>{imageOmitted ? 'Снимок не сохранён: место для вложений закончилось. Текст и данные игры сохранены.' : ''}</p>
           <button type="button" onClick={close}>Готово</button></> : draft && <>
           <label>Тип обращения<select value={kind} disabled={sending || attempted} onChange={e => setKind(e.target.value)}>

@@ -1,4 +1,4 @@
-import { registerReportCanvas } from '../reports/capture'
+import { captureDisplayedFrame, registerReportCanvas } from '../reports/capture'
 import { Application, CanvasSource, Container, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import {
   DUNGEON_TILES,
@@ -250,7 +250,7 @@ export class DungeonWorld {
 
   private constructor(app: Application, tiles: TileSet, painter: CharacterPainter) {
     this.app = app
-    this.reportCaptureCleanup = registerReportCanvas(app.canvas, () => app.renderer.extract.canvas({ target: app.stage, frame: app.screen, resolution: 1 }) as HTMLCanvasElement, visible => {
+    this.reportCaptureCleanup = registerReportCanvas(app.canvas, () => captureDisplayedFrame(app), visible => {
       if (visible === this.reportObscured) return
       this.reportObscured = visible
       if (visible) { this.reportPreviousFps = app.ticker.maxFPS; app.ticker.maxFPS = 8 }

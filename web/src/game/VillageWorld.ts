@@ -8,7 +8,7 @@ import { playerNamesVisible, PREFERENCES_EVENT } from '../gamePreferences'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
 import { BuildingLighting, hasPreparedBuilding, preparedBuildingBounds } from './BuildingLighting'
-import { registerReportCanvas } from '../reports/capture'
+import { captureDisplayedFrame, registerReportCanvas } from '../reports/capture'
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
 import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type Tsar, type VillageState, type Wilds } from '../api'
@@ -312,7 +312,7 @@ export class VillageWorld {
     window.addEventListener(PREFERENCES_EVENT, this.onPreferences)
     window.addEventListener('storage', this.onPreferences)
     this.app = app
-    this.reportCaptureCleanup = registerReportCanvas(app.canvas, () => app.renderer.extract.canvas({ target: app.stage, frame: app.screen, resolution: 1 }) as HTMLCanvasElement, visible => { this.reportObscured = visible; this.setObscured(this.menuObscured) })
+    this.reportCaptureCleanup = registerReportCanvas(app.canvas, () => captureDisplayedFrame(app), visible => { this.reportObscured = visible; this.setObscured(this.menuObscured) })
     this.tiles = tiles
     this.painter = painter
 

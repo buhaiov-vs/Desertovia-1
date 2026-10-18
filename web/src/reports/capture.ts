@@ -1,3 +1,22 @@
+import type { Application } from 'pixi.js'
+
+/** Copy the frame actually displayed, in the same task as an explicit screen render.
+ * WebGL's default buffer may be cleared after returning to the browser. Rendering
+ * immediately before drawImage avoids preserveDrawingBuffer on every game frame
+ * and does not rerender the scene through an offscreen texture/readPixels path.
+ */
+export function captureDisplayedFrame(app: Application): HTMLCanvasElement {
+  app.renderer.render({container:app.stage})
+  const copy=document.createElement('canvas')
+  const scale=Math.min(1,1280/Math.max(app.canvas.width,app.canvas.height))
+  copy.width=Math.max(1,Math.round(app.canvas.width*scale))
+  copy.height=Math.max(1,Math.round(app.canvas.height*scale))
+  const context=copy.getContext('2d')
+  if(!context)throw new Error('screenshot.canvas')
+  context.drawImage(app.canvas,0,0,copy.width,copy.height)
+  return copy
+}
+
 /** Capture hooks exist only while a renderer is mounted. Images are created only on an explicit click. */
 const sources = new Map<HTMLCanvasElement, {capture: () => HTMLCanvasElement; obscure: (visible:boolean) => void}>()
 let reporting = false
@@ -12,8 +31,8 @@ export function registerReportCanvas(canvas: HTMLCanvasElement, capture: () => H
 }
 
 export async function captureReportScreen(): Promise<string> {
-  // WebGL drawing buffers may be cleared between frames. Extract through Pixi instead of enabling
-  // preserveDrawingBuffer for every frame (which would penalize play even when nobody reports).
+  // Renderers synchronously copy a fresh visible frame before any dynamic import/await.
+  // Screenshots stay in memory until explicit submission.
   const snapshots = new Map<string, string>()
   let index = 0
   try {

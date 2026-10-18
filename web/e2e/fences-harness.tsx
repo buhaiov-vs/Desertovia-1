@@ -4,7 +4,8 @@ import type {TileSet} from '../src/game/sheets'
 import {VillageWorld} from '../src/game/VillageWorld'
 import {FortificationView} from '../src/game/FortificationView'
 import {api,ApiError,type Catalog,type Citizen,type VillageState} from '../src/api'
-import {Container} from 'pixi.js'
+import {Container,type Application} from 'pixi.js'
+import {ReportButton} from '../src/reports/ReportButton'
 import {DefensePanel} from '../src/ui/DefensePanel'
 import {BuildPanel} from '../src/ui/BuildPanel'
 import {SitesPanel} from '../src/ui/SitesPanel'
@@ -46,6 +47,8 @@ api.cancelBlueprint=async()=>{
 }
 api.civic=async(_slug,_plot,operation)=>{calls.push(operation);return {...state,sites:state.sites.map(s=>({...s,hasWork:false,operation:'site-demolish',stages:[{id:'dismantle',crewNeeded:1,hands:0,jobs:[{jobId:'dismantle',done:0,required:25,room:25}]}]}))}}
 const stand={
+ pause:()=>{const app=(world as unknown as {app:Application}).app;app.ticker.stop();app.renderer.render({container:app.stage})},
+ resume:()=>{(world as unknown as {app:Application}).app.ticker.start()},
  finishCancel:()=>finishCancel?.(),
  retryCancel:()=>{cancelError=false},
  material:(level:number)=>update({...state,fortifications:state.fortifications!.map(f=>({...f,level})),fortificationUpgrade:{...state.fortificationUpgrade!,level,strength:level===3?3.5:2,nextLevel:level===3?null:level+1,blockedBy:level===3?'building.maxLevel':null}}),
@@ -73,5 +76,5 @@ Object.assign(window,{fenceStand:stand})
 const worker={accountId:'resident',energy:20,maximumEnergy:20,state:'Idle',load:[],personalGoods:[],actionEnergyCosts:{}} as unknown as Citizen
 function Controls(){const[revision,setRevision]=useState(0);redraw=()=>setRevision(v=>v+1)
  const defense=<DefensePanel slug="demo-bridge" village={state} ruler tsar={!params.has('governor')} onVillage={update}/>
- return <I18nProvider><div data-revision={revision} style={{maxWidth:720,margin:'0 auto'}}>{workMode?<><BuildPanel tsar catalog={catalog} village={state} onPlace={()=>{}} onWithdraw={async plot=>update(await api.cancelBlueprint('demo-bridge',plot))} defense={defense}/><SitesPanel catalog={catalog} village={state} citizen={worker} disabled={false} onStartJob={choice=>calls.push(`job:${choice.stage}:${choice.jobId}`)}/></>:defense}</div></I18nProvider>}
+ return <I18nProvider>{params.has('report')&&<ReportButton/>}<div data-revision={revision} style={{maxWidth:720,margin:'0 auto'}}>{workMode?<><BuildPanel tsar catalog={catalog} village={state} onPlace={()=>{}} onWithdraw={async plot=>update(await api.cancelBlueprint('demo-bridge',plot))} defense={defense}/><SitesPanel catalog={catalog} village={state} citizen={worker} disabled={false} onStartJob={choice=>calls.push(`job:${choice.stage}:${choice.jobId}`)}/></>:defense}</div></I18nProvider>}
 createRoot(document.getElementById('app')!).render(<Controls/> )

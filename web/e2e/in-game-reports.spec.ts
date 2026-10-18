@@ -122,3 +122,32 @@ test('report control also covers the actual dungeon page and records its run ID'
   await expect(page.getByRole('dialog',{name:'Отчёт сохранён'})).toBeVisible()
   expect(body).toMatchObject({slug,screen:{page:'dungeon',dungeonId:runId}})
 })
+
+
+for(const night of [false,true])test(`report preserves the populated village map ${night?'at night':'by day'}`,async({page},info)=>{
+  test.slow()
+  await page.request.post('/auth/dev-login',{data:{name:uniqueName('report-map')}})
+  await page.goto('/e2e/fences-harness.html?report=1')
+  await page.waitForFunction(()=>!!(window as unknown as {fenceStand?:unknown}).fenceStand)
+  const stand=async(action:'night'|'pause',value?:boolean)=>page.evaluate(({action,value})=>{
+    const harness=(window as unknown as {fenceStand:{night:(v:boolean)=>void;pause:()=>void}}).fenceStand
+    if(action==='night')harness.night(!!value);else harness.pause()
+  },{action,value})
+  await stand('night',night)
+  if(night)await expect.poll(()=>page.evaluate(()=>(window as unknown as {fenceStand:{info:()=>{night:number}}}).fenceStand.info().night)).toBeGreaterThan(.95)
+  await stand('pause')
+  const canvas=page.locator('#fence-map canvas').first(),rect=(await canvas.boundingBox())!
+  const original=await canvas.screenshot(),width=await page.evaluate(()=>innerWidth)
+  await trigger(page).click();await expect(form(page).locator('img')).toBeVisible()
+  const src=await form(page).locator('img').getAttribute('src'),bytes=Buffer.from(src!.split(',')[1],'base64')
+  await writeFile(info.outputPath('populated-map-report.jpg'),bytes)
+  await writeFile(info.outputPath('populated-map-original.png'),original)
+  const meta=await sharp(bytes).metadata(),scale=meta.width!/width
+  const area={left:Math.round(32*scale),top:Math.round(48*scale),width:Math.floor((rect.width-80)*scale),height:Math.floor((rect.height-96)*scale)}
+  const normalised=await sharp(original).resize(Math.round(rect.width*scale),Math.round(rect.height*scale)).toBuffer()
+  const expected=await sharp(normalised).extract(area).resize(160,120).removeAlpha().raw().toBuffer()
+  const captured=await sharp(bytes).extract({...area,left:area.left+Math.round(rect.x*scale),top:area.top+Math.round(rect.y*scale)}).resize(160,120).removeAlpha().raw().toBuffer()
+  let error=0;for(let i=0;i<expected.length;i++)error+=Math.abs(expected[i]-captured[i])
+  expect(error/expected.length,'Report must contain the same terrain, buildings and fence as the visible canvas').toBeLessThan(15)
+  await form(page).getByRole('button',{name:'Отмена',exact:true}).click()
+})

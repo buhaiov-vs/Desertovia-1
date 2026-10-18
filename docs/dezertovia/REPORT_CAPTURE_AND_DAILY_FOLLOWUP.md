@@ -8,10 +8,11 @@ Live0.7.15/52f2f6c and bot7963416a remain installed. No version bump for prepara
 User reportfe3ea7d4 inspected read-only: statusSent, one attempt, iOS0.7.15,
 440x766 viewport,77,859-byteJPEG; mainmap entirely absent, HUD/minimap present.
 Image inspected locally only; no real screenshot/account payload committed.
-Fix copies an explicitly rendered visible frame synchronously to a temporary2D
-canvas, avoiding offscreen stage extraction. Validate populated terrain/buildings/
-fence against independent browser screenshots in day/night, desktop/WebKit.
-Native iPhone GPU cause not yet proven; do not claim physical-device verification.
+Reproduced in WebKit: visible map becomes absent in JPEG. html2canvas reads
+img.naturalWidth/naturalHeight before the cloned data-URI image loads (zero size).
+Await image.decode() in async onclone before parsing. Existing Pixi capture stays
+unchanged; no extra game renders or preserveDrawingBuffer. Populated-map comparisons
+PASS by day/night on desktopChrome and WebKit; no physical iPhone hardware check.
 
 Owner also requests no individual report DMs: durablefeedback+identity/context
 memory only, existing daily digest. No new timer/timezone/schedule. Preserve
@@ -25,13 +26,19 @@ Preparation/tests/GitHub source only. Install only after a NEW owner instruction
 Historical release records follow.
 
 
-## Validation status
+## Verified source fix, NOT INSTALLED
 
-TypeScript and lintPASS. Real menu/Cancel/X/Escape checksPASS on desktopChrome
-and WebKit with the new visible-frame capture. Populated-map JPEG comparison
-against independent browser screenshots is being finalised for day/night on
-both engines. Initial comparison script corrected to materialise its resize
-before extracting; that fixture error did not affect game runtime. Actual JPEGs
-show Hut/StoneYard/terrain/fence; native iPhone GPU still needs later confirmation.
-No source version bump, deployment or live change. Bot counterpart PR95, memory
-and existing daily digest only.
+Root cause: html2canvas ImageElementContainer snapshots naturalWidth/naturalHeight
+synchronously. Replaced canvas data-URI images are not decoded yet on WebKit,
+so the parser keeps a zero-sized map even when the live canvas shows buildings.
+Await image.decode() in the clone before parsing. Original Pixi extraction and
+live renderer/ticks stay unchanged. No new version number or server change.
+
+Final populated village comparison:4PASS (desktop/WebKit, day/night) against
+independent browser screenshots including Hut,StoneYard,ground,fence. Earlier
+pending-image path reproduced blank WebKit captures. Additional menu/Cancel/X/
+Escape checks2PASS; TypeScript/lintPASS. Native iPhone hardware not tested.
+No actual player screenshots/private payload committed. Source only, ownerHOLD.
+Bot counterpartPR95:11intake/dedup/daily tests+24existing feedback testsPASS.
+No per-report Telegram calls; existing daily digest/schedule preserved. Pending
+fullCI and installed state must remain distinct. Wait for NEWownerdeploymentinstruction.

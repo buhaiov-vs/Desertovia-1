@@ -1,3 +1,30 @@
+#0.7.15 УСТАНОВЛЕНА И НЕЗАВИСИМО ПРОВЕРЕНА
+
+Проверка завершена 2026-10-18T21:56:55Z. Gameexact`52f2f6ccb39d276be9a260f027198eb02f165e09`,
+CI39168526454 SUCCESS533Domain/287API/226browser+2штатныхskip/4Nodeunit/
+lint/build/Docker. Botexact`7963416ae406197089320e3e0d370fb71599dcde`, CI39168529605 SUCCESS1096,
+serverSKIPPED. SourcePR69/93 merged, деревья идентичны testedsource.
+Actualpreflight39169669850,install39169732307 и отдельныйcheck39170032365 SUCCESS.
+44operatorguards и дополнительный desktop/WebKit capture/CancelcheckPASS.
+141→141профилей,0потерьпрогресса;38миграций. Аккаунты/привязки/навыки/
+характеристики/слава/номеразданий сохранены; полные snapshots/backups вещей
+и игрового состояния сохранены. 121otherbotmodules/657othercodeassets и конфиги
+сохранены, Propose/бюджеты/карантин не менялись. PGdump/restorecatalog,
+SQLiteonlinebackup/integrity/code/config/profile backups созданы.
+
+В игре маленькая «!» поверх карты/любого меню и Dungeon: ошибка/жалоба/
+предложение, снимок до открытия формы, персонаж/версия/экран/диагностика.
+Отмена/X/Escape очищают память: до Send нет сохранения на сервере/в боте/
+браузерном хранилище/файле. Снимок можно убрать. Сервер принимает только
+аутентифицированную личность; отдельный outbox, дедупликация,5обращений/час,
+лимит вложений256MiB и7дней для доставленных изображений. Батюшка сохраняет
+предложку и передаёт владельцу один ZIP. Только явно отправленное — отчёт.
+BotruntimeONLY almighty.py,feedback.py,feedback_context.py,newgame_feedback.py.
+Никаких синтетических liveсообщений/отчётов, волн, modelprobes, платежей/сбросов.
+Отправка покрыта тестами с mockTelegram; настоящую жалобу не имитировали.
+Publichealth/login/exactSHA/frontendcontrols/outboxschema/bridge/versionregistry
+подтверждены. post0715request=check; НЕ повторятьinstall. История ниже.
+
 # Safari capture follow-up — FINAL CHECKS PENDING, NOT INSTALLED
 
 Visual review found WebKit restarting cloned menu entrance animations, blending

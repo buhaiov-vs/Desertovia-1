@@ -1,0 +1,107 @@
+{
+  "phase": "post0715_verified",
+  "version": "0.7.15",
+  "game_sha": "52f2f6ccb39d276be9a260f027198eb02f165e09",
+  "bot_sha": "7963416ae406197089320e3e0d370fb71599dcde",
+  "building_numbers": {
+    "sequenceTooSmall": 0,
+    "unassigned": 0,
+    "duplicatePlots": 0,
+    "duplicateNumbers": 0
+  },
+  "display_numbers": {
+    "missing": 0,
+    "duplicateGlobal": 0,
+    "duplicateFamily": 0,
+    "familyGaps": 0,
+    "invalidValue": 0
+  },
+  "feedback_origins_table": true,
+  "progress": {
+    "profiles_before": 141,
+    "profiles_after": 141,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 143,
+    "login_bindings_preserved": 143
+  },
+  "combat_preservation": {
+    "existing_battles_preserved": 0,
+    "existing_enemy_ids_and_health_checked": 0
+  },
+  "migrations": 38,
+  "director_mode": "Propose",
+  "pending_notice_states": [],
+  "telegram_civic_deliveries_confirmed": 57,
+  "frontend": {
+    "in_game_reports": true,
+    "capture_chunk": true,
+    "version": "0.7.15",
+    "slider_editor": true,
+    "upstream_music_control": true,
+    "fortification_controls": true,
+    "game_chunk": true,
+    "checked_chunks": 26,
+    "transient_http_retries": 0
+  },
+  "feedback_live_version_verified": true,
+  "report_bridge_and_schema_verified": true,
+  "protected_modules_preserved": true,
+  "configurations_preserved": true,
+  "quarantine_mode": "quarantine",
+  "protected_module_count": 121,
+  "protected_code_count": 657,
+  "postgres_backup": {
+    "created": true,
+    "file": "desertod-2026-10-18_2154.dump",
+    "restore_catalog_verified": true,
+    "before_game": "a616b6485b9ea469f2272d322c4c9753c90c939a",
+    "candidate": "52f2f6ccb39d276be9a260f027198eb02f165e09"
+  },
+  "sqlite_backup": true,
+  "sqlite_integrity": "ok",
+  "code_backups": true,
+  "equipment_schema_verified": true,
+  "director_policy": {
+    "quiet_minutes": 60,
+    "proposal_pause_minutes": 120,
+    "minimum_ready_online": 3,
+    "requires_owner_approval": true
+  },
+  "combat_diagnostics": {
+    "legacy_duties": {
+      "unfinished": 0,
+      "medicallyPaused": 0
+    },
+    "recent_timing_samples": [],
+    "forced_raid": false
+  },
+  "synthetic_messages": 0,
+  "test_payments": 0,
+  "forced_raids": 0,
+  "preflight_run": 39169669850,
+  "install_run": 39169732307,
+  "independent_check_run": 39170032365,
+  "independent_check_completed_at": "2026-10-18T21:56:55Z",
+  "game_ci": 39168526454,
+  "bot_ci": 39168529605,
+  "checks": {
+    "domain": 533,
+    "api": 287,
+    "browser_passed": 226,
+    "browser_normal_skip": 2,
+    "client_unit": 4,
+    "operator": 44,
+    "bot": 1096,
+    "webkit_capture_cancel": true,
+    "frontend": "pass",
+    "docker": "pass"
+  },
+  "bot_payload": [
+    "almighty.py",
+    "feedback.py",
+    "feedback_context.py",
+    "game_feedback.py"
+  ],
+  "game_merge_sha": "a259e47044c0b2cc68170be0ce5edbdd63aff45f",
+  "bot_merge_sha": "97f93628ff6846b6995e66154e7086c7841afc51"
+}

@@ -22,7 +22,8 @@
     "release_0_7_9": "7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8",
     "release_0_7_12": "56a62381eb33b35e401e1766c2f4525d2709b361",
     "release_0_7_13": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
-    "release_0_7_14": "a616b6485b9ea469f2272d322c4c9753c90c939a"
+    "release_0_7_14": "a616b6485b9ea469f2272d322c4c9753c90c939a",
+    "release_0_7_15": "52f2f6ccb39d276be9a260f027198eb02f165e09"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -2181,5 +2182,16 @@
     "guide": "IN_GAME_REPORTS.md",
     "prior_ci": 39166485172,
     "safari_capture": "disable clone-only animations; assert actual menu JPEG opacity"
+  },
+  "in_game_reports_0_7_15": {
+    "status": "installed_independently_verified",
+    "game_sha": "52f2f6ccb39d276be9a260f027198eb02f165e09",
+    "bot_sha": "7963416ae406197089320e3e0d370fb71599dcde",
+    "preflight_run": 39169669850,
+    "install_run": 39169732307,
+    "check_run": 39170032365,
+    "migration_count": 38,
+    "cancel_no_persistence": true,
+    "synthetic_live_reports": 0
   }
 }

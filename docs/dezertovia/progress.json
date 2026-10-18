@@ -1941,5 +1941,14 @@
     "browser_ci_skip": 2,
     "original_code_regressions_failed": 6,
     "restored_focused_api_pass": 17
+  },
+  "android_hud_icons": {
+    "status": "targeted_verified_source_only",
+    "installed": false,
+    "record": "docs/dezertovia/ANDROID_HUD_ICONS.md",
+    "targeted_browser": "2 passed; desktop/Pixel7, 320/390/430/960px",
+    "branch": "fix/android-resource-icons",
+    "lint_build": "pass",
+    "full_ci": "pending"
   }
 }

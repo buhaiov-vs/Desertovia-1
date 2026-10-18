@@ -175,6 +175,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     connection.on('villageDeleted', () => callbacks.current.onVillageDeleted?.())
     // Groups are per connection, and lines written while offline come back with the history.
     const applySnapshot = (village: Village) => {
+      if (cancelled) return
       setState(village.state)
       setIsOwner(village.isOwner)
       setInviteCode(village.inviteCode)
@@ -208,6 +209,9 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
           if (cancelled) return
           await connection.invoke('JoinVillage', slug)
         }
+        if (cancelled) return
+        setHub(connection)
+        setError(null)
         await refreshChat()
       } catch {
         // The next resume or reconnect tries again.

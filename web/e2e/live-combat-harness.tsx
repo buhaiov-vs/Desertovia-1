@@ -1,3 +1,4 @@
+import { onAppResume } from '../src/telegram'
 import { receiveFighterSample, fighterPositionAt } from '../src/game/fighterSamples'
 import { buildLayout, Terrain } from '../src/game/worldMap'
 // Production render and controls, isolated from real players, payments and director calls.
@@ -65,3 +66,6 @@ function Stand(){
  </div></I18nProvider>
 }
 createRoot(document.getElementById('app')!).render(<Stand/>);
+
+// Изолированная проверка возврата Mini App без подключения к настоящему Telegram.
+Object.assign(window, { resumeStand: { listen: onAppResume } })

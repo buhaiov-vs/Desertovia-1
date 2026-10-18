@@ -201,6 +201,7 @@ public sealed record VillageStateDto(
     WildsDto? Wilds,
     DungeonDto? Dungeon)
 {
+    public DateTimeOffset SnapshotAt { get; init; }
     public TileArea KingdomArea { get; init; } = WorldMap.BuildArea;
     public FortificationQuote? FortificationUpgrade { get; init; }
     public int CastleLevel { get; init; }
@@ -566,7 +567,7 @@ public static class DtoMapper
             village.Wilds?.Lookout)),
         village.Raids.OrderBy(r => r.StrikesAt).Select(r => r.ToDto()).ToList(),
         village.Wilds?.ToDto(),
-        dungeon?.ToDto());
+        dungeon?.ToDto()) { SnapshotAt = now };
     }
 
     public static WildsDto ToDto(this Wilds wilds) => new(

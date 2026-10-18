@@ -4,7 +4,7 @@ import { test, expect } from './fixtures.ts'
 type RaidBattle={revision:number;phase?:string;finishedAt?:string|null;fighters?:{citizenId:string;health:number;active:boolean;mode?:string;isTsar?:boolean}[];units:{id:string;x:number;y:number;health:number;state:string;diedAt:string|null}[];[key:string]:unknown}
 type Citizen={energy:number;maximumEnergy:number;energyPerHour:number;serverNow:string}
 
-type Stand={terrain:(seed:number,wilds:unknown)=>number[];initial:RaidBattle;orders:{target:string|null;mode:string}[];update:(b:RaidBattle,time?:number)=>{children:number;positions:number[][];rotations:number[]};rendered:(id:string)=>{x:number;y:number};pick:(x:number,y:number)=>unknown;mergeBattles:(a:RaidBattle[],b:RaidBattle[])=>RaidBattle[];adoptVillageState:(previous:{id:string;battles:RaidBattle[];fortifications?:{damage:number}[]},next:{id:string;battles:RaidBattle[];fortifications?:{damage:number}[]})=>{battles:RaidBattle[];fortifications?:{damage:number}[]};fightingCitizenIds:(battles:RaidBattle[])=>string[];currentEnergy:(c:Citizen,now:number)=>number}
+type Stand={terrain:(seed:number,wilds:unknown)=>number[];initial:RaidBattle;orders:{target:string|null;mode:string}[];update:(b:RaidBattle,time?:number)=>{children:number;positions:number[][];rotations:number[]};rendered:(id:string)=>{x:number;y:number};pick:(x:number,y:number)=>unknown;mergeBattles:(a:RaidBattle[],b:RaidBattle[])=>RaidBattle[];adoptVillageState:(previous:{id:string;battles:RaidBattle[];fortifications?:{damage:number}[]},next:{id:string;snapshotAt?:string;battles:RaidBattle[];fortifications?:{damage:number}[]})=>{battles:RaidBattle[];fortifications?:{damage:number}[]};fightingCitizenIds:(battles:RaidBattle[])=>string[];currentEnergy:(c:Citizen,now:number)=>number}
 
 test('live renderer shows every actual enemy, individual deaths and authoritative positions',async({page})=>{
   await page.goto('/e2e/live-combat-harness.html');await page.waitForFunction(()=>!!(window as unknown as {combatStand:unknown}).combatStand)
@@ -145,4 +145,21 @@ test('boss warning is fixed to the impact point and disappears after the authori
   expect(result.before.warning?.x).toBe(64);expect(result.before.warning?.y).toBe(48)
   expect(result.before.warning!.width).toBeGreaterThan(50)
   expect(result.after.warning).toBeNull()
+})
+
+
+test('an older full snapshot cannot erase a battle that started later, and a new village never inherits it', async ({page}) => {
+  await page.goto('/e2e/live-combat-harness.html')
+  await page.waitForFunction(() => !!(window as unknown as {combatStand:unknown}).combatStand)
+  const result = await page.evaluate(() => {
+    const s = (window as unknown as {combatStand:Stand}).combatStand
+    const battle = structuredClone(s.initial)
+    battle.lastTickAt = '2026-10-18T10:00:05Z'
+    const before = {id:'v',battles:[battle]}
+    const old = s.adoptVillageState(before,{id:'v',battles:[],snapshotAt:'2026-10-18T10:00:01Z'})
+    const fresh = s.adoptVillageState(before,{id:'v',battles:[],snapshotAt:'2026-10-18T10:00:06Z'})
+    const other = s.adoptVillageState(before,{id:'other',battles:[]})
+    return [old.battles.length,fresh.battles.length,other.battles.length]
+  })
+  expect(result).toEqual([1,0,0])
 })

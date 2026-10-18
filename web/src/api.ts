@@ -422,12 +422,16 @@ export function mergeBattles(previous:readonly RaidBattle[] = [], incoming:reado
 
 /**
  * A full village snapshot lists every battle the server still publishes.
- * Keep a newer local revision of those battles, and drop a fight the snapshot no longer includes.
+ * Keep newer revisions, including a battle newer than the snapshot itself; prune older unpublished fights.
  */
 export function adoptVillageState(previous: VillageState, next: VillageState): VillageState {
-  if (previous.id !== next.id || !next.battles) return next.battles ? next : { ...next, battles: previous.battles }
+  if (previous.id !== next.id) return next
+  if (!next.battles) return { ...next, battles: previous.battles }
   const published = new Set(next.battles.map(battle => battle.id))
-  const kept = (previous.battles ?? []).filter(battle => published.has(battle.id))
+  const snapshotAt = Date.parse(next.snapshotAt ?? '')
+  // Снимок мог быть прочитан до появления боя, а прийти после его первого delta.
+  const kept = (previous.battles ?? []).filter(battle => published.has(battle.id)
+    || !battle.finishedAt && Date.parse(battle.lastTickAt) > snapshotAt)
   const battles = mergeBattles(kept, next.battles)
   const tick = (list: readonly RaidBattle[]) => Math.max(0, ...list.map(battle => Date.parse(battle.lastTickAt)))
   const newer = kept.filter(battle => battle.revision > (next.battles?.find(item => item.id === battle.id)?.revision ?? -1))
@@ -998,6 +1002,7 @@ export interface CivicOrder { buildingKind?:BuildingKind|null; id:string; plotId
 export interface Housing { plotId:string; beds:number; occupied:number; level:number; number?:number; ownerAccountId?:string|null; ownerName?:string|null; builtAt?:string|null }
 export interface MonasteryView {open:boolean;inRange:boolean;knowsRemedy:boolean;readyAt:string|null;wood:number;food:number;remedyRoom:number;yard:TilePoint}
 export interface VillageState {
+  snapshotAt?: string
   bridgeDamage?:number
   bridgeRuinedAt?:string|null
   defeatedAt?:string|null

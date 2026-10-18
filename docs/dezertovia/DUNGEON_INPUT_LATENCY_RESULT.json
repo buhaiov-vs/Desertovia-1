@@ -1,0 +1,28 @@
+{
+  "status": "verified_source_not_installed",
+  "installed": false,
+  "source_sha": "d9ad3c4f5dba2bcf0218c33cd604b4e7f3b95f1e",
+  "ci_run": 39129933021,
+  "pull_request": 63,
+  "live_source_confirmed": "56a62381eb33b35e401e1766c2f4525d2709b361",
+  "local_api_pass": 278,
+  "focused_api_pass": 17,
+  "old_code_regression_replay": {
+    "failed": 6,
+    "passed": 0
+  },
+  "restored_focused_api_pass": 17,
+  "ci": {
+    "domain_pass": 533,
+    "api_pass": 278,
+    "client_unit_pass": 4,
+    "lint_build": "success",
+    "docker": "success",
+    "browser": "success",
+    "browser_pass": 212,
+    "browser_skip": 2
+  },
+  "merge_sha": "fb500b8626bc0ef03f93b8f87c984d7edd6e5170",
+  "merged_tree_matches_tested_source": true,
+  "ci_attempt": 1
+}

@@ -1,3 +1,20 @@
+# Подземелья: исправление проверено и слито, НЕ УСТАНОВЛЕНО18Oct2026
+
+Запрос владельца: задержки команд и движения в подземельях. PR63 merged
+fb500b8626bc0ef03f93b8f87c984d7edd6e5170; дерево идентично exact testedsource
+d9ad3c4f5dba2bcf0218c33cd604b4e7f3b95f1e.
+CI39129933021 attempt1 SUCCESS:533Domain/278API/212browser+2штатныхskip,
+4Node clienttests,lint/frontend/DockerPASS. Локально278API и focused17PASS;
+старый код отклонён6/6regressions, после восстановления focused17сноваPASS.
+Dungeon medical checks actorOnly при force=true; очередь one-inflight+latest,
+disconnect/unmount без replay; phase/settlement ожидания вне100ms simulation.
+Неудачный commit сохраняет live run/выходы для retry. Правила боя/добычи/раны/
+авторизация/DBschema прежние. Журнал DUNGEON_INPUT_LATENCY.md и RESULT.json.
+СЕРВЕР НЕ МЕНЯЛСЯ: проверенный0.7.12/56a62381eb33b35e401e1766c2f4525d2709b361,
+подтверждён публичнымreleaseheader. Естественныйпоход послеfix не измерен.
+Для выпуска новыйmanifest/operator/exactCI/botversionmapping/backups/check;
+старыеrequests не повторять. АктивныйDungeon не прерывать ради обновления.
+
 # Подземелья: задержки команд и тиков, 18Oct2026 — SOURCE ONLY
 
 Владелец сообщает плохой отклик персонажей в Dungeon, похожий на прежние набеги.

@@ -1,3 +1,15 @@
+#0.7.14 installation authorized — 18 October 2026, NOT INSTALLED
+
+Owner: «Установи». Fortification fix PR67 source9b3fa65 exactCI39140681611
+SUCCESS533Domain/280API/216browser+2normal skips, lint/build/Docker/4Nodeunit.
+Stamp0.7.14 and patch notes; final exactCI required after stamp. Freshpost0714
+operator/candidate, report→backup/deploy→separatecheck; baselinea4bc0ec/0.7.13.
+Only feedback_context.py registry may change in bot; preserve current other
+modules/assets/configs, Propose/budgets/quarantine and player progress. Do not
+replay older requests. Wait for natural Dungeon completion before restart.
+No synthetic player messages, model probes, waves, payments or state resets.
+See docs/dezertovia/RELEASE_0_7_14.md. Historical records below.
+
 # Fortification cancellation — source fix, NOT INSTALLED, 18 October 2026
 
 Owner reports an uncancellable reinforcement blueprint and unclear fence upgrades.

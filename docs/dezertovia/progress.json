@@ -2066,7 +2066,14 @@
     "browser_existing_fence_passed": 8,
     "browser_final_ui_passed": 4,
     "typescript_build_lint": "pass",
-    "github_ci": "pending",
+    "github_ci": 39140681611,
     "physical_phone_verified": false
+  },
+  "release_0_7_14": {
+    "status": "installation_authorized_final_ci_pending",
+    "installed": false,
+    "baseline": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
+    "source_fix_ci": 39140681611,
+    "version": "0.7.14"
   }
 }

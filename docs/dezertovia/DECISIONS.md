@@ -1,3 +1,25 @@
+# Safari capture follow-up — FINAL CHECKS PENDING, NOT INSTALLED
+
+Visual review found WebKit restarting cloned menu entrance animations, blending
+HUD through the screenshot. Capture now disables animations/transitions only in
+the detached clone; live UI stays unchanged. Regression checks actual JPEG menu
+pixels, not just file existence. Fixture waits for initial account load before
+API login/navigation. Prior f0027ff CI39166485172 passed533/287/226+2skip/4unit/
+lint/build/Docker, bot6f9e71e CI39166484124 passed1096. Final game source must
+pass again after this image fix; no install request or runtime change. History below.
+
+# In-game reports — IN PROGRESS, NOT INSTALLED18Oct2026
+
+Owner: small non-text «!» above map/menus, bug/complaint/suggestion with current
+screen and account/version context. Explicit clarification: Cancel/close discards
+all draft data; no server/bot/file/browser storage before Send. Capture before
+opening the form, preview/remove image, fallback without image; game and Dungeon.
+Authenticated server identity, bounded allowlisted context/JPEG, durable PG outbox,
+idempotent receipt and owner-only bot ZIP including JSON/text/optional image.
+No model calls, gameplay mutations or synthetic live messages. Source/tests only;
+no new deployment authorization. Preserve current0.7.14 and parallel bot news work.
+See docs/dezertovia/IN_GAME_REPORTS.md. Historical records below.
+
 #0.7.13 установлена и независимо проверена — 18 октября 2026
 
 Проверено в13:56UTC/15:56Осло. Gameexact`a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3`,

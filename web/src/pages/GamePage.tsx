@@ -5,6 +5,7 @@ import { createOperationId } from '../api'
 import { HospitalPanel } from '../ui/HospitalPanel'
 import { RescuePatientPanel } from '../ui/RescuePatientPanel'
 import { SramoslavPanel } from '../ui/SramoslavPanel'
+import { useReportContext } from '../reports/context'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import {
@@ -147,6 +148,13 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   }
   const phone = useMediaQuery('(max-width: 720px)')
   const pollClock = useServerNow(serverOffset, POLL_CLOCK_MS)
+  useReportContext(() => ({ slug, page: 'village',
+    menu: [panel === 'menu' ? `menu:${tab}` : panel, walletOpen && 'wallet', monasteryOpen && 'monastery',
+      hospitalOpen && 'hospital', (hospitalPatient || patientFor) && 'patient', chaplainOpen && 'chaplain',
+      placing && 'placement', subtitleFor && 'citizen'].filter(Boolean).join(',').slice(0, 80),
+    selection: picked?.target ? JSON.stringify(picked.target).slice(0, 160) :
+      enemyPick ? `enemy:${enemyPick.battleId}:${enemyPick.unitId}` : subtitleFor ?? hospitalPatient ?? patientFor ?? undefined,
+    x: ownCitizen?.spot?.x, y: ownCitizen?.spot?.y }))
   const canvas = useRef<GameCanvasHandle>(null)
   const citizenId = useRef<string | null>(null)
   const lastCitizenSnapshot = useRef(-Infinity)

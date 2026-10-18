@@ -1,3 +1,4 @@
+import { registerReportCanvas } from '../reports/capture'
 import { Application, CanvasSource, Container, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import {
   DUNGEON_TILES,
@@ -216,6 +217,9 @@ function drawBar(bar: Graphics, share: number, color: number) {
  * undead, blows, arrows and heals. Clicking a foe attacks it, an ally heals them, the ground walks there.
  */
 export class DungeonWorld {
+  private reportPreviousFps = 0
+  private reportObscured = false
+  private reportCaptureCleanup: (() => void) | null = null
   private readonly app: Application
   private readonly tiles: TileSet
   private readonly painter: CharacterPainter
@@ -246,6 +250,12 @@ export class DungeonWorld {
 
   private constructor(app: Application, tiles: TileSet, painter: CharacterPainter) {
     this.app = app
+    this.reportCaptureCleanup = registerReportCanvas(app.canvas, () => app.renderer.extract.canvas({ target: app.stage, frame: app.screen, resolution: 1 }) as HTMLCanvasElement, visible => {
+      if (visible === this.reportObscured) return
+      this.reportObscured = visible
+      if (visible) { this.reportPreviousFps = app.ticker.maxFPS; app.ticker.maxFPS = 8 }
+      else app.ticker.maxFPS = this.reportPreviousFps
+    })
     this.tiles = tiles
     this.painter = painter
     this.objects.sortableChildren = true
@@ -271,6 +281,7 @@ export class DungeonWorld {
   }
 
   destroy() {
+    this.reportCaptureCleanup?.()
     this.app.canvas.remove()
     this.app.destroy(true, { children: true })
     for (const texture of this.lookTextures.values()) texture.destroy(true)

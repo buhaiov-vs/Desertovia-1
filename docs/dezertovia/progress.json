@@ -2172,5 +2172,14 @@
       "game_version_changed_by_recovery": false,
       "underlying_stall_cause_proven": false
     }
+  },
+  "in_game_reports": {
+    "status": "final_safari_capture_validation",
+    "installed": false,
+    "draft": "memory_only_until_explicit_send",
+    "cancel": "discard_all",
+    "guide": "IN_GAME_REPORTS.md",
+    "prior_ci": 39166485172,
+    "safari_capture": "disable clone-only animations; assert actual menu JPEG opacity"
   }
 }

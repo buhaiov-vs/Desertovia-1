@@ -44,6 +44,9 @@ public sealed class DesertodApiFactory : WebApplicationFactory<Program>, IAsyncL
             var retirement=services.Single(d=>d.ServiceType==typeof(Microsoft.Extensions.Hosting.IHostedService)
                 &&d.ImplementationType==typeof(Desertod.Api.Game.RetiredGuardWorker));
             services.Remove(retirement);
+            var reports = services.Single(d => d.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService)
+                && d.ImplementationType == typeof(Desertod.Api.Game.PlayerReportWorker));
+            services.Remove(reports);
             services.RemoveAll<Desertod.Api.Game.IHospitalBridge>();
             services.AddSingleton<Desertod.Api.Game.IHospitalBridge>(Hospital);
             services.RemoveAll<TimeProvider>();

@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import { useI18n } from './i18n'
 import { CreateVillagePage } from './pages/CreateVillagePage'
 import { HomePage } from './pages/HomePage'
+import { ReportButton } from './reports/ReportButton'
 import { UpdatePrompt } from './ui/UpdatePrompt'
 
 // The map pages carry the PixiJS renderer; the home page does not wait for it.
@@ -35,6 +36,7 @@ export function App() {
         </Routes>
       </Suspense>
       <UpdatePrompt />
+      <ReportButton />
     </BrowserRouter>
   )
 }

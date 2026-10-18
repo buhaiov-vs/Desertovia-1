@@ -2735,3 +2735,20 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 .raid-editor-species{display:grid;grid-template-columns:minmax(0,1fr) auto;}
 .raid-editor-species input[type=range]{grid-column:1/-1;}
 .raid-slider-share{font-weight:700;}
+
+/* One small global report control. Portalled to body so no game/menu stacking context can hide it. */
+.report-trigger{display:grid;place-items:center;text-align:center;position:fixed;z-index:11000;right:calc(8px + env(safe-area-inset-right,0px));top:calc(50% + 24px);width:32px;height:32px;min-width:32px;padding:0;border:2px solid #583a1b;border-radius:7px;background:linear-gradient(#fff1c8,#e9cd8b);color:#633617;font:bold 23px/1 Georgia,serif;box-shadow:0 2px 3px #0007;touch-action:manipulation;pointer-events:auto}
+.report-trigger:disabled{opacity:.6}
+.report-overlay{position:fixed;inset:0;z-index:11001;background:#160e08b8;display:flex;align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));pointer-events:auto}
+.report-dialog{width:min(440px,100%);max-height:100%;overflow:auto;background:var(--parchment,#f5e8c5);color:var(--ink,#34200e);border:3px solid #583a1b;border-radius:10px;padding:14px;box-shadow:0 4px 20px #0008;box-sizing:border-box}
+.report-dialog header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.report-dialog h2{font-size:1.25rem;margin:0}
+.report-dialog .report-close{display:grid;place-items:center;text-align:center;flex:none;width:34px;height:34px;min-width:34px;padding:0;font-size:24px;line-height:1}
+.report-dialog label{display:block;margin:10px 0;font-weight:bold}
+.report-dialog select,.report-dialog textarea{display:block;width:100%;box-sizing:border-box;margin-top:5px;font:inherit;font-weight:normal}
+.report-dialog textarea{resize:vertical;min-height:85px}
+.report-preview{display:flex;align-items:center;gap:12px;margin:10px 0}
+.report-preview img{width:auto;max-width:45%;height:110px;object-fit:contain;background:#21180f;border:1px solid #795833}
+.report-hint{font-size:.85rem;line-height:1.35;opacity:.85}
+.report-dialog footer{display:flex;justify-content:space-between;gap:10px;margin-top:12px}
+.report-dialog footer button{min-height:40px}

@@ -10,6 +10,17 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.15',date:'2026-10-18',
+    title:{ru:'Обратная связь из игры',en:'In-game feedback'},
+    changes:{
+      ru:['Маленькая кнопка «!» доступна поверх карты и меню, в том числе в подземелье. Можно отправить ошибку, жалобу или предложение.',
+        'К обращению прикладываются текущий экран, персонаж, версия игры и данные диагностики. Снимок можно посмотреть и убрать перед отправкой.',
+        '«Отмена» и крестик удаляют черновик: до отправки снимок и данные нигде не сохраняются. После отправки батюшка передаёт владельцу единый отчёт.'],
+      en:['A small ! button is available above the map and menus, including dungeons, for bugs, complaints and suggestions.',
+        'Reports include the current game screen, character, game version and diagnostic context. Preview or remove the screenshot before sending.',
+        'Cancel and close discard the draft without storing it anywhere. After submission, the chaplain delivers one report to the owner.']}
+  },
+  {
     version:'0.7.14',date:'2026-10-18',
     title:{ru:'Укрепления и отмена чертежей',en:'Fortifications and blueprint cancellation'},
     changes:{

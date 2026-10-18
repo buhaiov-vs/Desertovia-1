@@ -25,6 +25,7 @@ export const combatDiagnostics={
  reconnect(){if(active)reconnects++},
  stop(){if(active)flush();active=0;started=0;lastPacket=0},
  context(nextObscured:boolean,fps:number){obscured=nextObscured;targetFps=fps},
+ reportSummary(){const last=history.at(-1);return {frameP95Ms:frames.length?p95(frames):last?.frameP95Ms,packetGapMaxMs:packetGap||last?.packetGapMaxMs,reconnects:reconnects||last?.reconnects}},
  export(){flush();return {format:1,version:GAME_VERSION,capturedAt:new Date().toISOString(),device:{pixelRatio:devicePixelRatio,coarsePointer:matchMedia('(pointer:coarse)').matches},samples:[...history]}},
  download(server:unknown=null){const content=JSON.stringify({...this.export(),server},null,2),url=URL.createObjectURL(new Blob([content],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='desertovia-combat-diagnostics.json';a.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000)},
 }

@@ -21,7 +21,8 @@
     "release_0_7_6": "d0f88e2e92d83e8c30a7566fb21c916a51023b1d",
     "release_0_7_9": "7c738bc30cfb7cfa21dc4c6e6dc7de9496ad77e8",
     "release_0_7_12": "56a62381eb33b35e401e1766c2f4525d2709b361",
-    "release_0_7_13": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3"
+    "release_0_7_13": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
+    "release_0_7_14": "a616b6485b9ea469f2272d322c4c9753c90c939a"
   },
   "source_repository": "buhaiov-vs/Desertovia",
   "release_repository": "desertod666/Desertovia",
@@ -2053,8 +2054,8 @@
     "natural_dungeon_latency_measured": false
   },
   "fortification_cancellation_2026_10_18": {
-    "status": "source_locally_verified_not_installed",
-    "installed": false,
+    "status": "installed_and_independently_verified",
+    "installed": true,
     "live_baseline": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
     "root_cause": "EF nested JSON ordinal failure during BuildState second save after middle-site removal",
     "old_source_regressions_failed": 2,
@@ -2066,14 +2067,110 @@
     "browser_existing_fence_passed": 8,
     "browser_final_ui_passed": 4,
     "typescript_build_lint": "pass",
-    "github_ci": 39140681611,
-    "physical_phone_verified": false
+    "github_ci": 39143233311,
+    "physical_phone_verified": false,
+    "install_run": 39144320651,
+    "check_run": 39144753586
   },
   "release_0_7_14": {
-    "status": "installation_authorized_final_ci_pending",
-    "installed": false,
-    "baseline": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
-    "source_fix_ci": 39140681611,
-    "version": "0.7.14"
+    "phase": "post0714_verified",
+    "version": "0.7.14",
+    "game_sha": "a616b6485b9ea469f2272d322c4c9753c90c939a",
+    "bot_sha": "6a51c2d6453bba9556d51f5b13525e6d0378ad39",
+    "building_numbers": {
+      "sequenceTooSmall": 0,
+      "unassigned": 0,
+      "duplicatePlots": 0,
+      "duplicateNumbers": 0
+    },
+    "display_numbers": {
+      "missing": 0,
+      "duplicateGlobal": 0,
+      "duplicateFamily": 0,
+      "familyGaps": 0,
+      "invalidValue": 0
+    },
+    "feedback_origins_table": true,
+    "progress": {
+      "profiles_before": 141,
+      "profiles_after": 141,
+      "lost_profiles_or_progress": 0,
+      "accounts_preserved": 143,
+      "login_bindings_preserved": 143
+    },
+    "combat_preservation": {
+      "existing_battles_preserved": 0,
+      "existing_enemy_ids_and_health_checked": 0
+    },
+    "migrations": 37,
+    "director_mode": "Propose",
+    "pending_notice_states": [],
+    "telegram_civic_deliveries_confirmed": 49,
+    "frontend": {
+      "version": "0.7.14",
+      "slider_editor": true,
+      "upstream_music_control": true,
+      "fortification_controls": true,
+      "game_chunk": true,
+      "checked_chunks": 24,
+      "transient_http_retries": 0
+    },
+    "feedback_live_version_verified": true,
+    "protected_modules_preserved": true,
+    "configurations_preserved": true,
+    "quarantine_mode": "quarantine",
+    "protected_module_count": 122,
+    "protected_code_count": 658,
+    "postgres_backup": {
+      "created": true,
+      "file": "desertod-2026-10-18_1620.dump",
+      "restore_catalog_verified": true,
+      "before_game": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
+      "candidate": "a616b6485b9ea469f2272d322c4c9753c90c939a"
+    },
+    "sqlite_backup": true,
+    "sqlite_integrity": "ok",
+    "code_backups": true,
+    "equipment_schema_verified": true,
+    "director_policy": {
+      "quiet_minutes": 60,
+      "proposal_pause_minutes": 120,
+      "minimum_ready_online": 3,
+      "requires_owner_approval": true
+    },
+    "combat_diagnostics": {
+      "legacy_duties": {
+        "unfinished": 0,
+        "medicallyPaused": 0
+      },
+      "recent_timing_samples": [],
+      "forced_raid": false
+    },
+    "synthetic_messages": 0,
+    "test_payments": 0,
+    "forced_raids": 0,
+    "status": "installed_and_independently_verified",
+    "installed": true,
+    "verified_at_utc": "2026-10-18T16:24:08.975117+00:00",
+    "preflight_run": 39144261041,
+    "install_run": 39144320651,
+    "check_run": 39144753586,
+    "game_ci": 39143233311,
+    "bot_ci": 39143279668,
+    "ci_attempt": 1,
+    "operator_tests": 40,
+    "game_merge_sha": "f0859fee6821e7a7ad85906ede51458cadee7db0",
+    "bot_merge_sha": "39d93bb43f4f0823d74831a49736e39006ff9d51",
+    "game_merge_tree_equal": true,
+    "bot_merge_tree_equal": true,
+    "gateway_recovery": {
+      "performed_before_install": true,
+      "upstream_responded": true,
+      "public_gateway_restored": true,
+      "code_and_configs_preserved": true,
+      "sqlite_online_backup_integrity": "ok",
+      "game_version_changed_by_recovery": false,
+      "underlying_stall_cause_proven": false
+    }
   }
 }

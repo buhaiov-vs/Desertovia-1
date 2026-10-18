@@ -1,3 +1,27 @@
+#0.7.14 УСТАНОВЛЕНА И НЕЗАВИСИМО ПРОВЕРЕНА — 18 октября 2026
+
+Проверено 16:24:08UTC/18:24:08Осло.
+Gameexact`a616b6485b9ea469f2272d322c4c9753c90c939a`, CI39143233311SUCCESS:
+533Domain/280API/216browser+2штатныхskip/4Nodeunit/lint/build/DockerPASS.
+BotONLYfeedback_context exact`6a51c2d6453bba9556d51f5b13525e6d0378ad39`,
+CI39143279668SUCCESS1053tests/serverSKIPPED.40operatorguardsPASS.
+Actualpreflight39144261041, install39144320651, отдельныйcheck39144753586SUCCESS.
+141→141профилей,0потерьпрогресса;37миграций,
+аккаунты/привязки/навыки/характеристики и номера зданий сохранены.
+122otherbotmodules/658othercodeassets/configs preserved; Propose/бюджеты/
+карантин сохранены. ActualPGdump restorecatalog,SQLiteintegrity/code/config/profile
+backups созданы. Public/local/gatewayexactSHA, frontend0.7.14 и новые controls
+подтверждены. Telegram-вход работает; Production/DevToolsdisabled.
+
+Исправлены отмена чертежа среди строек с вложенной работой и скрытые задания
+укреплений. В Стройке «Забор и ворота»: уровни, технологии, прогресс, ремонт.
+Начатая работа разбирается с подтверждением и прежним25%возвратом материалов.
+Новый движок/баланс/схема не менялись; liveигровые действия не имитировались.
+Перед выпуском зависший gateway восстановлен рестартом после SQLite/config/code
+snapshot, без изменения кода/версии/конфигов. Точная причина зависания не доказана.
+Это не считать исправлением зависаний ботав данном gamepatch.
+Не повторятьinstall; текущийpost0714request=check. История подготовки ниже.
+
 #0.7.14 installation authorized — 18 October 2026, NOT INSTALLED
 
 Owner: «Установи». Fortification fix PR67 source9b3fa65 exactCI39140681611

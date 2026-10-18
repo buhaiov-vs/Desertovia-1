@@ -1950,5 +1950,12 @@
     "branch": "fix/android-resource-icons",
     "lint_build": "pass",
     "full_ci": "pending"
+  },
+  "release_0_7_13": {
+    "status": "preparing",
+    "installed": false,
+    "owner_authorized": true,
+    "previous_live": "0.7.12/56a6238",
+    "record": "docs/dezertovia/RELEASE_0_7_13.md"
   }
 }

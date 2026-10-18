@@ -32,7 +32,6 @@ test('personal HUD matches the resource cards on the real map and leaves navigat
   expect(appearance.height).toBe(appearance.weatherHeight)
   await expect(page.locator('.battle-controls')).toHaveCount(0)
   await expect(page.locator('.hud-poll-actions')).toHaveCount(0)
-  await page.screenshot({path:test.info().outputPath('owner-real-map.png')})
   const me=await(await page.request.get(`/api/villages/${DEMO_SLUG}/me`)).json()
   const data=await(await page.request.get(`/api/villages/${DEMO_SLUG}`)).json()
   const at=new Date().toISOString()
@@ -78,7 +77,6 @@ test('personal HUD matches the resource cards on the real map and leaves navigat
   }
   await clearOfChat();await page.locator('.chat-launch').click();await expect(page.locator('.chat-panel')).toHaveAttribute('data-mode','quarter');await clearOfChat()
   await page.locator('.chat-control').last().click();await expect(page.locator('.chat-panel')).toHaveAttribute('data-mode','hidden');await clearOfChat()
-  await page.screenshot({path:test.info().outputPath('owner-real-map-battle.png')})
 })
 
 for (const mode of ['hidden', 'quarter'] as const) test(`real game selected object owns its header with ${mode} chat`, async ({ page }) => {

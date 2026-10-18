@@ -356,7 +356,8 @@ public static class CombatRules
         {
             if (weapon.Kind == ResourceKind.Bow)
             {
-                if (WeaponSharpening.BestEdge(citizen, village, weapon.Arrows) is int edge)
+                if (Available(citizen, village, ResourceKind.Bow) > 0
+                    && WeaponSharpening.BestEdge(citizen, village, weapon.Arrows) is int edge)
                 {
                     Consider(weapon, 0, edge);
                 }

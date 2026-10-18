@@ -294,6 +294,21 @@ public class CycleEngineTests
         Assert.False(citizen.IsCarrying);
     }
 
+    [Fact]
+    public void Eating_during_work_does_not_rewrite_hunger_at_cycle_start()
+    {
+        var village = NewVillage();
+        var citizen = NewCitizen(village);
+        citizen.IsHungry = true;
+        citizen.Carry(ResourceKind.Food, 1);
+        var context = WorkContext.For(village);
+        CycleEngine.Start(citizen, Task("forage"), context, Now);
+        Assert.True(FoodRules.Eat(citizen, village, Now.AddSeconds(1), allowPublic: false));
+        var report = Finish(citizen, context);
+        Assert.True(report.WorkedHungry);
+        Assert.False(report.Hungry);
+    }
+
     private static CycleReport Work(Citizen citizen, Village village)
     {
         CycleEngine.Start(citizen, Task("quarry-stone"), WorkContext.For(village), citizen.CycleEndsAt ?? Now);

@@ -5,6 +5,16 @@ using static Desertod.Domain.Tests.TestWorld;
 namespace Desertod.Domain.Tests;
 public sealed class FreeCombatTests
 {
+    [Fact] public void Bow_hit_keeps_its_power_when_the_shot_reduces_the_quiver_below_two()
+    {
+        var(v,c,r,b)=Scene();
+        c.Weapon=Catalog.ResourceKind.Bow;c.Arrows=2;c.ArrowSharpen=3;
+        var expected=CombatRules.Power(c)*.85;
+        RaidSimulation.Tick(v,r,b,[c],new HashSet<Guid>{c.Id},Now.AddSeconds(1));
+        Assert.Equal(expected,b.Fighters[0].DamageDealt,5);
+        Assert.Equal(1,c.Arrows);
+        Assert.Equal(3,c.ArrowSharpen);
+    }
     private static (Village V,Citizen C,Raid R,RaidBattle B) Scene()
     {
         var v=NewVillage();v.Id=Guid.Parse("00000000-0000-0000-0000-000000000701");

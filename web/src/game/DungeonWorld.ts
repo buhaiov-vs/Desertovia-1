@@ -355,6 +355,11 @@ export class DungeonWorld {
         continue
       }
       if (hero.state !== 'Left') {
+        if (floorChanged) {
+          figure.x = hero.x
+          figure.y = hero.y
+          figure.view.position.set(hero.x * TILE, hero.y * TILE)
+        }
         figure.targetX = hero.x
         figure.targetY = hero.y
       }

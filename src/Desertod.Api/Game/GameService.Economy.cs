@@ -187,14 +187,17 @@ public sealed partial class GameService
                 case "buy-stock":
                 {
                     var buyer = Own();
-                    if (!StorageCatalog.IsGood(request.Resource) || village.Stock(request.Resource) < request.Amount)
+                    // Личный торговый инвентарь пока не хранит заточку. Не превращать улучшенное оружие в обычное.
+                    var plainStock = village.Storages.Where(s => s.OwnerAccountId is null && s.RuinedAt is null && s.Damage < 100)
+                        .SelectMany(s => s.Goods).Where(g => g.Kind == request.Resource && g.Sharpen == 0).Sum(g => g.Amount);
+                    if (!StorageCatalog.IsGood(request.Resource) || plainStock < request.Amount)
                         throw new GameRuleException("inventory.stockMissing", "The common storage does not have this material.");
                     if (request.Price != 0 && request.Price != EconomyRules.StorePrice(request.Resource))
                         throw new GameRuleException("economy.priceChanged", "The price has changed. Refresh the menu.");
                     var cost = checked((long)EconomyRules.StorePrice(request.Resource) * request.Amount);
                     if (PersonalInventory.Room(buyer, request.Resource) < request.Amount)
                         throw new GameRuleException("inventory.full", "Your personal inventory is full.");
-                    EconomyRules.Spend(wallet, cost); village.Take(request.Resource, request.Amount);
+                    EconomyRules.Spend(wallet, cost); village.Take(request.Resource, request.Amount, 0);
                     PersonalInventory.Add(buyer, request.Resource, request.Amount, cost);
                     state.TreasuryCoins = checked(state.TreasuryCoins + cost);
                     WalletChange(account, -cost, "buy-stock");

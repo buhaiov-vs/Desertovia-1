@@ -14,6 +14,46 @@ namespace Desertod.Domain.Tests;
 
 public class CombatTests
 {
+    [Fact]
+    public void Arrows_do_not_create_a_bow_when_none_is_available()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.Arrows, 6, 3);
+        village.Store(ResourceKind.Spear, 1);
+        var citizen = NewCitizen(village);
+        CombatRules.Arm(citizen, village);
+        Assert.Equal(ResourceKind.Spear, citizen.Weapon);
+        Assert.Equal(0, citizen.Arrows);
+        Assert.Equal(6, village.Stock(ResourceKind.Arrows));
+        CombatRules.Disarm(citizen, village);
+        Assert.Equal(0, village.Stock(ResourceKind.Bow));
+        Assert.Equal(1, village.Stock(ResourceKind.Spear));
+    }
+
+    [Fact]
+    public void Mixed_edges_survive_storage_take_unload_and_full_storage_disarm()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.Sword, 2, 0);
+        village.Store(ResourceKind.Sword, 1, 3);
+        var citizen = NewCitizen(village);
+        var storage = village.Storages.Single(s => s.Goods.Any(g => g.Kind == ResourceKind.Sword && g.Sharpen == 3));
+        Storage.StorageRules.Take(citizen, village, storage.PlotId, ResourceKind.Sword, 1, Now, 3);
+        Assert.Equal(3, Assert.Single(citizen.Load).Sharpen);
+        Storage.StorageRules.Unload(citizen, village);
+        CombatRules.Arm(citizen, village);
+        Assert.Equal(3, citizen.WeaponSharpen);
+        foreach (var bin in village.Storages) bin.Decommissioning = true;
+        CombatRules.Disarm(citizen, village);
+        Assert.Equal(ResourceKind.Sword, citizen.Weapon);
+        Assert.Equal(3, citizen.WeaponSharpen);
+        storage.Decommissioning = false;
+        CombatRules.Disarm(citizen, village);
+        Assert.Null(citizen.Weapon);
+        Assert.Equal(1, village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Sword && g.Sharpen == 3).Amount);
+        Assert.Equal(3, village.Stock(ResourceKind.Sword));
+    }
+
     /// <summary>Returns the given rolls in order, then 0.5 for ever.</summary>
     private sealed class ScriptedRandom(params double[] rolls) : Random
     {

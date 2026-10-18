@@ -654,6 +654,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("CycleEndsAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool?>("CycleHungry")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("CyclePrivateOutput")
                         .HasColumnType("boolean");
 

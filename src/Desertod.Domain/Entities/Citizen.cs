@@ -103,6 +103,8 @@ public sealed class Citizen
     public DateTimeOffset? CycleEndsAt { get; set; }
     public bool CycleSettled { get; set; } = true;
     public bool CycleTired { get; set; }
+    /// <summary>Голод при старте оплаченного цикла; null для работ, начатых до обновления.</summary>
+    public bool? CycleHungry { get; set; }
     public int Streak { get; set; }
 
     /// <summary>Plot of the construction site the current job is on; null for ordinary tasks.</summary>

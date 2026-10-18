@@ -903,7 +903,7 @@ public static class CycleEngine
     /// </summary>
     private static (bool ExperienceHungry, bool Hungry) FinishMeal(Citizen citizen, Village village, DateTimeOffset now, bool eat)
     {
-        var experienceHungry = eat && citizen.IsHungry;
+        var experienceHungry = eat && (citizen.CycleHungry ?? citizen.IsHungry);
         return (experienceHungry, eat && Eat(citizen, village, now));
     }
 
@@ -974,6 +974,7 @@ public static class CycleEngine
         energyCost = WorkEnergy.WithMedical(citizen, energyCost, now);
         var energy = citizen.CurrentEnergy(now, village);
         citizen.CycleTired = energy < energyCost;
+        citizen.CycleHungry = citizen.IsHungry;
         citizen.StoredEnergy = citizen.CycleTired ? energy : energy - energyCost;
         citizen.EnergyUpdatedAt = now;
 

@@ -655,12 +655,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   })
 
   const withdraw = async (plotId: string) => {
-    try {
-      setVillageState(await api.cancelBlueprint(slug, plotId))
-    } catch (exception) {
-      setNotice(i18n.error(exception))
-      window.setTimeout(() => setNotice(null), 5000)
-    }
+    setVillageState(await api.cancelBlueprint(slug, plotId))
   }
 
   const hands = (owner: Citizen) => (

@@ -1,3 +1,19 @@
+# Fortification cancellation — source fix, NOT INSTALLED, 18 October 2026
+
+Owner reports an uncancellable reinforcement blueprint and unclear fence upgrades.
+Read-only live logs confirm EF nested JSON ordinal failure on the second save;
+untouched fortification site is between worked sites. Both cancellation routes
+now save, detach/reload within the same transaction, then build state. Resident
+SiteCard uses actual server stages: the empty static FortificationUpgrade catalog
+previously hid all jobs. Construction has Fence and gates guidance/progress;
+inline cancellation errors and existing paid dismantling/salvage remain distinct.
+Regression: old source fails both new API cases; fixed fortification API 5 PASS.
+Local 533Domain/280API PASS; existing fence scenarios 8 PASS, final new UI
+checks 4/4 PASS on desktop/Pixel7 after controlled-response test fix. TS/build/
+lint PASS; screenshots inspected. Full GitHub CI pending. Live stays exact 0.7.13/a4bc0ec;
+no deployment, reset, synthetic message/wave, balance or schema change.
+See docs/dezertovia/FORTIFICATION_CANCELLATION.md. Historical release records below.
+
 #0.7.13 установлена и независимо проверена — 18 октября 2026
 
 Проверено в13:56UTC/15:56Осло. Gameexact`a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3`,

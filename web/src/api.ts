@@ -1703,7 +1703,7 @@ export function plotPosition(plotId: string): TilePoint | null {
 }
 
 export function siteHasWork(site: Site) {
-  return site.stages.some((stage) => stage.hands > 0 || stage.jobs.some((job) => job.done > 0))
+  return site.hasWork === true || site.stages.some((stage) => stage.hands > 0 || stage.jobs.some((job) => job.done > 0))
 }
 
 /**

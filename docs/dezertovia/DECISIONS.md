@@ -1005,3 +1005,11 @@ DungeonOnlyвраги исключены. Новые боевые пробы/м�
 Не переустанавливать и не подставлятьmain/mergeSHA вместо exacttestedsource.
 Новый выпуск требует отдельного свежегоcandidate/preflight/backups/check.
 Нельзя автоматически откатывать двигатель через activeRaids/newJSON.
+
+## 18 October 2026 — cancel reinforcement and explain fence work
+
+Owner: «Мы не можем отменить это. Так же непонятно как улучшить забор и защиту».
+Fix cancellation and expose the actual resident reinforcement jobs; make upgrades,
+requirements, repair and cancellation discoverable in Construction. Preserve paid
+work/salvage, permissions, current fence and all other sites. Investigation/source
+work is not an installed release. Details: FORTIFICATION_CANCELLATION.md.

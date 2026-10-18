@@ -78,6 +78,7 @@ public sealed partial class GameService
             }
             await db.SaveChangesAsync(ct); changes.Mark(village.Id);
             foreach(var person in people)await notifier.CitizenUpdated(slug,person.ToSummaryDto(now));
+            if(request.Operation=="site-cancel")return await BuildSavedStateAsync(db,slug,now,ct);
             return await BuildStateAsync(db, village, now, ct);
         }, ct);
 

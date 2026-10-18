@@ -59,10 +59,9 @@ export function SiteCard({
 }) {
   const i18n = useI18n()
   const { t } = i18n
-  const definition = catalog.buildings.find((b) => b.kind === site.kind)
   const stage = site.stages[site.stage]
-  const stageDefinition = definition?.stages[site.stage]
-  if (!definition || !stage || !stageDefinition) return null
+  // Upgrade/dismantling stages come from the saved operation, not the new-building catalog.
+  if (!stage) return null
 
   if(site.ruinedAt)return <section className="card"><h3>{i18n.building(site.kind).name} · {i18n.language==='ru'?'Руины':'Ruins'}</h3><p>{i18n.language==='ru'?'Стройка остановлена. Восстановите участок работой «Ремонт зданий». Материалы и прежний вклад сохранены.':'Construction is suspended. Restore the site using Repair buildings. Materials and prior contributions are preserved.'}</p></section>
   const jobsDone = stage.jobs.every((job) => job.done >= job.required - 1e-6)

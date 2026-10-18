@@ -1,10 +1,10 @@
 {
-  "status": "verified_source_not_installed",
-  "installed": false,
+  "status": "installed_and_independently_verified",
+  "installed": true,
   "source_sha": "d9ad3c4f5dba2bcf0218c33cd604b4e7f3b95f1e",
   "ci_run": 39129933021,
   "pull_request": 63,
-  "live_source_confirmed": "56a62381eb33b35e401e1766c2f4525d2709b361",
+  "live_source_confirmed": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
   "local_api_pass": 278,
   "focused_api_pass": 17,
   "old_code_regression_replay": {
@@ -24,5 +24,8 @@
   },
   "merge_sha": "fb500b8626bc0ef03f93b8f87c984d7edd6e5170",
   "merged_tree_matches_tested_source": true,
-  "ci_attempt": 1
+  "ci_attempt": 1,
+  "installed_game_sha": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
+  "install_run": 39133438404,
+  "check_run": 39133722743
 }

@@ -1013,3 +1013,7 @@ Fix cancellation and expose the actual resident reinforcement jobs; make upgrade
 requirements, repair and cancellation discoverable in Construction. Preserve paid
 work/salvage, permissions, current fence and all other sites. Investigation/source
 work is not an installed release. Details: FORTIFICATION_CANCELLATION.md.
+
+## 18 October 2026 — 0.7.14 installed and independently verified
+
+Owner authorized «Установи». Exactgamea616b6485b9ea469f2272d322c4c9753c90c939a, install39144320651, independentcheck39144753586SUCCESS. Preserved progress, currentbotcode/configurations and existingdirector/quarantine modes. Details in RELEASE_0_7_14.md and RELEASE_0_7_14_RESULT.json.

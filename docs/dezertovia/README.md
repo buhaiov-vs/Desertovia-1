@@ -1,3 +1,5 @@
+> **Android: смещённые значки ресурсов, SOURCE ONLY:** [причина и проверка](ANDROID_HUD_ICONS.md). Сервер и версия не менялись.
+
 > **Dungeon fix проверен и слит, НЕ УСТАНОВЛЕН:** PR63, exact CI39129933021 SUCCESS. [Проверки и границы](DUNGEON_INPUT_LATENCY.md). LIVE0.7.12/56a6238 не менялся.
 
 > **18Oct2026 — Dungeon response fix, SOURCE ONLY:** [причины и проверки](DUNGEON_INPUT_LATENCY.md). Runtime0.7.12 не менялся.

@@ -27,11 +27,11 @@ test('application actions follow the copy without a giant blank region; wallet s
  await page.screenshot({path:`test-results/post-071-${test.info().project.name}.png`,fullPage:true})
 })
 
-test('phone wallet shares the weather row instead of adding a full HUD row',async({page})=>{
+test('resource icons and wallet fit the existing HUD on phone and desktop',async({page})=>{
  await page.request.post('/auth/dev-login',{data:{name:uniqueName('wallet-layout')}})
  await page.addInitScript(()=>localStorage.setItem('desertod.language','ru'))
  await page.route('**/api/villages/stand/economy?*',r=>r.fulfill({json:{...wallet,coins:1234567,testCandles:9999}}))
- for(const width of [320,390,430]){
+ for(const width of [320,390,430,960]){
   await page.setViewportSize({width,height:844})
   await page.goto('/e2e/post-071-harness.html?hud=1')
   const balances=page.locator('.hud-resources .wallet-hud')
@@ -40,6 +40,19 @@ test('phone wallet shares the weather row instead of adding a full HUD row',asyn
   expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(width)
   expect(Math.abs(box!.y-weather!.y)).toBeLessThan(3)
   for(const amount of await page.locator('.hud-resource-amount').all())expect(await amount.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true)
+  const icons=await page.locator('.hud-resource-icon').evaluateAll(slots=>slots.map(slot=>{
+   const rect=slot.getBoundingClientRect(),icon=slot.querySelector('.tile-icon')!.getBoundingClientRect()
+   const amount=slot.parentElement!.querySelector('.hud-resource-amount')!.getBoundingClientRect()
+   return {width:icon.width,height:icon.height,left:icon.left-rect.left,top:icon.top-rect.top,right:icon.right,amountLeft:amount.left}
+  }))
+  expect(icons).toHaveLength(6)
+  const size=width<=720?16:24
+  for(const icon of icons){
+   expect(icon.width).toBeCloseTo(size,2);expect(icon.height).toBeCloseTo(size,2)
+   expect(icon.left).toBeGreaterThanOrEqual(-.1);expect(icon.top).toBeGreaterThanOrEqual(-.1)
+   expect(icon.top+icon.height).toBeLessThanOrEqual(size+.1)
+   expect(icon.right).toBeLessThanOrEqual(icon.amountLeft+.1)
+  }
   await page.screenshot({path:test.info().outputPath(`wallet-${width}.png`)})
  }
 })

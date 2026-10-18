@@ -10,6 +10,19 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.13',date:'2026-10-18',
+    title:{ru:'Отклик в подземельях и значки ресурсов',en:'Dungeon response and resource icons'},
+    changes:{
+      ru:['Быстрые нажатия в подземелье сохраняют последнее намерение вместо длинной очереди устаревших команд.',
+        'Движение участников больше не ждёт записи результатов выбывшего героя. При ошибке сохранения награды остаются доступны для повторной записи.',
+        'Проверка больницы перед действием касается только управляющего героем игрока. Новые ранения по-прежнему запрещают бой.',
+        'Значки ресурсов на узком экране снова помещаются в ячейки и не перекрывают числа. Заточка +N и прежний размер значков на ПК сохранены.'],
+      en:['Rapid dungeon clicks keep the latest intent instead of a backlog of outdated orders.',
+        'Fighters keep moving while another hero’s results are saved. Failed persistence retains the run and rewards for retry.',
+        'An action checks the acting player’s hospital status only. Fresh injuries still prevent combat.',
+        'Resource icons fit narrow-screen slots without overlapping amounts. Sharpening badges and desktop icon sizes remain.']}
+  },
+  {
     version:'0.7.12',date:'2026-10-18',
     title:{ru:'Заточка, Мёртвые земли и чтение деревни',en:'Weapon edges, the Dead Lands and a clearer village'},
     changes:{

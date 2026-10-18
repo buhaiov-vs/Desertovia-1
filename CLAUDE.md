@@ -1,3 +1,26 @@
+#0.7.13 установка разрешена18Oct2026 — подготовка, НЕ УСТАНОВЛЕНО
+
+Владелец: «ставь на сервер» — обе правки Dungeon и Android icons. Следующий
+малый номер0.7.13. Exact final source/CI обязательны после version stamp.
+Новый post0713flow, baseline0.7.12/56a6238; не переигрывать post0712 requests.
+До перезапуска дождаться естественного конца всех Dungeon. Только registry
+feedback_context.py в боте; свежий actual inventory защищает параллельные news
+изменения. Propose/бюджеты/карантин/прогресс/конфиги сохранить. PG/SQLite/code/
+profile backups, независимый check. Подробно RELEASE_0_7_13.md. ПокаNOTREADY.
+
+# Android HUD icons — SOURCE ONLY,18Oct2026
+
+Владелец прислал смещённые значки ресурсов поверх чисел. После заточки
+ResourceIcon стал всегда возвращать дополнительный .resource-icon; мобильный
+CSS .hud-resource-icon>.tile-icon перестал совпадать,24px рисовались в16pxслоте.
+В fix/android-resource-icons обычные ресурсы снова возвращают прямой TileIcon;
+wrapper и +N остаются для заточенных предметов. Старое оформление/ПК/баланс
+сохраняются. Проверка фактических границ/перекрытий на320/390/430/960px в
+post-071.spec.ts,desktop иPixel7. Локально2browserPASS/4ширины,TS/build/lintPASS; screenshots390/960 просмотрены.
+ПолныйCIpending; журнал ANDROID_HUD_ICONS.md.
+Dungeon fix уже exactCI39129933021 SUCCESS и mergedPR63; сервер всё ещё
+0.7.12/56a6238. Эта ветка не установлена, версия не меняется ради CSS/документов.
+
 # Подземелья: исправление проверено и слито, НЕ УСТАНОВЛЕНО18Oct2026
 
 Запрос владельца: задержки команд и движения в подземельях. PR63 merged

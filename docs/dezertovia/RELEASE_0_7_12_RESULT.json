@@ -1,0 +1,78 @@
+{
+  "version": "0.7.12",
+  "state": "installed_and_independently_verified",
+  "observed_at_utc": "2026-10-18T09:49:17+00:00",
+  "observed_at_oslo": "2026-10-18T11:49:17+02:00",
+  "game_sha": "56a62381eb33b35e401e1766c2f4525d2709b361",
+  "bot_payload_sha": "d0f82a617a3a76830862942d3decd4708cfc8b9d",
+  "upstream_sha": "e30fc988c957b339ba1e7a172d5d70b0d3f59025",
+  "game_merge_sha": "895e8629a6d59f2512b7636293bc935b86f6d32e",
+  "game_ci": 39114746891,
+  "bot_ci": 39114759689,
+  "preflight_run": 39116333730,
+  "install_run": 39116370847,
+  "check_run": 39116734143,
+  "checks": {
+    "domain": 533,
+    "api": 272,
+    "browser_passed": 212,
+    "browser_normal_skip": 2,
+    "bot": 968,
+    "operator": 37,
+    "lint": "pass",
+    "build": "pass",
+    "docker": "pass"
+  },
+  "preservation": {
+    "profiles_before": 138,
+    "profiles_after": 138,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 141,
+    "login_bindings_preserved": 141
+  },
+  "migrations": 37,
+  "building_numbers": {
+    "sequenceTooSmall": 0,
+    "unassigned": 0,
+    "duplicatePlots": 0,
+    "duplicateNumbers": 0
+  },
+  "display_numbers": {
+    "missing": 0,
+    "duplicateGlobal": 0,
+    "duplicateFamily": 0,
+    "familyGaps": 0,
+    "invalidValue": 0
+  },
+  "protected_actual_bot_files": 115,
+  "bot_runtime_payload": [
+    "feedback_context.py"
+  ],
+  "configurations_preserved": true,
+  "director_mode": "Propose",
+  "quarantine_preserved": true,
+  "backups": {
+    "postgres": true,
+    "restore_catalog_verified": true,
+    "sqlite": true,
+    "sqlite_integrity": "ok",
+    "code": true,
+    "configurations": true,
+    "profiles": true
+  },
+  "frontend": {
+    "version": "0.7.12",
+    "slider_editor": true,
+    "upstream_music_control": true,
+    "game_chunk": true,
+    "checked_chunks": 24,
+    "transient_http_retries": 0
+  },
+  "equipment_schema_verified": true,
+  "aspnet_runtime_minimum": "10.0.13",
+  "forced_raids": 0,
+  "model_probes": 0,
+  "synthetic_messages": 0,
+  "test_payments": 0,
+  "natural_postrelease_combat_performance_measured": false
+}

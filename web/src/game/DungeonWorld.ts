@@ -322,7 +322,8 @@ export class DungeonWorld {
   }
 
   setSnapshot(snapshot: DungeonSnapshot) {
-    if (snapshot.floor !== this.floor) {
+    const floorChanged = snapshot.floor !== this.floor
+    if (floorChanged) {
       this.floor = snapshot.floor
       this.clearFoes()
       this.showMap(snapshot.width, snapshot.height, snapshot.tiles, snapshot.entrance)
@@ -330,22 +331,33 @@ export class DungeonWorld {
     for (const hero of snapshot.heroes) {
       const figure = this.heroes.get(hero.id)
       if (!figure) continue
-      figure.targetX = hero.x
-      figure.targetY = hero.y
       figure.health = hero.health
       figure.state = hero.state
+      const fell = hero.state !== 'Fighting' || hero.health <= 0
+      if (floorChanged && fell) {
+        figure.view.visible = false
+        continue
+      }
+      if (hero.state !== 'Left') {
+        figure.targetX = hero.x
+        figure.targetY = hero.y
+      }
     }
     for (const foe of snapshot.foes) {
       let figure = this.foes.get(foe.id)
       if (!figure) figure = this.addFoe(foe.id, foe.kind, foe.x, foe.y)
-      figure.targetX = foe.x
-      figure.targetY = foe.y
       figure.health = foe.health
       figure.maximumHealth = foe.maximumHealth
-      if (foe.health <= 0 && !figure.dead) {
-        figure.dead = true
-        figure.diedAt = this.elapsed
+      if (foe.health <= 0) {
+        if (!figure.dead) {
+          figure.dead = true
+          figure.diedAt = this.elapsed
+        }
+        continue
       }
+      figure.dead = false
+      figure.targetX = foe.x
+      figure.targetY = foe.y
     }
     for (const event of snapshot.events) this.showEvent(event)
     this.drawMarks(snapshot)
@@ -546,25 +558,21 @@ export class DungeonWorld {
     }
 
     for (const hero of this.heroes.values()) {
-      move(hero)
+      if (hero.state !== 'Left' && hero.view.visible) move(hero)
       drawBar(hero.bar, hero.health / Math.max(1, hero.maximumHealth), hero.id === this.myHeroId ? 0xffd23a : 0x60c040)
-      hero.skull.visible = hero.state === 'Fleeing'
-      hero.view.visible = hero.state !== 'Left'
-      hero.view.alpha = hero.state === 'Left' ? Math.max(0, hero.view.alpha - seconds) : 1
+      hero.skull.visible = hero.state === 'Fleeing' && hero.view.visible
+      if (hero.state === 'Left') hero.view.visible = false
+      hero.view.alpha = hero.view.visible ? 1 : Math.max(0, hero.view.alpha - seconds)
     }
-    for (const [id, foe] of this.foes) {
+    for (const foe of this.foes.values()) {
       if (foe.dead) {
         const since = this.elapsed - foe.diedAt
         foe.body.rotation = Math.PI / 2
         foe.bar.visible = false
         foe.view.alpha = Math.max(0, 1 - since / CORPSE_SECONDS)
-        if (since > CORPSE_SECONDS) {
-          foe.view.visible = false
-          if (since > CORPSE_SECONDS * 2) {
-            foe.view.destroy({ children: true })
-            this.foes.delete(id)
-          }
-        }
+        // Slain foes stay in every snapshot until the floor changes. The faded sprite stays
+        // listed so a later snapshot does not spawn that corpse and play the death again.
+        if (since > CORPSE_SECONDS) foe.view.visible = false
         continue
       }
       move(foe)

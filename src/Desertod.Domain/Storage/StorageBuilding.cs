@@ -31,7 +31,7 @@ public sealed class StorageBuilding
     public static StorageBuilding Create(StorageKind kind, string plotId, DateTimeOffset now) =>
         new() { Kind = kind, PlotId = plotId, BuiltAt = now };
 
-    public int Amount(ResourceKind kind) => Goods.SingleOrDefault(g => g.Kind == kind)?.Amount ?? 0;
+    public int Amount(ResourceKind kind) => Goods.Where(g => g.Kind == kind).Sum(g => g.Amount);
 
     public int SlotsUsed(int amount) => (amount + Definition.SlotSize - 1) / Definition.SlotSize;
 
@@ -48,19 +48,24 @@ public sealed class StorageBuilding
         return Math.Min(resourceRoom,totalRoom);
     }
 
-    /// <summary>Stores as much as fits and returns the stored amount.</summary>
-    public int Put(ResourceKind kind, int amount)
+    /// <summary>Stores as much as fits and returns the stored amount. A plain good is sharpen 0.</summary>
+    public int Put(ResourceKind kind, int amount, int sharpen = 0)
     {
+        if (sharpen < 0 || kind is not (ResourceKind.Sword or ResourceKind.Spear or ResourceKind.Arrows))
+        {
+            sharpen = 0;
+        }
+
         var stored = Math.Min(amount, FreeSpace(kind));
         if (stored <= 0)
         {
             return 0;
         }
 
-        var good = Goods.SingleOrDefault(g => g.Kind == kind);
+        var good = Goods.SingleOrDefault(g => g.Kind == kind && g.Sharpen == sharpen);
         if (good is null)
         {
-            good = new StoredGood { Kind = kind };
+            good = new StoredGood { Kind = kind, Sharpen = sharpen };
             Goods.Add(good);
         }
 
@@ -68,10 +73,27 @@ public sealed class StorageBuilding
         return stored;
     }
 
-    /// <summary>Takes up to <paramref name="amount"/> and returns the amount taken.</summary>
+    /// <summary>Takes up to <paramref name="amount"/>, dullest edge first, and returns the amount taken.</summary>
     public int Take(ResourceKind kind, int amount)
     {
-        var good = Goods.SingleOrDefault(g => g.Kind == kind);
+        var taken = 0;
+        foreach (var good in Goods.Where(g => g.Kind == kind).OrderBy(g => g.Sharpen).ToList())
+        {
+            if (taken >= amount)
+            {
+                break;
+            }
+
+            taken += Take(kind, amount - taken, good.Sharpen);
+        }
+
+        return taken;
+    }
+
+    /// <summary>Takes up to <paramref name="amount"/> of one sharpen level and returns the amount taken.</summary>
+    public int Take(ResourceKind kind, int amount, int sharpen)
+    {
+        var good = Goods.SingleOrDefault(g => g.Kind == kind && g.Sharpen == sharpen);
         if (good is null)
         {
             return 0;
@@ -108,4 +130,7 @@ public sealed class StoredGood
 {
     public ResourceKind Kind { get; set; }
     public int Amount { get; set; }
+
+    /// <summary>Edge ground at the smithy. 0 is an ordinary weapon; other goods stay at 0.</summary>
+    public int Sharpen { get; set; }
 }

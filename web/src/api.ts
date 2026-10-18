@@ -46,6 +46,7 @@ export type TaskEffect =
   | 'Guard'
   | 'Repair'
   | 'NotAvailableYet'
+  | 'Sharpen'
 
 export type ProjectPhase = 'Survey' | 'Construction' | 'Completed'
 
@@ -79,6 +80,8 @@ export interface SkillDefinition {
 export interface ResourceAmount {
   resource: string
   amount: number
+  /** Edge ground at the smithy. Absent or 0 is an ordinary weapon. */
+  sharpen?: number
 }
 
 export interface Task {
@@ -397,11 +400,42 @@ export interface RaidBattle {
   events:{sequence:number;kind:string;target:string;at:string}[];
 }
 
+/** Citizens still drawn in a live fight, including ones who closed the game after joining. */
+export function fightingCitizenIds(battles: readonly RaidBattle[] | undefined): Set<string> {
+  const ids = new Set<string>()
+  for (const battle of battles ?? []) {
+    if (battle.finishedAt || battle.phase === 'Warning' || battle.phase === 'Cancelled') continue
+    for (const fighter of battle.fighters) {
+      if (fighter.isTsar || !fighter.citizenId || fighter.health <= 0) continue
+      if (fighter.active || fighter.mode === 'withdrawn') ids.add(fighter.citizenId)
+    }
+  }
+  return ids
+}
+
 /** Keep authoritative actor revisions when a slow snapshot races a newer combat delta. */
 export function mergeBattles(previous:readonly RaidBattle[] = [], incoming:readonly RaidBattle[] = []):RaidBattle[] {
   const all=new Map(previous.map(b=>[b.id,b]));
   for(const next of incoming)if(next.revision>=(all.get(next.id)?.revision??-1))all.set(next.id,next);
   return [...all.values()].sort((a,b)=>Date.parse(a.startsAt)-Date.parse(b.startsAt)).slice(-16);
+}
+
+/**
+ * A full village snapshot lists every battle the server still publishes.
+ * Keep a newer local revision of those battles, and drop a fight the snapshot no longer includes.
+ */
+export function adoptVillageState(previous: VillageState, next: VillageState): VillageState {
+  if (previous.id !== next.id || !next.battles) return next.battles ? next : { ...next, battles: previous.battles }
+  const published = new Set(next.battles.map(battle => battle.id))
+  const kept = (previous.battles ?? []).filter(battle => published.has(battle.id))
+  const battles = mergeBattles(kept, next.battles)
+  const tick = (list: readonly RaidBattle[]) => Math.max(0, ...list.map(battle => Date.parse(battle.lastTickAt)))
+  const newer = kept.filter(battle => battle.revision > (next.battles?.find(item => item.id === battle.id)?.revision ?? -1))
+  return {
+    ...next,
+    battles,
+    fortifications: newer.length > 0 && tick(newer) > tick(next.battles) ? previous.fortifications : next.fortifications,
+  }
 }
 
 export interface Raid {
@@ -1253,8 +1287,12 @@ export interface Citizen {
   recovery?: ExternalRecovery | null
   injuredUntil: string | null
   weapon: string | null
+  /** Edge of the weapon in hand. 0 is an ordinary weapon. */
+  weaponSharpen?: number
   armor: string | null
   arrows: number
+  /** Edge of the arrows in the quiver. 0 is an ordinary arrow. */
+  arrowSharpen?: number
   /** Fight power with the weapon in hand. */
   power: number
 }
@@ -1357,6 +1395,8 @@ export interface LoginProviders {
   primaryVillage?: string | null
   telegramBrowserLogin: boolean
   developmentLogin: boolean
+  /** Present only in Development: ready Tsar, Governor and villager logins. */
+  developmentRoles?: { role: string; name: string }[] | null
 }
 
 export const PASSWORD_MINIMUM = 8
@@ -1470,7 +1510,7 @@ export interface EconomyView {
   journal: {id: string; at: string; operation: string; asset: string; location: string; delta: number; actor: string|null}[]
   nextJournalBefore: string|null; startedAt: string; workPay: number; constructionPay: number
   residents: {accountId: string; name: string}[]
-  privateStorages: {plotId: string; kind: string; goods: {resource:string; amount:number}[]}[]
+  privateStorages: {plotId: string; kind: string; goods: {resource:string; amount:number; sharpen?:number}[]}[]
 }
 export const api = {
   economy: (slug: string, before?: string, asset?: string) => request<EconomyView>('GET', `/api/villages/${encodeURIComponent(slug)}/economy?${new URLSearchParams({...before ? {before} : {}, ...asset ? {asset} : {}})}`),
@@ -1541,8 +1581,8 @@ export const api = {
   callUndead: (slug: string, enemy: EnemyKind, size: RaidSize) =>
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/undead`, { enemy, size }),
   cancelUndead: (slug: string) => request<VillageState>('DELETE', `/api/villages/${encodeURIComponent(slug)}/undead`),
-  takeFromStorage: (slug: string, plotId: string, resource: string, amount: number) =>
-    request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/take`, { plotId, resource, amount }),
+  takeFromStorage: (slug: string, plotId: string, resource: string, amount: number, sharpen?: number) =>
+    request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/take`, { plotId, resource, amount, sharpen }),
   goTo: (slug: string, spot: TilePoint) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/goto`, { spot }),
   research: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/research`),
   forecast: (slug: string, rain: boolean) =>

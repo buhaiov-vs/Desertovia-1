@@ -48,8 +48,8 @@ export function HandsCard({
       <h3>{t('hands.title')}</h3>
       <ul className="done-results">
         {citizen.load.map((good) => (
-          <li key={good.resource}>
-            <ResourceIcon kind={good.resource} scale={1} /> {i18n.held(good.resource, good.amount)}
+          <li key={`${good.resource}:${good.sharpen ?? 0}`}>
+            <ResourceIcon kind={good.resource} scale={1} sharpen={good.sharpen ?? 0} /> {i18n.held(good.resource, good.amount)}
           </li>
         ))}
       </ul>

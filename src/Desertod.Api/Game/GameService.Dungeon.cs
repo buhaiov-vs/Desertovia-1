@@ -339,18 +339,31 @@ public sealed partial class GameService
     {
         var fighters = new List<DungeonFighter>();
         var owners = new Dictionary<Guid, Guid>();
+        var now = time.GetUtcNow();
+        var invulnerable = bool.TryParse(configuration["Game:DevTools"], out var devTools) && devTools;
         foreach (var hero in run.Heroes)
         {
+            if (hero.Settled)
+            {
+                continue;
+            }
+
             var definition = HeroClassCatalog.Get(hero.Class);
             if (hero.IsTsar)
             {
+                if (village.TsarInjuredUntil > now || village.TsarHospitalizedAt is not null)
+                {
+                    continue;
+                }
+
                 fighters.Add(new DungeonFighter(hero.AccountId, hero.AccountId, hero.Name, hero.Class,
-                    HeroClassCatalog.VoivodeHealth, HeroClassCatalog.VoivodeDamage, 0, null, false));
+                    HeroClassCatalog.VoivodeHealth, HeroClassCatalog.VoivodeDamage, 0, null, false, invulnerable));
                 owners[hero.AccountId] = hero.AccountId;
                 continue;
             }
 
-            if (citizens.FirstOrDefault(c => c.Id == hero.CitizenId) is not { } citizen)
+            if (citizens.FirstOrDefault(c => c.Id == hero.CitizenId) is not { } citizen
+                || !DungeonRules.CanMarch(citizen, now))
             {
                 continue;
             }
@@ -364,7 +377,8 @@ public sealed partial class GameService
                 DungeonRules.Damage(citizen, definition),
                 DungeonRules.Protection(citizen),
                 hero.Class == HeroClass.Archer ? citizen.Arrows : null,
-                definition.Heal > 0 && hero.Remedies > 0));
+                definition.Heal > 0 && hero.Remedies > 0,
+                invulnerable));
             owners[citizen.Id] = citizen.AccountId;
         }
 
@@ -386,6 +400,11 @@ public sealed partial class GameService
         var heroes = new List<DungeonRunHeroDto>();
         foreach (var hero in run.Heroes)
         {
+            if (hero.Settled)
+            {
+                continue;
+            }
+
             var definition = HeroClassCatalog.Get(hero.Class);
             if (hero.IsTsar)
             {

@@ -87,7 +87,7 @@ export function TaskDonePanel({
             const carried = report.carried.some((good) => good.resource === item.resource)
             return (
               <li key={item.resource}>
-                <ResourceIcon kind={item.resource} scale={1} /> {i18n.produced(item.resource, item.amount, item.amount - lost)}
+                <ResourceIcon kind={item.resource} scale={1} sharpen={item.sharpen ?? 0} /> {i18n.produced(item.resource, item.amount, item.amount - lost)}
                 {(task?.effect === 'Deliver' || report.siteId) && ` ${t('done.toProject')}`}
                 {(lost > 0 || carried) && (
                   <span className="warning"> {t(lost > 0 ? 'done.handsFull' : 'done.storageFull')}</span>

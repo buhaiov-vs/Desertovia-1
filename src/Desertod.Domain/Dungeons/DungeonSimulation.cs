@@ -19,6 +19,7 @@ public enum HeroState
 /// <param name="Id">The citizen, or the Tsar's account.</param>
 /// <param name="Protection">Share of each blow the armor stops.</param>
 /// <param name="Arrows">Shots of an archer; null when the hero does not shoot.</param>
+/// <param name="Invulnerable">Local development only: blows land, but health stays full and the clock does not end the run.</param>
 public sealed record DungeonFighter(
     Guid Id,
     Guid AccountId,
@@ -28,7 +29,8 @@ public sealed record DungeonFighter(
     double Damage,
     double Protection,
     int? Arrows,
-    bool CanHeal);
+    bool CanHeal,
+    bool Invulnerable = false);
 
 public enum DungeonEventKind
 {
@@ -256,7 +258,7 @@ public sealed class DungeonSimulation
         {
             Outcome = DungeonOutcome.Defeat;
         }
-        else if (Elapsed >= timeLimit.TotalSeconds)
+        else if (Elapsed >= timeLimit.TotalSeconds && heroes.Any(h => h.State == HeroState.Fighting && !h.Fighter.Invulnerable))
         {
             Outcome = DungeonOutcome.Defeat;
             TimedOut = true;
@@ -435,6 +437,12 @@ public sealed class DungeonSimulation
             return;
         }
 
+        if (target.Fighter.Invulnerable)
+        {
+            foe.Cooldown = foe.Definition.AttackSeconds;
+            return;
+        }
+
         var damage = foe.Definition.Damage * (1 - target.Fighter.Protection);
         target.Health -= damage;
         foe.Cooldown = foe.Definition.AttackSeconds;
@@ -563,14 +571,19 @@ public sealed class DungeonSimulation
             hero.Destination = null;
             hero.Path.Clear();
             hero.Cooldown = 0;
-            if (hero.State == HeroState.Fighting)
+            if (hero.State == HeroState.Fighting && hero.Health > 0)
             {
                 var start = StartTile(Dungeon, file++);
                 hero.X = start.X;
                 hero.Y = start.Y;
             }
-            else if (hero.State == HeroState.Fleeing)
+            else
             {
+                if (hero.Health <= 0 || hero.State == HeroState.Fleeing)
+                {
+                    hero.Health = 0;
+                }
+
                 hero.State = HeroState.Left;
             }
         }

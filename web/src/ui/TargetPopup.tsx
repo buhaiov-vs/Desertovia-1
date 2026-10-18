@@ -163,7 +163,7 @@ export function TargetPopup({
   onStartJob: (choice: JobChoice) => void
   ruler: boolean
   onCivic: (plotId:string, operation:string)=>Promise<void>
-  onTake: (plotId: string, resource: string, amount: number) => void
+  onTake: (plotId: string, resource: string, amount: number, sharpen?: number) => void
   onClose: () => void
 }) {
   const [confirm,setConfirm]=useState(false),[operationError,setOperationError]=useState('')
@@ -216,7 +216,7 @@ export function TargetPopup({
           <StorageCard
             storage={storage}
             catalog={catalog}
-            take={{ citizen, disabled, onTake: (resource, amount) => onTake(storage.plotId, resource, amount) }}
+            take={{ citizen, disabled, onTake: (resource, amount, sharpen) => onTake(storage.plotId, resource, amount, sharpen) }}
           />
         )}
         {tasks.some(task=>task.outputs.length>0)&&(target.kind==='building'||'spot' in target)&&<p className="small muted">{(() => {

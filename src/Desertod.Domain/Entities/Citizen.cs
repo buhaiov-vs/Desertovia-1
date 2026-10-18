@@ -1,4 +1,5 @@
 using Desertod.Domain.Catalog;
+using Desertod.Domain.Combat;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
@@ -83,10 +84,16 @@ public sealed class Citizen
 
     public ResourceKind? Weapon { get; set; }
 
+    /// <summary>Edge of <see cref="Weapon"/>, ground at the smithy. 0 is an ordinary weapon.</summary>
+    public int WeaponSharpen { get; set; }
+
     public ResourceKind? Armor { get; set; }
 
     /// <summary>Arrows in the quiver; a bow is no use without them.</summary>
     public int Arrows { get; set; }
+
+    /// <summary>Edge of the arrows in the quiver. 0 is an ordinary arrow.</summary>
+    public int ArrowSharpen { get; set; }
 
     /// <summary>Explicit repair or unloading destination, persisted for the whole paid cycle.</summary>
     public string? CurrentTargetPlotId { get; set; }
@@ -167,14 +174,35 @@ public sealed class Citizen
 
     public int SkillLevel(Skill skill) => Skills.SingleOrDefault(s => s.Kind == skill)?.Level ?? 0;
 
-    public int Carried(ResourceKind kind) => Load.SingleOrDefault(g => g.Kind == kind)?.Amount ?? 0;
-
-    public void Carry(ResourceKind kind, int amount)
+    public void ClearWeapon()
     {
-        var good = Load.SingleOrDefault(g => g.Kind == kind);
+        Weapon = null;
+        WeaponSharpen = 0;
+    }
+
+    /// <summary>Spends shots from the quiver. An empty quiver forgets the edge.</summary>
+    public void SpendArrows(int amount)
+    {
+        Arrows = Math.Max(0, Arrows - amount);
+        if (Arrows == 0)
+        {
+            ArrowSharpen = 0;
+        }
+    }
+
+    public int Carried(ResourceKind kind) => Load.Where(g => g.Kind == kind).Sum(g => g.Amount);
+
+    public void Carry(ResourceKind kind, int amount, int sharpen = 0)
+    {
+        if (sharpen < 0 || kind is not (ResourceKind.Sword or ResourceKind.Spear or ResourceKind.Arrows))
+        {
+            sharpen = 0;
+        }
+
+        var good = Load.SingleOrDefault(g => g.Kind == kind && g.Sharpen == sharpen);
         if (good is null)
         {
-            good = new CarriedGood { Kind = kind };
+            good = new CarriedGood { Kind = kind, Sharpen = sharpen };
             Load.Add(good);
         }
 
@@ -182,9 +210,26 @@ public sealed class Citizen
         IsCarrying = true;
     }
 
+    /// <summary>Takes from the dullest stack of this kind first.</summary>
     public int TakeFromLoad(ResourceKind kind, int amount)
     {
-        var good = Load.SingleOrDefault(g => g.Kind == kind);
+        var taken = 0;
+        foreach (var good in Load.Where(g => g.Kind == kind).OrderBy(g => g.Sharpen).ToList())
+        {
+            if (taken >= amount)
+            {
+                break;
+            }
+
+            taken += TakeFromLoad(kind, amount - taken, good.Sharpen);
+        }
+
+        return taken;
+    }
+
+    public int TakeFromLoad(ResourceKind kind, int amount, int sharpen)
+    {
+        var good = Load.SingleOrDefault(g => g.Kind == kind && g.Sharpen == sharpen);
         if (good is null)
         {
             return 0;
@@ -223,6 +268,12 @@ public sealed class Citizen
     public void GoTo(TilePoint spot, Village village, DateTimeOffset now)
     {
         HospitalRules.RequireReady(this, now);
+        if (CombatRules.IsInjured(this, now))
+        {
+            throw new GameRuleException("citizen.injured", "You are wounded and cannot walk until the wound heals.",
+                new Dictionary<string, object> { ["readyAt"] = InjuredUntil!.Value });
+        }
+
         if (ExhaustedUntil > now) throw new GameRuleException("citizen.exhausted", "You are unconscious and recovering.");
         if (WorkState(now) == Entities.WorkState.Working)
         {
@@ -318,4 +369,7 @@ public sealed class CarriedGood
 {
     public ResourceKind Kind { get; set; }
     public int Amount { get; set; }
+
+    /// <summary>Edge of a carried weapon. Other goods stay at 0.</summary>
+    public int Sharpen { get; set; }
 }

@@ -19,11 +19,11 @@ public static class StorageRules
         var unloaded = new List<ResourceAmount>();
         foreach (var good in citizen.Load.ToList())
         {
-            var stored = destination is null ? village.Store(good.Kind, good.Amount) : destination.Put(good.Kind, good.Amount);
+            var stored = destination is null ? village.Store(good.Kind, good.Amount, good.Sharpen) : destination.Put(good.Kind, good.Amount, good.Sharpen);
             if (stored > 0)
             {
-                citizen.TakeFromLoad(good.Kind, stored);
-                unloaded.Add(new ResourceAmount(good.Kind, stored));
+                citizen.TakeFromLoad(good.Kind, stored, good.Sharpen);
+                unloaded.Add(new ResourceAmount(good.Kind, stored, good.Sharpen));
             }
         }
 
@@ -46,7 +46,7 @@ public static class StorageRules
     /// An idle citizen takes up to <paramref name="amount"/> of a good out of one storage building into their hands,
     /// holding at most <see cref="TakeLimit"/>. Returns the amount taken.
     /// </summary>
-    public static int Take(Citizen citizen, Village village, string plotId, ResourceKind kind, int amount, DateTimeOffset now)
+    public static int Take(Citizen citizen, Village village, string plotId, ResourceKind kind, int amount, DateTimeOffset now, int? sharpen = null)
     {
         if (amount < 1)
         {
@@ -76,13 +76,39 @@ public static class StorageRules
             throw new GameRuleException("take.handsFull", $"You cannot carry more {ResourceNames.Of(kind)}.", Resource(kind));
         }
 
-        var taken = building.Take(kind, Math.Min(amount, room));
+        var wanted = Math.Min(amount, room);
+        var taken = 0;
+        if (sharpen is int level)
+        {
+            taken = building.Take(kind, wanted, level);
+            if (taken > 0)
+            {
+                citizen.Carry(kind, taken, level);
+            }
+        }
+        else
+        {
+            foreach (var good in building.Goods.Where(g => g.Kind == kind).OrderBy(g => g.Sharpen).ToList())
+            {
+                if (taken >= wanted)
+                {
+                    break;
+                }
+
+                var slice = building.Take(kind, wanted - taken, good.Sharpen);
+                if (slice > 0)
+                {
+                    citizen.Carry(kind, slice, good.Sharpen);
+                    taken += slice;
+                }
+            }
+        }
+
         if (taken <= 0)
         {
             throw new GameRuleException("take.nothing", $"There is no {ResourceNames.Of(kind)} here.", Resource(kind));
         }
 
-        citizen.Carry(kind, taken);
         return taken;
     }
 
@@ -105,7 +131,7 @@ public static class StorageRules
 
         foreach (var good in unwanted)
         {
-            citizen.TakeFromLoad(good.Kind, good.Amount);
+            citizen.TakeFromLoad(good.Kind, good.Amount, good.Sharpen);
         }
     }
 

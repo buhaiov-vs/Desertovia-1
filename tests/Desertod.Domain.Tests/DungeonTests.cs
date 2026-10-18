@@ -4,6 +4,7 @@ using Desertod.Domain.Dungeons;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
+using Desertod.Domain.World;
 using static Desertod.Domain.Tests.TestWorld;
 
 namespace Desertod.Domain.Tests;
@@ -69,6 +70,7 @@ public class DungeonTests
         Assert.Equal(DungeonOutcome.Pending, simulation.Outcome);
         Assert.Equal(HeroState.Left, simulation.Hero(fallen.Id)!.State);
         Assert.Equal(HeroState.Fighting, simulation.Hero(survivor.Id)!.State);
+        Assert.NotEqual(simulation.Hero(survivor.Id)!.X, simulation.Hero(fallen.Id)!.X);
         Assert.Equal(200, simulation.Hero(survivor.Id)!.Health);
         Assert.Equal(EnemyKind.BarrowKing, Assert.Single(simulation.Foes, foe => foe.IsAlive).Kind);
 
@@ -283,6 +285,20 @@ public class DungeonTests
     }
 
     [Fact]
+    public void An_InvulnerableHero_KeepsFullHealth_AndTheClockDoesNotEndTheRun()
+    {
+        var hero = Fighter(health: 1, damage: 0) with { Invulnerable = true };
+        var simulation = new DungeonSimulation(Corridor(".r......", timeLimitSeconds: 1), [hero]);
+
+        Run(simulation, 3);
+
+        Assert.Equal(DungeonOutcome.Pending, simulation.Outcome);
+        Assert.False(simulation.TimedOut);
+        Assert.Equal(HeroState.Fighting, simulation.Heroes[0].State);
+        Assert.Equal(1, simulation.Heroes[0].Health);
+    }
+
+    [Fact]
     public void TheRun_IsLost_WhenTheTimeRunsOut_WithNoWounds()
     {
         var simulation = new DungeonSimulation(Corridor(".......r", timeLimitSeconds: 1), [Fighter()]);
@@ -310,24 +326,66 @@ public class DungeonTests
     }
 
     [Fact]
-    public void Settle_StoresTheLoot_WoundsTheFallen_AndSendsThemHome()
+    public void Settle_StoresTheLoot_AndLeavesTheFallenWhereTheyFell()
     {
         var village = NewVillage();
         var citizen = NewCitizen(village, (Stat.Strength, 2));
         var run = DungeonRules.Open(village, DungeonCatalog.DeadLands, "Tsar", 1, Now);
         DungeonRules.Join(run, village, citizen, HeroClass.Brawler, Now);
-        DungeonRules.March(run, village, [citizen], Now + DungeonRules.Gathering);
+        DungeonRules.March(run, village, [citizen], Now);
         var iron = village.Stock(ResourceKind.IronOre);
+        var back = citizen.Trip!.ArrivesAt + TimeSpan.FromMinutes(1);
+        var fallen = citizen.Trip.PositionAt(back);
         var outcome = new DungeonHeroOutcome(1, 20, [new ResourceAmount(ResourceKind.IronOre, 2)], 1, 0, false, true, EnemyKind.Ghoul);
+
+        DungeonRules.Settle(run, run.Hero(citizen.Id)!, citizen, village, outcome, new Random(1), back);
+
+        Assert.Equal(iron + 2, village.Stock(ResourceKind.IronOre));
+        Assert.Equal(back + TimeSpan.FromMinutes(EnemyCatalog.Get(EnemyKind.Ghoul).InjuryMinutes), citizen.InjuredUntil);
+        Assert.Null(citizen.DungeonRunId);
+        Assert.Null(citizen.Trip);
+        Assert.Equal(fallen, citizen.IdleSpot);
+        Assert.Equal(fallen, citizen.Spot);
+        Assert.Equal("citizen.injured", Assert.Throws<GameRuleException>(() => citizen.GoTo(WorldMap.Places[WorldMap.Camp], village, back)).Code);
+        Assert.Equal(fallen, citizen.IdleSpot);
+        Assert.True(citizen.SkillLevel(Skill.Guarding) > 0 || citizen.Skills.Any(s => s.Kind == Skill.Guarding && s.Experience > 0));
+        Assert.True(run.Hero(citizen.Id)!.Settled);
+    }
+
+    [Fact]
+    public void Settle_SendsALivingHeroHome()
+    {
+        var village = NewVillage();
+        var citizen = NewCitizen(village);
+        var run = DungeonRules.Open(village, DungeonCatalog.DeadLands, "Tsar", 1, Now);
+        DungeonRules.Join(run, village, citizen, HeroClass.Brawler, Now);
+        DungeonRules.March(run, village, [citizen], Now);
+        var outcome = new DungeonHeroOutcome(1, 10, [], 1, 0, false, false, null);
 
         DungeonRules.Settle(run, run.Hero(citizen.Id)!, citizen, village, outcome, new Random(1), Now);
 
-        Assert.Equal(iron + 2, village.Stock(ResourceKind.IronOre));
-        Assert.Equal(Now + TimeSpan.FromMinutes(EnemyCatalog.Get(EnemyKind.Ghoul).InjuryMinutes), citizen.InjuredUntil);
-        Assert.Null(citizen.DungeonRunId);
+        Assert.Null(citizen.InjuredUntil);
         Assert.Null(citizen.IdleSpot);
-        Assert.True(citizen.SkillLevel(Skill.Guarding) > 0 || citizen.Skills.Any(s => s.Kind == Skill.Guarding && s.Experience > 0));
-        Assert.True(run.Hero(citizen.Id)!.Settled);
+        Assert.Equal(WorldMap.Places[WorldMap.Camp], citizen.Trip!.To);
+    }
+
+    [Fact]
+    public void Settle_LeavesAFallenTsarWhereTheyFell()
+    {
+        var village = NewVillage();
+        var run = DungeonRules.Open(village, DungeonCatalog.DeadLands, "Tsar", 1, Now);
+        DungeonRules.March(run, village, [], Now);
+        var back = village.TsarTrip!.ArrivesAt + TimeSpan.FromMinutes(1);
+        var fallen = village.TsarTrip.PositionAt(back);
+        var outcome = new DungeonHeroOutcome(0, 0, [], 0, 0, false, true, EnemyKind.Ghoul);
+
+        DungeonRules.Settle(run, run.Tsar, null, village, outcome, new Random(1), back);
+
+        Assert.Null(village.TsarTrip);
+        Assert.Equal(fallen, village.TsarSpot);
+        Assert.Equal(back + TimeSpan.FromMinutes(EnemyCatalog.Get(EnemyKind.Ghoul).InjuryMinutes), village.TsarInjuredUntil);
+        Assert.Equal("tsar.injured", Assert.Throws<GameRuleException>(() => village.TsarGoTo(WorldMap.Places[WorldMap.Camp], back)).Code);
+        Assert.Equal(fallen, village.TsarSpot);
     }
 
     [Fact]
@@ -345,5 +403,56 @@ public class DungeonTests
         Assert.Equal(DungeonRules.MarchSpot, citizen.Trip!.To);
         Assert.Equal(DungeonRules.MarchSpot, village.TsarSpot);
         Assert.True(run.MarchEndsAt <= closes + DungeonRules.LongestMarch);
+    }
+
+    [Fact]
+    public void March_LeavesTheWoundedWhereTheyFell()
+    {
+        var village = NewVillage();
+        var healthy = NewCitizen(village);
+        var wounded = NewCitizen(village);
+        var run = DungeonRules.Open(village, DungeonCatalog.DeadLands, "Tsar", 1, Now);
+        DungeonRules.Join(run, village, healthy, HeroClass.Brawler, Now);
+        DungeonRules.Join(run, village, wounded, HeroClass.Brawler, Now);
+        wounded.InjuredUntil = Now.AddHours(1);
+        wounded.IdleSpot = new TilePoint(12, 8);
+        village.TsarInjuredUntil = Now.AddHours(1);
+        var tsarSpot = village.TsarSpot;
+
+        DungeonRules.March(run, village, [healthy, wounded], run.GatheringEndsAt);
+
+        Assert.Equal(DungeonPhase.Marching, run.Phase);
+        Assert.Equal(DungeonRules.MarchSpot, healthy.Trip!.To);
+        Assert.Null(wounded.Trip);
+        Assert.Null(wounded.DungeonRunId);
+        Assert.Null(run.Hero(wounded.Id));
+        Assert.Equal(new TilePoint(12, 8), wounded.IdleSpot);
+        Assert.Equal(tsarSpot, village.TsarSpot);
+        Assert.True(run.Tsar.Settled);
+    }
+
+    [Fact]
+    public void ADeadHero_IsNotCarriedOntoTheNextFloor()
+    {
+        var woods = DungeonCatalog.Parse("woods", "Woods", ["TTTTTTTTTT", "Er.......T", "TTTTTTTTTT"], TimeSpan.FromMinutes(15));
+        var barrow = DungeonCatalog.Parse("barrow", "Barrow", ["TTTTTTTTTT", "E.......KT", "TTTTTTTTTT"], TimeSpan.FromMinutes(15));
+        var course = DungeonCatalog.Expedition("run", "Run", TimeSpan.FromMinutes(15), woods, barrow);
+        var fallen = Fighter(health: 30, damage: 1);
+        var survivor = Fighter(health: 200, damage: 1000);
+        var simulation = new DungeonSimulation(course, [fallen, survivor]);
+        var hero = simulation.Hero(fallen.Id)!;
+        hero.State = HeroState.Fighting;
+        hero.Health = 0;
+        hero.X = 4.5;
+        hero.Y = 1.5;
+        simulation.Attack(survivor.Id, 0);
+
+        Run(simulation, 2);
+
+        Assert.Equal(1, simulation.Floor);
+        Assert.Equal(HeroState.Left, hero.State);
+        Assert.Equal(4.5, hero.X);
+        Assert.Equal(1.5, hero.Y);
+        Assert.Equal(HeroState.Fighting, simulation.Hero(survivor.Id)!.State);
     }
 }

@@ -353,7 +353,7 @@ public sealed partial class GameService
             EconomyNumber("WorkPay", 10, 1, 1000), EconomyNumber("ConstructionPay", 20, 1, 1000),
             await db.Citizens.AsNoTracking().Where(c => c.VillageId == village.Id && c.Status == CitizenStatus.Active)
                 .OrderBy(c => c.Name).Select(c => new EconomyResident(c.AccountId, c.Name)).ToListAsync(ct),
-            village.Storages.Where(s => s.OwnerAccountId == account).Select(s => new PrivateStorageDto(s.PlotId, s.Kind, s.Goods.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToArray())).ToArray(),
+            village.Storages.Where(s => s.OwnerAccountId == account).Select(s => new PrivateStorageDto(s.PlotId, s.Kind, s.Goods.Select(g => new ResourceAmount(g.Kind, g.Amount, g.Sharpen)).ToArray())).ToArray(),
             Enum.GetValues<ResourceKind>().Where(StorageCatalog.IsGood).ToDictionary(k=>k,EconomyRules.StorePrice),
             village.Structures.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,s.Kind,s.Level,false,false))
                 .Concat(village.Storages.Where(s=>s.OwnerAccountId==account).Select(s=>new PrivatePropertyDto(s.PlotId,BuildingCatalog.ForStorage(s.Kind)??BuildingKind.Heap,1,false,false)))

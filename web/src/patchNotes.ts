@@ -10,6 +10,21 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.12',date:'2026-10-18',
+    title:{ru:'Заточка, Мёртвые земли и чтение деревни',en:'Weapon edges, the Dead Lands and a clearer village'},
+    changes:{
+      ru:['В кузнице точат один меч, копьё или стрелу за работу, до +3. Каждая ступень прибавляет 1 к силе удара и стоит 1 уголь. Заточка остаётся на стопке и показывается как +N. Лук не точится: точатся стрелы. В бой берётся самое острое подходящее оружие.',
+        'Мёртвые земли — один поход из трёх этажей: мёртвый лес, погост и король кургана. Упавший герой остаётся жив и ранен; кто ещё стоит, идёт дальше.',
+        'Пропавшие трупы в подземелье не появляются снова. Обводка выбранного здания совпадает со спрайтом.',
+        'Тёмный склад читается как чернила на пергаменте. Голод режет опыт в начале цикла. Счётчики костра и золота считают вклады. Дорога не срезает воду, камыш не кончается.',
+        'В деревне звучат гусли, в набеге — боевая тема. Громкость и выключение — в настройках. После сворачивания окна Telegram деревня догоняет состояние.'],
+      en:['At the smithy, one sword, spear or arrow is ground a step sharper, up to +3. Each step adds 1 fight power and costs 1 coal. The edge stays on the stack and is shown as +N. A bow is not sharpened; the arrows are. Fights take the sharpest fitting weapon.',
+        'The Dead Lands are one run of three floors: the dead woods, the graveyard and the barrow king. A fallen hero lives and stays wounded; whoever is still standing goes on.',
+        'Faded dungeon corpses do not appear again. The selected building outline matches the sprite.',
+        'Dark storage reads as ink on parchment. Hunger cuts experience at the start of the cycle. Campfire and gold counters count contributions. Paths do not cut water, and reeds do not run out.',
+        'Gusli plays in the village and a battle theme during a raid. Volume and mute are in Settings. After the Telegram window is collapsed, the village catches up.']}
+  },
+  {
     version:'0.7.11',date:'2026-10-17',
     title:{ru:'Набеги, спасение и развитие поселения',en:'Raids, rescue and settlement progression'},
     changes:{

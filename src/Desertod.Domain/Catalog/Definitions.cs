@@ -61,6 +61,9 @@ public enum TaskEffect
 
     /// <summary>Needs streamer events or other villages, which are not implemented yet.</summary>
     NotAvailableYet,
+
+    /// <summary>Grinds one weapon a single step sharper at the smithy and returns it.</summary>
+    Sharpen,
 }
 
 public sealed record StatRequirement(Stat Stat, int Minimum);
@@ -83,7 +86,7 @@ public sealed record RoleDefinition(
     public bool IsQualified(Citizen citizen) => Skill is not { } skill || citizen.SkillLevel(skill) >= SkillLevel;
 }
 
-public sealed record ResourceAmount(ResourceKind Resource, int Amount);
+public sealed record ResourceAmount(ResourceKind Resource, int Amount, int Sharpen = 0);
 
 /// <param name="Animals">Animals caught per cycle at a stat factor of 1 while the herd is abundant; the task's outputs are for that catch.</param>
 public sealed record HuntDefinition(AnimalKind Prey, int Animals);

@@ -280,7 +280,7 @@ export class DungeonWorld {
     this.handlers = handlers
   }
 
-  /** The map and the heroes; drawn once per run. */
+  /** The map once per run. Heroes stay off it until their march to the edge is over. */
   setRun(view: DungeonRunView) {
     const firstTime = this.view?.runId !== view.runId
     this.view = view
@@ -289,17 +289,22 @@ export class DungeonWorld {
       this.floor = 0
       this.showMap(view.width, view.height, view.tiles, view.entrance)
     }
-    view.heroes.forEach((hero, index) => {
-      let figure = this.heroes.get(hero.id)
-      if (!figure) {
-        const x = view.entrance.x + 0.5
-        const y = view.entrance.y + 0.5 + (index % 7) - 3
-        figure = this.addHero(hero.id, hero.name, hero.class, hero.appearance, x, y)
-      }
-      figure.maximumHealth = hero.maximumHealth || figure.maximumHealth
-      if (figure.health === 0) figure.health = figure.maximumHealth
-    })
+    for (const [id, figure] of this.heroes) {
+      if (!this.onTheLand(id)) figure.view.visible = false
+    }
     this.layoutCamera()
+  }
+
+  /** A hero is on the dungeon land only after the fight has started and their own arrival time has passed. */
+  private onTheLand(heroId: string) {
+    const view = this.view
+    if (!view || view.run.phase !== 'Running') return false
+    const listed = view.heroes.find((hero) => hero.id === heroId)
+    if (!listed) return false
+    const marcher = listed.citizenId === null
+      ? view.run.heroes.find((hero) => hero.citizenId === null)
+      : view.run.heroes.find((hero) => hero.citizenId === listed.citizenId)
+    return marcher?.arrivesAt == null || Date.parse(marcher.arrivesAt) <= Date.now()
   }
 
   private showMap(width: number, height: number, tiles: string, entrance: { x: number; y: number }) {
@@ -329,8 +334,19 @@ export class DungeonWorld {
       this.showMap(snapshot.width, snapshot.height, snapshot.tiles, snapshot.entrance)
     }
     for (const hero of snapshot.heroes) {
-      const figure = this.heroes.get(hero.id)
-      if (!figure) continue
+      if (!this.onTheLand(hero.id)) {
+        const waiting = this.heroes.get(hero.id)
+        if (waiting) waiting.view.visible = false
+        continue
+      }
+      let figure = this.heroes.get(hero.id)
+      if (!figure) {
+        const listed = this.view?.heroes.find((candidate) => candidate.id === hero.id)
+        if (!listed) continue
+        figure = this.addHero(listed.id, listed.name, listed.class, listed.appearance, hero.x, hero.y)
+        figure.maximumHealth = listed.maximumHealth || figure.maximumHealth
+      }
+      figure.view.visible = true
       figure.health = hero.health
       figure.state = hero.state
       const fell = hero.state !== 'Fighting' || hero.health <= 0
@@ -593,7 +609,7 @@ export class DungeonWorld {
 
     if (this.following && this.myHeroId) {
       const mine = this.heroes.get(this.myHeroId)
-      if (mine && mine.state !== 'Left') {
+      if (mine?.view.visible && mine.state !== 'Left') {
         this.centerX = mine.x
         this.centerY = mine.y
         this.layoutCamera()

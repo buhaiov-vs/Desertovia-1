@@ -4,6 +4,8 @@ using Desertod.Domain.Entities;
 using Desertod.Domain.Farming;
 using Desertod.Domain.Projects;
 using Desertod.Domain.Quests;
+using Desertod.Domain.Rules;
+using Desertod.Domain.Skills;
 using Desertod.Domain.Storage;
 using Desertod.Domain.Technologies;
 using Desertod.Domain.World;
@@ -19,7 +21,6 @@ public static class BuiltVillage
 {
     public const string Slug = "demo-built";
     private const string Name = "Демо: Отстроенная деревня";
-    private const string TsarName = "Демо-зодчий";
     private const int StockPerGood = 40;
     private const int Knowledge = 200;
 
@@ -39,7 +40,12 @@ public static class BuiltVillage
         await DemoVillage.RemoveAsync(db, Slug, cancellationToken);
         var now = time.GetUtcNow();
 
-        var tsar = await DemoVillage.AccountAsync(db, TsarName, now, cancellationToken);
+        var tsar = await DemoVillage.AccountAsync(db, DevelopmentRoles.TsarName, now, cancellationToken);
+        var governorAccount = await DemoVillage.AccountAsync(db, DevelopmentRoles.GovernorName, now, cancellationToken);
+        var villagerAccount = await DemoVillage.AccountAsync(db, DevelopmentRoles.VillagerName, now, cancellationToken);
+        EnsureCharacter(tsar, DevelopmentRoles.TsarName, Gender.Male, 1);
+        EnsureCharacter(governorAccount, DevelopmentRoles.GovernorName, Gender.Male, 2);
+        EnsureCharacter(villagerAccount, DevelopmentRoles.VillagerName, Gender.Female, 0);
         var village = Village.Create(Slug, Name, "Все здания, склады и стройки готовы: посмотреть, как они выглядят.", false, tsar.Id, now);
 
         using var plots = FreePlots().GetEnumerator();
@@ -85,8 +91,48 @@ public static class BuiltVillage
             village.Store(kind, StockPerGood);
         }
 
+        // Swords, shields, arrows and armor are last in the stock loop and do not fit the storehouse total.
+        // Overflow stays withdrawable, so every dungeon class can still take its gear.
+        var armory = village.Storages.Single(storage => storage.Kind == StorageKind.Storehouse);
+        foreach (var kind in new[] { ResourceKind.Arrows, ResourceKind.Sword, ResourceKind.Shield, ResourceKind.LeatherArmor })
+        {
+            var missing = StockPerGood - village.Stock(kind);
+            if (missing <= 0)
+            {
+                continue;
+            }
+
+            var pile = armory.Goods.SingleOrDefault(good => good.Kind == kind && good.Sharpen == 0);
+            if (pile is null)
+            {
+                pile = new StoredGood { Kind = kind, Sharpen = 0 };
+                armory.Goods.Add(pile);
+            }
+
+            pile.Amount += missing;
+        }
+
         village.Store(ResourceKind.ResearchPoints, Knowledge);
         db.Villages.Add(village);
+
+        var governor = CharacterCreation.Create(village.Id, governorAccount.Id, governorAccount.Character!, now);
+        governor.IsGovernor = true;
+        var villager = CharacterCreation.Create(village.Id, villagerAccount.Id, villagerAccount.Character!, now);
+        var residents = new List<Citizen> { governor, villager };
+        foreach (var player in DevelopmentRoles.Players)
+        {
+            var account = await DemoVillage.AccountAsync(db, player.Name, now, cancellationToken);
+            EnsureCharacter(account, player.Name, player.Gender, player.Style, player.SkinTone, player.HairColor, player.OutfitColor);
+            residents.Add(CharacterCreation.Create(village.Id, account.Id, account.Character!, now));
+        }
+
+        foreach (var resident in residents)
+        {
+            ReadyForDungeon(resident);
+        }
+
+        db.Citizens.AddRange(residents);
+        ShelterRules.Assign(village, residents, now);
 
         foreach (var kind in StoryQuests.Chain)
         {
@@ -146,5 +192,36 @@ public static class BuiltVillage
             .Select(plot => WorldMap.PlotAt(plot.X, plot.Y))
             .OrderBy(plotId => WorldMap.Yard(plotId).DistanceTo(camp))
             .FirstOrDefault();
+    }
+
+    /// <summary>A ready look, so the development login can enter the village without the character form.</summary>
+    private static void EnsureCharacter(Account account, string name, Gender gender, int style, int skinTone = 2, int hairColor = 1, int outfitColor = 3)
+    {
+        account.Character ??= CharacterCreation.CreateCharacter(name, new Appearance
+        {
+            Gender = gender,
+            Style = style,
+            SkinTone = skinTone,
+            HairColor = hairColor,
+            OutfitColor = outfitColor,
+        });
+    }
+
+    /// <summary>
+    /// Enough stats and crafts to be offered every citizen class: brawler, spear, sword, bow, shield and healer.
+    /// </summary>
+    private static void ReadyForDungeon(Citizen citizen)
+    {
+        citizen.Stats.Strength = 4;
+        citizen.Stats.Dexterity = 4;
+        citizen.Stats.Intelligence = 4;
+        citizen.Stats.Endurance = 4;
+        citizen.StoredEnergy = Energy.Maximum(citizen.Stats.Endurance);
+        citizen.Skills =
+        [
+            new SkillProgress { Kind = Skill.Guarding, Level = 2 },
+            new SkillProgress { Kind = Skill.Hunting, Level = 2 },
+            new SkillProgress { Kind = Skill.Scholarship, Level = 2 },
+        ];
     }
 }

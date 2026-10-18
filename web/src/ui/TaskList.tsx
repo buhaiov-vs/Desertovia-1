@@ -60,6 +60,8 @@ function describeOutcome(task: Task, catalog: Catalog, i18n: Translator) {
       return t('outcome.guard')
     case 'Repair':
       return t('outcome.repair', { amount: i18n.amount(task.baseYield) })
+    case 'Sharpen':
+      return t('outcome.sharpen')
     case 'NotAvailableYet':
       return ''
     default:

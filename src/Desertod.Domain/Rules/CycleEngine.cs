@@ -167,6 +167,11 @@ public static class CycleEngine
 
         var privateOutput = privateWorkplace || spot is {} personalSpot && !KingdomRules.Area(village).Contains(personalSpot.ToTile());
         citizen.CyclePrivateOutput = privateOutput;
+        if (task.Effect == TaskEffect.Sharpen)
+        {
+            WeaponSharpening.Check(citizen, village, task.Outputs[0].Resource);
+        }
+
         foreach (var input in task.Inputs)
         {
             if (Available(citizen, village, input.Resource) < input.Amount)
@@ -178,6 +183,11 @@ public static class CycleEngine
         foreach (var input in task.Inputs)
         {
             TakeFromHandsThenStorage(citizen, village, input.Resource, input.Amount);
+        }
+
+        if (task.Effect == TaskEffect.Sharpen)
+        {
+            WeaponSharpening.Take(citizen, village, task.Outputs[0].Resource);
         }
 
         var repairYard = repairAt is null ? (TilePoint?)null : CombatRules.RepairYard(village,repairAt);
@@ -296,6 +306,12 @@ public static class CycleEngine
 
         if (village is not null)
         {
+            if (GameCatalog.FindTask(citizen.CurrentTaskId ?? "") is { Effect: TaskEffect.Sharpen } task
+                && task.Outputs[0].Resource == ResourceKind.Arrows)
+            {
+                WeaponSharpening.Return(citizen, village);
+            }
+
             CombatRules.Disarm(citizen, village);
         }
 
@@ -452,6 +468,33 @@ public static class CycleEngine
                 contributed = repaired > 0 ? 1 : 0;
                 overflowed = repaired == 0;
                 break;
+
+            case TaskEffect.Sharpen:
+            {
+                var kind = task.Outputs[0].Resource;
+                if (kind == ResourceKind.Arrows)
+                {
+                    if (WeaponSharpening.Raise(citizen, village) is int edge)
+                    {
+                        produced.Add(new ResourceAmount(kind, 1, edge));
+                    }
+                    else
+                    {
+                        overflowed = true;
+                    }
+                }
+                else if (citizen.Weapon == kind && citizen.WeaponSharpen < WeaponSharpening.Maximum)
+                {
+                    citizen.WeaponSharpen++;
+                    produced.Add(new ResourceAmount(kind, 1, citizen.WeaponSharpen));
+                }
+                else
+                {
+                    overflowed = true;
+                }
+
+                break;
+            }
 
             case TaskEffect.Resources:
             {

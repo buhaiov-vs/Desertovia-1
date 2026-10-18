@@ -35,7 +35,7 @@ export function InventoryPanel({
   onDrop: () => void
   onCitizen?: (c:Citizen)=>void
   onEat?: () => void
-  onTake: (plotId: string, resource: string, amount: number) => void
+  onTake: (plotId: string, resource: string, amount: number, sharpen?: number) => void
   onPrivatePlace?: (building:BuildingDefinition)=>void
   onClose: () => void
 }) {
@@ -50,6 +50,20 @@ export function InventoryPanel({
     return !!definition&&(definition.accepts.length===0||definition.accepts.includes(resource))
   }
   const resources = village.resources.filter((r) => HUD_RESOURCES.includes(r.kind) || r.amount > 0)
+  const weaponKinds = ['Sword', 'Spear', 'Bow', 'Arrows']
+  const weaponStacks = new Map<string, { kind: string; sharpen: number; amount: number }>()
+  for (const storage of village.storages) {
+    if (storage.ownerAccountId) continue
+    for (const good of storage.goods) {
+      if (!weaponKinds.includes(good.resource) || good.amount <= 0) continue
+      const sharpen = good.sharpen ?? 0
+      const key = `${good.resource}:${sharpen}`
+      const row = weaponStacks.get(key) ?? { kind: good.resource, sharpen, amount: 0 }
+      row.amount += good.amount
+      weaponStacks.set(key, row)
+    }
+  }
+  const weapons = [...weaponStacks.values()].sort((a, b) => a.kind.localeCompare(b.kind) || b.sharpen - a.sharpen)
   const working = citizen?.cycleEndsAt ? now < Date.parse(citizen.cycleEndsAt) : false
   return (
     <div className="modal-backdrop" onPointerDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -98,7 +112,14 @@ export function InventoryPanel({
               <span className="muted">{t('inventory.morale', { value: Math.round(village.morale * 100) })}</span>
             </h3>
             <div className="inventory-grid">
-              {resources.map((resource) => (
+              {weapons.map((weapon) => (
+                <div className="slot" key={`${weapon.kind}:${weapon.sharpen}`} title={i18n.resource(weapon.kind)}>
+                  <ResourceIcon kind={weapon.kind} scale={3} sharpen={weapon.sharpen} />
+                  <span className="slot-name">{i18n.resource(weapon.kind)}</span>
+                  <span className="slot-amount">{i18n.amount(weapon.amount)}</span>
+                </div>
+              ))}
+              {resources.filter((resource) => !weaponKinds.includes(resource.kind)).map((resource) => (
                 <div className="slot" key={resource.kind} title={i18n.resource(resource.kind)}>
                   <ResourceIcon kind={resource.kind} scale={3} />
                   <span className="slot-name">{i18n.resource(resource.kind)}</span>
@@ -140,7 +161,7 @@ export function InventoryPanel({
                         ? {
                             citizen,
                             disabled: pending || working,
-                            onTake: (resource, amount) => onTake(storage.plotId, resource, amount),
+                            onTake: (resource, amount, sharpen) => onTake(storage.plotId, resource, amount, sharpen),
                           }
                         : undefined
                     }

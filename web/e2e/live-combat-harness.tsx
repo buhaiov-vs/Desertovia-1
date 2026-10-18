@@ -1,10 +1,11 @@
+import { onAppResume } from '../src/telegram'
 import { receiveFighterSample, fighterPositionAt } from '../src/game/fighterSamples'
 import { buildLayout, Terrain } from '../src/game/worldMap'
 // Production render and controls, isolated from real players, payments and director calls.
 import { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Application, Container, Graphics } from 'pixi.js'
-import { api, mergeBattles, type Catalog, type Citizen, type Raid, type RaidBattle, type VillageState } from '../src/api'
+import { adoptVillageState, api, fightingCitizenIds, mergeBattles, type Catalog, type Citizen, type Raid, type RaidBattle, type VillageState } from '../src/api'
 import { currentEnergy } from '../src/energy'
 import { EnemyLayer } from '../src/game/enemies'
 import { RaidBanner } from '../src/ui/RaidBanner'
@@ -34,7 +35,7 @@ Object.assign(window,{combatStand:{
   const actor=internals.liveViews.get(id)!.actor,warning=internals.warnings.get(id)?.view
   return {scale:Math.abs(actor.scale.x),warning:warning?{x:warning.x,y:warning.y,width:warning.width}:null}
  },
- initial:structuredClone(battle),orders,mergeBattles,currentEnergy,receiveFighterSample,fighterPositionAt,
+ initial:structuredClone(battle),orders,mergeBattles,adoptVillageState,fightingCitizenIds,currentEnergy,receiveFighterSample,fighterPositionAt,
  frames:()=>{
   const bars=layer.children.filter(child=>child instanceof Graphics)
   let updates=0
@@ -65,3 +66,6 @@ function Stand(){
  </div></I18nProvider>
 }
 createRoot(document.getElementById('app')!).render(<Stand/>);
+
+// Изолированная проверка возврата Mini App без подключения к настоящему Telegram.
+Object.assign(window, { resumeStand: { listen: onAppResume } })

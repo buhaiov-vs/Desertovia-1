@@ -21,3 +21,28 @@ export function setGamePopups(enabled: boolean) {
   try { localStorage.setItem(KEY, enabled ? '1' : '0') } catch { /* Browser privacy mode. */ }
   window.dispatchEvent(new Event(EVENT))
 }
+
+const VOLUME_KEY = 'desertovia.musicVolume'
+const MUTE_KEY = 'desertovia.musicMuted'
+
+export function musicVolume() {
+  try {
+    const saved = localStorage.getItem(VOLUME_KEY)
+    if (saved === null) return 0.4
+    const value = Number(saved)
+    return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0.4
+  } catch { return 0.4 }
+}
+export function musicMuted() {
+  try { return localStorage.getItem(MUTE_KEY) === '1' } catch { return false }
+}
+export function setMusicVolume(volume: number) {
+  try { localStorage.setItem(VOLUME_KEY, String(Math.min(1, Math.max(0, volume)))) } catch { /* Browser privacy mode. */ }
+  window.dispatchEvent(new Event(EVENT))
+}
+export function setMusicMuted(muted: boolean) {
+  try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0') } catch { /* Browser privacy mode. */ }
+  window.dispatchEvent(new Event(EVENT))
+}
+export const useMusicVolume = () => useSyncExternalStore(subscribe, musicVolume, () => 0.4)
+export const useMusicMuted = () => useSyncExternalStore(subscribe, musicMuted, () => false)

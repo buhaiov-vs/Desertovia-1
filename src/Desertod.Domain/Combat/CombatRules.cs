@@ -66,7 +66,9 @@ public static class CombatRules
         + StrengthPower * citizen.Stats.Strength
         + DexterityPower * citizen.Stats.Dexterity
         + GuardingPower * citizen.SkillLevel(Skill.Guarding)
-        + (UsableWeapon(citizen)?.Power ?? 0);
+        + (UsableWeapon(citizen) is { } weapon
+            ? weapon.Power + WeaponSharpening.Bonus(weapon.Kind == ResourceKind.Bow ? citizen.ArrowSharpen : citizen.WeaponSharpen)
+            : 0);
 
     /// <summary>The weapon in hand, if it can be used: a bow needs arrows.</summary>
     public static WeaponDefinition? UsableWeapon(Citizen citizen) =>
@@ -78,26 +80,14 @@ public static class CombatRules
     /// </summary>
     public static void Arm(Citizen citizen, Village village)
     {
-        if (citizen.Weapon is null)
+        if (citizen.Weapon is null && BestWeapon(citizen, village) is { } best)
         {
-            foreach (var weapon in ArmoryCatalog.Weapons)
+            Take(citizen, village, best.Weapon.Kind, 1, best.Sharpen);
+            citizen.Weapon = best.Weapon.Kind;
+            citizen.WeaponSharpen = best.Sharpen;
+            if (best.Weapon.Arrows > 0)
             {
-                var arrows = weapon.Arrows > 0 ? Available(citizen, village, ResourceKind.Arrows) : 0;
-                if (Available(citizen, village, weapon.Kind) == 0 || arrows < weapon.Arrows)
-                {
-                    continue;
-                }
-
-                TakeOne(citizen, village, weapon.Kind);
-                citizen.Weapon = weapon.Kind;
-                if (weapon.Arrows > 0)
-                {
-                    var quiver = Math.Min(ArmoryCatalog.QuiverSize, arrows);
-                    Take(citizen, village, ResourceKind.Arrows, quiver);
-                    citizen.Arrows += quiver;
-                }
-
-                break;
+                FillQuiver(citizen, village, best.ArrowEdge);
             }
         }
 
@@ -111,9 +101,9 @@ public static class CombatRules
     /// <summary>Puts weapon, armor and arrows back into storage. What does not fit stays with the citizen.</summary>
     public static void Disarm(Citizen citizen, Village village)
     {
-        if (citizen.Weapon is { } weapon && village.Store(weapon, 1) == 1)
+        if (citizen.Weapon is { } weapon && village.Store(weapon, 1, citizen.WeaponSharpen) == 1)
         {
-            citizen.Weapon = null;
+            citizen.ClearWeapon();
         }
 
         if (citizen.Armor is { } armor && village.Store(armor, 1) == 1)
@@ -123,7 +113,11 @@ public static class CombatRules
 
         if (citizen.Arrows > 0)
         {
-            citizen.Arrows -= village.Store(ResourceKind.Arrows, citizen.Arrows);
+            citizen.Arrows -= village.Store(ResourceKind.Arrows, citizen.Arrows, citizen.ArrowSharpen);
+            if (citizen.Arrows == 0)
+            {
+                citizen.ArrowSharpen = 0;
+            }
         }
     }
 
@@ -210,11 +204,11 @@ public static class CombatRules
         var broken = new List<ResourceKind>();
         if (UsableWeapon(citizen) is { } weapon)
         {
-            citizen.Arrows -= weapon.Arrows;
+            citizen.SpendArrows(weapon.Arrows);
             if (random.NextDouble() < weapon.BreakChance)
             {
                 broken.Add(weapon.Kind);
-                citizen.Weapon = null;
+                citizen.ClearWeapon();
             }
         }
 
@@ -323,9 +317,76 @@ public static class CombatRules
 
     private static void TakeOne(Citizen citizen, Village village, ResourceKind kind) => Take(citizen, village, kind, 1);
 
-    private static void Take(Citizen citizen, Village village, ResourceKind kind, int amount)
+    private static void Take(Citizen citizen, Village village, ResourceKind kind, int amount, int? sharpen = null)
     {
-        var fromHands = citizen.TakeFromLoad(kind, amount);
-        village.Take(kind, amount - fromHands);
+        var fromHands = sharpen is int level ? citizen.TakeFromLoad(kind, amount, level) : citizen.TakeFromLoad(kind, amount);
+        village.Take(kind, amount - fromHands, sharpen);
+    }
+
+    /// <summary>Fills the quiver from one arrow edge. A quiver that already holds another edge is left as it is.</summary>
+    private static void FillQuiver(Citizen citizen, Village village, int edge)
+    {
+        if (citizen.Arrows > 0 && citizen.ArrowSharpen != edge)
+        {
+            return;
+        }
+
+        var room = ArmoryCatalog.QuiverSize - citizen.Arrows;
+        var loose = WeaponSharpening.Count(citizen, village, edge) - (citizen.ArrowSharpen == edge ? citizen.Arrows : 0);
+        var take = Math.Min(room, loose);
+        if (take <= 0)
+        {
+            return;
+        }
+
+        Take(citizen, village, ResourceKind.Arrows, take, edge);
+        citizen.Arrows += take;
+        citizen.ArrowSharpen = edge;
+    }
+
+    /// <summary>The sharpest usable weapon the citizen can reach. Equal power keeps the catalog order: sword, then bow, then spear.</summary>
+    private readonly record struct WeaponPick(WeaponDefinition Weapon, int Sharpen, int ArrowEdge);
+
+    private static WeaponPick? BestWeapon(Citizen citizen, Village village)
+    {
+        WeaponPick? best = null;
+        var rank = 0;
+        var bestRank = int.MaxValue;
+        foreach (var weapon in ArmoryCatalog.Weapons)
+        {
+            if (weapon.Kind == ResourceKind.Bow)
+            {
+                if (Available(citizen, village, ResourceKind.Bow) > 0
+                    && WeaponSharpening.BestEdge(citizen, village, weapon.Arrows) is int edge)
+                {
+                    Consider(weapon, 0, edge);
+                }
+
+                rank++;
+                continue;
+            }
+
+            foreach (var sharpen in WeaponSharpening.Levels(citizen, village, weapon.Kind).Distinct())
+            {
+                Consider(weapon, sharpen, 0);
+            }
+
+            rank++;
+        }
+
+        return best;
+
+        void Consider(WeaponDefinition weapon, int sharpen, int arrowEdge)
+        {
+            var power = weapon.Power + WeaponSharpening.Bonus(weapon.Kind == ResourceKind.Bow ? arrowEdge : sharpen);
+            var bestPower = best is null
+                ? double.MinValue
+                : best.Value.Weapon.Power + WeaponSharpening.Bonus(best.Value.Weapon.Kind == ResourceKind.Bow ? best.Value.ArrowEdge : best.Value.Sharpen);
+            if (best is null || power > bestPower || power == bestPower && rank < bestRank)
+            {
+                best = new WeaponPick(weapon, sharpen, arrowEdge);
+                bestRank = rank;
+            }
+        }
     }
 }

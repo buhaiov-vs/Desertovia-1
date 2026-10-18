@@ -12,6 +12,7 @@ import {
   ApiError,
   CARRY_TO_STORAGE,
   comingRaids,
+  fightingCitizenIds,
   dungeonPath,
   myArrival,
   myHero,
@@ -32,10 +33,12 @@ import { inForestArea, tileBuiltOver, type WorldTarget } from '../game/worldMap'
 import { TargetPopup } from '../ui/TargetPopup'
 import { watchable, WatchPopup } from '../ui/WatchPopup'
 import { flagTitle, notify, useTitleReset } from '../notifications'
+import { BackgroundMusic } from '../ui/BackgroundMusic'
 import { GameCanvas, type GameCanvasHandle, type Placement } from '../game/GameCanvas'
 import { HandsCard } from '../ui/HandsCard'
 import { PRIEST_ID, TSAR_ID } from '../game/VillageWorld'
 import { useLiveVillage, useMediaQuery, useServerNow } from '../hooks'
+import { onAppResume } from '../telegram'
 import { GameMenu } from '../ui/GameMenu'
 import type { MenuTab } from '../ui/menuTabs'
 import { BottomBar, TopBar } from '../ui/Hud'
@@ -156,12 +159,11 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
 
   const loadCitizen = useCallback(async () => applyCitizen(await api.myCitizen(slug)), [slug, applyCitizen])
   useEffect(() => {
-    const refresh = () => { if(document.visibilityState==='visible')void loadCitizen().catch(()=>{}) }
-    const interval=window.setInterval(refresh,30_000)
-    window.addEventListener('focus',refresh)
-    document.addEventListener('visibilitychange',refresh)
-    return ()=>{window.clearInterval(interval);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh)}
-  },[loadCitizen])
+    const refresh = () => { if (document.visibilityState !== 'hidden') void loadCitizen().catch(() => {}) }
+    const interval = window.setInterval(refresh, 30_000)
+    const stopResume = onAppResume(() => { void loadCitizen().catch(() => {}) })
+    return () => { window.clearInterval(interval); stopResume() }
+  }, [loadCitizen])
 
   useEffect(() => {
     lastCitizenSnapshot.current=-Infinity
@@ -370,7 +372,10 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   // Heroes go to the run's page once their figure reaches the edge of the land.
   const arrival = dungeon && (dungeon.phase === 'Marching' || dungeon.phase === 'Running') ? myArrival(dungeon, citizen?.id ?? null, tsar) : null
   const ownHero = dungeon ? myHero(dungeon, citizen?.id ?? null, tsar) : null
-  const sendable = ownHero !== null && !ownHero.settled && !ownHero.knockedOut
+  const summary = citizen ? live.citizens.get(citizen.id) : undefined
+  const woundedUntil = tsar ? live.state?.tsar.injuredUntil : summary ? summary.injuredUntil : citizen?.injuredUntil
+  const lyingDown = !!woundedUntil && Date.parse(woundedUntil) > Date.now()
+  const sendable = ownHero !== null && !ownHero.settled && !ownHero.knockedOut && !lyingDown
   useEffect(() => {
     if (!dungeon || arrival === null || !sendable) return
     if (sessionStorage.getItem(sentToDungeonKey(dungeon.id))) return
@@ -556,11 +561,11 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   }
 
   /** Keeps the storage view open, so the player sees the goods move into their hands. */
-  const takeFromStorage = async (plotId: string, resource: string, amount: number) => {
+  const takeFromStorage = async (plotId: string, resource: string, amount: number, sharpen?: number) => {
     setPending(true)
     setError(null)
     try {
-      applyCitizen(await api.takeFromStorage(slug, plotId, resource, amount))
+      applyCitizen(await api.takeFromStorage(slug, plotId, resource, amount, sharpen))
     } catch (exception) {
       setError(i18n.error(exception))
     } finally {
@@ -672,10 +677,11 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   const canWork = !tsar && !!citizen
   const working = citizen?.state === 'Paused' || citizen?.state === 'Working' && !!citizen.cycleEndsAt && Date.parse(citizen.cycleEndsAt)>raidClock
   const ownId = citizen?.id
-  /** Away citizens stay on the map only while a task they started is still running. */
+  const fighting = useMemo(() => fightingCitizenIds(live.state?.battles), [live.state?.battles])
+  /** Away citizens stay on the map while a task they started is still running, or while they are still in a fight. */
   const shownCitizens = useMemo(
-    () => citizens.filter((c) => c.id === ownId || c.state === 'Working' || (!!c.injuredUntil&&Date.parse(c.injuredUntil)>Date.now()) || (!!c.recovery?.until&&Date.parse(c.recovery.until)>Date.now()) || !live.away.has(c.id)),
-    [citizens, live.away, ownId],
+    () => citizens.filter((c) => c.id === ownId || fighting.has(c.id) || c.state === 'Working' || (!!c.injuredUntil&&Date.parse(c.injuredUntil)>Date.now()) || (!!c.recovery?.until&&Date.parse(c.recovery.until)>Date.now()) || !live.away.has(c.id)),
+    [citizens, live.away, ownId, fighting],
   )
   const pickWorld = useMemo(() => {
     /** Water and mountains stop walkers; says so instead of asking the server. */
@@ -810,6 +816,8 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
       >
         <EyeIcon closed={uiHidden} />
       </button>}
+
+      <BackgroundMusic battles={village.battles} />
 
       {dayNight && (
         <button

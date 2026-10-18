@@ -103,6 +103,7 @@ kbd {
   border: 1px solid var(--wood);
   border-radius: 3px;
   background: #fffaf0;
+  color: var(--ink);
 }
 
 .muted {
@@ -141,11 +142,36 @@ kbd {
   padding: 0.1rem 0.45rem;
   border-radius: 999px;
   background: var(--parchment-dark);
+  color: var(--ink);
   margin-left: 0.4rem;
 }
 
 .tile-icon {
   vertical-align: middle;
+}
+
+.resource-icon {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+.sharpen-badge {
+  position: absolute;
+  right: -0.2rem;
+  bottom: -0.15rem;
+  min-width: 1rem;
+  padding: 0 0.12rem;
+  border-radius: 999px;
+  background: #6b2a12;
+  color: #fff4d2;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1rem;
+  text-align: center;
+  box-shadow: 0 0 0 1px #fff4d2;
+  pointer-events: none;
 }
 
 /* Bars */
@@ -1254,9 +1280,25 @@ button.tech-node {
 
 .field-bed {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto max-content minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Crop names are one word. Popup text may break anywhere, which stacked each letter. */
+.field-bed .field-name {
+  min-width: max-content;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.field-bed .field-state {
+  justify-self: end;
+  width: max-content;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .field-bed.thirsty .muted {
@@ -1454,6 +1496,14 @@ input[aria-invalid='true'] {
   margin-bottom: 0.6rem;
 }
 
+.dev-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
 .password-login {
   max-width: 22rem;
   margin-bottom: 0.6rem;
@@ -1493,6 +1543,7 @@ input[aria-invalid='true'] {
   gap: 0.2rem;
   padding: 0.5rem;
   background: var(--parchment);
+  color: var(--ink);
   border: 2px solid var(--wood);
   border-radius: 6px;
   box-shadow: inset 0 0 0 2px #fffaf0;
@@ -1923,16 +1974,56 @@ input[aria-invalid='true'] {
   height: 22px;
 }
 
+.music-toggle {
+  position: absolute;
+  z-index: 40;
+  top: calc(max(10px, env(safe-area-inset-top)) + 228px);
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.music-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+.music-volume {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.music-volume input[type='range'] {
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  accent-color: #986b18;
+}
+
 @media (max-width: 720px) {
   /* Under the minimap, in the column the guide keeps clear. */
   .ui-toggle {
     top: calc(var(--minimap-top) + 90px);
     right: 8px;
   }
+
+  .music-toggle {
+    top: calc(var(--minimap-top) + 132px);
+    right: 8px;
+  }
 }
 
 /* Panels, popups and dialogs are siblings of the canvas, so everything but the map and the toggles goes. */
-.game-root.ui-hidden > :not(.game-canvas, .ui-toggle, .night-toggle),
+.game-root.ui-hidden > :not(.game-canvas, .ui-toggle, .night-toggle, .music-toggle),
 .game-root.ui-hidden .minimap {
   display: none;
 }
@@ -2454,6 +2545,30 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 :root[data-ui-theme="dark"] .muted { color:#b8b5a7; }
 :root[data-ui-theme="dark"] input, :root[data-ui-theme="dark"] textarea, :root[data-ui-theme="dark"] select { background:#202626; color:#ede6d4; }
 :root[data-ui-theme="dark"] button:not(.primary) { background:#33332a; color:#ecdba9; }
+:root[data-ui-theme="dark"] .slot { color:var(--ink); background:var(--parchment); }
+:root[data-ui-theme="dark"] .slot .muted { color:var(--muted); }
+:root[data-ui-theme="dark"] .slot ::selection { background:#6b4423; color:#fff8e8; }
+:root[data-ui-theme="dark"] button:disabled { opacity:1; color:#d9d0bc; background:#2c312c; border-color:#6a5a42; }
+:root[data-ui-theme="dark"] button.primary:disabled { color:#6b5430; background:linear-gradient(#d9c091,#b89655); }
+/* Toggle chips keep a gold ring. An open menu tab already has its own border, so a second ring only doubles the frame. */
+:root[data-ui-theme="dark"] button.active:not(.tab), :root[data-ui-theme="dark"] .chip.active { outline:2px solid #f2d58b; outline-offset:1px; }
+:root[data-ui-theme="dark"] .modal-header .tab:not(.active) {
+  background: transparent;
+  color: #f2d58b;
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+:root[data-ui-theme="dark"] .modal-header .tab:not(.active):hover {
+  background: rgba(255, 243, 214, 0.15);
+}
+:root[data-ui-theme="dark"] .modal-header .tab.active {
+  background: var(--parchment);
+  color: var(--ink);
+  border: 2px solid var(--wood-dark);
+  box-shadow: none;
+  outline: none;
+}
 
 .hospital-bed-patient{font-size:44px;line-height:1.3;text-align:center;background:rgba(80,100,90,.12);border-radius:8px;margin-bottom:8px}
 
@@ -2541,6 +2656,8 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
   .hud-buttons { display: grid; grid-template-columns: repeat(var(--hud-button-count), minmax(0, 1fr)); gap: 0; padding: 3px; background: var(--wood-dark); border: 1px solid var(--gold); border-radius: 10px; }
   .hud-buttons button { display: flex; flex-direction: column; gap: 3px; min-height: 54px; padding: 5px 1px; border: 0; border-radius: 6px; box-shadow: none; background: transparent; color: #ffe7ac; font-size: clamp(.62rem, 2.5vw, .78rem); line-height: 1.1; overflow-wrap: normal; }
   .hud-buttons button:hover, .hud-buttons button:focus-visible { background: #72502d; }
+  :root[data-ui-theme="dark"] .hud-buttons button { background: transparent; color: #ffe7ac; border: 0; box-shadow: none; outline: none; }
+  :root[data-ui-theme="dark"] .hud-buttons button:hover, :root[data-ui-theme="dark"] .hud-buttons button:focus-visible { background: #72502d; }
   .hud-buttons button span { white-space: nowrap; }
   .menu-actions { justify-content: stretch; padding: .4rem .7rem; }
   .menu-actions button { width: 100%; }

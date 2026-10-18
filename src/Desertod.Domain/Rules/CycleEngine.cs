@@ -17,7 +17,8 @@ namespace Desertod.Domain.Rules;
 /// <param name="ProjectContribution">Material carried to, or work done on, a project or construction site.</param>
 /// <param name="SiteId">Plot of the construction site for construction jobs.</param>
 /// <param name="BuildingCompleted">Set when this cycle finished the last stage of a building.</param>
-/// <param name="Hungry">No food was left in storage for this cycle.</param>
+/// <param name="Hungry">The citizen is still hungry after the meal at the end of the cycle.</param>
+/// <param name="WorkedHungry">The cycle started while hungry, so experience was halved.</param>
 /// <param name="TechnologyId">Technology the cycle researched.</param>
 /// <param name="TechnologyDiscovered">Set when this cycle finished the research of <paramref name="TechnologyId"/>.</param>
 /// <param name="LevelsGained">Stat levels; skill levels are in <paramref name="SkillLevelsGained"/>.</param>
@@ -44,6 +45,7 @@ public sealed record CycleReport(
     string? SiteId = null,
     BuildingKind? BuildingCompleted = null,
     bool Hungry = false,
+    bool WorkedHungry = false,
     string? TechnologyId = null,
     bool TechnologyDiscovered = false,
     FightReport? Fight = null,
@@ -165,6 +167,11 @@ public static class CycleEngine
 
         var privateOutput = privateWorkplace || spot is {} personalSpot && !KingdomRules.Area(village).Contains(personalSpot.ToTile());
         citizen.CyclePrivateOutput = privateOutput;
+        if (task.Effect == TaskEffect.Sharpen)
+        {
+            WeaponSharpening.Check(citizen, village, task.Outputs[0].Resource);
+        }
+
         foreach (var input in task.Inputs)
         {
             if (Available(citizen, village, input.Resource) < input.Amount)
@@ -176,6 +183,11 @@ public static class CycleEngine
         foreach (var input in task.Inputs)
         {
             TakeFromHandsThenStorage(citizen, village, input.Resource, input.Amount);
+        }
+
+        if (task.Effect == TaskEffect.Sharpen)
+        {
+            WeaponSharpening.Take(citizen, village, task.Outputs[0].Resource);
         }
 
         var repairYard = repairAt is null ? (TilePoint?)null : CombatRules.RepairYard(village,repairAt);
@@ -294,6 +306,12 @@ public static class CycleEngine
 
         if (village is not null)
         {
+            if (GameCatalog.FindTask(citizen.CurrentTaskId ?? "") is { Effect: TaskEffect.Sharpen } task
+                && task.Outputs[0].Resource == ResourceKind.Arrows)
+            {
+                WeaponSharpening.Return(citizen, village);
+            }
+
             CombatRules.Disarm(citizen, village);
         }
 
@@ -348,9 +366,10 @@ public static class CycleEngine
                 citizen.Spot = completed.PositionAt(now); citizen.IdleSpot = citizen.Spot; citizen.Trip = null;
             }
             var deliveryRenown = citizen.Renown - renownBefore;
+            var (experienceHungry, hungry) = FinishMeal(citizen, context.Village, now, delivered);
             var rescueReport = Finish(citizen, context.Village, RescueRules.TaskId,
                 Stat.Endurance, Stat.Strength, Skill.Hauling, 1, delivered ? 1 : 0,
-                delivered && Eat(citizen, context.Village, now), [], [], 0, 0, false, !delivered);
+                hungry, [], [], 0, 0, false, !delivered, experienceHungry);
             return rescueReport with { RenownGained = rescueReport.RenownGained + deliveryRenown };
         }
         if (citizen.CurrentTechnologyId is not null)
@@ -379,12 +398,12 @@ public static class CycleEngine
                      * WeatherRules.ResearchMultiplier(village, WorkedAt(citizen, now));
         var (amount, discovered) = TechnologyRules.Research(village, citizen, technology, factor, context.RecentCitizenCount, now);
         var overflowed = amount == 0;
-        var hungry = Eat(citizen, village, now);
+        var (experienceHungry, hungry) = FinishMeal(citizen, village, now, true);
 
         var challenge = Progression.ChallengeMultiplier(citizen.Stats.Get(technology.Primary), technology.Researcher.Max(r => r.Minimum));
         var report = Finish(citizen, village, TechnologyCatalog.ResearchTaskId, technology.Primary, technology.Secondary, SkillRules.Research,
             challenge, overflowed ? GameRules.OverflowExperienceMultiplier : 1, hungry,
-            [], [], 0, 0, false, overflowed);
+            [], [], 0, 0, false, overflowed, experienceHungry);
         return report with { TechnologyId = technology.Id, TechnologyDiscovered = discovered };
     }
 
@@ -449,6 +468,33 @@ public static class CycleEngine
                 contributed = repaired > 0 ? 1 : 0;
                 overflowed = repaired == 0;
                 break;
+
+            case TaskEffect.Sharpen:
+            {
+                var kind = task.Outputs[0].Resource;
+                if (kind == ResourceKind.Arrows)
+                {
+                    if (WeaponSharpening.Raise(citizen, village) is int edge)
+                    {
+                        produced.Add(new ResourceAmount(kind, 1, edge));
+                    }
+                    else
+                    {
+                        overflowed = true;
+                    }
+                }
+                else if (citizen.Weapon == kind && citizen.WeaponSharpen < WeaponSharpening.Maximum)
+                {
+                    citizen.WeaponSharpen++;
+                    produced.Add(new ResourceAmount(kind, 1, citizen.WeaponSharpen));
+                }
+                else
+                {
+                    overflowed = true;
+                }
+
+                break;
+            }
 
             case TaskEffect.Resources:
             {
@@ -652,7 +698,7 @@ public static class CycleEngine
             experienceShare *= task.WorkSeconds / GameRules.CycleLength.TotalSeconds;
         }
 
-        var hungry = task.Effect != TaskEffect.Unload && Eat(citizen, village, now);
+        var (experienceHungry, hungry) = FinishMeal(citizen, village, now, task.Effect != TaskEffect.Unload);
         if(task.Effect is TaskEffect.Survey or TaskEffect.Build && contributed>0)
             experienceShare*=Math.Min(1,(double)contributed/Math.Max(1,YieldMath.Whole(task.BaseYield*factor)));
         if(task.Effect==TaskEffect.Repair && repaired>0)experienceShare*=Math.Min(1,repaired/(double)task.BaseYield);
@@ -663,7 +709,7 @@ public static class CycleEngine
         }
         var report = Finish(citizen, village, task.Id, task.Primary, task.Secondary, task.Skill,
             SkillRules.Challenge(citizen, task.Skill, task.SkillLevel), experienceShare, hungry,
-            produced, carried, moraleGained, contributed, rareFind, overflowed);
+            produced, carried, moraleGained, contributed, rareFind, overflowed, experienceHungry);
         return report with { Fight = fight, Repaired = repaired, Lost = lost, TargetPlotId = citizen.CurrentTargetPlotId };
     }
 
@@ -758,11 +804,11 @@ public static class CycleEngine
 
         var overflowed = amount <= 0;
         var completed = site is null ? null : ConstructionRules.Advance(village, site, context.RecentCitizenCount, now, citizen);
-        var hungry = Eat(citizen, village, now);
+        var (experienceHungry, hungry) = FinishMeal(citizen, village, now, true);
 
         var report = Finish(citizen, village, job.Id, job.Primary, job.Secondary, job.Skill, SkillRules.Challenge(citizen, job.Skill, 0),
             job.Id == "dismantle" || overflowed ? 0 : Math.Min(1, (double)amount / Math.Max(1, potential)), hungry,
-            produced, carried, 0, overflowed ? 0 : amount, false, overflowed);
+            produced, carried, 0, overflowed ? 0 : amount, false, overflowed, experienceHungry);
         return report with { SiteId = plotId, BuildingCompleted = completed, Lost = lost };
     }
 
@@ -799,7 +845,8 @@ public static class CycleEngine
         double moraleGained,
         int contributed,
         bool rareFind,
-        bool overflowed)
+        bool overflowed,
+        bool experienceHungry)
     {
         if (skill == Skill.Building && (overflowed || taskId == "dismantle")) experienceShare = 0;
         if (skill == Skill.Building) challenge = 1;
@@ -807,7 +854,7 @@ public static class CycleEngine
                      * challenge
                      * (citizen.CycleTired ? GameRules.TiredExperienceMultiplier : 1)
                      * experienceShare
-                     * (hungry ? GameRules.HungryExperienceMultiplier : 1);
+                     * (experienceHungry ? GameRules.HungryExperienceMultiplier : 1);
         var experience = YieldMath.Whole(earned);
         var secondaryExperience = YieldMath.Whole(earned * GameRules.SecondaryExperienceShare);
 
@@ -845,7 +892,19 @@ public static class CycleEngine
             renown,
             citizen.CycleTired,
             overflowed,
-            Hungry: hungry);
+            Hungry: hungry,
+            WorkedHungry: experienceHungry);
+    }
+
+    /// <summary>
+    /// Experience uses hunger at the start of the cycle. The meal still happens at the end:
+    /// a fed start keeps full experience even when that meal finds no food, and the report's
+    /// <see cref="CycleReport.Hungry"/> says whether the citizen is hungry afterwards.
+    /// </summary>
+    private static (bool ExperienceHungry, bool Hungry) FinishMeal(Citizen citizen, Village village, DateTimeOffset now, bool eat)
+    {
+        var experienceHungry = eat && (citizen.CycleHungry ?? citizen.IsHungry);
+        return (experienceHungry, eat && Eat(citizen, village, now));
     }
 
     /// <summary>
@@ -915,6 +974,7 @@ public static class CycleEngine
         energyCost = WorkEnergy.WithMedical(citizen, energyCost, now);
         var energy = citizen.CurrentEnergy(now, village);
         citizen.CycleTired = energy < energyCost;
+        citizen.CycleHungry = citizen.IsHungry;
         citizen.StoredEnergy = citizen.CycleTired ? energy : energy - energyCost;
         citizen.EnergyUpdatedAt = now;
 

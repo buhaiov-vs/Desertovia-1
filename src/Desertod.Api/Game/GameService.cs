@@ -1014,7 +1014,7 @@ public sealed partial class GameService(
             HospitalRules.RequireReady(citizen, time.GetUtcNow());
             var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
             var now = time.GetUtcNow();
-            StorageRules.Take(citizen, village, request.PlotId, request.Resource, request.Amount, now);
+            StorageRules.Take(citizen, village, request.PlotId, request.Resource, request.Amount, now, request.Sharpen);
             await db.SaveChangesAsync(cancellationToken);
             logger.CitizenActed(citizen.Id, slug, "take", $"{request.Amount} {request.Resource} from {request.PlotId}");
 
@@ -1429,6 +1429,7 @@ public sealed partial class GameService(
         var context = await LoadContextAsync(db, village, null, now, cancellationToken);
         var electorate = context.ActiveCitizenIds.Count(presence.IsPresent);
         var quests = await db.VillageQuests
+            .Include(q => q.Contributions)
             .Where(q => q.VillageId == village.Id && q.Status == QuestStatus.Active)
             .OrderBy(q => q.StartedAt)
             .ToListAsync(cancellationToken);

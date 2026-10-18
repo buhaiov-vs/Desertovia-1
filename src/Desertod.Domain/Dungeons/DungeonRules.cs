@@ -52,7 +52,7 @@ public static class DungeonRules
             OpenedAt = now,
             GatheringEndsAt = now + Gathering,
             Seed = seed,
-            Foes = dungeon.Spawns.Count,
+            Foes = dungeon.TotalFoes,
             Heroes = [new DungeonHero { AccountId = village.OwnerAccountId, Name = tsarName, Class = HeroClass.Voivode }],
         };
     }
@@ -161,10 +161,14 @@ public static class DungeonRules
         run.EndedAt = now;
     }
 
-    /// <summary>The gathering is over: the heroes walk to the edge of the land.</summary>
+    /// <summary>
+    /// The gathering is over: heroes who can still walk go to the edge of the land. Someone already down stays where
+    /// they fell, with their gear put back, and does not enter the dungeon.
+    /// </summary>
     public static void March(DungeonRun run, Village village, IEnumerable<Citizen> citizens, DateTimeOffset now)
     {
         var latest = now;
+        var anyone = false;
         foreach (var citizen in citizens)
         {
             if (run.Hero(citizen.Id) is not { } hero)
@@ -172,19 +176,54 @@ public static class DungeonRules
                 continue;
             }
 
+            if (!CanMarch(citizen, now))
+            {
+                ReturnGear(citizen, village, hero);
+                run.Heroes.Remove(hero);
+                citizen.DungeonRunId = null;
+                continue;
+            }
+
             citizen.SetOut(MarchSpot, village, now);
             citizen.IdleSpot = MarchSpot;
             hero.ArrivesAt = citizen.Trip!.ArrivesAt;
             latest = Max(latest, hero.ArrivesAt.Value);
+            anyone = true;
         }
 
-        village.TsarGoTo(MarchSpot, now);
-        run.Tsar.ArrivesAt = village.TsarTrip!.ArrivesAt;
-        latest = Max(latest, run.Tsar.ArrivesAt.Value);
+        if (TsarIsDown(village, now))
+        {
+            run.Tsar.Settled = true;
+        }
+        else
+        {
+            village.TsarGoTo(MarchSpot, now);
+            run.Tsar.ArrivesAt = village.TsarTrip!.ArrivesAt;
+            latest = Max(latest, run.Tsar.ArrivesAt.Value);
+            anyone = true;
+        }
+
+        if (!anyone)
+        {
+            run.Tsar.Settled = true;
+            Finish(run, DungeonOutcome.Abandoned, 0, now);
+            return;
+        }
 
         run.Phase = DungeonPhase.Marching;
         run.MarchEndsAt = latest < now + LongestMarch ? latest : now + LongestMarch;
     }
+
+    /// <summary>A citizen who is wounded, in care, exhausted or dormant does not set out.</summary>
+    public static bool CanMarch(Citizen citizen, DateTimeOffset now) =>
+        citizen.Status == CitizenStatus.Active
+        && !CombatRules.IsInjured(citizen, now)
+        && !HospitalRules.IsAdmitted(citizen, now)
+        && citizen.RecoveryPausedAt is null
+        && !(citizen.ExhaustedUntil > now);
+
+    private static bool TsarIsDown(Village village, DateTimeOffset now) =>
+        village.TsarInjuredUntil > now || village.TsarHospitalizedAt is not null;
 
     public static void Start(DungeonRun run, DateTimeOffset now)
     {
@@ -199,7 +238,8 @@ public static class DungeonRules
 
     /// <summary>
     /// A hero is out of the dungeon. A citizen stores the goods (what does not fit stays in their hands), gets the
-    /// experience, may find their gear broken, is wounded if they fell, and walks home. The Tsar just walks home.
+    /// experience, and may find their gear broken. Someone who fell stays wounded where they are. Anyone still
+    /// standing walks home.
     /// </summary>
     public static void Settle(DungeonRun run, DungeonHero hero, Citizen? citizen, Village village, DungeonHeroOutcome outcome, Random random, DateTimeOffset now)
     {
@@ -214,7 +254,15 @@ public static class DungeonRules
         hero.Killer = outcome.Killer;
         if (hero.IsTsar)
         {
-            village.TsarGoTo(WorldMap.Places[WorldMap.Camp], now);
+            if (outcome.KnockedOut)
+            {
+                StayDown(village, outcome, now);
+            }
+            else
+            {
+                village.TsarGoTo(WorldMap.Places[WorldMap.Camp], now);
+            }
+
             return;
         }
 
@@ -244,6 +292,10 @@ public static class DungeonRules
         if (citizen.Weapon == ResourceKind.Bow)
         {
             citizen.Arrows = Math.Clamp(outcome.ArrowsLeft, 0, citizen.Arrows);
+            if (citizen.Arrows == 0)
+            {
+                citizen.ArrowSharpen = 0;
+            }
         }
 
         if (outcome.Healed && hero.Remedies > 0)
@@ -252,15 +304,59 @@ public static class DungeonRules
         }
 
         Wear(citizen, outcome.FoesHit, random, hero.Broken);
-        if (outcome.KnockedOut && outcome.Killer is { } killer)
-        {
-            CombatRules.Injure(citizen, TimeSpan.FromMinutes(EnemyCatalog.Get(killer).InjuryMinutes), now, rewardEligible:true);
-        }
-
         ReturnGear(citizen, village, hero);
         citizen.DungeonRunId = null;
-        citizen.SetOut(WorldMap.Places[WorldMap.Camp], village, now);
-        citizen.IdleSpot = null;
+        if (outcome.KnockedOut)
+        {
+            if (outcome.Killer is { } killer)
+            {
+                CombatRules.Injure(citizen, TimeSpan.FromMinutes(EnemyCatalog.Get(killer).InjuryMinutes), now, rewardEligible: true);
+            }
+
+            StayDown(citizen, now);
+        }
+        else
+        {
+            citizen.SetOut(WorldMap.Places[WorldMap.Camp], village, now);
+            citizen.IdleSpot = null;
+        }
+    }
+
+    /// <summary>A fallen hero is down. The walk home is not started, so they are not both wounded and on the road.</summary>
+    private static void StayDown(Citizen citizen, DateTimeOffset now)
+    {
+        if (citizen.Trip is { } trip)
+        {
+            var here = trip.PositionAt(now);
+            citizen.IdleSpot = here;
+            citizen.Spot = here;
+        }
+
+        citizen.Trip = null;
+    }
+
+    private static void StayDown(Village village, DungeonHeroOutcome outcome, DateTimeOffset now)
+    {
+        if (outcome.Killer is { } killer)
+        {
+            var until = now.AddMinutes(EnemyCatalog.Get(killer).InjuryMinutes);
+            if (village.TsarInjuredUntil is not { } current || current < until)
+            {
+                village.TsarInjuredUntil = until;
+                village.TsarWoundedAt = now;
+                village.TsarHospitalizedAt = null;
+                village.TsarRescueByCitizenId = null;
+                village.TsarRescueRewardEligible = true;
+                village.TsarRescueRequestedAt = null;
+            }
+        }
+
+        if (village.TsarTrip is { } trip)
+        {
+            village.TsarSpot = trip.PositionAt(now);
+        }
+
+        village.TsarTrip = null;
     }
 
     public static void Finish(DungeonRun run, DungeonOutcome outcome, int slain, DateTimeOffset now)
@@ -314,7 +410,10 @@ public static class DungeonRules
          + CombatRules.StrengthPower * citizen.Stats.Strength
          + CombatRules.DexterityPower * citizen.Stats.Dexterity
          + CombatRules.GuardingPower * citizen.SkillLevel(Skill.Guarding)
-         + (ArmoryCatalog.Weapon(definition.Weapon)?.Power ?? 0))
+         + (ArmoryCatalog.Weapon(definition.Weapon)?.Power ?? 0)
+         + WeaponSharpening.Bonus(definition.Weapon == ResourceKind.Bow
+             ? citizen.ArrowSharpen
+             : citizen.Weapon == definition.Weapon ? citizen.WeaponSharpen : 0))
         * definition.DamageMultiplier;
 
     /// <summary>Share of each blow the armor stops.</summary>
@@ -376,8 +475,21 @@ public static class DungeonRules
 
         if (definition.Class == HeroClass.Archer)
         {
-            var wanted = Math.Max(0, HeroClassCatalog.Quiver - citizen.Arrows);
-            citizen.Arrows += Take(citizen, village, ResourceKind.Arrows, wanted);
+            var edge = citizen.Arrows > 0
+                ? citizen.ArrowSharpen
+                : WeaponSharpening.BestEdge(citizen, village, 1);
+            if (edge is int level)
+            {
+                var wanted = Math.Max(0, HeroClassCatalog.Quiver - citizen.Arrows);
+                var taken = Take(citizen, village, ResourceKind.Arrows, wanted, level);
+                if (taken > 0 && citizen.Arrows == 0)
+                {
+                    citizen.ArrowSharpen = level;
+                }
+
+                citizen.Arrows += taken;
+            }
+
             hero.Arrows = citizen.Arrows;
         }
 
@@ -415,14 +527,35 @@ public static class DungeonRules
 
         if (held is { } other)
         {
-            citizen.Carry(other, 1);
+            citizen.Carry(other, 1, isWeapon ? citizen.WeaponSharpen : 0);
+            if (isWeapon)
+            {
+                citizen.ClearWeapon();
+            }
+            else
+            {
+                citizen.Armor = null;
+            }
         }
 
-        if (Take(citizen, village, kind, 1) == 0)
+        var sharpen = 0;
+        if (isWeapon)
+        {
+            var levels = WeaponSharpening.Levels(citizen, village, kind).ToList();
+            if (levels.Count == 0)
+            {
+                citizen.ClearWeapon();
+                return;
+            }
+
+            sharpen = levels.Max();
+        }
+
+        if (Take(citizen, village, kind, 1, isWeapon ? sharpen : null) == 0)
         {
             if (isWeapon)
             {
-                citizen.Weapon = null;
+                citizen.ClearWeapon();
             }
             else
             {
@@ -435,6 +568,7 @@ public static class DungeonRules
         if (isWeapon)
         {
             citizen.Weapon = kind;
+            citizen.WeaponSharpen = sharpen;
         }
         else
         {
@@ -442,10 +576,10 @@ public static class DungeonRules
         }
     }
 
-    private static int Take(Citizen citizen, Village village, ResourceKind kind, int amount)
+    private static int Take(Citizen citizen, Village village, ResourceKind kind, int amount, int? sharpen = null)
     {
-        var fromHands = citizen.TakeFromLoad(kind, amount);
-        return fromHands + village.Take(kind, amount - fromHands);
+        var fromHands = sharpen is int level ? citizen.TakeFromLoad(kind, amount, level) : citizen.TakeFromLoad(kind, amount);
+        return fromHands + village.Take(kind, amount - fromHands, sharpen);
     }
 
     /// <summary>Each foe struck may break the weapon and the armor, the same chances as a fight in the wild.</summary>
@@ -456,7 +590,7 @@ public static class DungeonRules
             if (ArmoryCatalog.Weapon(citizen.Weapon) is { } weapon && random.NextDouble() < weapon.BreakChance)
             {
                 broken.Add(weapon.Kind);
-                citizen.Weapon = null;
+                citizen.ClearWeapon();
             }
 
             if (ArmoryCatalog.Armor(citizen.Armor) is { } armor && random.NextDouble() < armor.BreakChance)

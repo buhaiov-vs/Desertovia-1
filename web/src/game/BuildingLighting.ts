@@ -12,6 +12,34 @@ export function registeredPlacement(bounds: Bounds, width: number, height: numbe
   return { scaleX, scaleY, x: -bounds[0] * scaleX, y: -bounds[1] * scaleY }
 }
 
+type PreparedPair = { day: string; night: string; dayBounds: number[]; nightBounds: number[]; preparedDay?: string; worldSize?: number[] }
+
+/** Pixel size of a prepared building, using the same fit as the sprite on its 3×3 plot. */
+export function preparedBuildingSize(kind: string, plotWidth = 3, plotHeight = 3) {
+  const key = kind === 'Castle' ? 'TownHall' : kind === 'Longhouse' ? 'Hut' : kind
+  if (!Object.hasOwn(registrations, key)) return null
+  const pair = registrations[key as keyof typeof registrations] as PreparedPair
+  const [left, top, right, bottom] = pair.dayBounds
+  const desired = pair.worldSize ?? [(right - left) * 0.5, (bottom - top) * 0.5]
+  const scale = Math.min(1, (plotWidth * TILE) / desired[0], (plotHeight * TILE) / desired[1])
+  return { pair, width: desired[0] * scale, height: desired[1] * scale }
+}
+
+/**
+ * Tile rectangle the sprite actually covers. The plot stays 3×4 for placement;
+ * this is only the visible building, bottom-centred on the 3×3 walls.
+ */
+export function preparedBuildingBounds(kind: string, x: number, y: number, plotWidth = 3, plotHeight = 3) {
+  const size = preparedBuildingSize(kind, plotWidth, plotHeight)
+  if (!size) return null
+  return {
+    x: x + plotWidth / 2 - size.width / (2 * TILE),
+    y: y + plotHeight - size.height / TILE,
+    width: size.width / TILE,
+    height: size.height / TILE,
+  }
+}
+
 const vertex = `
 in vec2 aPosition;
 uniform mat3 uProjectionMatrix;
@@ -78,13 +106,10 @@ export class BuildingLighting extends Container {
   private readonly emitsLight: boolean
   constructor(tiles: TileSet, kind: string, x: number, y: number, plotWidth = 3, plotHeight = 3, emitsLight = true) {
     super()
-    if (kind === 'Castle') kind = 'TownHall'
     this.emitsLight = emitsLight
-    const pair = registrations[kind as keyof typeof registrations] as { day:string; night:string; dayBounds:number[]; nightBounds:number[]; preparedDay?:string; worldSize?:number[] }
-    const [left, top, right, bottom] = pair.dayBounds
-    const desired = pair.worldSize ?? [(right-left)*0.5,(bottom-top)*0.5]
-    const scale = Math.min(1,plotWidth*TILE/desired[0],plotHeight*TILE/desired[1])
-    const width = desired[0]*scale, height = desired[1]*scale
+    const size = preparedBuildingSize(kind, plotWidth, plotHeight)
+    if (!size) throw new Error(`No prepared art for ${kind}`)
+    const { pair, width, height } = size
     const prepared = pair.preparedDay ?? (pair.worldSize ? pair.day : null)
     const dayTexture = prepared ? tiles.nightBuilding(prepared) : tiles.get(art(pair.day as ArtName)), nightTexture = tiles.nightBuilding(pair.night)
     const day = sampling(dayTexture,registeredPlacement(pair.dayBounds.map(value=>value/(prepared ? 1 : dayAtlas.meta.scale)),width,height))

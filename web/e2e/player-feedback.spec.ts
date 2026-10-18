@@ -35,6 +35,22 @@ test('gathering previews public versus personal output and work names both train
  await expect(page.locator('.task-meta').first()).toContainText('Ум, Обаяние')
 })
 
+test('dark theme keeps dark ink on parchment storage tiles',async({page})=>{
+ await page.evaluate(()=>{document.documentElement.dataset.uiTheme='dark'})
+ await page.getByRole('button',{name:'inventory',exact:true}).click()
+ const slot=page.locator('.inventory-grid .slot').first()
+ const colors=await slot.evaluate((element)=>{
+  const style=getComputedStyle(element)
+  const muted=element.querySelector('.muted')
+  return {color:style.color,background:style.backgroundColor,muted:muted?getComputedStyle(muted).color:''}
+ })
+ expect(colors.color).toBe('rgb(43, 29, 14)')
+ expect(colors.background).toBe('rgb(244, 230, 200)')
+ expect(colors.muted).toBe('rgb(122, 100, 70)')
+ await page.setViewportSize({width:390,height:844})
+ await expect(slot).toBeVisible()
+})
+
 test('hungry inventory offers a meal and disables it when there is no owned food',async({page})=>{
  await page.getByRole('button',{name:'inventory',exact:true}).click()
  await page.getByRole('button',{name:'Поесть',exact:true}).click();await expect(page.locator('#call')).toHaveText('eat')

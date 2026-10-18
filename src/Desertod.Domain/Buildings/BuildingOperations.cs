@@ -194,7 +194,7 @@ public static class BuildingOperations
             // Simulate ALL refunds together: total-capacity bins are shared between resources.
             var bins=village.Storages.Where(s=>s.PlotId!=site.PlotId && s.OwnerAccountId==null).Select(s=>new StorageBuilding
                 {Kind=s.Kind,PlotId=s.PlotId,Decommissioning=s.Decommissioning,
-                 Goods=s.Goods.Select(g=>new StoredGood{Kind=g.Kind,Amount=g.Amount}).ToList()}).ToList();
+                 Goods=s.Goods.Select(g=>new StoredGood{Kind=g.Kind,Amount=g.Amount,Sharpen=g.Sharpen}).ToList()}).ToList();
             foreach(var good in returns)
             {
                 var remaining=good.Amount;

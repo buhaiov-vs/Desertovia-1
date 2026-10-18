@@ -623,6 +623,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
+                    b.Property<int>("ArrowSharpen")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Arrows")
                         .HasColumnType("integer");
 
@@ -650,6 +653,9 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                     b.Property<DateTimeOffset?>("CycleEndsAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool?>("CycleHungry")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("CyclePrivateOutput")
                         .HasColumnType("boolean");
@@ -803,6 +809,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<string>("Weapon")
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
+
+                    b.Property<int>("WeaponSharpen")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset?>("WoundedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1900,6 +1909,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<string>("Kind")
                                 .IsRequired();
 
+                            b1.Property<int>("Sharpen");
+
                             b1.HasKey("CitizenId", "__synthesizedOrdinal");
 
                             b1.ToTable("Citizens");
@@ -2340,6 +2351,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                     b2.Property<string>("Kind")
                                         .IsRequired();
 
+                                    b2.Property<int>("Sharpen");
+
                                     b2.HasKey("ConstructionSiteVillageId", "ConstructionSite__synthesizedOrdinal", "__synthesizedOrdinal");
 
                                     b2.ToTable("Villages");
@@ -2441,6 +2454,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                     b2.Property<string>("Kind")
                                         .IsRequired();
 
+                                    b2.Property<int>("Sharpen");
+
                                     b2.HasKey("SiteRecoveryVillageId", "SiteRecovery__synthesizedOrdinal", "__synthesizedOrdinal");
 
                                     b2.ToTable("Villages");
@@ -2505,6 +2520,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                                     b2.Property<string>("Kind")
                                         .IsRequired();
+
+                                    b2.Property<int>("Sharpen");
 
                                     b2.HasKey("StructureVillageId", "Structure__synthesizedOrdinal", "__synthesizedOrdinal");
 
@@ -3024,6 +3041,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                     b2.Property<string>("Kind")
                                         .IsRequired();
 
+                                    b2.Property<int>("Sharpen");
+
                                     b2.HasKey("StorageBuildingVillageId", "StorageBuilding__synthesizedOrdinal", "__synthesizedOrdinal");
 
                                     b2.ToTable("Villages");
@@ -3045,6 +3064,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                                     b2.Property<string>("Kind")
                                         .IsRequired();
+
+                                    b2.Property<int>("Sharpen");
 
                                     b2.HasKey("StorageBuildingVillageId", "StorageBuilding__synthesizedOrdinal", "__synthesizedOrdinal");
 

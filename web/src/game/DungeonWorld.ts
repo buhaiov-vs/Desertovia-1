@@ -232,6 +232,7 @@ export class DungeonWorld {
   private walkable: boolean[] = []
   private width = 0
   private height = 0
+  private floor = 0
   private myHeroId: string | null = null
   private handlers: DungeonPickHandlers | null = null
   private elapsed = 0
@@ -279,56 +280,105 @@ export class DungeonWorld {
     this.handlers = handlers
   }
 
-  /** The map and the heroes; drawn once per run. */
+  /** The map once per run. Heroes stay off it until their march to the edge is over. */
   setRun(view: DungeonRunView) {
     const firstTime = this.view?.runId !== view.runId
     this.view = view
     this.myHeroId = view.myHeroId
     if (firstTime) {
-      this.width = view.width
-      this.height = view.height
-      this.walkable = [...view.tiles].map((digit) => WALKABLE.includes(DUNGEON_TILES[Number(digit)] ?? 'Rock'))
-      this.ground.clear()
-      ;[...view.tiles].forEach((digit, index) =>
-        drawTile(this.ground, DUNGEON_TILES[Number(digit)] ?? 'Rock', index % view.width, Math.floor(index / view.width)),
-      )
-      this.centerX = view.entrance.x + 0.5
-      this.centerY = view.entrance.y + 0.5
-      this.scale = this.defaultScale()
+      this.floor = 0
+      this.showMap(view.width, view.height, view.tiles, view.entrance)
     }
-    view.heroes.forEach((hero, index) => {
-      let figure = this.heroes.get(hero.id)
-      if (!figure) {
-        const x = view.entrance.x + 0.5
-        const y = view.entrance.y + 0.5 + (index % 7) - 3
-        figure = this.addHero(hero.id, hero.name, hero.class, hero.appearance, x, y)
-      }
-      figure.maximumHealth = hero.maximumHealth || figure.maximumHealth
-      if (figure.health === 0) figure.health = figure.maximumHealth
-    })
+    for (const [id, figure] of this.heroes) {
+      if (!this.onTheLand(id)) figure.view.visible = false
+    }
     this.layoutCamera()
   }
 
+  /** A hero is on the dungeon land only after the fight has started and their own arrival time has passed. */
+  private onTheLand(heroId: string) {
+    const view = this.view
+    if (!view || view.run.phase !== 'Running') return false
+    const listed = view.heroes.find((hero) => hero.id === heroId)
+    if (!listed) return false
+    const marcher = listed.citizenId === null
+      ? view.run.heroes.find((hero) => hero.citizenId === null)
+      : view.run.heroes.find((hero) => hero.citizenId === listed.citizenId)
+    return marcher?.arrivesAt == null || Date.parse(marcher.arrivesAt) <= Date.now()
+  }
+
+  private showMap(width: number, height: number, tiles: string, entrance: { x: number; y: number }) {
+    this.width = width
+    this.height = height
+    this.walkable = [...tiles].map((digit) => WALKABLE.includes(DUNGEON_TILES[Number(digit)] ?? 'Rock'))
+    this.ground.clear()
+    ;[...tiles].forEach((digit, index) =>
+      drawTile(this.ground, DUNGEON_TILES[Number(digit)] ?? 'Rock', index % width, Math.floor(index / width)),
+    )
+    this.centerX = entrance.x + 0.5
+    this.centerY = entrance.y + 0.5
+    this.scale = this.defaultScale()
+    this.layoutCamera()
+  }
+
+  private clearFoes() {
+    for (const foe of this.foes.values()) foe.view.destroy({ children: true })
+    this.foes.clear()
+  }
+
   setSnapshot(snapshot: DungeonSnapshot) {
+    const floorChanged = snapshot.floor !== this.floor
+    if (floorChanged) {
+      this.floor = snapshot.floor
+      this.clearFoes()
+      this.showMap(snapshot.width, snapshot.height, snapshot.tiles, snapshot.entrance)
+    }
     for (const hero of snapshot.heroes) {
-      const figure = this.heroes.get(hero.id)
-      if (!figure) continue
-      figure.targetX = hero.x
-      figure.targetY = hero.y
+      if (!this.onTheLand(hero.id)) {
+        const waiting = this.heroes.get(hero.id)
+        if (waiting) waiting.view.visible = false
+        continue
+      }
+      let figure = this.heroes.get(hero.id)
+      if (!figure) {
+        const listed = this.view?.heroes.find((candidate) => candidate.id === hero.id)
+        if (!listed) continue
+        figure = this.addHero(listed.id, listed.name, listed.class, listed.appearance, hero.x, hero.y)
+        figure.maximumHealth = listed.maximumHealth || figure.maximumHealth
+      }
+      figure.view.visible = true
       figure.health = hero.health
       figure.state = hero.state
+      const fell = hero.state !== 'Fighting' || hero.health <= 0
+      if (floorChanged && fell) {
+        figure.view.visible = false
+        continue
+      }
+      if (hero.state !== 'Left') {
+        if (floorChanged) {
+          figure.x = hero.x
+          figure.y = hero.y
+          figure.view.position.set(hero.x * TILE, hero.y * TILE)
+        }
+        figure.targetX = hero.x
+        figure.targetY = hero.y
+      }
     }
     for (const foe of snapshot.foes) {
       let figure = this.foes.get(foe.id)
       if (!figure) figure = this.addFoe(foe.id, foe.kind, foe.x, foe.y)
-      figure.targetX = foe.x
-      figure.targetY = foe.y
       figure.health = foe.health
       figure.maximumHealth = foe.maximumHealth
-      if (foe.health <= 0 && !figure.dead) {
-        figure.dead = true
-        figure.diedAt = this.elapsed
+      if (foe.health <= 0) {
+        if (!figure.dead) {
+          figure.dead = true
+          figure.diedAt = this.elapsed
+        }
+        continue
       }
+      figure.dead = false
+      figure.targetX = foe.x
+      figure.targetY = foe.y
     }
     for (const event of snapshot.events) this.showEvent(event)
     this.drawMarks(snapshot)
@@ -529,24 +579,21 @@ export class DungeonWorld {
     }
 
     for (const hero of this.heroes.values()) {
-      move(hero)
+      if (hero.state !== 'Left' && hero.view.visible) move(hero)
       drawBar(hero.bar, hero.health / Math.max(1, hero.maximumHealth), hero.id === this.myHeroId ? 0xffd23a : 0x60c040)
-      hero.skull.visible = hero.state === 'Fleeing'
-      hero.view.alpha = hero.state === 'Left' ? Math.max(0, hero.view.alpha - seconds) : 1
+      hero.skull.visible = hero.state === 'Fleeing' && hero.view.visible
+      if (hero.state === 'Left') hero.view.visible = false
+      hero.view.alpha = hero.view.visible ? 1 : Math.max(0, hero.view.alpha - seconds)
     }
-    for (const [id, foe] of this.foes) {
+    for (const foe of this.foes.values()) {
       if (foe.dead) {
         const since = this.elapsed - foe.diedAt
         foe.body.rotation = Math.PI / 2
         foe.bar.visible = false
         foe.view.alpha = Math.max(0, 1 - since / CORPSE_SECONDS)
-        if (since > CORPSE_SECONDS) {
-          foe.view.visible = false
-          if (since > CORPSE_SECONDS * 2) {
-            foe.view.destroy({ children: true })
-            this.foes.delete(id)
-          }
-        }
+        // Slain foes stay in every snapshot until the floor changes. The faded sprite stays
+        // listed so a later snapshot does not spawn that corpse and play the death again.
+        if (since > CORPSE_SECONDS) foe.view.visible = false
         continue
       }
       move(foe)
@@ -567,7 +614,7 @@ export class DungeonWorld {
 
     if (this.following && this.myHeroId) {
       const mine = this.heroes.get(this.myHeroId)
-      if (mine && mine.state !== 'Left') {
+      if (mine?.view.visible && mine.state !== 'Left') {
         this.centerX = mine.x
         this.centerY = mine.y
         this.layoutCamera()

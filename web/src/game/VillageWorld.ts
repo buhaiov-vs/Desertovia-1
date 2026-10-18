@@ -7,7 +7,7 @@ import { receiveFighterSample, fighterPositionAt, fighterIsMoving, type FighterS
 import { playerNamesVisible, PREFERENCES_EVENT } from '../gamePreferences'
 import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
-import { BuildingLighting, hasPreparedBuilding } from './BuildingLighting'
+import { BuildingLighting, hasPreparedBuilding, preparedBuildingBounds } from './BuildingLighting'
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
 import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type Tsar, type VillageState, type Wilds } from '../api'
@@ -577,7 +577,15 @@ export class VillageWorld {
     // Battle positions already drive this walker. Replanning a civilian route to
     // the stale Tsar spot on every combat snapshot can search the whole map.
     const fighting=this.village?.battles?.some(b=>!b.finishedAt&&b.fighters.some(f=>f.isTsar&&f.active&&f.health>0))
-    if(!fighting)this.walkTo(walker, spot)
+    if (walker.injuredUntil > Date.now()) {
+      walker.way = []
+      if (!walker.carrierId) {
+        walker.x = spot.x * TILE
+        walker.y = spot.y * TILE
+      }
+      walker.targetX = walker.x
+      walker.targetY = walker.y
+    } else if (!fighting) this.walkTo(walker, spot)
   }
 
   private bridgeDone() {
@@ -709,6 +717,11 @@ export class VillageWorld {
     this.worldPickable = pickable
   }
 
+  /** Yellow outline follows the sprite. The plot underneath stays the full yard for walking and placement. */
+  private shownBuildingArea(kind: string, x: number, y: number): TileArea {
+    return preparedBuildingBounds(kind, x, y) ?? footprint(x, y)
+  }
+
   /** Outlines tiles of the map; null removes the outline. */
   setSelection(area: TileArea | null) {
     this.selection.clear()
@@ -738,7 +751,7 @@ export class VillageWorld {
     for (const site of village.sites) {
       const plot = this.plot(site.plotId)
       const area = plot && footprint(plot.x, plot.y)
-      if (area && inside(area)) return { kind: 'site', plotId: site.plotId, building: site.kind, area }
+      if (plot && area && inside(area)) return { kind: 'site', plotId: site.plotId, building: site.kind, area: this.shownBuildingArea(site.kind, plot.x, plot.y) }
     }
     const buildings = [
       ...village.structures.map((structure) => ({ plotId: structure.plotId, building: structure.kind, storage: false })),
@@ -751,7 +764,7 @@ export class VillageWorld {
     for (const building of buildings) {
       const plot = this.plot(building.plotId)
       const area = plot && footprint(plot.x, plot.y)
-      if (area && inside(area)) return { kind: 'building', ...building, area }
+      if (plot && area && inside(area)) return { kind: 'building', ...building, area: this.shownBuildingArea(building.building, plot.x, plot.y) }
     }
 
     const project = village.project
@@ -819,6 +832,7 @@ export class VillageWorld {
     for (const citizen of citizens) {
       seen.add(citizen.id)
       let walker = this.walkers.get(citizen.id)
+      const fresh = !walker
       const texture = this.lookTexture(citizen.id, citizen.appearance)
       if (!walker) {
         const seed = hash(citizen.id)
@@ -864,6 +878,10 @@ export class VillageWorld {
       walker.rescueJourney=citizen.rescueJourney??null
       walker.pickupAt=walker.rescueJourney&&!walker.rescueJourney.completedAt?Date.parse(walker.rescueJourney.pickupAt):0
       if(injured&&!walker.inHospital&&!walker.carrierId&&citizen.rescueRequestedAt)walker.treatmentCause='Просит помощи'
+      if (injured && !walker.carrierId && !walker.inHospital && stayAt) {
+        walker.x = stayAt.x * TILE
+        walker.y = stayAt.y * TILE
+      }
       if(injured){walker.working=false;walker.roaming=false;walker.hunt=null;walker.way=[];walker.targetX=walker.x;walker.targetY=walker.y}
       if (injured) walker.staying = true
       let icon: { key: string; tile: TileRef | null } | null = null
@@ -912,6 +930,13 @@ export class VillageWorld {
         walker.targetX=(plot?plot.x+1.5:CAMPFIRE.x+(slot%2===0?-1.2:4.2))*TILE
         walker.targetY=(plot?plot.y+2:CAMPFIRE.y+4.35+Math.floor(slot/2)*5.5+(slot%2)*2.75)*TILE
         walker.x=walker.targetX;walker.y=walker.targetY;walker.staying=true
+      }
+      // A new map starts each person where they already are. Walking in from the campfire
+      // only happens when their place actually changes while this page stays open.
+      if (fresh) {
+        walker.x = walker.targetX
+        walker.y = walker.targetY
+        walker.way = []
       }
       this.setIcon(walker, icon?.key ?? '', icon?.tile ?? null)
     }
@@ -1368,6 +1393,8 @@ export class VillageWorld {
     for(const id of this.fighterSamples.keys())if(!presentFighters.has(id))this.fighterSamples.delete(id)
     this.enemies.setBattles(state.battles??[])
     if(sameWorld){
+      this.wildlife.setHerds(state.wildlife)
+      this.enemies.setRaids(state.raids)
       if(previousFighters.size!==presentFighters.size||[...presentFighters].some(id=>!previousFighters.has(id))){this.setCitizens(this.citizens,this.highlightId);this.setTsar(state.tsar)}
       return
     }
@@ -2162,6 +2189,9 @@ export class VillageWorld {
       walker.sprite.anchor.set(.5,hurt?.5:1)
       if(hurt){
         walker.staying=true;walker.working=false;walker.hunt=null;walker.roaming=false
+        walker.way=[]
+        walker.targetX=walker.x
+        walker.targetY=walker.y
         walker.subtitle.text=`${walker.inHospital?'На лечении':'Ждёт помощи'}${walker.treatmentCause ? ' · ' + walker.treatmentCause : ''}`
         walker.subtitle.visible=walker.sprite.visible
       } else if(walker.treatmentCause){walker.subtitle.text=walker.normalSubtitle;walker.subtitle.visible=!!walker.normalSubtitle;walker.treatmentCause='';walker.inHospital=false;walker.carrierId=null}

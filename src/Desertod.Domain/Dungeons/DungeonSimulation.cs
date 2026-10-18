@@ -19,6 +19,7 @@ public enum HeroState
 /// <param name="Id">The citizen, or the Tsar's account.</param>
 /// <param name="Protection">Share of each blow the armor stops.</param>
 /// <param name="Arrows">Shots of an archer; null when the hero does not shoot.</param>
+/// <param name="Invulnerable">Local development only: blows land, but health stays full and the clock does not end the run.</param>
 public sealed record DungeonFighter(
     Guid Id,
     Guid AccountId,
@@ -28,7 +29,8 @@ public sealed record DungeonFighter(
     double Damage,
     double Protection,
     int? Arrows,
-    bool CanHeal);
+    bool CanHeal,
+    bool Invulnerable = false);
 
 public enum DungeonEventKind
 {
@@ -111,31 +113,31 @@ public sealed class DungeonSimulation
     private const double Brawling = 0.5;
 
     private readonly List<SimulatedHero> heroes;
-    private readonly List<SimulatedFoe> foes;
+    private readonly List<SimulatedFoe> foes = [];
+    private readonly IReadOnlyList<DungeonDefinition> floors;
+    private readonly TimeSpan timeLimit;
+    private int slainBefore;
+    private int floor = -1;
 
     public DungeonSimulation(DungeonDefinition dungeon, IEnumerable<DungeonFighter> fighters)
     {
-        Dungeon = dungeon;
-        heroes = fighters.Select((fighter, index) =>
+        floors = dungeon.Floors.Count > 0 ? dungeon.Floors : [dungeon];
+        timeLimit = dungeon.TimeLimit;
+        heroes = fighters.Select(fighter => new SimulatedHero
         {
-            var start = StartTile(dungeon, index);
-            return new SimulatedHero
-            {
-                Fighter = fighter,
-                X = start.X,
-                Y = start.Y,
-                Health = fighter.Health,
-                Arrows = fighter.Arrows,
-            };
+            Fighter = fighter,
+            Health = fighter.Health,
+            Arrows = fighter.Arrows,
         }).ToList();
-        foes = dungeon.Spawns.Select((spawn, index) =>
-        {
-            var definition = DungeonCatalog.Foe(spawn.Kind);
-            return new SimulatedFoe { Id = index, Definition = definition, X = spawn.X + 0.5, Y = spawn.Y + 0.5, Health = definition.Health };
-        }).ToList();
+        EnterFloor(0);
     }
 
-    public DungeonDefinition Dungeon { get; }
+    public DungeonDefinition Dungeon { get; private set; } = null!;
+
+    /// <summary>Zero on the first floor.</summary>
+    public int Floor => floor;
+
+    public int FloorCount => floors.Count;
     public IReadOnlyList<SimulatedHero> Heroes => heroes;
     public IReadOnlyList<SimulatedFoe> Foes => foes;
 
@@ -147,7 +149,7 @@ public sealed class DungeonSimulation
     /// <summary>The time ran out: nobody still fighting is wounded.</summary>
     public bool TimedOut { get; private set; }
 
-    public int Slain => foes.Count(f => !f.IsAlive);
+    public int Slain => slainBefore + foes.Count(f => !f.IsAlive);
 
     public bool IsOver => Outcome != DungeonOutcome.Pending;
 
@@ -241,15 +243,22 @@ public sealed class DungeonSimulation
 
         MoveCrowd(beforeFoes,seconds);
 
-        if (foes.All(f => !f.IsAlive))
+        if (foes.Count > 0 && foes.All(f => !f.IsAlive))
         {
-            Outcome = DungeonOutcome.Victory;
+            if (floor < floors.Count - 1 && heroes.Any(h => h.State == HeroState.Fighting))
+            {
+                EnterFloor(floor + 1);
+            }
+            else
+            {
+                Outcome = floor < floors.Count - 1 ? DungeonOutcome.Defeat : DungeonOutcome.Victory;
+            }
         }
         else if (heroes.All(h => h.State != HeroState.Fighting))
         {
             Outcome = DungeonOutcome.Defeat;
         }
-        else if (Elapsed >= Dungeon.TimeLimit.TotalSeconds)
+        else if (Elapsed >= timeLimit.TotalSeconds && heroes.Any(h => h.State == HeroState.Fighting && !h.Fighter.Invulnerable))
         {
             Outcome = DungeonOutcome.Defeat;
             TimedOut = true;
@@ -428,6 +437,12 @@ public sealed class DungeonSimulation
             return;
         }
 
+        if (target.Fighter.Invulnerable)
+        {
+            foe.Cooldown = foe.Definition.AttackSeconds;
+            return;
+        }
+
         var damage = foe.Definition.Damage * (1 - target.Fighter.Protection);
         target.Health -= damage;
         foe.Cooldown = foe.Definition.AttackSeconds;
@@ -520,6 +535,59 @@ public sealed class DungeonSimulation
     }
 
     private static double Distance(double x1, double y1, double x2, double y2) => Math.Sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+
+    /// <summary>
+    /// Opens a floor. Health, arrows and loot stay. A hero who already fell is sent out and does not come along.
+    /// </summary>
+    private void EnterFloor(int index)
+    {
+        if (foes.Count > 0)
+        {
+            slainBefore += foes.Count(f => !f.IsAlive);
+        }
+
+        floor = index;
+        Dungeon = floors[index];
+        foes.Clear();
+        for (var spawnIndex = 0; spawnIndex < Dungeon.Spawns.Count; spawnIndex++)
+        {
+            var spawn = Dungeon.Spawns[spawnIndex];
+            var definition = DungeonCatalog.Foe(spawn.Kind);
+            foes.Add(new SimulatedFoe
+            {
+                Id = spawnIndex,
+                Definition = definition,
+                X = spawn.X + 0.5,
+                Y = spawn.Y + 0.5,
+                Health = definition.Health,
+            });
+        }
+
+        var file = 0;
+        foreach (var hero in heroes)
+        {
+            hero.TargetFoe = null;
+            hero.HealTarget = null;
+            hero.Destination = null;
+            hero.Path.Clear();
+            hero.Cooldown = 0;
+            if (hero.State == HeroState.Fighting && hero.Health > 0)
+            {
+                var start = StartTile(Dungeon, file++);
+                hero.X = start.X;
+                hero.Y = start.Y;
+            }
+            else
+            {
+                if (hero.Health <= 0 || hero.State == HeroState.Fleeing)
+                {
+                    hero.Health = 0;
+                }
+
+                hero.State = HeroState.Left;
+            }
+        }
+    }
 
     /// <summary>Heroes come in by the entrance in a few short files, so they do not stand on each other.</summary>
     private static TilePoint StartTile(DungeonDefinition dungeon, int index)

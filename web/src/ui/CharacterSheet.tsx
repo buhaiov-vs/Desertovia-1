@@ -5,6 +5,7 @@ import { CharacterPortrait } from './CharacterPortrait'
 import { citizenTitle } from './citizenTitle'
 import { Hint } from './Hint'
 import { restHints } from './needHints'
+import { ResourceIcon } from './TileIcon'
 import { formatRecoveryTime } from './recoveryTime'
 
 export function CharacterSheet({ citizen, catalog, structures, now = Date.now() }: { citizen: Citizen; catalog: Catalog; structures: Structure[]; now?: number }) {
@@ -98,6 +99,9 @@ export function CharacterSheet({ citizen, catalog, structures, now = Date.now() 
       <h4>{t('fight.title')}</h4>
       <p className="small" title={t('fight.powerHint')}>
         {t('fight.power', { power: i18n.amount(citizen.power) })} ·{' '}
+        {citizen.weapon && <ResourceIcon kind={citizen.weapon} scale={2} sharpen={citizen.weaponSharpen ?? 0} />}
+        {citizen.arrows > 0 && <ResourceIcon kind="Arrows" scale={2} sharpen={citizen.arrowSharpen ?? 0} />}
+        {citizen.armor && <ResourceIcon kind={citizen.armor} scale={2} />}{' '}
         {citizen.weapon || citizen.armor
           ? t('fight.gear', {
               gear: [citizen.weapon, citizen.armor]

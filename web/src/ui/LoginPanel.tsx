@@ -12,6 +12,13 @@ import {
 import { useI18n } from '../i18n'
 import type { UiKey } from '../i18n/en'
 
+function roleLabel(role: string): UiKey | null {
+  if (role === 'tsar') return 'login.role.tsar'
+  if (role === 'governor') return 'login.role.governor'
+  if (role === 'villager') return 'login.role.villager'
+  return null
+}
+
 function TelegramLoginButton({ botUsername, returnUrl, language }: { botUsername: string; returnUrl: string; language: string }) {
   const container = useRef<HTMLDivElement>(null)
 
@@ -171,6 +178,15 @@ export function LoginPanel({ onLoggedIn, title = 'login.title' }: { onLoggedIn: 
     api.providers().then(setProviders, (exception: unknown) => setError(i18n.error(exception)))
   }, [i18n])
 
+  const signInAs = async (name: string) => {
+    try {
+      await api.developmentLogin(name)
+      onLoggedIn()
+    } catch (exception) {
+      setError(i18n.error(exception))
+    }
+  }
+
   if (!providers) return <section className="card">{error ?? t('loading')}</section>
 
   const loginUrl = (provider: string) => `${appPath(`/auth/login/${provider}`)}?returnUrl=${encodeURIComponent(returnUrl)}`
@@ -218,15 +234,20 @@ export function LoginPanel({ onLoggedIn, title = 'login.title' }: { onLoggedIn: 
           className="inline-form"
           onSubmit={async (event) => {
             event.preventDefault()
-            try {
-              await api.developmentLogin(developmentName)
-              onLoggedIn()
-            } catch (exception) {
-              setError(i18n.error(exception))
-            }
+            await signInAs(developmentName)
           }}
         >
           <span className="muted small">{t('login.development')}</span>
+          {providers.developmentRoles && providers.developmentRoles.length > 0 && (
+            <div className="dev-roles">
+              <span className="muted small">{t('login.roles')}</span>
+              {providers.developmentRoles.map((role) => (
+                <button key={role.role} type="button" title={role.name} onClick={() => void signInAs(role.name)}>
+                  {roleLabel(role.role) ? t(roleLabel(role.role)!) : role.name}
+                </button>
+              ))}
+            </div>
+          )}
           <input
             value={developmentName}
             onChange={(event) => setDevelopmentName(event.target.value)}

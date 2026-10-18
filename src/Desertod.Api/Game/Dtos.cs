@@ -201,6 +201,7 @@ public sealed record VillageStateDto(
     WildsDto? Wilds,
     DungeonDto? Dungeon)
 {
+    public DateTimeOffset SnapshotAt { get; init; }
     public TileArea KingdomArea { get; init; } = WorldMap.BuildArea;
     public FortificationQuote? FortificationUpgrade { get; init; }
     public int CastleLevel { get; init; }
@@ -282,6 +283,7 @@ public sealed record CitizenSummaryDto(
     ResourceKind? Weapon,
     ExternalRecovery? Recovery = null)
 {
+    public int WeaponSharpen { get; init; }
     public DateTimeOffset? HospitalizedAt { get; init; }
     public Guid? RescueByCitizenId { get; init; }
     public Guid? RescuePatientId { get; init; }
@@ -371,6 +373,8 @@ public sealed record CitizenDto(
     double Power,
     ExternalRecovery? Recovery = null)
 {
+    public int WeaponSharpen { get; init; }
+    public int ArrowSharpen { get; init; }
     public Guid AccountId { get; init; }
     public bool CyclePrivateOutput { get; init; }
     public IReadOnlyList<Desertod.Domain.Economy.PersonalGood> PersonalGoods { get; init; } = [];
@@ -459,7 +463,7 @@ public sealed record GoToRequest(TilePoint Spot);
 
 /// <param name="PlotId">The storage building to take from.</param>
 /// <param name="Amount">How much to take; less is taken when the building has less or the hands are nearly full.</param>
-public sealed record TakeRequest(string PlotId, ResourceKind Resource, int Amount = StorageRules.TakeLimit);
+public sealed record TakeRequest(string PlotId, ResourceKind Resource, int Amount = StorageRules.TakeLimit, int? Sharpen = null);
 
 public sealed record StartJobRequest(string PlotId, int Stage, string JobId);
 
@@ -514,7 +518,7 @@ public static class DtoMapper
             .Select(s => new StorageDto(
                 s.Kind,
                 s.PlotId,
-                (s.OwnerAccountId is null ? s.Goods : []).OrderBy(g => g.Kind).Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
+                (s.OwnerAccountId is null ? s.Goods : []).OrderBy(g => g.Kind).ThenBy(g => g.Sharpen).Select(g => new ResourceAmount(g.Kind, g.Amount, g.Sharpen)).ToList(),
                 s.Slots().Select(slot => new StorageSlotDto(slot.Kind, slot.Fill)).ToList(),
                 s.Damage) { Number = s.Number, DisplayNumber=labels.GetValueOrDefault(s.Number), OwnerAccountId = s.OwnerAccountId, RuinedAt=s.RuinedAt })
             .ToList(),
@@ -563,7 +567,7 @@ public static class DtoMapper
             village.Wilds?.Lookout)),
         village.Raids.OrderBy(r => r.StrikesAt).Select(r => r.ToDto()).ToList(),
         village.Wilds?.ToDto(),
-        dungeon?.ToDto());
+        dungeon?.ToDto()) { SnapshotAt = now };
     }
 
     public static WildsDto ToDto(this Wilds wilds) => new(
@@ -693,7 +697,7 @@ public static class DtoMapper
             citizen.CycleEndsAt,
             citizen.Load.Select(g => g.Kind).ToList(),
             CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
-            citizen.Weapon, citizen.Recovery) {HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId,RescueJourney=citizen.RescueJourney,RescueRequestedAt=citizen.RescueRequestedAt,DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt};
+            citizen.Weapon, citizen.Recovery) {WeaponSharpen=citizen.WeaponSharpen,HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId,RescueJourney=citizen.RescueJourney,RescueRequestedAt=citizen.RescueRequestedAt,DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt};
     }
 
     public static CitizenDto ToDto(this Citizen citizen, Village village, DateTimeOffset now) => new(
@@ -737,7 +741,7 @@ public static class DtoMapper
         citizen.CycleEndsAt,
         citizen.GraceEndsAt,
         citizen.CycleTired && !citizen.CycleSettled,
-        citizen.Load.Select(g => new ResourceAmount(g.Kind, g.Amount)).ToList(),
+        citizen.Load.Select(g => new ResourceAmount(g.Kind, g.Amount, g.Sharpen)).ToList(),
         citizen.ShelterQuality,
         citizen.IsHungry,
         citizen.CyclesSinceMeal,
@@ -752,7 +756,7 @@ public static class DtoMapper
         citizen.Armor,
         citizen.Arrows,
         Math.Round(CombatRules.Power(citizen), 1), citizen.Recovery)
-        { MealKind=citizen.MealKind,MealUntil=citizen.MealUntil,MealReadyAt=citizen.LastMealAt+PreparedMeals.Cooldown, VigorEnergy = village.VigorEnergy, VigorCooldownMinutes = village.VigorCooldownMinutes, AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
+        { WeaponSharpen=citizen.WeaponSharpen, ArrowSharpen=citizen.ArrowSharpen, MealKind=citizen.MealKind,MealUntil=citizen.MealUntil,MealReadyAt=citizen.LastMealAt+PreparedMeals.Cooldown, VigorEnergy = village.VigorEnergy, VigorCooldownMinutes = village.VigorCooldownMinutes, AccountId = citizen.AccountId, CyclePrivateOutput = citizen.CyclePrivateOutput, PersonalGoods = citizen.PersonalGoods, ActionEnergyCosts = GameCatalog.Tasks.Select(task => new KeyValuePair<string, double>(task.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.TaskCost(village, task, now), now)))
             .Concat(BuildingCatalog.Jobs.Select(job => new KeyValuePair<string, double>(job.Id, WorkEnergy.WithMedical(citizen, WorkEnergy.JobCost(village, job, now), now))))
             .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value),
             DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,

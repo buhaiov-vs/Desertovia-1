@@ -294,6 +294,21 @@ public class CycleEngineTests
         Assert.False(citizen.IsCarrying);
     }
 
+    [Fact]
+    public void Eating_during_work_does_not_rewrite_hunger_at_cycle_start()
+    {
+        var village = NewVillage();
+        var citizen = NewCitizen(village);
+        citizen.IsHungry = true;
+        citizen.Carry(ResourceKind.Food, 1);
+        var context = WorkContext.For(village);
+        CycleEngine.Start(citizen, Task("forage"), context, Now);
+        Assert.True(FoodRules.Eat(citizen, village, Now.AddSeconds(1), allowPublic: false));
+        var report = Finish(citizen, context);
+        Assert.True(report.WorkedHungry);
+        Assert.False(report.Hungry);
+    }
+
     private static CycleReport Work(Citizen citizen, Village village)
     {
         CycleEngine.Start(citizen, Task("quarry-stone"), WorkContext.For(village), citizen.CycleEndsAt ?? Now);
@@ -313,16 +328,49 @@ public class CycleEngineTests
 
         var hungry = Work(citizen, village);
         Assert.True(hungry.Hungry);
+        Assert.False(hungry.WorkedHungry);
         Assert.True(citizen.IsHungry);
-        Assert.Equal(5, hungry.PrimaryExperience);
+        Assert.Equal(10, hungry.PrimaryExperience);
 
         // A hungry citizen looks for food after every cycle, not only at mealtime.
         village.Store(ResourceKind.Food, 1);
         var fed = Work(citizen, village);
+        Assert.True(fed.WorkedHungry);
+        Assert.Equal(5, fed.PrimaryExperience);
         Assert.False(fed.Hungry);
         Assert.False(citizen.IsHungry);
         Assert.Equal(0, village.Stock(ResourceKind.Food));
         Assert.Equal(0, citizen.CyclesSinceMeal);
+    }
+
+    [Fact]
+    public void HungerPenalty_FollowsTheStartOfTheCycle()
+    {
+        var village = NewVillage(fed: false);
+        var citizen = NewCitizen(village);
+        citizen.IsHungry = true;
+        village.Store(ResourceKind.Food, 1);
+
+        var fedAtTheEnd = Work(citizen, village);
+
+        Assert.True(fedAtTheEnd.WorkedHungry);
+        Assert.False(fedAtTheEnd.Hungry);
+        Assert.False(citizen.IsHungry);
+        Assert.Equal(5, fedAtTheEnd.PrimaryExperience);
+        Assert.Equal(0, village.Stock(ResourceKind.Food));
+
+        citizen.IsHungry = true;
+        var stillHungry = Work(citizen, village);
+        Assert.True(stillHungry.WorkedHungry);
+        Assert.True(stillHungry.Hungry);
+        Assert.Equal(5, stillHungry.PrimaryExperience);
+
+        village.Store(ResourceKind.Food, 1);
+        var next = Work(citizen, village);
+        Assert.True(next.WorkedHungry);
+        Assert.False(next.Hungry);
+        Assert.Equal(5, next.PrimaryExperience);
+        Assert.Null(CycleEngine.Settle(citizen, WorkContext.For(village), citizen.CycleEndsAt!.Value));
     }
 
     [Fact]

@@ -7,7 +7,7 @@ import { ResourceIcon } from './TileIcon'
 export interface StorageTake {
   citizen: Citizen
   disabled: boolean
-  onTake: (resource: string, amount: number) => void
+  onTake: (resource: string, amount: number, sharpen?: number) => void
 }
 
 /** One storage building: what it takes, how many slots are used and what lies inside. */
@@ -32,14 +32,14 @@ export function StorageCard({ storage, catalog, take }: { storage: Storage; cata
       {take ? (
         <ul className="storage-take">
           {storage.goods.map((good) => (
-            <TakeRow key={good.resource} good={good} limit={limit} take={take} />
+            <TakeRow key={`${good.resource}:${good.sharpen ?? 0}`} good={good} limit={limit} take={take} />
           ))}
         </ul>
       ) : (
         <div className="storage-goods">
           {storage.goods.map((good) => (
-            <span key={good.resource} className="cost" title={i18n.resource(good.resource)}>
-              <ResourceIcon kind={good.resource} scale={1} /> {i18n.amount(good.amount)}
+            <span key={`${good.resource}:${good.sharpen ?? 0}`} className="cost" title={i18n.resource(good.resource)}>
+              <ResourceIcon kind={good.resource} scale={1} sharpen={good.sharpen ?? 0} /> {i18n.amount(good.amount)}
             </span>
           ))}
         </div>
@@ -53,7 +53,9 @@ export function StorageCard({ storage, catalog, take }: { storage: Storage; cata
 function TakeRow({ good, limit, take }: { good: ResourceAmount; limit: number; take: StorageTake }) {
   const i18n = useI18n()
   const { t } = i18n
-  const held = take.citizen.load.find((carried) => carried.resource === good.resource)?.amount ?? 0
+  const held = take.citizen.load
+    .filter((carried) => carried.resource === good.resource)
+    .reduce((sum, carried) => sum + carried.amount, 0)
   const most = Math.max(0, Math.min(limit - held, good.amount))
   const [chosen, setChosen] = useState<string | null>(null)
   const draft = chosen ?? String(most)
@@ -62,7 +64,7 @@ function TakeRow({ good, limit, take }: { good: ResourceAmount; limit: number; t
 
   return (
     <li>
-      <ResourceIcon kind={good.resource} scale={1} />
+      <ResourceIcon kind={good.resource} scale={1} sharpen={good.sharpen ?? 0} />
       <span>{i18n.resource(good.resource)}</span>
       <span className="muted">{i18n.amount(good.amount)}</span>
       <input
@@ -82,7 +84,7 @@ function TakeRow({ good, limit, take }: { good: ResourceAmount; limit: number; t
         disabled={take.disabled || most < 1 || !valid}
         title={t('storage.takeTitle', { amount: i18n.amount(limit) })}
         onClick={() => {
-          if (valid) take.onTake(good.resource, amount)
+          if (valid) take.onTake(good.resource, amount, good.sharpen ?? 0)
         }}
       >
         {t('storage.take')}

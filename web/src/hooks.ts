@@ -1,7 +1,8 @@
 import { combatDiagnostics } from './game/combatDiagnostics'
-import { mergeBattles } from './api'
+import { adoptVillageState, mergeBattles, type Village } from './api'
 import { appPath } from './paths'
-import { HubConnectionBuilder, LogLevel, type HubConnection } from '@microsoft/signalr'
+import { onAppResume } from './telegram'
+import { HubConnectionBuilder, HubConnectionState, LogLevel, type HubConnection } from '@microsoft/signalr'
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import {
   api,
@@ -75,9 +76,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     setRawState(previous=>{
       const next=typeof value==='function'?value(previous):value
       if(!next||!previous||next.id!==previous.id)return next
-      const newest=(s:VillageState)=>Math.max(0,...(s.battles??[]).map(b=>Date.parse(b.lastTickAt)))
-      return {...next,battles:mergeBattles(previous.battles,next.battles),
-        fortifications:newest(previous)>newest(next)?previous.fortifications:next.fortifications}
+      return adoptVillageState(previous, next)
     })
   },[])
   const [citizens, setCitizens] = useState<Map<string, CitizenSummary>>(new Map())
@@ -110,6 +109,9 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
 
   useEffect(() => {
     let cancelled = false
+    let catching = false
+    let again = false
+    let ready = false
     let feedKey = 0
     const push = (entry: DistributiveOmit<FeedEntry, 'key' | 'at'>) =>
       setFeed((previous) => [{ ...entry, key: feedKey++, at: Date.now() } as FeedEntry, ...previous].slice(0, FEED_LENGTH))
@@ -120,7 +122,7 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
       .configureLogging(LogLevel.Warning)
       .build()
 
-    connection.on('villageUpdated', (next: VillageState) => setState(previous=>({...next,battles:mergeBattles(previous?.battles,next.battles)})))
+    connection.on('villageUpdated', (next: VillageState) => setState(next))
     connection.on('villageEvents', (events: VillageEvents) => {
       if(events.battles?.length)combatDiagnostics.packet()
       if(events.battles?.length || events.fortifications)setState(previous=>previous?{
@@ -172,40 +174,78 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
     connection.on('chatMessage', receive)
     connection.on('villageDeleted', () => callbacks.current.onVillageDeleted?.())
     // Groups are per connection, and lines written while offline come back with the history.
-    connection.onreconnected(async () => {
-      combatDiagnostics.reconnect();
-      await connection.invoke('JoinVillage', slug)
-      const refreshed=await loadVillage(slug)
-      if(!cancelled){setState(refreshed.state);setCitizens(new Map(refreshed.citizens.map(c=>[c.id,c])))}
-      if (!memberRef.current) return
+    const applySnapshot = (village: Village) => {
+      if (cancelled) return
+      setState(village.state)
+      setIsOwner(village.isOwner)
+      setInviteCode(village.inviteCode)
+      setCitizens(new Map(village.citizens.map(citizen => [citizen.id, citizen])))
+      setAway(new Set(village.awayCitizenIds ?? []))
+    }
+    const refreshChat = async () => {
+      if (!memberRef.current || connection.state !== HubConnectionState.Connected) return
       const history = await joinChat(connection, slug)
       if (history && !cancelled) {
         for (const message of history) announced.current.add(message.id)
         setChat((previous) => mergeChat(previous, history))
       }
+    }
+    // A reported restore means events from the frozen page are gone. The snapshot is the authority, then the feed is joined again.
+    const catchUp = async () => {
+      if (!ready || cancelled || catching) { if (!cancelled) again = true; return }
+      catching = true
+      try {
+        applySnapshot(await loadVillage(slug))
+        if (cancelled) return
+        if (connection.state === HubConnectionState.Disconnected) await connection.start()
+        if (cancelled || connection.state !== HubConnectionState.Connected) return
+        try {
+          await connection.invoke('JoinVillage', slug)
+        } catch {
+          if (cancelled || connection.state === HubConnectionState.Connected) return
+          await connection.stop().catch(() => {})
+          if (cancelled || connection.state !== HubConnectionState.Disconnected) return
+          await connection.start()
+          if (cancelled) return
+          await connection.invoke('JoinVillage', slug)
+        }
+        if (cancelled) return
+        setHub(connection)
+        setError(null)
+        await refreshChat()
+      } catch {
+        // The next resume or reconnect tries again.
+      } finally {
+        catching = false
+        if (again && !cancelled) { again = false; void catchUp() }
+      }
+    }
+    connection.onreconnected(async () => {
+      combatDiagnostics.reconnect();
+      await catchUp()
     })
 
     const load = async () => {
       try {
-        const village = await loadVillage(slug)
+        applySnapshot(await loadVillage(slug))
         if (cancelled) return
-        setState(village.state)
-        setIsOwner(village.isOwner)
-        setInviteCode(village.inviteCode)
-        setCitizens(new Map(village.citizens.map((c) => [c.id, c])))
-        setAway(new Set(village.awayCitizenIds ?? []))
         await connection.start()
         if (cancelled) return
         await connection.invoke('JoinVillage', slug)
         if (!cancelled) setHub(connection)
       } catch (exception) {
         if (!cancelled) setError(exception)
+      } finally {
+        ready = true
+        if (again && !cancelled) { again = false; void catchUp() }
       }
     }
 
+    const stopResume = onAppResume(() => { void catchUp() })
     void load()
     return () => {
       cancelled = true
+      stopResume()
       void connection.stop()
     }
   }, [slug, receive, setState])
@@ -309,6 +349,16 @@ export function useDungeonRun(runId: string) {
     })
     connection.on('dungeonEnded', () => void refetch())
     connection.onreconnected(() => void join())
+    const stopResume = onAppResume(() => {
+      void (async () => {
+        try {
+          if (connection.state === HubConnectionState.Disconnected) await connection.start()
+          if (!cancelled && connection.state === HubConnectionState.Connected) await join()
+        } catch (exception) {
+          if (!cancelled) setError(exception)
+        }
+      })()
+    })
 
     const start = async () => {
       try {
@@ -323,6 +373,7 @@ export function useDungeonRun(runId: string) {
     void start()
     return () => {
       cancelled = true
+      stopResume()
       hub.current = null
       void connection.stop()
     }

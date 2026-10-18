@@ -6,6 +6,7 @@ using Desertod.Domain.Economy;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
+using Desertod.Domain.Technologies;
 using Desertod.Domain.Weather;
 using static Desertod.Domain.Tests.TestWorld;
 
@@ -13,6 +14,57 @@ namespace Desertod.Domain.Tests;
 
 public class CombatTests
 {
+    [Fact]
+    public void Private_sharpening_cannot_mix_personal_inputs_with_communal_weapons()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.Sword, 1);
+        var citizen = NewCitizen(village);
+        citizen.CyclePrivateOutput = true;
+        Assert.Equal("sharpen.communal", Assert.Throws<GameRuleException>(() => WeaponSharpening.Check(citizen, village, ResourceKind.Sword)).Code);
+        Assert.Equal(1, village.Stock(ResourceKind.Sword));
+        Assert.Null(citizen.Weapon);
+    }
+    [Fact]
+    public void Arrows_do_not_create_a_bow_when_none_is_available()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.Arrows, 6, 3);
+        village.Store(ResourceKind.Spear, 1);
+        var citizen = NewCitizen(village);
+        CombatRules.Arm(citizen, village);
+        Assert.Equal(ResourceKind.Spear, citizen.Weapon);
+        Assert.Equal(0, citizen.Arrows);
+        Assert.Equal(6, village.Stock(ResourceKind.Arrows));
+        CombatRules.Disarm(citizen, village);
+        Assert.Equal(0, village.Stock(ResourceKind.Bow));
+        Assert.Equal(1, village.Stock(ResourceKind.Spear));
+    }
+
+    [Fact]
+    public void Mixed_edges_survive_storage_take_unload_and_full_storage_disarm()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.Sword, 2, 0);
+        village.Store(ResourceKind.Sword, 1, 3);
+        var citizen = NewCitizen(village);
+        var storage = village.Storages.Single(s => s.Goods.Any(g => g.Kind == ResourceKind.Sword && g.Sharpen == 3));
+        Storage.StorageRules.Take(citizen, village, storage.PlotId, ResourceKind.Sword, 1, Now, 3);
+        Assert.Equal(3, Assert.Single(citizen.Load).Sharpen);
+        Storage.StorageRules.Unload(citizen, village);
+        CombatRules.Arm(citizen, village);
+        Assert.Equal(3, citizen.WeaponSharpen);
+        foreach (var bin in village.Storages) bin.Decommissioning = true;
+        CombatRules.Disarm(citizen, village);
+        Assert.Equal(ResourceKind.Sword, citizen.Weapon);
+        Assert.Equal(3, citizen.WeaponSharpen);
+        storage.Decommissioning = false;
+        CombatRules.Disarm(citizen, village);
+        Assert.Null(citizen.Weapon);
+        Assert.Equal(1, village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Sword && g.Sharpen == 3).Amount);
+        Assert.Equal(3, village.Stock(ResourceKind.Sword));
+    }
+
     /// <summary>Returns the given rolls in order, then 0.5 for ever.</summary>
     private sealed class ScriptedRandom(params double[] rolls) : Random
     {
@@ -392,5 +444,133 @@ public class CombatTests
         Assert.Equal(Technologies.TechnologyCatalog.Warfare, Task("forge-sword").RequiredTechnology);
         Assert.Equal(Technologies.TechnologyCatalog.Warfare, GameCatalog.FindRole("guard")!.Technology);
         Assert.NotEmpty(BuildingCatalog.Get(BuildingKind.Barracks).Stages);
+    }
+
+    [Fact]
+    public void Sharpen_RaisesOneEdgeAndPutsItBack()
+    {
+        var village = Smithy();
+        village.Store(ResourceKind.Sword, 2);
+        village.Store(ResourceKind.Coal, 1);
+        var citizen = NewCitizen(village);
+        var context = WorkContext.For(village);
+
+        CycleEngine.Start(citizen, Task("sharpen-sword"), context, Now);
+
+        Assert.Equal(ResourceKind.Sword, citizen.Weapon);
+        Assert.Equal(0, citizen.WeaponSharpen);
+        Assert.Equal(1, village.Stock(ResourceKind.Sword));
+        Assert.Equal(0, village.Stock(ResourceKind.Coal));
+
+        var report = Finish(citizen, context);
+
+        Assert.Null(citizen.Weapon);
+        Assert.Equal(0, citizen.WeaponSharpen);
+        Assert.Equal(2, village.Stock(ResourceKind.Sword));
+        var sharp = village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Sword && g.Sharpen == 1);
+        var plain = village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Sword && g.Sharpen == 0);
+        Assert.Equal(1, sharp.Amount);
+        Assert.Equal(1, plain.Amount);
+        Assert.Equal(1, report.Produced.Single(item => item.Resource == ResourceKind.Sword).Sharpen);
+    }
+
+    [Fact]
+    public void Sharpen_StopsAtTheThirdEdge()
+    {
+        var village = Smithy();
+        village.Store(ResourceKind.Spear, 1, WeaponSharpening.Maximum);
+        village.Store(ResourceKind.Coal, 1);
+        var citizen = NewCitizen(village);
+
+        var error = Assert.Throws<GameRuleException>(() =>
+            CycleEngine.Start(citizen, Task("sharpen-spear"), WorkContext.For(village), Now));
+
+        Assert.Equal("sharpen.maximum", error.Code);
+        Assert.Equal(1, village.Stock(ResourceKind.Coal));
+        Assert.Equal(WeaponSharpening.Maximum, village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Spear).Sharpen);
+    }
+
+    [Fact]
+    public void Cancel_ReturnsTheArrowUnsharpened()
+    {
+        var village = Smithy();
+        village.Store(ResourceKind.Arrows, 1);
+        village.Store(ResourceKind.Coal, 1);
+        var citizen = NewCitizen(village);
+
+        CycleEngine.Start(citizen, Task("sharpen-arrows"), WorkContext.For(village), Now);
+        CycleEngine.Cancel(citizen, Now.AddSeconds(10), village);
+
+        Assert.Equal(0, citizen.Arrows);
+        Assert.Equal(0, village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Arrows).Sharpen);
+        Assert.Equal(1, village.Stock(ResourceKind.Arrows));
+        Assert.Equal(0, village.Stock(ResourceKind.Coal));
+    }
+
+    [Fact]
+    public void Sharpen_RaisesOneArrowAndTheBowUsesThatEdge()
+    {
+        var village = Smithy();
+        village.Store(ResourceKind.Arrows, 4);
+        village.Store(ResourceKind.Coal, 1);
+        village.Store(ResourceKind.Bow, 1);
+        var citizen = NewCitizen(village);
+
+        CycleEngine.Start(citizen, Task("sharpen-arrows"), WorkContext.For(village), Now);
+        Finish(citizen, WorkContext.For(village));
+
+        var sharp = village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Arrows && g.Sharpen == 1);
+        var plain = village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Arrows && g.Sharpen == 0);
+        Assert.Equal(1, sharp.Amount);
+        Assert.Equal(3, plain.Amount);
+        Assert.Equal(0, village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Bow).Sharpen);
+
+        village.Store(ResourceKind.Arrows, 1, 1);
+        village.Take(ResourceKind.Arrows, 3, 0);
+        var bare = CombatRules.Power(citizen);
+        CombatRules.Arm(citizen, village);
+
+        Assert.Equal(ResourceKind.Bow, citizen.Weapon);
+        Assert.Equal(0, citizen.WeaponSharpen);
+        Assert.Equal(1, citizen.ArrowSharpen);
+        Assert.Equal(bare + ArmoryCatalog.Weapon(ResourceKind.Bow)!.Power + WeaponSharpening.Bonus(1), CombatRules.Power(citizen));
+
+        CombatRules.Disarm(citizen, village);
+        Assert.Equal(1, village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Arrows && g.Amount > 0).Sharpen);
+    }
+
+    [Fact]
+    public void Arm_TakesTheSharperEdge()
+    {
+        var village = NewVillage();
+        village.Store(ResourceKind.Spear, 1);
+        village.Store(ResourceKind.Spear, 1, 2);
+        village.Store(ResourceKind.Sword, 1);
+        var citizen = NewCitizen(village);
+
+        CombatRules.Arm(citizen, village);
+
+        Assert.Equal(ResourceKind.Sword, citizen.Weapon);
+        Assert.Equal(0, citizen.WeaponSharpen);
+
+        CombatRules.Disarm(citizen, village);
+        village.Take(ResourceKind.Sword, 1, 0);
+        var bare = CombatRules.Power(citizen);
+        CombatRules.Arm(citizen, village);
+
+        Assert.Equal(ResourceKind.Spear, citizen.Weapon);
+        Assert.Equal(2, citizen.WeaponSharpen);
+        Assert.Equal(bare + ArmoryCatalog.Weapon(ResourceKind.Spear)!.Power + WeaponSharpening.Bonus(2), CombatRules.Power(citizen));
+
+        CombatRules.Disarm(citizen, village);
+        Assert.Equal(2, village.Storages.SelectMany(s => s.Goods).Single(g => g.Kind == ResourceKind.Spear && g.Amount > 0 && g.Sharpen == 2).Sharpen);
+    }
+
+    private static Village Smithy()
+    {
+        var village = NewVillage();
+        village.Research.Add(new TechnologyProgress { TechnologyId = TechnologyCatalog.Smelting, ResearchedAt = Now });
+        village.Structures.Add(new Structure { Kind = BuildingKind.Smithy, PlotId = "4,4", BuiltAt = Now });
+        return village;
     }
 }

@@ -22,8 +22,8 @@ export function FieldsCard({ beds, now, raining }: { beds: FieldBed[]; now: numb
       {beds.map((bed) => (
         <li key={bed.index} className={`field-bed ${bed.thirsty ? 'thirsty' : ''}`}>
           <TileIcon tile={bed.crop ? cropTile(bed.crop, bed.growth, isRipe(bed)) : undefined} scale={2} />
-          <span>{bed.crop ? i18n.crop(bed.crop) : t('field.bed', { number: bed.index + 1 })}</span>
-          <span className="muted small">{state(bed)}</span>
+          <span className="field-name">{bed.crop ? i18n.crop(bed.crop) : t('field.bed', { number: bed.index + 1 })}</span>
+          <span className="field-state muted small">{state(bed)}</span>
         </li>
       ))}
     </ul>

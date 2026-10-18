@@ -121,6 +121,15 @@ function DungeonHud({ view, snapshot, backTo }: { view: DungeonRunView; snapshot
   const foesLeft = snapshot ? snapshot.foes.filter((foe) => foe.health > 0).length : view.run.foes - view.run.slain
   const target = live?.targetFoe != null ? snapshot?.foes.find((foe) => foe.id === live.targetFoe) : undefined
   const running = view.run.phase === 'Running' && snapshot !== null
+  const floorName = !snapshot
+    ? t('dungeon.deadLands')
+    : snapshot.floor === 2
+      ? t('dungeon.floor.barrow')
+      : snapshot.floor === 1
+        ? t('dungeon.floor.graves')
+        : snapshot.floorCount > 1
+          ? t('dungeon.floor.woods')
+          : t('dungeon.deadLands')
   let hint: string
   if (!running) hint = view.run.phase === 'Ended' ? '' : t('dungeon.waiting')
   else if (!hero) hint = t('dungeon.hintWatcher')
@@ -131,7 +140,10 @@ function DungeonHud({ view, snapshot, backTo }: { view: DungeonRunView; snapshot
   return (
     <>
       <div className="dungeon-top">
-        <strong>{t('dungeon.deadLands')}</strong>
+        <strong>{floorName}</strong>
+        {running && snapshot && snapshot.floorCount > 1 && (
+          <span>{t('dungeon.floor', { floor: snapshot.floor + 1, count: snapshot.floorCount })}</span>
+        )}
         {running && <span>{t('dungeon.timeLeft', { time: clock(view.timeLimitSeconds - snapshot.elapsed) })}</span>}
         <span>{t('dungeon.foesLeft', { count: foesLeft })}</span>
         <Link className="button" to={backTo}>

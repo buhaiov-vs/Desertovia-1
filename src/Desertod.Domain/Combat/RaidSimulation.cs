@@ -140,10 +140,11 @@ public static class RaidSimulation
         }
         if(fighter.NextAttackAt>at)return;
         fighter.NextAttackAt=at.AddSeconds(weapon?.Kind==ResourceKind.Bow?2.5:2);
-        if(weapon?.Arrows>0){citizen.Arrows=Math.Max(0,citizen.Arrows-1);fighter.ArrowsSpent++;}
+        var power=CombatRules.Power(citizen);
+        if(weapon?.Arrows>0){citizen.SpendArrows(1);fighter.ArrowsSpent++;}
         fighter.Arrows=citizen.Arrows;
         var multiplier=village.Has(BuildingKind.Barracks)?RaidRules.BarracksMultiplier:1;
-        var hit=Math.Min(target.Health,Math.Max(1,CombatRules.Power(citizen)*multiplier*.85*PreparedMeals.AttackMultiplier(citizen,at)));
+        var hit=Math.Min(target.Health,Math.Max(1,power*multiplier*.85*PreparedMeals.AttackMultiplier(citizen,at)));
         Contact(battle,at);
         target.Health=Math.Max(0,target.Health-hit);fighter.DamageDealt+=hit;
         fighter.RangedDamage=(fighter.RangedDamage??0)+(weapon?.Kind==ResourceKind.Bow?hit:0);
@@ -447,7 +448,7 @@ public static class RaidSimulation
             if(!cancelled&&!battle.ManualOverride)CombatTraining.Grant(c,f);
             // Equipment wears once per encounter, not once per server tick. Arrows were consumed by actual shots.
             var random=new Random(battle.Seed^c.Id.GetHashCode());
-            if(c.Weapon is {} w && random.NextDouble()<(ArmoryCatalog.Weapon(w)?.BreakChance??0)){c.Weapon=null;broken++;}
+            if(c.Weapon is {} w && random.NextDouble()<(ArmoryCatalog.Weapon(w)?.BreakChance??0)){c.ClearWeapon();broken++;}
             if(c.Armor is {} a && random.NextDouble()<(ArmoryCatalog.Armor(a)?.BreakChance??0)){c.Armor=null;broken++;}
             f.RewardsGranted=true;
         }

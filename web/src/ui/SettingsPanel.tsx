@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { PatchNotes } from './PatchNotes'
 import { api, type Me, type VillageState } from '../api'
 import { LanguageSwitcher, useI18n } from '../i18n'
+import { MusicSettings } from './BackgroundMusic'
 import { InviteCard } from './InviteCard'
 import { NotificationToggle } from './NotificationToggle'
 
@@ -59,6 +60,7 @@ export function SettingsPanel({ village, me, isOwner, inviteCode, onNewInviteCod
         </div><label><input type="checkbox" checked={labels} onChange={e=>{setLabels(e.target.checked);localStorage.setItem('desertovia.buildingLabels',String(e.target.checked))}}/> Названия зданий на карте · применится при обновлении</label></section>
       <section className="card"><label><input type="checkbox" checked={popups} onChange={e=>setGamePopups(e.target.checked)}/>{language==='ru'?'Всплывающие сообщения в игре':'In-game message popups'}</label><p className="small muted">{language==='ru'?'История и счётчик непрочитанных сохраняются.':'History and unread counts stay available.'}</p></section>
       <section className="card"><label><input type="checkbox" checked={playerNames} onChange={e=>setPlayerNames(e.target.checked)}/>{language==='ru'?'Показывать ники игроков на карте':'Show player names on the map'}</label></section>
+      <MusicSettings />
       <section className="card"><h3>{language==='ru'?'Диагностика боя':'Combat diagnostics'}</h3>
         <p className="small">{language==='ru'?'Замеры кадров и обновлений собираются во время боя. Скачайте сводку при рывках и приложите к сообщению об ошибке.':'Frame and update timings are collected during combat. Download a report when movement stutters.'}</p>
         <button disabled={exporting} onClick={async()=>{setExporting(true);try{let server:unknown=null;if(isOwner){try{server=await api.combatDiagnostics(village.slug)}catch{server={unavailable:true}}}combatDiagnostics.download(server)}finally{setExporting(false)}}}>{language==='ru'?'Скачать диагностику боя':'Download combat diagnostics'}</button>

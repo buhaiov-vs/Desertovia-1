@@ -88,7 +88,13 @@ public sealed record DungeonSnapshotDto(
     DungeonOutcome Outcome,
     IReadOnlyList<DungeonHeroSnapshotDto> Heroes,
     IReadOnlyList<DungeonFoeSnapshotDto> Foes,
-    IReadOnlyList<DungeonEvent> Events);
+    IReadOnlyList<DungeonEvent> Events,
+    int Floor,
+    int FloorCount,
+    int Width,
+    int Height,
+    string Tiles,
+    TilePoint Entrance);
 
 public static class DungeonMapper
 {
@@ -142,10 +148,16 @@ public static class DungeonMapper
         simulation.Foes
             .Select(f => new DungeonFoeSnapshotDto(f.Id, f.Kind, Math.Round(f.X, 2), Math.Round(f.Y, 2), Math.Round(Math.Max(0, f.Health), 1), f.Definition.Health, f.Target))
             .ToList(),
-        events);
+        events,
+        simulation.Floor,
+        simulation.FloorCount,
+        simulation.Dungeon.Width,
+        simulation.Dungeon.Height,
+        EncodeTiles(simulation.Dungeon),
+        simulation.Dungeon.Entrance);
 
     public static IReadOnlyList<DungeonInfoDto> Dungeons() =>
         DungeonCatalog.Dungeons
-            .Select(d => new DungeonInfoDto(d.Id, d.Name, d.Width, d.Height, (int)d.TimeLimit.TotalSeconds, d.Spawns.Count))
+            .Select(d => new DungeonInfoDto(d.Id, d.Name, d.Width, d.Height, (int)d.TimeLimit.TotalSeconds, d.TotalFoes))
             .ToList();
 }

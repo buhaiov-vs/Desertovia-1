@@ -1,3 +1,5 @@
+> **LIVE0.7.13:** [установлена и независимо проверена](RELEASE_0_7_13.md), install39133438404/check39133722743 SUCCESS;139профилей сохранены. Исправлены Dungeonresponse и Androidresourceicons.
+
 > **Android: смещённые значки ресурсов, SOURCE ONLY:** [причина и проверка](ANDROID_HUD_ICONS.md). Сервер и версия не менялись.
 
 > **Dungeon fix проверен и слит, НЕ УСТАНОВЛЕН:** PR63, exact CI39129933021 SUCCESS. [Проверки и границы](DUNGEON_INPUT_LATENCY.md). LIVE0.7.12/56a6238 не менялся.

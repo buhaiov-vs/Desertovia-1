@@ -1,23 +1,22 @@
-#0.7.13 — Dungeon response and Android HUD icons
+#0.7.13 установлена и независимо проверена — 18 октября 2026
 
-Owner18Oct2026: «ставь на сервер». Both fixes authorized for installation.
-Current state NOT READY / NOT INSTALLED, previous live0.7.12/56a6238.
+Проверено в13:56UTC/15:56Осло. Gameexact`a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3`,
+CI39131566902 SUCCESS:533Domain/278API/212browser+2штатныхskip/4Nodeunit,
+lint/build/Docker PASS. BotregistryONLY`b400c06`/CI39131646323 SUCCESS1007tests.
+Preflight39133399274,install39133438404,отдельныйcheck39133722743 SUCCESS.
+139→139профилей,142аккаунта/привязки сохранены;0потерьпрогресса,37миграций,
+номеразданийбезошибок.120другихмодулей/656файловбота и конфиги сохранены.
+PGdumpс проверкой каталога,SQLiteintegrityok,code/config/profile backups созданы.
+Frontend0.7.13,24chunks,exactSHA публичного/локального/gateway совпадают;
+Telegram-вход работает,Propose/бюджеты/карантин сохранены.
 
-Includes PR63 Dungeon response (actor-only fresh clinical checks, bounded latest
-intent queue, independent phase/settlement loops and retained failed rewards),
-plus PR65 ordinary resource tiles without unnecessary badge wrapper. Pixel7 and
-desktop icon bounds checked at320/390/430/960px. No schema/balance changes.
-Game version and release notes stamped0.7.13; final exact CI required. Prior
-CI39129933021 proves Dungeon predecessor only, not this new exact source.
+Исправлены очередь команд и задержки серверного тика подземелий, а также
+перекрытие чисел значками ресурсов на Android. Правила боя/баланс/схема прежние.
+CI и эмуляция Pixel7 пройдены; задержка в живом подземелье и физический
+телефон после установки ещё не измерены. Не обещать подтверждённый FPS/RTT.
+Первая попытка остановилась из-за заполненного диска; удалён только неиспользуемый
+сборочный кэш и брошенный сборочный контейнер. Базы/резервные копии сохранены.
+Параллельный newsmedia-релиз проверен по квитанции и защищён от перезаписи.
 
-Only bot runtime payload feedback_context.py registers the exact source/version.
-All other actual bot files and configuration, including concurrent newsroom code,
-remain protected. Propose, AI budget, quarantine, player profiles/skills/items/
-buildings/wounds/login bindings and all37 migrations preserved.
-
-Fresh private post0713 report→deploy→separate check, exact pins/CI, actual clean
-baseline, natural end of active Dungeon before restart, PG dump with catalog
-validation and SQLite/code/config/profile backups. Never replay old request pins,
-force waves/messages/models/payments, reset progress or blindly downgrade JSON.
-
-Evidence/results will be recorded after actual installation and independent check.
+Фактическая квитанция: [RELEASE_0_7_13_RESULT.json](RELEASE_0_7_13_RESULT.json).
+Не переигрывать старые install requests. Текущий private post0713 request=check.

@@ -1,3 +1,5 @@
+> **LIVE0.7.13:** [установлена и независимо проверена](docs/dezertovia/RELEASE_0_7_13.md), install39133438404/check39133722743 SUCCESS;139профилей сохранены. Исправлены Dungeonresponse и Androidresourceicons.
+
 # Desertod
 
 Audience village game for streamers. Game rules: [docs/game-design.md](docs/game-design.md). Progress and plans: [docs/roadmap.md](docs/roadmap.md). How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md).

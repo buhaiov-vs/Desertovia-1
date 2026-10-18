@@ -79,7 +79,7 @@ export const en = {
     'hint.meal': 'Eating is automatic. {done} of {cycles} tasks completed since your last meal. After task {cycles} you eat 1 food.',
     'hint.hungry':
       'No food was available at the last meal. Tasks give {experience}% XP and energy recovers at {rest}% speed. After each task: carried food → personal inventory → village stock for public work only. Eat immediately from your own supplies in Inventory.',
-    'hint.hungryExperience': 'Hungry: every task gives {percent}% of the usual experience.',
+    'hint.hungryExperience': 'Hungry at the start: that task gives {percent}% of the usual experience. A task started while fed keeps full experience even if the meal at the end finds no food.',
     'hint.hungryRest': 'Hungry: energy comes back at {percent}% of its usual speed.',
     'hint.underTrees':
       'No bed is left for you, so you sleep under the trees: energy comes back at {percent}% speed, and slower in the rain.\nBeds in the village: {beds}. The best beds go to whoever settled first.',
@@ -305,7 +305,7 @@ export const en = {
     'character.underTrees': 'under the trees',
     'character.inShelter': 'in a shelter',
     'character.rest': 'energy recovers at {percent}%',
-    'character.hungry': 'You are hungry: half XP and slower rest. Eat immediately from carried or personal supplies in Inventory. After each completed task you also try to eat automatically; village food is available for public work only.',
+    'character.hungry': 'You are hungry: a task started now gives half XP, and rest is slower. Eat immediately from carried or personal supplies in Inventory. After each completed task you also try to eat automatically; village food is available for public work only.',
     'character.eating': 'One food after every {cycles} completed tasks: carried food → personal inventory → village stock for public work only. To end hunger immediately, press Eat in Inventory. Food removes hunger; energy recovers gradually during rest. Idle time does not consume food.',
     'character.fed': 'Fed',
 
@@ -426,7 +426,8 @@ export const en = {
     'done.built': '{building} is built!',
     'done.discovered': 'Tech unlocked: {technology}!',
     'done.research': 'Research: {technology}',
-    'done.hungry': 'You worked hungry: half XP. Bring food to storage.',
+    'done.hungry': 'You started this task hungry: half XP. Bring food to storage.',
+    'done.mealMissed': 'No food was left for the meal at the end. This task keeps full XP. The next task started while hungry gives half XP until you eat.',
     'done.storageFull': '(storage is full)',
     'done.handsFull': '(storage and hands are full)',
     'done.grace': 'Repeat within {seconds} s to keep your combo.',

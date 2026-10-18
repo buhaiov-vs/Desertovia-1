@@ -1368,6 +1368,8 @@ export class VillageWorld {
     for(const id of this.fighterSamples.keys())if(!presentFighters.has(id))this.fighterSamples.delete(id)
     this.enemies.setBattles(state.battles??[])
     if(sameWorld){
+      this.wildlife.setHerds(state.wildlife)
+      this.enemies.setRaids(state.raids)
       if(previousFighters.size!==presentFighters.size||[...presentFighters].some(id=>!previousFighters.has(id))){this.setCitizens(this.citizens,this.highlightId);this.setTsar(state.tsar)}
       return
     }

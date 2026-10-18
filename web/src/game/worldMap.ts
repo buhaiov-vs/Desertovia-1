@@ -506,16 +506,40 @@ export function findWay(
     const kind = inside(goalX, goalY) ? terrain[index(goalX, goalY)] : Terrain.Water
     return kind === Terrain.Mountain ? 'mountain' : kind === Terrain.Ravine ? 'ravine' : 'water'
   }
-  // A straight line never cuts through marsh, so walkers keep to the dry way the search found around it.
+  // A straight line never cuts through marsh or water, including a corner the samples used to skip.
   const dry = (x: number, y: number) =>
     walkable(x, y) && (stepCost(x, y) === 1 || (x === startX && y === startY) || (x === goalX && y === goalY))
   const clear = (a: TilePoint, b: TilePoint) => {
-    const steps = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.1)
-    for (let step = 1; step <= steps; step++) {
-      const share = step / steps
-      if (!dry(Math.floor(a.x + (b.x - a.x) * share), Math.floor(a.y + (b.y - a.y) * share))) return false
+    let x = Math.floor(a.x)
+    let y = Math.floor(a.y)
+    const endX = Math.floor(b.x)
+    const endY = Math.floor(b.y)
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const stepX = Math.sign(dx)
+    const stepY = Math.sign(dy)
+    const tDeltaX = dx === 0 ? Number.POSITIVE_INFINITY : Math.abs(1 / dx)
+    const tDeltaY = dy === 0 ? Number.POSITIVE_INFINITY : Math.abs(1 / dy)
+    let tMaxX = dx === 0 ? Number.POSITIVE_INFINITY : (stepX > 0 ? x + 1 - a.x : a.x - x) * tDeltaX
+    let tMaxY = dy === 0 ? Number.POSITIVE_INFINITY : (stepY > 0 ? y + 1 - a.y : a.y - y) * tDeltaY
+    if (!dry(x, y)) return false
+    for (let guard = 0; (x !== endX || y !== endY) && guard < MAP_WIDTH + MAP_HEIGHT; guard++) {
+      if (tMaxX < tMaxY) {
+        x += stepX
+        tMaxX += tDeltaX
+      } else if (tMaxY < tMaxX) {
+        y += stepY
+        tMaxY += tDeltaY
+      } else {
+        if (!dry(x + stepX, y) || !dry(x, y + stepY)) return false
+        x += stepX
+        y += stepY
+        tMaxX += tDeltaX
+        tMaxY += tDeltaY
+      }
+      if (!dry(x, y)) return false
     }
-    return true
+    return x === endX && y === endY
   }
   if (clear(from, to)) return [to]
 

@@ -1279,6 +1279,8 @@ export interface CycleReport {
   siteId: string | null
   buildingCompleted: BuildingKind | null
   hungry: boolean
+  /** The cycle started while hungry, so experience was halved. A meal missed only at the end leaves this false. */
+  workedHungry?: boolean
   /** Technology the cycle researched. */
   technologyId: string | null
   /** This cycle finished the research of `technologyId`. */

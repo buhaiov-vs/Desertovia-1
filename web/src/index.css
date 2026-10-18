@@ -1493,6 +1493,7 @@ input[aria-invalid='true'] {
   gap: 0.2rem;
   padding: 0.5rem;
   background: var(--parchment);
+  color: var(--ink);
   border: 2px solid var(--wood);
   border-radius: 6px;
   box-shadow: inset 0 0 0 2px #fffaf0;
@@ -2454,6 +2455,12 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 :root[data-ui-theme="dark"] .muted { color:#b8b5a7; }
 :root[data-ui-theme="dark"] input, :root[data-ui-theme="dark"] textarea, :root[data-ui-theme="dark"] select { background:#202626; color:#ede6d4; }
 :root[data-ui-theme="dark"] button:not(.primary) { background:#33332a; color:#ecdba9; }
+:root[data-ui-theme="dark"] .slot { color:var(--ink); background:var(--parchment); }
+:root[data-ui-theme="dark"] .slot .muted { color:var(--muted); }
+:root[data-ui-theme="dark"] .slot ::selection { background:#6b4423; color:#fff8e8; }
+:root[data-ui-theme="dark"] button:disabled { opacity:1; color:#d9d0bc; background:#2c312c; border-color:#6a5a42; }
+:root[data-ui-theme="dark"] button.primary:disabled { color:#6b5430; background:linear-gradient(#d9c091,#b89655); }
+:root[data-ui-theme="dark"] button.active, :root[data-ui-theme="dark"] .chip.active { outline:2px solid #f2d58b; outline-offset:1px; }
 
 .hospital-bed-patient{font-size:44px;line-height:1.3;text-align:center;background:rgba(80,100,90,.12);border-radius:8px;margin-bottom:8px}
 

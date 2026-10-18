@@ -112,7 +112,8 @@ export function TaskDonePanel({
           {report.buildingCompleted && (
             <li className="highlight">{t('done.built', { building: i18n.building(report.buildingCompleted).name })}</li>
           )}
-          {report.hungry && <li className="warning">{t('done.hungry')}</li>}
+          {report.workedHungry && <li className="warning">{t('done.hungry')}</li>}
+          {report.hungry && !report.workedHungry && <li className="warning">{t('done.mealMissed')}</li>}
           {report.levelsGained > 0 && <li className="highlight">{t('done.levelUp', { stat: i18n.stat(report.primary) })}</li>}
           {report.skillLevelsGained > 0 && (
             <li className="highlight">{t('done.skillUp', { skill: i18n.skill(report.skill) })}</li>

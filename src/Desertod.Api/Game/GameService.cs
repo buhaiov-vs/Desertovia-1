@@ -1429,6 +1429,7 @@ public sealed partial class GameService(
         var context = await LoadContextAsync(db, village, null, now, cancellationToken);
         var electorate = context.ActiveCitizenIds.Count(presence.IsPresent);
         var quests = await db.VillageQuests
+            .Include(q => q.Contributions)
             .Where(q => q.VillageId == village.Id && q.Status == QuestStatus.Active)
             .OrderBy(q => q.StartedAt)
             .ToListAsync(cancellationToken);

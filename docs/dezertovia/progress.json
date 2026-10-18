@@ -38,6 +38,11 @@
   "game_code_changed": true,
   "runtime_tests_on_new_base": true,
   "deployed": true,
+  "viewer_todo_0712": {
+    "status": "source_only",
+    "live": "0.7.11",
+    "items": "V-01 dark storage ink, V-02 hunger XP at cycle start, V-03 unchanged world skips scenery rebuild, V-04 reeds stay infinite, V-05 quest contributions in published state, V-06 paths do not cut water"
+  },
   "live_checked_on_recorded_date": true,
   "features": [
     {

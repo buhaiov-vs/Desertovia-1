@@ -1,3 +1,5 @@
+> **18Oct2026 — Dungeon response fix, SOURCE ONLY:** [причины и проверки](DUNGEON_INPUT_LATENCY.md). Runtime0.7.12 не менялся.
+
 > **LIVE0.7.12:** [установлена и независимо проверена](RELEASE_0_7_12.md), install39116370847/check39116734143 SUCCESS;138профилей сохранены. Старые REVIEW/READY ниже — история.
 
 > **0.7.12 REVIEW:** [интеграция второго разработчика](RELEASE_0_7_12.md), D-101. Пока не установлено.

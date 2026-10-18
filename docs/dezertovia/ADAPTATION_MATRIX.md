@@ -1,3 +1,13 @@
+# Dungeon input latency — SOURCE ONLY, 18Oct2026
+
+| Проблема | Точки | Изменение | Проверка |
+| --- | --- | --- | --- |
+| Каждый клик опрашивает всех жителей | DungeonHub.Act → CheckDungeonHospitalAsync → SyncHospitalAsync | actorOnly=true при force=true | 4API: обычный/царь, новое ранение/отказ моста |
+| Старые клики копятся в SignalR | useDungeonRun → DungeonOrders | один in-flight, одна последняя команда; очистка после disconnect/unmount | 4Node unit: burst/rejection/disconnect/dispose |
+| Переходы и выдача наград останавливают все тики | DungeonWorker | отдельная phase loop, один асинхронный settlement на run; retry после неуспеха | 2API: заблокированная деревня и движение; отказ final transaction |
+
+Бой/награды/ранения сохраняют серверные правила. Полный CI pending, LIVE0.7.12.
+
 # D-101:0.7.12 УСТАНОВЛЕНА И НЕЗАВИСИМО ПРОВЕРЕНА18Oct2026
 
 Проверка подтверждена18Oct09:49UTC (11:49Europe/Oslo). Результат установлен,

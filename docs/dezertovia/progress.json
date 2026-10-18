@@ -1921,5 +1921,16 @@
     "synthetic_messages": 0,
     "test_payments": 0,
     "natural_postrelease_combat_performance_measured": false
+  },
+  "dungeon_input_latency": {
+    "status": "source_only",
+    "branch": "fix/dungeon-input-latency",
+    "record": "docs/dezertovia/DUNGEON_INPUT_LATENCY.md",
+    "local_api_pass": 17,
+    "client_unit_pass": 4,
+    "typescript_build": "pass",
+    "full_ci": "pending",
+    "installed": false,
+    "live_source": "56a62381eb33b35e401e1766c2f4525d2709b361"
   }
 }

@@ -130,7 +130,9 @@ public sealed partial class GameService
     public Task<bool> CheckDungeonHospitalAsync(Guid villageId, Guid accountId, CancellationToken ct) =>
         WithVillageAsync(villageId, async db =>
         {
-            await SyncHospitalAsync(db, villageId, ct, true, accountId);
+            // Like raid orders, a dungeon click must force-check its actor only.
+            // Village medical sweeps and relationships run in the periodic worker.
+            await SyncHospitalAsync(db, villageId, ct, true, accountId, actorOnly: true);
             return !HasHospitalRestriction(accountId);
         }, ct);
 

@@ -67,6 +67,31 @@ public sealed class CombatLockContentionTests(DesertodApiFactory factory) : IDis
         Assert.Equal(new[]{s.TsarUid},Assert.Single(RequestsFor(s.Uids,s.TsarUid)));
     }
 
+    [Theory]
+    [InlineData(false, false)][InlineData(false, true)]
+    [InlineData(true, false)][InlineData(true, true)]
+    public async Task Dungeon_clicks_check_only_the_actor_and_force_fresh_injury_or_failure(bool royal, bool unavailable)
+    {
+        var s=await Setup();
+        await using var db=await Db();
+        var account=royal ? (await db.Villages.SingleAsync(v=>v.Id==s.VillageId)).OwnerAccountId
+            : (await db.Citizens.SingleAsync(c=>c.Id==s.Residents[0].Id)).AccountId;
+        var uid=royal ? s.TsarUid : s.Uids[0];
+        factory.Hospital.Enabled=true;
+        var game=factory.Services.GetRequiredService<GameService>();
+        Assert.True(await game.CheckDungeonHospitalAsync(s.VillageId,account,default));
+        Assert.Equal(new[]{uid},Assert.Single(RequestsFor(s.Uids,s.TsarUid)));
+        if(unavailable)factory.Hospital.Fail=true;
+        else {var now=factory.Clock.GetUtcNow().ToUnixTimeSeconds();factory.Hospital.States[uid]=new(uid.ToString(),"new-dungeon-injury",now,now+3600,now,0,0,[]);}
+        Assert.False(await game.CheckDungeonHospitalAsync(s.VillageId,account,default));
+        var checks=RequestsFor(s.Uids,s.TsarUid);
+        Assert.Equal(2,checks.Length);
+        Assert.All(checks,ids=>Assert.Equal(new[]{uid},ids));
+        await using var fresh=await Db();
+        var untouched=await fresh.Citizens.Where(c=>c.VillageId==s.VillageId&&c.AccountId!=account).ToListAsync();
+        Assert.All(untouched,c=>Assert.Null(c.Recovery));
+    }
+
     [Fact]
     public async Task Settlement_releases_the_village_between_each_resident_and_retries_do_not_change_progress()
     {

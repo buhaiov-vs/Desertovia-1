@@ -28,8 +28,8 @@ test('small symbol stays above actual menu; cancel, X and Escape discard unsent 
   const expected = await page.locator('.modal.menu').evaluate(el=>{
     const body=el.querySelector('.modal-body')!
     const rect=body.getBoundingClientRect()
-    // Sample the empty inner padding, clear of the wood border and text/cards.
-    return {x:rect.x+4,y:rect.y+rect.height*.55,width:innerWidth,color:getComputedStyle(el).backgroundColor.match(/\d+/g)!.slice(0,3).map(Number)}
+    // Compare a background region rather than one border/text pixel.
+    return {x:rect.x+16,y:rect.y+20,w:rect.width-32,h:rect.height-40,width:innerWidth,color:getComputedStyle(el).backgroundColor.match(/\d+/g)!.slice(0,3).map(Number)}
   })
   const writes: string[]=[]
   page.on('request',r=>{if(r.url().includes('/api/reports'))writes.push(r.method())})
@@ -44,8 +44,10 @@ test('small symbol stays above actual menu; cancel, X and Escape discard unsent 
   const stats=await sharp(bytes).stats();expect(stats.entropy).toBeGreaterThan(2)
   await writeFile(info.outputPath('captured-menu.jpg'),bytes)
   const meta=await sharp(bytes).metadata(),scale=meta.width!/expected.width
-  const pixel=await sharp(bytes).removeAlpha().extract({left:Math.round(expected.x*scale),top:Math.round(expected.y*scale),width:1,height:1}).raw().toBuffer()
-  for(let channel=0;channel<3;channel++)expect(Math.abs(pixel[channel]-expected.color[channel]),'Menu must remain opaque in the captured image').toBeLessThan(18)
+  const pixels=await sharp(bytes).removeAlpha().extract({left:Math.round(expected.x*scale),top:Math.round(expected.y*scale),width:Math.floor(expected.w*scale),height:Math.floor(expected.h*scale)}).raw().toBuffer()
+  let opaque=0
+  for(let offset=0;offset<pixels.length;offset+=3)if(expected.color.every((color:number,channel:number)=>Math.abs(pixels[offset+channel]-color)<18))opaque++
+  expect(opaque/(pixels.length/3),'Menu background must remain opaque in the captured image').toBeGreaterThan(.2)
   await page.screenshot({path:info.outputPath('report-form.png')})
   await form(page).getByLabel('Описание').fill('Do not send this cancelled draft')
   await form(page).getByRole('button',{name:'Отмена',exact:true}).click()

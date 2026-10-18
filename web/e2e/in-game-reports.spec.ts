@@ -1,7 +1,8 @@
 import { test, expect, openMenu, uniqueName } from './fixtures.ts'
 import { writeFile } from 'node:fs/promises'
 import sharp from 'sharp'
-import { GAME_VERSION } from '../src/version.ts'
+import { createRequire } from 'node:module'
+const { version: GAME_VERSION } = createRequire(import.meta.url)('../package.json')
 
 test.use({serviceWorkers:'block'})
 

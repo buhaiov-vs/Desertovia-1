@@ -535,7 +535,7 @@ public sealed partial class GameService(
             db.AuditActor=accountId;db.AuditOperation="cancelBlueprint:"+plotId;
             ConstructionRules.Cancel(village,plotId);
             await db.SaveChangesAsync(cancellationToken);changes.Mark(village.Id);
-            return await BuildStateAsync(db,village,time.GetUtcNow(),cancellationToken);
+            return await BuildSavedStateAsync(db,slug,time.GetUtcNow(),cancellationToken);
         },cancellationToken);
 
     /// <summary>The Tsar writes a subtitle under a citizen's name on the map.</summary>
@@ -1415,6 +1415,16 @@ public sealed partial class GameService(
             BuildersWorking = working.Count(c => c.CurrentTaskId == BuildTaskId && c.Id != citizenId),
         };
         return new VillageContext(work, completedProjects, citizens.Where(c => c.IsActive).Select(c => c.Id).ToList());
+    }
+
+    // Call only after saving all action mutations. Removing a JSON-owned site shifts the
+    // ordinals of its surviving Progress/Hands; EF cannot save that tracked graph twice.
+    // Reload within the same transaction before shelter assignment and DTO construction.
+    private async Task<VillageStateDto> BuildSavedStateAsync(
+        DesertodDbContext db, string slug, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        db.ChangeTracker.Clear();
+        return await BuildStateAsync(db,await LoadVillageAsync(db,slug,cancellationToken),now,cancellationToken);
     }
 
     private async Task<VillageStateDto> BuildStateAsync(

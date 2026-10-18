@@ -2051,5 +2051,29 @@
     "disk_recovery": "Only unused Docker build cache and a confirmed abandoned npm-ci build container removed; DB/backups/volumes retained",
     "physical_android_observation": false,
     "natural_dungeon_latency_measured": false
+  },
+  "fortification_cancellation_2026_10_18": {
+    "status": "source_locally_verified_not_installed",
+    "installed": false,
+    "live_baseline": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
+    "root_cause": "EF nested JSON ordinal failure during BuildState second save after middle-site removal",
+    "old_source_regressions_failed": 2,
+    "focused_api_passed": 5,
+    "guide": "FORTIFICATION_CANCELLATION.md",
+    "production_state_mutated": false,
+    "domain_passed": 533,
+    "api_passed": 280,
+    "browser_existing_fence_passed": 8,
+    "browser_final_ui_passed": 4,
+    "typescript_build_lint": "pass",
+    "github_ci": 39140681611,
+    "physical_phone_verified": false
+  },
+  "release_0_7_14": {
+    "status": "installation_authorized_final_ci_pending",
+    "installed": false,
+    "baseline": "a4bc0ec46170b5b3c94356d2c7b2c03f90e7eab3",
+    "source_fix_ci": 39140681611,
+    "version": "0.7.14"
   }
 }

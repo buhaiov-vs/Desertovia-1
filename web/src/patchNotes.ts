@@ -10,6 +10,17 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.14',date:'2026-10-18',
+    title:{ru:'Укрепления и отмена чертежей',en:'Fortifications and blueprint cancellation'},
+    changes:{
+      ru:['Пустой чертёж можно отменить, даже если после него есть стройки с вложенной работой. Их материалы и вклад сохраняются.',
+        'Жители видят задания улучшения укреплений и могут приносить материалы и работать.',
+        'В Стройке есть раздел «Забор и ворота»: уровни, технологии, прогресс и объяснение ремонта. Начатое улучшение можно разобрать с подтверждением и обычным возвратом материалов.'],
+      en:['Untouched blueprints can be cancelled when later sites contain work; their materials and contributions remain.',
+        'Residents can see fortification upgrade jobs, deliver materials and work.',
+        'Construction includes Fence and gates: tiers, technologies, progress and repair guidance. Invested upgrades use the existing confirmed dismantling and salvage rules.']}
+  },
+  {
     version:'0.7.13',date:'2026-10-18',
     title:{ru:'Отклик в подземельях и значки ресурсов',en:'Dungeon response and resource icons'},
     changes:{

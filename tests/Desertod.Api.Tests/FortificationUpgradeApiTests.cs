@@ -15,6 +15,47 @@ public sealed class FortificationUpgradeApiTests(DesertodApiFactory factory)
 {
     private readonly Players players=new(factory);
     private Task<DesertodDbContext> Db()=>factory.Services.GetRequiredService<IDbContextFactory<DesertodDbContext>>().CreateDbContextAsync();
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Cancelling_middle_blueprint_preserves_other_sites_nested_progress_and_hands(bool civic)
+    {
+        var v=await players.FoundVillageAsync("Cancel fortifications");
+        var resident=await players.JoinAsync(v);
+        var id=await Arrange(v);
+        ConstructionSite WorkedSite(string plot)
+        {
+            var site=new ConstructionSite {Kind=BuildingKind.Hut,PlotId=plot,PlacedAt=factory.Clock.GetUtcNow()};
+            site.Record(0,site.Jobs(0)[0].JobId,2,resident.Id);
+            return site;
+        }
+        await players.ArrangeVillageAsync(v.Slug,(city,_)=>city.Sites.Add(WorkedSite("30,30")));
+        await OkJsonAsync(await v.Tsar.PostAsync(v.Path+"/fortifications/upgrade",null));
+        await players.ArrangeVillageAsync(v.Slug,(city,_)=>city.Sites.Add(WorkedSite("35,35")));
+        string before;
+        await using(var db=await Db())
+        {
+            var city=await db.Villages.AsNoTracking().SingleAsync(x=>x.Id==id);
+            before=System.Text.Json.JsonSerializer.Serialize(city.Sites.Where(s=>s.PlotId!=FortificationUpgrades.Plot));
+        }
+        Task<HttpResponseMessage> Cancel(HttpClient client)=>civic
+            ?client.PostAsJsonAsync(v.Path+"/civic",new{plotId=FortificationUpgrades.Plot,operation="site-cancel"})
+            :client.DeleteAsync(v.Path+"/blueprints/"+FortificationUpgrades.Plot);
+        Assert.Equal(HttpStatusCode.Forbidden,(await Cancel(resident.Client)).StatusCode);
+        var state=await OkJsonAsync(await Cancel(v.Tsar));
+        Assert.Equal(2,state.GetProperty("sites").GetArrayLength());
+        await using(var db=await Db())
+        {
+            var city=await db.Villages.SingleAsync(x=>x.Id==id);
+            Assert.Equal(before,System.Text.Json.JsonSerializer.Serialize(city.Sites));
+            Assert.Equal("cancelled",city.CivicOrders.Single().Status);
+            Assert.Equal(1,FortificationUpgrades.Level(city));
+            Assert.Equal(42,city.Fortifications[0].Damage);
+            await db.SaveChangesAsync();
+        }
+        Assert.Equal(HttpStatusCode.OK,(await v.Tsar.GetAsync(v.Path)).StatusCode);
+        await OkJsonAsync(await v.Tsar.PostAsync(v.Path+"/fortifications/upgrade",null));
+    }
     private async Task<Guid> Arrange(FoundedVillage v)
     {
         await using var db=await Db();var city=await db.Villages.SingleAsync(x=>x.Slug==v.Slug);

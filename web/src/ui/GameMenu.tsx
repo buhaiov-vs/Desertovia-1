@@ -64,7 +64,7 @@ export interface MenuProps {
   onNewInviteCode: () => Promise<void>
   onPrivatePlace?: (definition: BuildingDefinition) => void
   onPlace: (definition: BuildingDefinition) => void
-  onWithdraw: (plotId: string) => void
+  onWithdraw: (plotId: string) => Promise<void>
   catalog: Catalog
   me: Me
   citizen: Citizen | null | undefined
@@ -297,7 +297,8 @@ export function GameMenu(props: MenuProps) {
           )}
 
           {tab === 'build' && ruler && (
-            <BuildPanel tsar={tsar} catalog={catalog} village={village} onPlace={props.onPlace} onWithdraw={props.onWithdraw} />
+            <BuildPanel tsar={tsar} catalog={catalog} village={village} onPlace={props.onPlace} onWithdraw={props.onWithdraw}
+              defense={<DefensePanel slug={props.slug} village={village} ruler tsar={tsar} onVillage={props.onVillage}/>} />
           )}
 
           {tab === 'technologies' && (

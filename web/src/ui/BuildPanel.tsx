@@ -1,4 +1,5 @@
 import {buildingSuffix} from '../buildingLabels'
+import { useState, type ReactNode } from 'react'
 import {
   buildingCount,
   buildingMaterials,
@@ -21,15 +22,19 @@ export function BuildPanel({
   village,
   onPlace,
   onWithdraw,
+  defense,
 }: {
   /** The Tsar; false for a citizen the Tsar appointed Governor. */
   tsar: boolean
   catalog: Catalog
   village: VillageState
   onPlace: (definition: BuildingDefinition) => void
-  onWithdraw: (plotId: string) => void
+  onWithdraw: (plotId: string) => Promise<void>
+  defense?: ReactNode
 }) {
   const i18n = useI18n()
+  const [withdrawing, setWithdrawing] = useState<string | null>(null)
+  const [withdrawError, setWithdrawError] = useState('')
   const { t } = i18n
   const built = builtKinds(village, catalog)
   const discovered = discoveredTechnologies(village)
@@ -37,7 +42,15 @@ export function BuildPanel({
   const publicSites = village.sites.filter(s=>!s.ownerAccountId)
   const full = (tsar ? publicSites.length : publicConstructionLoad(village)) >= maximum
   const buildable = catalog.buildings.filter((b) => b.stages.length > 0)
-  const later = catalog.buildings.filter((b) => b.stages.length === 0)
+  const later = catalog.buildings.filter((b) => b.stages.length === 0 && b.kind !== 'FortificationUpgrade')
+  const withdraw = async (plotId: string) => {
+    if (withdrawing) return
+    setWithdrawing(plotId)
+    setWithdrawError('')
+    try { await onWithdraw(plotId) }
+    catch (error) { setWithdrawError(i18n.error(error)) }
+    finally { setWithdrawing(null) }
+  }
 
   const describeStorage = (definition: BuildingDefinition) => {
     const storage = catalog.storages.find((s) => s.kind === definition.storage)
@@ -75,19 +88,18 @@ export function BuildPanel({
         {publicSites.length === 0 && <p className="muted small">{t('build.noSites')}</p>}
         <ul className="site-list">
           {publicSites.map((site) => {
-            const definition = catalog.buildings.find((b) => b.kind === site.kind)
-            const stage = definition?.stages[site.stage]
+            const stage = site.stages[site.stage]
             return (
               <li key={site.plotId}>
                 <div className="site-head">
                   <strong>{i18n.building(site.kind).name}{buildingSuffix(site)}</strong>
-                  {stage && definition && (
+                  {stage && (
                     <span className="muted small">
-                      {t('site.stage', { number: site.stage + 1, total: definition.stages.length, stage: i18n.stage(stage.id) })}
+                      {t('site.stage', { number: site.stage + 1, total: site.stages.length, stage: i18n.stage(stage.id) })}
                     </span>
                   )}
-                  {!siteHasWork(site) && (
-                    <button className="small-button" onClick={() => onWithdraw(site.plotId)}>
+                  {site.operation !== 'site-demolish' && !siteHasWork(site) && (
+                    <button className="small-button" disabled={withdrawing !== null} onClick={() => void withdraw(site.plotId)}>
                       {t('build.withdraw')}
                     </button>
                   )}
@@ -99,7 +111,10 @@ export function BuildPanel({
             )
           })}
         </ul>
+        {withdrawError && <p className="error small" role="alert">{withdrawError}</p>}
       </section>
+
+      {defense}
 
       <section className="card">
         <h3>{t('build.title')}</h3>

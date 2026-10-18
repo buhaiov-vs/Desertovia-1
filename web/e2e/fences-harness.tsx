@@ -3,9 +3,11 @@ import {useState} from 'react'
 import type {TileSet} from '../src/game/sheets'
 import {VillageWorld} from '../src/game/VillageWorld'
 import {FortificationView} from '../src/game/FortificationView'
-import {api,type Catalog,type VillageState} from '../src/api'
+import {api,ApiError,type Catalog,type Citizen,type VillageState} from '../src/api'
 import {Container} from 'pixi.js'
 import {DefensePanel} from '../src/ui/DefensePanel'
+import {BuildPanel} from '../src/ui/BuildPanel'
+import {SitesPanel} from '../src/ui/SitesPanel'
 import {I18nProvider} from '../src/i18n'
 import '../src/index.css'
 const catalog=await fetch('/api/catalog').then(r=>r.json()) as Catalog
@@ -18,14 +20,34 @@ if(!state.fortifications.length){
  for(let x=0;x<=27;x++)for(const y of [-1,26])state.fortifications.push({id:`wall:${x},${y}`,x,y,level:2,damage:0,gate:false,open:false})
 }
 state.fortificationUpgrade={level:2,nextLevel:3,sections:84,strength:2,damaged:0,materials:[{resource:'Stone',amount:420},{resource:'Planks',amount:84}],work:63,blockedBy:null,readyAfterBattle:false}
+const params=new URLSearchParams(location.search),workMode=params.has('work'),paid=params.has('paid')
+if(workMode){
+ state.sites=[{kind:'FortificationUpgrade',plotId:'fortifications',operation:'fortification-upgrade',targetLevel:3,stage:0,progress:paid?0.1:0,hasWork:paid,
+  stages:[{id:'reinforce',crewNeeded:3,hands:paid?1:0,jobs:[{jobId:'bring-stones',done:paid?12:0,required:420,room:420},{jobId:'bring-planks',done:0,required:84,room:84},{jobId:'raise-posts',done:0,required:63,room:0}]}]}]
+ state.fortificationUpgrade.blockedBy='defense.upgradeWorking'
+ state.resources=[{kind:'Stone',amount:500},{kind:'Planks',amount:100}] as VillageState['resources']
+ document.getElementById('fence-map')!.style.height='160px'
+ document.getElementById('fence-map')!.style.minHeight='160px'
+}
 const world=await VillageWorld.create(document.getElementById('fence-map')!,{minimap:false});world.setCatalog(catalog);world.setVillage(state);world.setNightOverride(false);world.zoomBy(.75);world.centerOn(1,2)
 const internals=world as unknown as {projectLayer:Container;tiles:TileSet;app:{renderer:{extract:{pixels:(o:unknown)=>{pixels:Uint8Array;width:number;height:number}}}};nightAmount:number}
 const ids=new WeakMap<Container,number>();let serial=0;const calls:string[]=[]
+let cancelError=params.has('cancelError')
+let finishCancel:(()=>void)|null=null
 let redraw:()=>void=()=>{}
 function update(next:VillageState){state=next;world.setVillage(state);redraw()}
 api.upgradeFortifications=async()=>{calls.push('upgrade');return {...state,fortificationUpgrade:{...state.fortificationUpgrade!,blockedBy:'defense.upgradeWorking'}}}
 api.gateOrder=async()=>{}
+const removed=()=>({...state,sites:[],fortificationUpgrade:{...state.fortificationUpgrade!,blockedBy:null}})
+api.cancelBlueprint=async()=>{
+ calls.push('cancel');await new Promise<void>(resolve=>{finishCancel=resolve});finishCancel=null
+ if(cancelError)throw new ApiError(400,'Work has started.','building.cannotCancel',{})
+ return removed()
+}
+api.civic=async(_slug,_plot,operation)=>{calls.push(operation);return {...state,sites:state.sites.map(s=>({...s,hasWork:false,operation:'site-demolish',stages:[{id:'dismantle',crewNeeded:1,hands:0,jobs:[{jobId:'dismantle',done:0,required:25,room:25}]}]}))}}
 const stand={
+ finishCancel:()=>finishCancel?.(),
+ retryCancel:()=>{cancelError=false},
  material:(level:number)=>update({...state,fortifications:state.fortifications!.map(f=>({...f,level})),fortificationUpgrade:{...state.fortificationUpgrade!,level,strength:level===3?3.5:2,nextLevel:level===3?null:level+1,blockedBy:level===3?'building.maxLevel':null}}),
  damage:(damage:number)=>update({...state,fortifications:state.fortifications!.map((f,i)=>i===0?{...f,damage}:f)}),
  open:(open:boolean)=>update({...state,fortifications:state.fortifications!.map(f=>f.gate?{...f,open}:f)}),
@@ -48,5 +70,8 @@ const stand={
  })
 }
 Object.assign(window,{fenceStand:stand})
-function Controls(){const[revision,setRevision]=useState(0);redraw=()=>setRevision(v=>v+1);return <I18nProvider><div data-revision={revision}><DefensePanel slug="demo-bridge" village={state} ruler tsar={!new URLSearchParams(location.search).has('governor')} onVillage={update}/></div></I18nProvider>}
+const worker={accountId:'resident',energy:20,maximumEnergy:20,state:'Idle',load:[],personalGoods:[],actionEnergyCosts:{}} as unknown as Citizen
+function Controls(){const[revision,setRevision]=useState(0);redraw=()=>setRevision(v=>v+1)
+ const defense=<DefensePanel slug="demo-bridge" village={state} ruler tsar={!params.has('governor')} onVillage={update}/>
+ return <I18nProvider><div data-revision={revision} style={{maxWidth:720,margin:'0 auto'}}>{workMode?<><BuildPanel tsar catalog={catalog} village={state} onPlace={()=>{}} onWithdraw={async plot=>update(await api.cancelBlueprint('demo-bridge',plot))} defense={defense}/><SitesPanel catalog={catalog} village={state} citizen={worker} disabled={false} onStartJob={choice=>calls.push(`job:${choice.stage}:${choice.jobId}`)}/></>:defense}</div></I18nProvider>}
 createRoot(document.getElementById('app')!).render(<Controls/> )

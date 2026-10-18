@@ -21,7 +21,7 @@ function Stand(){
  const [picked,setPicked]=useState('')
  const [village,setVillage]=useState(buildMode?applications:initial),[tsar,setTsar]=useState(false)
  return <I18nProvider><div className="modal-backdrop"><section className="modal" role="dialog" aria-label="Управление городом"><header className="modal-header"><strong>Дезертовия</strong><button onClick={()=>setTsar(!tsar)}>{tsar?'Стать посадником':'Стать царём'}</button></header><div className="modal-body">
- {buildMode&&<><BuildPanel tsar={tsar} catalog={buildCatalog} village={fullVillage} onPlace={b=>setPicked(b.kind)} onWithdraw={()=>{}}/><output>{picked}</output></>}
+ {buildMode&&<><BuildPanel tsar={tsar} catalog={buildCatalog} village={fullVillage} onPlace={b=>setPicked(b.kind)} onWithdraw={async()=>{}}/><output>{picked}</output></>}
  <CivicPanel village={village} tsar={tsar} ruler actorId={tsar?'owner':'governor'} citizen={citizen} onVillage={setVillage}/>
  <CivicPanel village={village} tsar={tsar} ruler actorId={tsar?'owner':'governor'} onVillage={setVillage} plotId="1,1"/>
  <SettingsPanel village={village} me={{id:'owner',displayName:'Царь'} as Me} isOwner={false} inviteCode={null} onNewInviteCode={async()=>{}} onAccountChanged={()=>{}}/>

@@ -70,6 +70,8 @@ jobs:
 
       - run: npm run lint
 
+      - run: npm run test:unit
+
       - run: npm run build
 
   e2e:

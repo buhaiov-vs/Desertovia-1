@@ -1,4 +1,5 @@
 import { combatDiagnostics } from './game/combatDiagnostics'
+import { DungeonOrders, type DungeonOrder } from './game/dungeonOrders'
 import { adoptVillageState, mergeBattles, type Village } from './api'
 import { appPath } from './paths'
 import { onAppResume } from './telegram'
@@ -313,6 +314,7 @@ export function useDungeonRun(runId: string) {
   const [error, setError] = useState<unknown>(null)
   const hub = useRef<HubConnection | null>(null)
   const heroId = useRef<string | null>(null)
+  const orders = useRef<DungeonOrders | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -324,11 +326,23 @@ export function useDungeonRun(runId: string) {
       .configureLogging(LogLevel.Warning)
       .build()
 
+    const outgoing = new DungeonOrders(async (order) => {
+      if (cancelled || connection.state !== HubConnectionState.Connected || !heroId.current) return false
+      return connection.invoke<boolean>(order.method, runId, heroId.current, ...order.args)
+    })
+    orders.current = outgoing
+    heroId.current = null
+    setView(undefined)
+    setSnapshot(null)
+    setError(null)
+
     const join = async () => {
       const next = await connection.invoke<DungeonRunView | null>('JoinRun', runId)
       if (cancelled) return
       phase = next?.run.phase ?? null
+      if (heroId.current !== next?.myHeroId) outgoing.clear()
       setView(next)
+      setError(null)
       heroId.current = next?.myHeroId ?? null
       if (next?.snapshot) setSnapshot(next.snapshot)
     }
@@ -348,6 +362,8 @@ export function useDungeonRun(runId: string) {
       if (phase !== 'Running') void refetch()
     })
     connection.on('dungeonEnded', () => void refetch())
+    connection.onreconnecting(() => outgoing.clear())
+    connection.onclose(() => outgoing.clear())
     connection.onreconnected(() => void join())
     const stopResume = onAppResume(() => {
       void (async () => {
@@ -373,6 +389,9 @@ export function useDungeonRun(runId: string) {
     void start()
     return () => {
       cancelled = true
+      outgoing.dispose()
+      if (orders.current === outgoing) orders.current = null
+      heroId.current = null
       stopResume()
       hub.current = null
       void connection.stop()
@@ -380,18 +399,16 @@ export function useDungeonRun(runId: string) {
   }, [runId])
 
   const send = useCallback(
-    (method: string, ...args: unknown[]) => {
+    (order: DungeonOrder) => {
       const connection = hub.current
-      if (!connection || !heroId.current) return
-      void connection.invoke<boolean>(method, runId, heroId.current, ...args).catch(() => {
-        // An order lost to a reconnect is simply given again.
-      })
+      if (!connection || connection.state !== HubConnectionState.Connected || !heroId.current) return
+      orders.current?.offer(order)
     },
-    [runId],
+    [],
   )
-  const moveTo = useCallback((x: number, y: number) => send('MoveTo', x, y), [send])
-  const attack = useCallback((foeId: number) => send('Attack', foeId), [send])
-  const heal = useCallback((allyId: string) => send('Heal', allyId), [send])
+  const moveTo = useCallback((x: number, y: number) => send({ method: 'MoveTo', args: [x, y] }), [send])
+  const attack = useCallback((foeId: number) => send({ method: 'Attack', args: [foeId] }), [send])
+  const heal = useCallback((allyId: string) => send({ method: 'Heal', args: [allyId] }), [send])
 
   return { view, snapshot, error, moveTo, attack, heal }
 }

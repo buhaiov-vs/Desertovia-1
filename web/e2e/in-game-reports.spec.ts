@@ -181,12 +181,14 @@ test('report symbol uses the top left corner and is hidden inside its own form',
 
 test('opening pointer-up cannot click a newly mounted popup control; deliberate second tap can',async({page})=>{
   test.slow();const slug=await village(page);
-  const data=await(await page.request.get(`/api/villages/${slug}`)).json();const storage=data.state.storages[0];
-  const [x,y]=storage.plotId.split(',').map(Number);
-  await page.evaluate(({storage,x,y})=>window.dispatchEvent(new CustomEvent('desertovia-e2e-select',{detail:{
-    target:{kind:'building',plotId:storage.plotId,building:storage.kind,storage:true,area:{x,y,width:3,height:3}},
-    screen:{x:innerWidth/2,y:innerHeight/2},point:{x,y}
-  }})),{storage,x,y});
+  // A newly founded village has no completed storage. Place a real blueprint before selecting its card.
+  const placed=await page.request.post(`/api/villages/${slug}/blueprints`,{data:{kind:'Heap',x:5,y:5}});
+  expect(placed.ok(),await placed.text()).toBe(true);
+  await page.reload();await expect(page.locator('.hud-resources')).toBeVisible();
+  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('desertovia-e2e-select',{detail:{
+    target:{kind:'site',plotId:'5,5',building:'Heap',area:{x:5,y:5,width:3,height:3}},
+    screen:{x:innerWidth/2,y:innerHeight/2},point:{x:5,y:5}
+  }})));
   const popup=page.locator('.target-popup');await expect(popup).toBeVisible();
   await popup.locator('button.close').dispatchEvent('click',{detail:1});await expect(popup).toBeVisible();
   await popup.locator('button.close').click();await expect(popup).toBeHidden();

@@ -75,7 +75,11 @@ jobs:
       - run: npm run build
 
   e2e:
-    name: Browser tests
+    name: Browser tests (${{ matrix.shard }}/2)
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -120,14 +124,14 @@ jobs:
       - run: npx playwright install --with-deps chromium
         working-directory: web
 
-      - run: npm run test:e2e
+      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/2
         working-directory: web
 
       - uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ failure() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: |
             web/playwright-report
             web/test-results

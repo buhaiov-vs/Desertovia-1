@@ -29,7 +29,7 @@ export async function captureReportScreen(): Promise<string> {
       scale: Math.min(1.5, 1280 / Math.max(window.innerWidth, window.innerHeight)),
       backgroundColor: '#34230f', logging: false, imageTimeout: 3000,
       ignoreElements: element => element.hasAttribute('data-report-exclude') || element.tagName === 'IFRAME' || element.classList.contains('login') || element.classList.contains('telegram-confirm'),
-      onclone: doc => {
+      onclone: async doc => {
         // Cloning restarts CSS entrance animations in WebKit. Capture fully visible menus,
         // without changing the live page's animation or persisting a screenshot anywhere.
         const still = doc.createElement('style')
@@ -54,6 +54,10 @@ export async function captureReportScreen(): Promise<string> {
           image.width = canvas.clientWidth || canvas.width
           image.height = canvas.clientHeight || canvas.height
           canvas.replaceWith(image)
+          // WebKit can still report naturalWidth/naturalHeight=0 for a data URI
+          // here. html2canvas snapshots those intrinsic dimensions immediately;
+          // waiting for its later image loader cannot repair the zero-sized map.
+          await image.decode()
         }
         // Credentials and account/login forms are never part of an attachment.
         for (const input of doc.querySelectorAll<HTMLInputElement>('input[type="password"],input[type="email"],input[autocomplete="one-time-code"]')) {

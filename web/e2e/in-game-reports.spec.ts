@@ -122,3 +122,83 @@ test('report control also covers the actual dungeon page and records its run ID'
   await expect(page.getByRole('dialog',{name:'Отчёт сохранён'})).toBeVisible()
   expect(body).toMatchObject({slug,screen:{page:'dungeon',dungeonId:runId}})
 })
+
+
+for(const night of [false,true])test(`report preserves the populated village map ${night?'at night':'by day'}`,async({page},info)=>{
+  test.slow()
+  await page.request.post('/auth/dev-login',{data:{name:uniqueName('report-map')}})
+  await page.goto('/e2e/fences-harness.html?report=1')
+  await page.waitForFunction(()=>!!(window as unknown as {fenceStand?:unknown}).fenceStand)
+  const stand=async(action:'night'|'pause',value?:boolean)=>page.evaluate(({action,value})=>{
+    const harness=(window as unknown as {fenceStand:{night:(v:boolean)=>void;pause:()=>void}}).fenceStand
+    if(action==='night')harness.night(!!value);else harness.pause()
+  },{action,value})
+  await stand('night',night)
+  if(night)await expect.poll(()=>page.evaluate(()=>(window as unknown as {fenceStand:{info:()=>{night:number}}}).fenceStand.info().night)).toBeGreaterThan(.95)
+  await stand('pause')
+  const canvas=page.locator('#fence-map canvas').first(),rect=(await canvas.boundingBox())!
+  const original=await canvas.screenshot(),width=await page.evaluate(()=>innerWidth)
+  await trigger(page).click();await expect(form(page).locator('img')).toBeVisible()
+  const src=await form(page).locator('img').getAttribute('src'),bytes=Buffer.from(src!.split(',')[1],'base64')
+  await writeFile(info.outputPath('populated-map-report.jpg'),bytes)
+  await writeFile(info.outputPath('populated-map-original.png'),original)
+  const meta=await sharp(bytes).metadata(),scale=meta.width!/width
+  const area={left:Math.round(32*scale),top:Math.round(48*scale),width:Math.floor((rect.width-80)*scale),height:Math.floor((rect.height-96)*scale)}
+  const normalised=await sharp(original).resize(Math.round(rect.width*scale),Math.round(rect.height*scale)).toBuffer()
+  const expected=await sharp(normalised).extract(area).resize(160,120).removeAlpha().raw().toBuffer()
+  const captured=await sharp(bytes).extract({...area,left:area.left+Math.round(rect.x*scale),top:area.top+Math.round(rect.y*scale)}).resize(160,120).removeAlpha().raw().toBuffer()
+  let error=0;for(let i=0;i<expected.length;i++)error+=Math.abs(expected[i]-captured[i])
+  expect(error/expected.length,'Report must contain the same terrain, buildings and fence as the visible canvas').toBeLessThan(15)
+  await form(page).getByRole('button',{name:'Отмена',exact:true}).click()
+})
+
+
+test('definitive report rejection allows correcting attachment and resubmitting without locking the draft',async({page})=>{
+  test.slow();await village(page);const requests:Record<string,unknown>[]=[];
+  await page.route('**/api/reports',async route=>{
+    requests.push(route.request().postDataJSON());
+    await route.fulfill({status:requests.length===1?400:200,contentType:'application/json',body:JSON.stringify(requests.length===1?{code:'report.invalid',message:'Check report'}:{id:requests[0].id,state:'saved',screenshotIncluded:false})});
+  });
+  await trigger(page).click();await form(page).getByLabel('Описание').fill('Keep my report description');
+  await form(page).getByRole('button',{name:'Отправить',exact:true}).click();
+  await expect(form(page).getByRole('alert')).toContainText('Проверь описание');
+  await form(page).getByRole('button',{name:'Убрать снимок'}).click();
+  await expect(form(page).getByLabel('Описание')).toHaveValue('Keep my report description');
+  await form(page).getByRole('button',{name:'Отправить',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'Отчёт сохранён'})).toBeVisible();
+  expect(requests).toHaveLength(2);expect(requests[1].screenshot).toBeNull();expect(requests[0].id).toBe(requests[1].id);
+});
+
+test('report symbol uses the top left corner and is hidden inside its own form',async({page})=>{
+  test.slow();await village(page);await openMenu(page);
+  const report=await trigger(page).boundingBox(),close=await page.locator('.modal-header .close').boundingBox();
+  expect(report!.x).toBeLessThan(50);expect(report!.y).toBeLessThan(70);
+  if(close)expect(report!.x+report!.width).toBeLessThan(close.x);
+  await trigger(page).click();await expect(trigger(page)).toHaveCount(0);
+  await form(page).getByRole('button',{name:'Отмена',exact:true}).click();await expect(trigger(page)).toBeVisible();
+});
+
+
+test('opening pointer-up cannot click a newly mounted popup control; deliberate second tap can',async({page})=>{
+  test.slow();const slug=await village(page);
+  // A newly founded village has no completed storage. Place a real blueprint before selecting its card.
+  const placed=await page.request.post(`/api/villages/${slug}/blueprints`,{data:{kind:'Heap',x:5,y:5}});
+  expect(placed.ok(),await placed.text()).toBe(true);
+  await page.reload();await expect(page.locator('.hud-resources')).toBeVisible();
+  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('desertovia-e2e-select',{detail:{
+    target:{kind:'site',plotId:'5,5',building:'Heap',area:{x:5,y:5,width:3,height:3}},
+    screen:{x:innerWidth/2,y:innerHeight/2},point:{x:5,y:5}
+  }})));
+  const popup=page.locator('.target-popup');await expect(popup).toBeVisible();
+  await popup.locator('button.close').dispatchEvent('click',{detail:1});await expect(popup).toBeVisible();
+  await popup.locator('button.close').click();await expect(popup).toBeHidden();
+});
+
+test('communal resource slots use a dark readable surface in dark theme',async({page})=>{
+  test.slow();await village(page);
+  await page.evaluate(()=>document.documentElement.dataset.uiTheme='dark');
+  await page.locator('.hud-buttons button').last().click();
+  const slot=page.locator('.inventory .slot').first();await expect(slot).toBeVisible();
+  const colors=await slot.evaluate(el=>({bg:getComputedStyle(el).backgroundColor,fg:getComputedStyle(el).color}));
+  expect(colors.bg).toBe('rgb(37, 43, 43)');expect(colors.fg).toBe('rgb(237, 230, 212)');
+});

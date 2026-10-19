@@ -10,6 +10,21 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version:'0.7.16',date:'2026-10-19',
+    title:{ru:'Исправления обращений и стройки',en:'Feedback and construction fixes'},
+    changes:{
+      ru:['Снимки отчётов сохраняют карту с постройками в Safari. Значок «!» перенесён в верхний левый угол; отмена удаляет черновик.',
+        'После отказа проверки форму можно исправить и убрать снимок. При сетевом сбое повтор не создаёт дубликат. Обращения входят в ежедневную сводку батюшки без отдельных сообщений владельцу.',
+        'Нетронутую разрушенную разметку можно убрать без ремонта. Вложенные материалы по-прежнему требуют разборки.',
+        'Завершение работы не возвращает оружие на склад посреди набега. Обычная поломка оружия после боя сохраняется.',
+        'Нажатие, открывшее карточку, не активирует её кнопки. Плитки ресурсов используют читаемую тёмную тему.'],
+      en:['Safari report screenshots preserve the map and buildings. The small ! button moves to the top left; cancel discards the draft.',
+        'Validation failures allow correcting the form or removing the image. Network retries keep the original report ID. Reports enter the chaplain’s daily digest without individual owner messages.',
+        'Untouched ruined blueprints can be withdrawn without repairs. Invested sites still require dismantling.',
+        'Finishing work no longer returns equipment to storage during an active raid. Normal post-battle breakage remains.',
+        'The gesture opening a card cannot activate its controls. Resource tiles use a readable dark surface.']}
+  },
+  {
     version:'0.7.15',date:'2026-10-18',
     title:{ru:'Обратная связь из игры',en:'In-game feedback'},
     changes:{

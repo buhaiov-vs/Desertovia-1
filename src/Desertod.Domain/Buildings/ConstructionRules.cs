@@ -121,7 +121,6 @@ public static class ConstructionRules
     public static void Cancel(Village village, string plotId)
     {
         var site = FindSite(village, plotId);
-        if(site.RuinedAt is not null)throw new GameRuleException("building.ruined","Restore the ruins before continuing construction.");
         if(site.Operation=="site-demolish")throw new GameRuleException("building.cannotCancel","Finish dismantling this site.");
         if (site.HasWork)
         {

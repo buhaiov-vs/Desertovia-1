@@ -35,7 +35,7 @@ test('gathering previews public versus personal output and work names both train
  await expect(page.locator('.task-meta').first()).toContainText('Ум, Обаяние')
 })
 
-test('dark theme keeps dark ink on parchment storage tiles',async({page})=>{
+test('dark theme uses readable ink on dark storage tiles',async({page})=>{
  await page.evaluate(()=>{document.documentElement.dataset.uiTheme='dark'})
  await page.getByRole('button',{name:'inventory',exact:true}).click()
  const slot=page.locator('.inventory-grid .slot').first()
@@ -44,9 +44,16 @@ test('dark theme keeps dark ink on parchment storage tiles',async({page})=>{
   const muted=element.querySelector('.muted')
   return {color:style.color,background:style.backgroundColor,muted:muted?getComputedStyle(muted).color:''}
  })
- expect(colors.color).toBe('rgb(43, 29, 14)')
- expect(colors.background).toBe('rgb(244, 230, 200)')
- expect(colors.muted).toBe('rgb(122, 100, 70)')
+ expect(colors.color).toBe('rgb(237, 230, 212)')
+ expect(colors.background).toBe('rgb(37, 43, 43)')
+ expect(colors.muted).toBe('rgb(184, 181, 167)')
+ const contrast=await slot.evaluate(el=>{
+  const luminance=(value:string)=>value.match(/\d+/g)!.slice(0,3).map(Number).map(n=>{const v=n/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4}).reduce((a,n,i)=>a+n*[.2126,.7152,.0722][i],0)
+  const style=getComputedStyle(el),bg=luminance(style.backgroundColor)
+  const ratio=(color:string)=>{const fg=luminance(color);return (Math.max(fg,bg)+.05)/(Math.min(fg,bg)+.05)}
+  return [ratio(style.color),ratio(getComputedStyle(el.querySelector('.muted')!).color)]
+ })
+ expect(Math.min(...contrast)).toBeGreaterThanOrEqual(4.5)
  await page.setViewportSize({width:390,height:844})
  await expect(slot).toBeVisible()
 })

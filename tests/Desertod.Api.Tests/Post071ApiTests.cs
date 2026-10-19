@@ -126,4 +126,17 @@ public sealed class Post071ApiTests(DesertodApiFactory factory)
         var changed=await OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+"/civic",new{plotId="26,5",operation="site-demolish"}));
         Assert.Equal("site-demolish",changed.GetProperty("sites").EnumerateArray().Single(s=>s.GetProperty("plotId").GetString()=="26,5").GetProperty("operation").GetString());
     }
+    [Fact]
+    public async Task Ruined_untouched_blueprint_cancel_preserves_other_sites_and_owner_rights()
+    {
+        var v=await players.FoundVillageAsync("Ruined blueprint");var worker=await players.JoinAsync(v);
+        await players.ArrangeVillageAsync(v.Slug,(village,now)=>{
+            village.Sites.Add(new(){Kind=BuildingKind.Hut,PlotId="1,1",PlacedAt=now,RuinedAt=now,Damage=100});
+            village.Sites.Add(new(){Kind=BuildingKind.Hut,PlotId="5,1",PlacedAt=now});
+        });
+        Assert.Equal(HttpStatusCode.Forbidden,(await worker.Client.PostAsJsonAsync(v.Path+"/civic",new{plotId="1,1",operation="site-cancel"})).StatusCode);
+        await OkJsonAsync(await v.Tsar.PostAsJsonAsync(v.Path+"/civic",new{plotId="1,1",operation="site-cancel"}));
+        await using var db=await Db();var village=await db.Villages.AsNoTracking().SingleAsync(x=>x.Slug==v.Slug);
+        Assert.DoesNotContain(village.Sites,s=>s.PlotId=="1,1");Assert.Contains(village.Sites,s=>s.PlotId=="5,1");
+    }
 }

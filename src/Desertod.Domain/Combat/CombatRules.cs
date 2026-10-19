@@ -98,6 +98,12 @@ public static class CombatRules
         }
     }
 
+    /// <summary>Work completion must not disarm a citizen during a live raid. Ordinary return is unchanged outside combat.</summary>
+    public static void ReturnWorkEquipment(Citizen citizen, Village village, DateTimeOffset now)
+    {
+        if (!village.Raids.Any(r => r.IsPending && r.StrikesAt <= now)) Disarm(citizen, village);
+    }
+
     /// <summary>Puts weapon, armor and arrows back into storage. What does not fit stays with the citizen.</summary>
     public static void Disarm(Citizen citizen, Village village)
     {

@@ -312,7 +312,7 @@ public static class CycleEngine
                 WeaponSharpening.Return(citizen, village);
             }
 
-            CombatRules.Disarm(citizen, village);
+            CombatRules.ReturnWorkEquipment(citizen, village, now);
         }
 
         // A streak above zero means this cycle renewed the last one: keep the grace window open so the next task renews it again.
@@ -380,7 +380,7 @@ public static class CycleEngine
         var report = citizen.CurrentSiteId is not null
             ? SettleJob(citizen, context, now)
             : SettleTask(citizen, context, now);
-        CombatRules.Disarm(citizen, context.Village);
+        CombatRules.ReturnWorkEquipment(citizen, context.Village, now);
         return report;
     }
 

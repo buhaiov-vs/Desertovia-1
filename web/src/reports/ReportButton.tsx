@@ -78,15 +78,22 @@ export function ReportButton() {
       setDraft(null); submitted.current = null
       setText('')
     } catch (e) {
+      // A definitive validation rejection saved nothing: let the player correct the text/image.
+      // Network/5xx uncertainty keeps the exact original payload for idempotent retry.
+      if (e instanceof ApiError && (e.status === 413 || e.status === 400 && e.code !== 'report.changed')) {
+        submitted.current = null; setAttempted(false)
+      }
       setError(e instanceof ApiError && e.status === 401 ? 'Войди в игру, чтобы отправить отчёт.' :
+        e instanceof ApiError && e.status === 413 ? 'Снимок слишком большой. Убери снимок и отправь текст.' :
+        e instanceof ApiError && e.code === 'report.invalid' ? 'Проверь описание (до 2000 знаков). Если ошибка повторится, убери снимок и отправь текст.' :
         e instanceof ApiError && e.code === 'report.limit' ? 'Можно отправить до пяти обращений в час. Попробуй позже.' :
         'Не удалось подтвердить отправку. Повтори отправку того же отчёта: дубликат не появится.')
     } finally { setSending(false) }
   }
   return createPortal(<>
-    <button ref={button} type="button" className="report-trigger" data-report-exclude
+    {!draft && !receipt && <button ref={button} type="button" className="report-trigger" data-report-exclude
       aria-label="Сообщить об ошибке или предложить идею" title="Сообщить об ошибке или предложить идею"
-      disabled={capturing || !!draft || !!receipt} aria-busy={capturing} onClick={() => void open()}>!</button>
+      disabled={capturing || !!draft || !!receipt} aria-busy={capturing} onClick={() => void open()}>!</button>}
     {(draft || receipt) && <div className="report-overlay" data-report-exclude onPointerDown={event => event.stopPropagation()}>
       <div className="report-dialog" role="dialog" aria-modal="true" aria-labelledby="report-title" ref={dialog}>
         <header><h2 id="report-title">{receipt ? 'Отчёт сохранён' : 'Обратная связь'}</h2>
@@ -98,7 +105,7 @@ export function ReportButton() {
             <option value="bug">Ошибка</option><option value="complaint">Жалоба</option><option value="suggestion">Предложение</option>
           </select></label>
           <label>Описание<textarea maxLength={2000} rows={4} value={text} disabled={sending || attempted}
-            placeholder="Что произошло или что предлагаешь изменить?" onChange={e => setText(e.target.value)} /></label>
+            placeholder="Что произошло или что предлагаешь изменить?" onChange={e => setText(e.target.value)} /><span className="small muted">{text.length}/2000</span></label>
           {draft.screenshot ? <div className="report-preview"><img src={`data:image/jpeg;base64,${draft.screenshot}`} alt="Экран игры до открытия отчёта" />
             <button type="button" disabled={sending || attempted} onClick={() => setDraft({ ...draft, screenshot: null })}>Убрать снимок</button></div> :
             <p className="report-hint">Без снимка экрана. Описание и данные игры можно отправить.</p>}

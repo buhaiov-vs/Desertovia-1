@@ -2545,8 +2545,8 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 :root[data-ui-theme="dark"] .muted { color:#b8b5a7; }
 :root[data-ui-theme="dark"] input, :root[data-ui-theme="dark"] textarea, :root[data-ui-theme="dark"] select { background:#202626; color:#ede6d4; }
 :root[data-ui-theme="dark"] button:not(.primary) { background:#33332a; color:#ecdba9; }
-:root[data-ui-theme="dark"] .slot { color:var(--ink); background:var(--parchment); }
-:root[data-ui-theme="dark"] .slot .muted { color:var(--muted); }
+:root[data-ui-theme="dark"] .slot { color:#ede6d4; background:#252b2b; border-color:#77674e; box-shadow:inset 0 0 0 2px #343b36; }
+:root[data-ui-theme="dark"] .slot .muted { color:#b8b5a7; }
 :root[data-ui-theme="dark"] .slot ::selection { background:#6b4423; color:#fff8e8; }
 :root[data-ui-theme="dark"] button:disabled { opacity:1; color:#d9d0bc; background:#2c312c; border-color:#6a5a42; }
 :root[data-ui-theme="dark"] button.primary:disabled { color:#6b5430; background:linear-gradient(#d9c091,#b89655); }
@@ -2737,7 +2737,7 @@ button, input, select, textarea, .modal-header, .target-popup-header { font-fami
 .raid-slider-share{font-weight:700;}
 
 /* One small global report control. Portalled to body so no game/menu stacking context can hide it. */
-.report-trigger{display:grid;place-items:center;text-align:center;position:fixed;z-index:11000;right:calc(8px + env(safe-area-inset-right,0px));top:calc(50% + 24px);width:32px;height:32px;min-width:32px;padding:0;border:2px solid #583a1b;border-radius:7px;background:linear-gradient(#fff1c8,#e9cd8b);color:#633617;font:bold 23px/1 Georgia,serif;box-shadow:0 2px 3px #0007;touch-action:manipulation;pointer-events:auto}
+.report-trigger{display:grid;place-items:center;text-align:center;position:fixed;z-index:11000;left:calc(8px + env(safe-area-inset-left,0px));top:calc(8px + env(safe-area-inset-top,0px));width:32px;height:32px;min-width:32px;padding:0;border:2px solid #583a1b;border-radius:7px;background:linear-gradient(#fff1c8,#e9cd8b);color:#633617;font:bold 23px/1 Georgia,serif;box-shadow:0 2px 3px #0007;touch-action:manipulation;pointer-events:auto}
 .report-trigger:disabled{opacity:.6}
 .report-overlay{position:fixed;inset:0;z-index:11001;background:#160e08b8;display:flex;align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));pointer-events:auto}
 .report-dialog{width:min(440px,100%);max-height:100%;overflow:auto;background:var(--parchment,#f5e8c5);color:var(--ink,#34200e);border:3px solid #583a1b;border-radius:10px;padding:14px;box-shadow:0 4px 20px #0008;box-sizing:border-box}

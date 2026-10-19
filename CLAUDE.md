@@ -1,3 +1,7 @@
+# 0.7.16 — owner authorized 19 October 2026
+
+Owner: «Составь план из этих ошибок и правь. Разрешаю сразу же загружать на сервер». This supersedes the report follow-up deployment HOLD. No repeated approval required. Implement, test exact pins, fresh live baseline, actual backups, narrow bot payload, deploy and independent check. Preserve player progress, external news work, configurations and director Propose/budgets/quarantine. No synthetic production reports/messages/battles/model probes.
+
 # HOLD: report follow-up SOURCE ONLY — owner forbids deployment now
 
 Owner18Oct2026: «Сейчас эти правки на сервер не грузи». This supersedes all

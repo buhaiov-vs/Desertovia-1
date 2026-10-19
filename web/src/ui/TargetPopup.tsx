@@ -1,3 +1,4 @@
+import { usePopupGesture } from './usePopupGesture'
 import {canUpgradeBuilding} from '../buildingLabels'
 import { buildingNumber } from './buildingLabel'
 import { SiteActions } from './SiteActions'
@@ -168,6 +169,7 @@ export function TargetPopup({
 }) {
   const [confirm,setConfirm]=useState(false),[operationError,setOperationError]=useState('')
   const operate=async(operation:string)=>{if(target.kind!=='building')return;try{await onCivic(target.plotId,operation);setConfirm(false)}catch(e){setOperationError(e instanceof Error?e.message:'Не удалось выполнить действие')}}
+  const gesture = usePopupGesture()
   const i18n = useI18n()
   const { t } = i18n
   const working = citizen.cycleEndsAt ? now < Date.parse(citizen.cycleEndsAt) : false
@@ -185,7 +187,7 @@ export function TargetPopup({
   const damage = target.kind === 'building' ? damageOf(village, target.plotId) : 0
 
   return (
-    <div className={`target-popup ${phone ? 'sheet' : ''}`} style={popupStyle(screen, phone)} role="dialog" aria-label={titleOf(target, catalog, citizen, i18n, village)}>
+    <div {...gesture} className={`target-popup ${phone ? 'sheet' : ''}`} style={popupStyle(screen, phone)} role="dialog" aria-label={titleOf(target, catalog, citizen, i18n, village)}>
       <header className="target-popup-header">
         <strong>{titleOf(target, catalog, citizen, i18n, village)}</strong>
         <button className="close" onClick={onClose} title={`${t('close')} (Esc)`}>

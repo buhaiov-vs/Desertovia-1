@@ -151,3 +151,52 @@ for(const night of [false,true])test(`report preserves the populated village map
   expect(error/expected.length,'Report must contain the same terrain, buildings and fence as the visible canvas').toBeLessThan(15)
   await form(page).getByRole('button',{name:'Отмена',exact:true}).click()
 })
+
+
+test('definitive report rejection allows correcting attachment and resubmitting without locking the draft',async({page})=>{
+  test.slow();await village(page);const requests:Record<string,unknown>[]=[];
+  await page.route('**/api/reports',async route=>{
+    requests.push(route.request().postDataJSON());
+    await route.fulfill({status:requests.length===1?400:200,contentType:'application/json',body:JSON.stringify(requests.length===1?{code:'report.invalid',message:'Check report'}:{id:requests[0].id,state:'saved',screenshotIncluded:false})});
+  });
+  await trigger(page).click();await form(page).getByLabel('Описание').fill('Keep my report description');
+  await form(page).getByRole('button',{name:'Отправить',exact:true}).click();
+  await expect(form(page).getByRole('alert')).toContainText('Проверь описание');
+  await form(page).getByRole('button',{name:'Убрать снимок'}).click();
+  await expect(form(page).getByLabel('Описание')).toHaveValue('Keep my report description');
+  await form(page).getByRole('button',{name:'Отправить',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'Отчёт сохранён'})).toBeVisible();
+  expect(requests).toHaveLength(2);expect(requests[1].screenshot).toBeNull();expect(requests[0].id).toBe(requests[1].id);
+});
+
+test('report symbol uses the top left corner and is hidden inside its own form',async({page})=>{
+  test.slow();await village(page);await openMenu(page);
+  const report=await trigger(page).boundingBox(),close=await page.locator('.modal-header .close').boundingBox();
+  expect(report!.x).toBeLessThan(50);expect(report!.y).toBeLessThan(70);
+  if(close)expect(report!.x+report!.width).toBeLessThan(close.x);
+  await trigger(page).click();await expect(trigger(page)).toHaveCount(0);
+  await form(page).getByRole('button',{name:'Отмена',exact:true}).click();await expect(trigger(page)).toBeVisible();
+});
+
+
+test('opening pointer-up cannot click a newly mounted popup control; deliberate second tap can',async({page})=>{
+  test.slow();const slug=await village(page);
+  const data=await(await page.request.get(`/api/villages/${slug}`)).json();const storage=data.state.storages[0];
+  const [x,y]=storage.plotId.split(',').map(Number);
+  await page.evaluate(({storage,x,y})=>window.dispatchEvent(new CustomEvent('desertovia-e2e-select',{detail:{
+    target:{kind:'building',plotId:storage.plotId,building:storage.kind,storage:true,area:{x,y,width:3,height:3}},
+    screen:{x:innerWidth/2,y:innerHeight/2},point:{x,y}
+  }})),{storage,x,y});
+  const popup=page.locator('.target-popup');await expect(popup).toBeVisible();
+  await popup.locator('button.close').dispatchEvent('click',{detail:1});await expect(popup).toBeVisible();
+  await popup.locator('button.close').click();await expect(popup).toBeHidden();
+});
+
+test('communal resource slots use a dark readable surface in dark theme',async({page})=>{
+  test.slow();await village(page);
+  await page.evaluate(()=>document.documentElement.dataset.uiTheme='dark');
+  await page.locator('.hud-buttons button').last().click();
+  const slot=page.locator('.inventory .slot').first();await expect(slot).toBeVisible();
+  const colors=await slot.evaluate(el=>({bg:getComputedStyle(el).backgroundColor,fg:getComputedStyle(el).color}));
+  expect(colors.bg).toBe('rgb(37, 43, 43)');expect(colors.fg).toBe('rgb(237, 230, 212)');
+});

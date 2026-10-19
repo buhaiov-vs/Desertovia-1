@@ -1,3 +1,4 @@
+import { usePopupGesture } from './usePopupGesture'
 import { buildingNumber } from './buildingLabel'
 import { api } from '../api'
 import { SiteActions } from './SiteActions'
@@ -90,6 +91,7 @@ export function WatchPopup({
   ruler:boolean
   onClose: () => void
 }) {
+  const gesture = usePopupGesture()
   const i18n = useI18n()
   const { t } = i18n
   const site = target.kind === 'site' ? village.sites.find((s) => s.plotId === target.plotId) : undefined
@@ -105,7 +107,7 @@ export function WatchPopup({
           : ''
 
   return (
-    <div className={`target-popup ${phone ? 'sheet' : ''}`} style={popupStyle(screen, phone)} role="dialog" aria-label={title}>
+    <div {...gesture} className={`target-popup ${phone ? 'sheet' : ''}`} style={popupStyle(screen, phone)} role="dialog" aria-label={title}>
       <header className="target-popup-header">
         <strong>{title}</strong>
         <button className="close" onClick={onClose} title={`${t('close')} (Esc)`}>

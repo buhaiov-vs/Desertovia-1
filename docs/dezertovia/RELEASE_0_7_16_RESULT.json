@@ -1,0 +1,148 @@
+{
+  "phase": "post0716_verified",
+  "version": "0.7.16",
+  "game_sha": "4bb125f2dc05711ebaf4dac2723f3ee19eae3ea9",
+  "bot_sha": "8dbbc3a000367a84c12869f6aed0a2b12318c148",
+  "building_numbers": {
+    "sequenceTooSmall": 0,
+    "unassigned": 0,
+    "duplicatePlots": 0,
+    "duplicateNumbers": 0
+  },
+  "display_numbers": {
+    "missing": 0,
+    "duplicateGlobal": 0,
+    "duplicateFamily": 0,
+    "familyGaps": 0,
+    "invalidValue": 0
+  },
+  "feedback_origins_table": true,
+  "progress": {
+    "profiles_before": 143,
+    "profiles_after": 143,
+    "lost_profiles_or_progress": 0,
+    "accounts_preserved": 145,
+    "login_bindings_preserved": 145
+  },
+  "combat_preservation": {
+    "existing_battles_preserved": 0,
+    "existing_enemy_ids_and_health_checked": 0
+  },
+  "migrations": 38,
+  "director_mode": "Propose",
+  "pending_notice_states": [],
+  "telegram_civic_deliveries_confirmed": 58,
+  "frontend": {
+    "in_game_reports": true,
+    "capture_chunk": true,
+    "version": "0.7.16",
+    "slider_editor": true,
+    "upstream_music_control": true,
+    "fortification_controls": true,
+    "game_chunk": true,
+    "checked_chunks": 26,
+    "transient_http_retries": 0
+  },
+  "feedback_live_version_verified": true,
+  "report_bridge_and_schema_verified": true,
+  "protected_modules_preserved": true,
+  "configurations_preserved": true,
+  "quarantine_mode": "quarantine",
+  "protected_module_count": 121,
+  "protected_code_count": 657,
+  "postgres_backup": {
+    "created": true,
+    "file": "desertod-2026-10-19_1036.dump",
+    "restore_catalog_verified": true,
+    "before_game": "52f2f6ccb39d276be9a260f027198eb02f165e09",
+    "candidate": "4bb125f2dc05711ebaf4dac2723f3ee19eae3ea9"
+  },
+  "sqlite_backup": true,
+  "sqlite_integrity": "ok",
+  "code_backups": true,
+  "equipment_schema_verified": true,
+  "director_policy": {
+    "quiet_minutes": 60,
+    "proposal_pause_minutes": 120,
+    "minimum_ready_online": 3,
+    "requires_owner_approval": true
+  },
+  "combat_diagnostics": {
+    "legacy_duties": {
+      "unfinished": 0,
+      "medicallyPaused": 0
+    },
+    "recent_timing_samples": [],
+    "forced_raid": false
+  },
+  "synthetic_messages": 0,
+  "test_payments": 0,
+  "forced_raids": 0,
+  "status": "installed_and_independently_verified",
+  "verified_at_utc": "2026-10-19T10:40:06.689723+00:00",
+  "preflight_run": 39238163222,
+  "install_run": 39238318586,
+  "check_run": 39238986121,
+  "game_ci": 39236625836,
+  "bot_ci": 39236650441,
+  "game_merge_sha": "72521742cf4bbc997992feeb42442b0641570c8f",
+  "bot_merge_sha": "1366a0b8d0c470b929ac55d1099f0e40993aed54",
+  "public_health": {
+    "http": 200,
+    "release": "4bb125f2dc05711ebaf4dac2723f3ee19eae3ea9",
+    "telegram_login": true,
+    "development_login": false
+  },
+  "checks": {
+    "operator": 45,
+    "bot": 1104,
+    "bot_local_main": 186,
+    "bot_local_reports": 11,
+    "bot_local_context": 12,
+    "local_domain_regression": 4,
+    "frontend_lint": "pass",
+    "local_map_desktop_webkit_day_night": 4,
+    "local_webkit_report_validation_position_dark": 3,
+    "local_webkit_popup_gesture": 1,
+    "local_webkit_cancel_dungeon": 2,
+    "local_history_theme_chromium_webkit": 6,
+    "local_group_cleanup_policy": 3,
+    "domain": 537,
+    "api": 288,
+    "browser_passed": 238,
+    "browser_normal_skip": 2,
+    "browser_shards": {
+      "1": {
+        "passed": 120,
+        "skipped": 0
+      },
+      "2": {
+        "passed": 118,
+        "skipped": 2
+      }
+    },
+    "client_unit": 4,
+    "frontend": "pass",
+    "docker": "pass"
+  },
+  "ci_jobs": {
+    "game": {
+      "Frontend lint and build": "success",
+      "Backend tests": "success",
+      "Browser tests (1/2)": "success",
+      "Browser tests (2/2)": "success",
+      "Docker image": "success"
+    },
+    "bot": {
+      "test": "success",
+      "server": "skipped"
+    }
+  },
+  "request_commits": {
+    "report": "ac3b389e48fc9c04bfb0a920a228880e10c1b605",
+    "deploy": "285d21a0b69e331c028a665d535de2f49681f590",
+    "check": "8f3b16ca6788678df22b60c312e3240e9c752445"
+  },
+  "parallel_news_source": "90f55e322198c040b05ec1bcd088c5e19f569537",
+  "physical_mobile_hardware_tested": false
+}

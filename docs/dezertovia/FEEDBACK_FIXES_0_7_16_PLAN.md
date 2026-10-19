@@ -1,3 +1,5 @@
+> Выполнен и установлен0.7.16: см. RELEASE_0_7_16.md и фактическую квитанцию. Полный разбор остальных сообщений — FEEDBACK_TRIAGE_2026_10_19.md. Неизвестный исходный сбой144 не объявляется воспроизведённым.
+
 # Patch 0.7.16: feedback defects and reporting follow-up
 
 Authorized 19 October 2026: source, tests, GitHub and immediate server installation after checks. Earlier report-follow-up HOLD is superseded. Ready does not mean installed.

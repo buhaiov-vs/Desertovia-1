@@ -85,7 +85,9 @@ public sealed class PublicEndpointTests(DesertodApiFactory factory)
         Assert.All(Enum.GetNames<StorageKind>(), kind => Assert.Contains(kind, built));
         var explored = state.GetProperty("exploredChunks").EnumerateArray().ToList();
         Assert.NotEmpty(explored);
-        Assert.All(explored, chunk => Assert.True(chunk.GetProperty("complete").GetBoolean()));
+        var bitmap = Convert.FromBase64String(state.GetProperty("explored").GetString()!);
+        Assert.Contains(bitmap, tile => tile != 0);
+        Assert.Contains(bitmap, tile => tile != byte.MaxValue);
     }
 
     [Fact]

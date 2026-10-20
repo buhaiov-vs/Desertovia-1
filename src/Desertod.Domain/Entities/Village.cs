@@ -219,18 +219,25 @@ public sealed class Village
             added = true;
         }
 
-        if (Explored.Length != Exploration.Size)
+        if (!Exploration.IsChunkFormat(Explored))
         {
-            Explored = Exploration.Camp();
-            var plots = Storages.Select(s => s.PlotId).Concat(Structures.Select(s => s.PlotId)).Concat(Sites.Select(s => s.PlotId));
-            foreach (var plotId in plots)
+            if (Explored.Length == Exploration.LegacySize)
             {
-                Exploration.Reveal(Explored, WorldMap.Yard(plotId), Exploration.BuildingSightRadius);
+                Explored = Exploration.ImportLegacy(Explored);
             }
-
-            if (TsarSpot is { } spot)
+            else
             {
-                Exploration.Reveal(Explored, spot, Exploration.SightRadius);
+                Explored = Exploration.Camp();
+                var plots = Storages.Select(s => s.PlotId).Concat(Structures.Select(s => s.PlotId)).Concat(Sites.Select(s => s.PlotId));
+                foreach (var plotId in plots)
+                {
+                    Explored = Exploration.Reveal(Explored, WorldMap.Yard(plotId), Exploration.BuildingSightRadius);
+                }
+
+                if (TsarSpot is { } spot)
+                {
+                    Explored = Exploration.Reveal(Explored, spot, Exploration.SightRadius);
+                }
             }
 
             added = true;
@@ -254,21 +261,23 @@ public sealed class Village
         }
 
         BankAccess.Require(this, spot);
-        TsarTrip = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, Wilds?.Lookout);
+        var departure = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, Wilds?.Lookout);
+        Explored = departure.Explored;
+        TsarTrip = departure.Trip;
         TsarSpot = spot;
     }
 
     /// <summary>Writes the walked parts of these trips into the seen land.</summary>
     public void Explore(IEnumerable<Trip> trips, DateTimeOffset now)
     {
-        if (Explored.Length != Exploration.Size)
+        if (!Exploration.IsChunkFormat(Explored) && Explored.Length != Exploration.LegacySize)
         {
             return;
         }
 
         foreach (var trip in TsarTrip is null ? trips : trips.Append(TsarTrip))
         {
-            if (BankAccess.CanReach(this, trip.To)) Exploration.Reveal(Explored, trip, now, Wilds?.Lookout);
+            if (BankAccess.CanReach(this, trip.To)) Explored = Exploration.Reveal(Explored, trip, now, Wilds?.Lookout);
         }
     }
 

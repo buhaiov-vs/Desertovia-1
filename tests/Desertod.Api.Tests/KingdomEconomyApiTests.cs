@@ -6,6 +6,7 @@ using Desertod.Domain.Catalog;
 using Desertod.Domain.Combat;
 using Desertod.Domain.Economy;
 using Desertod.Domain.Storage;
+using Desertod.Domain.World;
 using Desertod.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -260,7 +261,7 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
         var job=definition.Stages[stage].Jobs.First(j=>BuildingCatalog.FindJob(j.JobId)?.Kind==JobKind.Haul);
         var resource=BuildingCatalog.FindJob(job.JobId)!.Resource!.Value;
         await players.ArrangeVillageAsync(v.Slug,(city,now)=>{
-            Array.Fill(city.Explored,(byte)255);city.Wilds!.Ravine.Clear();city.Wilds.Obstacles.Clear();
+            city.Explored=Exploration.EntireLand();city.Wilds!.Ravine.Clear();city.Wilds.Obstacles.Clear();
             city.Structures.Add(new Structure{Kind=BuildingKind.LeanTo,PlotId="4,18",BuiltAt=now});
             var s=StorageBuilding.Create(StorageKind.TownHall,"3,3",now);s.Put(resource,10);city.Storages.Add(s);
         });

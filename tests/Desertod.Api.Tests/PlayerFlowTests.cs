@@ -121,9 +121,14 @@ public sealed class PlayerFlowTests(DesertodApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, (await citizen.PostAsJsonAsync($"{path}/me/goto", new { spot = new { x = 20, y = 30 } })).StatusCode);
 
         var village = await citizen.GetFromJsonAsync<JsonElement>(path);
-        var explored = Convert.FromBase64String(village.GetProperty("state").GetProperty("explored").GetString()!);
-        Assert.Equal(Domain.World.Exploration.Size, explored.Length);
-        Assert.False(Domain.World.Exploration.IsExplored(explored, 20, 30));
+        var explored = village.GetProperty("state").GetProperty("exploredChunks").EnumerateArray();
+        Assert.DoesNotContain(explored, chunk => Domain.World.Exploration.ChunkSees(
+            chunk.GetProperty("x").GetInt32(),
+            chunk.GetProperty("y").GetInt32(),
+            chunk.GetProperty("complete").GetBoolean(),
+            chunk.TryGetProperty("bits", out var bits) && bits.ValueKind == JsonValueKind.String ? Convert.FromBase64String(bits.GetString()!) : null,
+            20,
+            30));
 
         var blueprint = await tsar.PostAsJsonAsync($"{path}/blueprints", new { kind = "WoodPile", x = 0, y = 0 });
         Assert.Equal(HttpStatusCode.BadRequest, blueprint.StatusCode);

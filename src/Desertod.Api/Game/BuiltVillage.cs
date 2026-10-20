@@ -66,7 +66,7 @@ public static class BuiltVillage
             village.Structures.Add(new Structure { Kind = BuildingKind.RopeBridge, PlotId = bridge, BuiltAt = now });
         }
 
-        village.Explored = Enumerable.Repeat(byte.MaxValue, Exploration.Size).ToArray();
+        village.Explored = Exploration.EntireLand();
 
         FarmRules.EnsureBeds(village);
         foreach (var (bed, (crop, growth)) in village.Fields.OrderBy(b => b.Index).Zip(Beds))

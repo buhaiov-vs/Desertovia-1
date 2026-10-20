@@ -77,7 +77,7 @@ public sealed class KingdomEconomyTests
     [Fact]
     public void Private_blueprints_do_not_occupy_public_slots_or_raise_public_repeat_costs()
     {
-        var village=TestWorld.NewVillage();Array.Fill(village.Explored,(byte)255);
+        var village=TestWorld.NewVillage();village.Explored=Exploration.EntireLand();
         village.Structures.Add(new Structure{Kind=BuildingKind.LeanTo,PlotId="4,18",BuiltAt=TestWorld.Now});
         for(var i=0;i<4;i++)village.Sites.Add(new ConstructionSite{Kind=BuildingKind.Hut,PlotId=$"{-4-i*4},10",OwnerAccountId=Guid.NewGuid(),PlacedAt=TestWorld.Now});
         Assert.Equal(0,village.CountOf(BuildingKind.Hut));

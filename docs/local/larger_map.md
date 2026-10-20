@@ -1,6 +1,8 @@
 # Larger map
 
-Plan only. No game code, version, or server change.
+Fog on the current 120 by 90 land is stored as the 32 by 32 chunks someone has seen. A missing chunk is fog. The land size, version, and server are unchanged.
+
+Still planned, and still at today's size first: chunked drawing, per-chunk generation, a delta village feed, nearby interest, and region pathfinding. The land grows only after those.
 
 Target land: **2,000 by 1,500 tiles**, with the camp in the middle. That is about **280 times** today's area (120 by 90). A phone still draws one screen. The server still simulates only the places where someone is.
 
@@ -84,7 +86,9 @@ The live budget is how many places are active at once. A few hundred entities ne
 
 ### 6. Store fog by visited chunk
 
-Fog memory on the client is three full-land arrays. At the target size a dense bitmap is acceptable, and visited chunks are better. At about 8,000 by 6,000 a dense bitmap is about **6 MB** per village, and the server would load all of it to reveal a few tiles. Only visited chunks are stored.
+This is in the current map. The saved column is still one byte array, now headed `FCH1`. Each block is 32 by 32 tiles (128 bytes), or a complete flag and no bits when every tile in it has been seen. An old 1,350-byte bitmap is read once and written back as chunks. Reveal walks the route, about every 4 tiles, and only looks at the tiles within sight of that sample. The village message sends `exploredChunks` instead of one base64 bitmap.
+
+The client still paints fog on one canvas for the current land. That is the picture, not the store. At the target size a dense bitmap is acceptable, and visited chunks are better. At about 8,000 by 6,000 a dense bitmap is about **6 MB** per village, and the server would load all of it to reveal a few tiles. Only visited chunks are stored.
 
 Sprite coordinates are ordinary numbers. Past a few thousand tiles from the origin, sub-pixel steps start to quantize. Chunk-local coordinates are the fix, and they belong with the 8,000-tile ceiling, not with the 2,000-tile target.
 
@@ -92,7 +96,7 @@ Sprite coordinates are ordinary numbers. Past a few thousand tiles from the orig
 
 1. Per-chunk generation, still at 120 by 90, so the picture matches today's map.
 2. Chunked drawing at the same size.
-3. Delta feed and visited-chunk fog.
+3. Delta feed. Visited-chunk fog is already how the current map stores and sends what the village has seen.
 4. Nearby interest for entities and battles.
 5. Region activities and region pathfinding.
 6. Raise the land to 2,000 by 1,500.

@@ -1005,6 +1005,14 @@ export const RAIN = {
 export interface CivicOrder { buildingKind?:BuildingKind|null; id:string; plotId:string; operation:string; requestedBy:string; partnerAccountId:string|null; partnerAccepted:boolean; status:string }
 export interface Housing { plotId:string; beds:number; occupied:number; level:number; number?:number; ownerAccountId?:string|null; ownerName?:string|null; builtAt?:string|null }
 export interface MonasteryView {open:boolean;inRange:boolean;knowsRemedy:boolean;readyAt:string|null;wood:number;food:number;remedyRoom:number;yard:TilePoint}
+/** One 32×32 block of land the tribe has seen. */
+export interface ExploredChunk {
+  x: number
+  y: number
+  complete: boolean
+  bits?: string | null
+}
+
 export interface VillageState {
   snapshotAt?: string
   bridgeDamage?:number
@@ -1053,10 +1061,11 @@ export interface VillageState {
   /** The village owner's figure on the map. */
   tsar: Tsar
   /**
-   * Land the tribe has seen, shared by all its players, as base64: one bit per map tile, row by row from the
-   * top-left, lowest bit first.
+   * Land the tribe has seen, shared by all its players. Only chunks someone has walked are listed.
+   * A missing chunk is still fog. `bits` is base64, 128 bytes, one bit per tile of the 32×32 chunk, lowest bit first.
+   * It is omitted when `complete` is set.
    */
-  explored: string
+  exploredChunks: ExploredChunk[]
   /** Attacks on the way (shown from `announcedAt`) and the last fought ones. */
   raids: Raid[]
   /** The ravine, mountain features and obstacles of the wild land; the map is shaped around them. */

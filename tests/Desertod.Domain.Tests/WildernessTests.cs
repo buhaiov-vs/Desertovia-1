@@ -30,7 +30,7 @@ public class WildernessTests
         return village;
     }
 
-    private static void See(Village village, double x, double y) => Exploration.Reveal(village.Explored, new TilePoint(x, y), 3);
+    private static void See(Village village, double x, double y) => village.Explored = Exploration.Reveal(village.Explored, new TilePoint(x, y), 3);
 
     private static bool Seen(Village village, double x, double y) => Exploration.IsExplored(village.Explored, (int)Math.Floor(x), (int)Math.Floor(y));
 
@@ -182,7 +182,7 @@ public class WildernessTests
     public void RopeBridge_MustSpanTheRavine()
     {
         var village = Wild();
-        Exploration.Reveal(village.Explored, new TilePoint(-9, -19), 5);
+        village.Explored = Exploration.Reveal(village.Explored, new TilePoint(-9, -19), 5);
 
         Assert.Equal("building.bridgeNeedsRavine", Assert.Throws<GameRuleException>(() =>
             ConstructionRules.Place(village, BuildingKind.RopeBridge, 2, 2, Now)).Code);

@@ -1,7 +1,10 @@
 import { CanvasSource, Sprite, Texture } from 'pixi.js'
 import { TILE } from './sheets'
 import { MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH } from './worldMap'
-import type { TileArea } from '../api'
+import type { ExploredChunk, TileArea } from '../api'
+
+/** Tiles on a side of one fog chunk. Matches the server's Exploration.ChunkSize. */
+const CHUNK = 32
 
 /** Something that sees the land around it; coordinates and radius in tiles. */
 export interface Viewer {
@@ -52,14 +55,23 @@ export class Fog {
     this.texture.destroy(true)
   }
 
-  /** Adds the land the server says the tribe has seen; nothing seen is ever forgotten. */
+  /** Replaces the seen land with the visited chunks. A chunk that is absent stays fog. */
   private lastExplored: string | null = null
-  setExplored(base64: string) {
-    if(base64===this.lastExplored)return
-    const bits = atob(base64)
-    this.lastExplored=base64
-    for (let index = 0; index < this.explored.length; index++) {
-      if ((bits.charCodeAt(index >> 3) >> (index & 7)) & 1) this.explored[index] = 1
+  setChunks(chunks: ExploredChunk[]) {
+    const signature = chunks.map(chunk => `${chunk.x},${chunk.y},${chunk.complete ? 1 : 0},${chunk.bits ?? ''}`).join(';')
+    if (signature === this.lastExplored) return
+    this.lastExplored = signature
+    this.explored.fill(0)
+    for (const chunk of chunks) {
+      const originX = chunk.x * CHUNK
+      const originY = chunk.y * CHUNK
+      const bits = chunk.bits ? atob(chunk.bits) : ''
+      for (let local = 0; local < CHUNK * CHUNK; local++) {
+        const seen = chunk.complete || ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
+        if (!seen) continue
+        const index = this.index(originX + (local % CHUNK), originY + Math.floor(local / CHUNK))
+        if (index >= 0) this.explored[index] = 1
+      }
     }
     this.draw()
   }

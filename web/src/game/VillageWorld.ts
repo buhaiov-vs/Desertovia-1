@@ -1408,7 +1408,7 @@ export class VillageWorld {
     }
     this.staticUpdate=true
     this.drawKingdomBorder()
-    this.fog.setExplored(state.explored)
+    this.fog.setChunks(state.exploredChunks ?? [])
     this.drawTrees(state.trees)
     this.drawObstacles(state.wilds)
     this.drawBuildings()

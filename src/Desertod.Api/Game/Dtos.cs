@@ -169,9 +169,9 @@ public sealed record WeatherDto(
 /// <param name="Fields">Beds of every farm.</param>
 /// <param name="Tsar">The village owner's figure on the map.</param>
 /// <param name="Dungeon">The dungeon run under way, or one that ended a moment ago; see <see cref="DungeonRules.ShownAfterEnd"/>.</param>
-/// <param name="Explored">
-/// Land the tribe has seen, walks under way included, as base64: one bit per tile of <see cref="WorldMap.Land"/>,
-/// row by row from the top-left, lowest bit first.
+/// <param name="ExploredChunks">
+/// Land the tribe has seen, walks under way included. Only chunks someone has walked are present;
+/// a missing chunk is still fog.
 /// </param>
 public sealed record VillageStateDto(
     Guid Id,
@@ -197,7 +197,7 @@ public sealed record VillageStateDto(
     IReadOnlyList<FieldBedDto> Fields,
     WeatherDto Weather,
     TsarDto Tsar,
-    string Explored,
+    IReadOnlyList<FogChunk> ExploredChunks,
     IReadOnlyList<RaidDto> Raids,
     WildsDto? Wilds,
     DungeonDto? Dungeon)
@@ -561,7 +561,7 @@ public static class DtoMapper
             .ToList(),
         village.ToWeatherDto(now),
         tsar,
-        Convert.ToBase64String(Exploration.Seen(
+        Exploration.Chunks(Exploration.Seen(
             village.Explored,
             (village.TsarTrip is null ? citizenTrips : citizenTrips.Append(village.TsarTrip)).Where(t=>BankAccess.CanReach(village,t.To)),
             now,

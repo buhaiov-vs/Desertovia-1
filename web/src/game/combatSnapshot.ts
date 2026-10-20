@@ -6,7 +6,7 @@ function visualWorld(state:VillageState){
  const project=state.project
  return JSON.stringify({
   id:state.id,
-  explored:state.explored,
+  explored:state.exploredChunks.map(chunk=>[chunk.x,chunk.y,chunk.complete,chunk.bits??'']),
   trees:state.trees.map(tree=>`${tree.x},${tree.y}`).sort(),
   structures:state.structures.map(s=>[s.kind,s.plotId,s.number,s.displayNumber,!!s.ruinedAt,s.damage,s.level??1]),
   storages:state.storages.map(s=>[s.kind,s.plotId,s.number,s.displayNumber,!!s.ruinedAt,s.damage,s.slots.map(slot=>[slot.kind,Math.ceil(slot.fill*4)])]),

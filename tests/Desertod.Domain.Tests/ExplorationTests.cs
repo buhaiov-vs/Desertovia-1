@@ -76,4 +76,56 @@ public class ExplorationTests
         Assert.False(Seen(Exploration.Seen(village.Explored, [citizen.Trip!], Now), woods));
         Assert.True(Seen(Exploration.Seen(village.Explored, [citizen.Trip!], citizen.Trip!.ArrivesAt), woods));
     }
+
+    [Fact]
+    public void LegacyBitmap_BecomesChunks_WithoutLosingTiles()
+    {
+        var legacy = Enumerable.Repeat((byte)255, Exploration.LegacySize).ToArray();
+
+        var chunks = Exploration.ImportLegacy(legacy);
+
+        Assert.True(Exploration.IsChunkFormat(chunks));
+        Assert.True(Exploration.IsExplored(chunks, WorldMap.Land.X, WorldMap.Land.Y));
+        Assert.True(Exploration.IsExplored(chunks, WorldMap.Land.X + WorldMap.Land.Width - 1, WorldMap.Land.Y + WorldMap.Land.Height - 1));
+        Assert.InRange(Exploration.EntireLand().Length, 1, 200);
+        Assert.True(Exploration.Camp().Length < Exploration.LegacySize);
+    }
+
+    [Fact]
+    public void WalkedLand_MatchesADenseScan_AndStaysSmallerThanTheOldBitmap()
+    {
+        var from = WorldMap.Places[WorldMap.Camp];
+        var to = new TilePoint(WorldMap.Land.X + 1.5, WorldMap.Land.Y + WorldMap.Land.Height - 1.5);
+        var trip = Trip.Start(from, to, Now);
+        var revealed = Exploration.Reveal(Exploration.Camp(), trip, trip.ArrivesAt);
+
+        var land = WorldMap.Land;
+        for (var y = land.Y; y < land.Y + land.Height; y++)
+        {
+            for (var x = land.X; x < land.X + land.Width; x++)
+            {
+                var onTrip = DistanceToSegment(new TilePoint(x + 0.5, y + 0.5), from, to) <= Exploration.SightRadius;
+                var inCamp = InOval(new TilePoint(x + 0.5, y + 0.5), WorldMap.Places[WorldMap.Camp], Exploration.CampRadiusX, Exploration.CampRadiusY);
+                Assert.Equal(onTrip || inCamp, Exploration.IsExplored(revealed, x, y));
+            }
+        }
+
+        Assert.True(revealed.Length < Exploration.LegacySize);
+    }
+
+    private static bool InOval(TilePoint point, TilePoint center, double radiusX, double radiusY)
+    {
+        var dx = (point.X - center.X) / radiusX;
+        var dy = (point.Y - center.Y) / radiusY;
+        return dx * dx + dy * dy <= 1;
+    }
+
+    private static double DistanceToSegment(TilePoint point, TilePoint from, TilePoint to)
+    {
+        var dx = to.X - from.X;
+        var dy = to.Y - from.Y;
+        var lengthSquared = dx * dx + dy * dy;
+        var share = lengthSquared == 0 ? 0 : Math.Clamp(((point.X - from.X) * dx + (point.Y - from.Y) * dy) / lengthSquared, 0, 1);
+        return point.DistanceTo(new TilePoint(from.X + dx * share, from.Y + dy * share));
+    }
 }

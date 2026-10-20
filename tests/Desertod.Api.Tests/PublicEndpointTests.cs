@@ -83,7 +83,9 @@ public sealed class PublicEndpointTests(DesertodApiFactory factory)
             .ToHashSet();
         Assert.All(Enum.GetNames<BuildingKind>(), kind => Assert.Contains(kind, built));
         Assert.All(Enum.GetNames<StorageKind>(), kind => Assert.Contains(kind, built));
-        Assert.All(state.GetProperty("explored").GetBytesFromBase64(), tiles => Assert.Equal(byte.MaxValue, tiles));
+        var explored = state.GetProperty("exploredChunks").EnumerateArray().ToList();
+        Assert.NotEmpty(explored);
+        Assert.All(explored, chunk => Assert.True(chunk.GetProperty("complete").GetBoolean()));
     }
 
     [Fact]

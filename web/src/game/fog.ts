@@ -6,6 +6,15 @@ import type { ExploredChunk, TileArea } from '../api'
 /** Tiles on a side of one fog chunk. Matches the server's Exploration.ChunkSize. */
 const CHUNK = 32
 
+/** Base64 from the server. A bad string leaves that chunk fog instead of stopping the map. */
+function decodeBits(encoded: string) {
+  try {
+    return atob(encoded)
+  } catch {
+    return ''
+  }
+}
+
 /** Something that sees the land around it; coordinates and radius in tiles. */
 export interface Viewer {
   x: number
@@ -65,7 +74,7 @@ export class Fog {
     for (const chunk of chunks) {
       const originX = chunk.x * CHUNK
       const originY = chunk.y * CHUNK
-      const bits = chunk.bits ? atob(chunk.bits) : ''
+      const bits = chunk.bits ? decodeBits(chunk.bits) : ''
       for (let local = 0; local < CHUNK * CHUNK; local++) {
         const seen = chunk.complete || ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
         if (!seen) continue

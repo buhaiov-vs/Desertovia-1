@@ -89,6 +89,7 @@ public class ExplorationTests
         Assert.True(Exploration.IsExplored(chunks, WorldMap.Land.X + WorldMap.Land.Width - 1, WorldMap.Land.Y + WorldMap.Land.Height - 1));
         Assert.InRange(Exploration.EntireLand().Length, 1, 200);
         Assert.True(Exploration.Camp().Length < Exploration.LegacySize);
+        Assert.Equal(legacy, Exploration.LegacyBitmap(chunks));
     }
 
     [Fact]

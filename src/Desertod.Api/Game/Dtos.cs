@@ -171,7 +171,8 @@ public sealed record WeatherDto(
 /// <param name="Dungeon">The dungeon run under way, or one that ended a moment ago; see <see cref="DungeonRules.ShownAfterEnd"/>.</param>
 /// <param name="ExploredChunks">
 /// Land the tribe has seen, walks under way included. Only chunks someone has walked are present;
-/// a missing chunk is still fog.
+/// a missing chunk is still fog. <see cref="VillageStateDto.Explored"/> repeats the same land as the
+/// old bitmap, which the published client still decodes.
 /// </param>
 public sealed record VillageStateDto(
     Guid Id,
@@ -203,6 +204,9 @@ public sealed record VillageStateDto(
     DungeonDto? Dungeon)
 {
     public DateTimeOffset SnapshotAt { get; init; }
+
+    /// <summary>Seen land as base64, one bit per tile. Kept so a client that still calls atob on this field can draw the fog.</summary>
+    public string Explored { get; init; } = "";
     public TileArea KingdomArea { get; init; } = WorldMap.BuildArea;
     public FortificationQuote? FortificationUpgrade { get; init; }
     public int CastleLevel { get; init; }
@@ -502,6 +506,11 @@ public static class DtoMapper
         DateTimeOffset now)
     {
         var labels=BuildingLabels.Visible(village);
+        var seen = Exploration.Seen(
+            village.Explored,
+            (village.TsarTrip is null ? citizenTrips : citizenTrips.Append(village.TsarTrip)).Where(t=>BankAccess.CanReach(village,t.To)),
+            now,
+            village.Wilds?.Lookout);
         return new(
         village.Id,
         village.Slug,
@@ -561,14 +570,10 @@ public static class DtoMapper
             .ToList(),
         village.ToWeatherDto(now),
         tsar,
-        Exploration.Chunks(Exploration.Seen(
-            village.Explored,
-            (village.TsarTrip is null ? citizenTrips : citizenTrips.Append(village.TsarTrip)).Where(t=>BankAccess.CanReach(village,t.To)),
-            now,
-            village.Wilds?.Lookout)),
+        Exploration.Chunks(seen),
         village.Raids.OrderBy(r => r.StrikesAt).Select(r => r.ToDto()).ToList(),
         village.Wilds?.ToDto(),
-        dungeon?.ToDto()) { SnapshotAt = now };
+        dungeon?.ToDto()) { SnapshotAt = now, Explored = Convert.ToBase64String(Exploration.LegacyBitmap(seen)) };
     }
 
     public static WildsDto ToDto(this Wilds wilds) => new(

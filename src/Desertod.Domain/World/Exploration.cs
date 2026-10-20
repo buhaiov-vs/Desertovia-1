@@ -221,6 +221,32 @@ public static class Exploration
     public static IReadOnlyList<FogChunk> Chunks(byte[] map) => Decode(map).List();
 
     /// <summary>
+    /// The same seen land as one bit per tile of <see cref="WorldMap.Land"/>, the layout the current client decodes.
+    /// The map is still 120 by 90, so this stays a small bitmap beside the chunks.
+    /// </summary>
+    public static byte[] LegacyBitmap(byte[] map)
+    {
+        var seen = Decode(map);
+        var legacy = new byte[LegacySize];
+        var land = WorldMap.Land;
+        for (var y = land.Y; y < land.Y + land.Height; y++)
+        {
+            for (var x = land.X; x < land.X + land.Width; x++)
+            {
+                if (!seen.IsExplored(x, y))
+                {
+                    continue;
+                }
+
+                var index = (y - land.Y) * land.Width + (x - land.X);
+                legacy[index >> 3] |= (byte)(1 << (index & 7));
+            }
+        }
+
+        return legacy;
+    }
+
+    /// <summary>
     /// The village's seen land plus the parts of the trips walked by <paramref name="now"/>. Trips still count after
     /// they end, until the next trip of the same walker writes them into the village's map.
     /// </summary>

@@ -98,3 +98,29 @@ Sprite coordinates are ordinary numbers. Past a few thousand tiles from the orig
 6. Raise the land to 2,000 by 1,500.
 
 Far work uses a journey to a place, then a local job. The 2-second work walk stays for distance inside that place.
+
+## Days of travel
+
+A walk of hours or days uses the same arrival clock: **0.6 seconds per tile**, healthy, and that clock keeps running when the player is away. The sprite at 26 pixels per second only plays while the figure is on screen. Watching the whole way is about 3 percent longer than the server clock, so one real day on screen is about **140,000 tiles** instead of **144,000**.
+
+One village day is **4 real hours**.
+
+| Time to the camp, straight line | Tiles from the edge to the center |
+|---|---:|
+| 1 real hour | 6,000 |
+| 1 village day (4 hours) | 24,000 |
+| 1 real day | 144,000 |
+| 3 real days | 432,000 |
+| 7 real days | 1,008,000 |
+
+The land is twice that on the long side if the camp stays in the middle. One real day from the edge means a map about **288,000 by 216,000** tiles, keeping today's 4:3 shape. A corner is 1.25 times the edge time, so **30 hours** on that map.
+
+A dense fog bitmap of that land is about **7.8 GB** per village. `Exploration.Seen` also copies the whole bitmap, and `Reveal` scans the rectangle around the entire trip. A diagonal day's walk makes that rectangle about 144,000 tiles on a side. Day-scale trips need three further changes on top of the 2,000-tile plan:
+
+1. **The journey is one timed route.** Start, destination, and departure are enough. The position at any moment is a point along the route. The server does not step the walker tile by tile. The client draws them only in the chunks around the camera.
+2. **Coordinates are local to a chunk.** One real day is about 2.3 million pixels from the camp. A few days past that, ordinary sprite positions can no longer represent every pixel. Each chunk keeps its own origin.
+3. **Fog is the chunks the route has touched.** A chunk is stored when someone walks through it or changes it. Reveal follows the route from chunk to chunk. Scenery along an unvisited road is generated from the seed when the camera arrives, and is not stored.
+
+Encounters sit on region crossings: an ambush, a camp, a ruin. They are checked when the traveler enters that region. The road between crossings has no simulation.
+
+There is no useful tile cap after those three. A week from the edge is about a million tiles and stays cheap, because an empty region is a seed and a journey is one record. The 2,000 by 1,500 land remains the first size to build. Day-scale routes come after chunk-local coordinates and route fog.

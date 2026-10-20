@@ -117,9 +117,13 @@ The land is twice that on the long side if the camp stays in the middle. One rea
 
 A dense fog bitmap of that land is about **7.8 GB** per village. `Exploration.Seen` also copies the whole bitmap, and `Reveal` scans the rectangle around the entire trip. A diagonal day's walk makes that rectangle about 144,000 tiles on a side. Day-scale trips need three further changes on top of the 2,000-tile plan:
 
-1. **The journey is one timed route.** Start, destination, and departure are enough. The position at any moment is a point along the route. The server does not step the walker tile by tile. The client draws them only in the chunks around the camera.
+1. **The journey is one timed route over land the village has already seen.** The destination is a revealed tile, or a tile someone can see right now. The route stays on those tiles; it does not cut through fog. Start, destination, and departure are enough. The position at any moment is a point along that route. The server does not step the walker tile by tile. The client draws them only in the chunks around the camera.
 2. **Coordinates are local to a chunk.** One real day is about 2.3 million pixels from the camp. A few days past that, ordinary sprite positions can no longer represent every pixel. Each chunk keeps its own origin.
-3. **Fog is the chunks the route has touched.** A chunk is stored when someone walks through it or changes it. Reveal follows the route from chunk to chunk. Scenery along an unvisited road is generated from the seed when the camera arrives, and is not stored.
+3. **Fog is the chunks someone has seen.** A chunk is stored when a walker sees it or someone changes it. A walker sees **6 tiles** around them. Standing on the edge of known land reveals about 6 tiles past it, and the next order can go there. Scenery in the black is generated from the seed only when that band is revealed. Unseen land is not stored, and it is not a destination.
+
+A click on fog already does nothing. Building on unseen land is already refused. The server still accepts any walk coordinate; on the large map it refuses a destination, or a route, that leaves revealed land.
+
+Pushing the frontier is a series of those 6-tile bands. If the walker stays at the edge, the time to reveal a line is the same as walking it: **one real day** of scouting reaches **144,000 tiles** out. One order cannot name a ruin in the black and travel there overnight. An overnight journey only crosses land the village has already seen, and a known road that bends around fog is longer than the straight line.
 
 Encounters sit on region crossings: an ambush, a camp, a ruin. They are checked when the traveler enters that region. The road between crossings has no simulation.
 

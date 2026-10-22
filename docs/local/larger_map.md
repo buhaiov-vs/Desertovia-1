@@ -131,26 +131,46 @@ Encounters sit on region crossings: an ambush, a camp, a ruin. They are checked 
 
 ## How far out each foe starts
 
-On the square of about 288,000 tiles, the camp is in the middle and each edge is one real day away (144,000 tiles). The order of foes comes from the sprite descriptions, easiest first. A figure the text calls weak or small, with no weapon, comes before a larger one. A weapon comes before an empty hand. The description that says "the boss" and gives him a crown and a sword is last. The fight numbers in the catalogs are not this order.
-
-Wolf, boar, bear, zombie, and skeleton have no prompt row. Their order uses the pixels they are drawn with. Zombie and skeleton are drawn at double size.
+On the square of about 288,000 tiles, the camp is in the middle and each edge is one real day away (144,000 tiles). A corner is about 34 hours. The order comes from the sprite descriptions, easiest first, including the archive sheets in `docs/local/pixel-sprite-archives.md`. A figure called weak or small, with no weapon, comes before a larger one. A tooth, a claw, a club, a blade, a spell, or armor comes later. Two weapons come after one. The crowned swordsman is near the end. The lich, seated on a throne with green flames and with no walk of his own, is last. Color variants of the same body share one floor. The fight numbers in the catalogs are not this order.
 
 | Order | Foe | What the sprite says | Not closer than | Walk, healthy |
 |---|---|---|---:|---:|
-| 1 | Grave rat | "Fast, weak", a pack, body about 10 pixels | 6,000 | 1 hour |
-| 2 | Imp | "Small", about 9 pixels tall, stubby horns, no weapon | 20,000 | 3 hours 20 minutes |
-| 3 | Wolf | Low grey animal, 9 pixels tall, yellow eyes, no weapon | 34,000 | 5 hours 40 minutes |
-| 4 | Boar | Short tusks on a low heavy body | 48,000 | 8 hours |
-| 5 | Ghoul | Hunched, about 11 pixels, long claws reaching forward | 62,000 | 10 hours 20 minutes |
-| 6 | Wraith | Floating, hooded, dark empty eyes, no weapon, about 10 pixels | 76,000 | 12 hours 40 minutes |
-| 7 | Bear | Widest animal, pale claws, 11 pixels tall | 90,000 | 15 hours |
-| 8 | Zombie | Standing green corpse, drawn twice as tall, 26 pixels, no weapon | 104,000 | 17 hours 20 minutes |
-| 9 | Skeleton | Bone figure, drawn twice as tall, 30 pixels, glowing eyes; the archive sheet also gives him a short blade | 118,000 | 19 hours 40 minutes |
-| 10 | Barrow king | "The boss", rusty gold crown, notched sword, a 16 by 24 frame | 132,000 | 22 hours |
+| 1 | Plain slime | Round blue, green, or red jelly; teal or dark-blue blob; island green slime. Eyes, no weapon | 6,000 | 1 hour |
+| 2 | Grave rat | "Fast, weak", a pack, body about 10 pixels | 12,800 | 2 hours 8 minutes |
+| 3 | Imp | "Small", about 9 pixels tall, stubby horns, no weapon | 19,600 | 3 hours 16 minutes |
+| 4 | Small goblin | Small green goblin, no weapon drawn | 26,400 | 4 hours 24 minutes |
+| 5 | Wolf | Low grey animal, 9 pixels tall, yellow eyes, no weapon | 33,200 | 5 hours 32 minutes |
+| 6 | Boar | Short tusks on a low heavy body | 40,000 | 6 hours 40 minutes |
+| 7 | Goblin with a club | Green goblin, wooden club | 46,800 | 7 hours 48 minutes |
+| 8 | Hooded orc | Green orc in a brown hood, a club | 53,600 | 8 hours 56 minutes |
+| 9 | Scarecrow | Straw hat, stick arms | 60,400 | 10 hours 4 minutes |
+| 10 | Ghoul | Hunched, about 11 pixels, long claws | 67,200 | 11 hours 12 minutes |
+| 11 | Goblin with a sword | Green goblin, a sword | 74,000 | 12 hours 20 minutes |
+| 12 | Banner goblin | Green goblin carrying a red-and-white banner | 80,800 | 13 hours 28 minutes |
+| 13 | Wraith | Floating, hooded, dark empty eyes, no weapon | 87,600 | 14 hours 36 minutes |
+| 14 | Poison plant | Dark purple bulb, leafy crown, poison puff and poison cloud | 94,400 | 15 hours 44 minutes |
+| 15 | Flaming slime | Dark cracked blob with yellow flames | 101,200 | 16 hours 52 minutes |
+| 16 | Orc with one axe | Smaller orc, leather and cloth, one axe | 108,000 | 18 hours |
+| 17 | Bear | Widest animal, pale claws, 11 pixels tall | 114,800 | 19 hours 8 minutes |
+| 18 | Orc warrior | Large orc, topknot, one axe | 121,600 | 20 hours 16 minutes |
+| 19 | Vampire | Pale, a cape, a spell flash, no wings | 128,400 | 21 hours 24 minutes |
+| 20 | Orc berserk | Large, tusks, bare chest, a cleaver in each hand | 135,200 | 22 hours 32 minutes |
+| 21 | Orc shaman | Large, grey tunic, wooden staff, two spell casts | 142,000 | 23 hours 40 minutes |
+| 22 | Winged vampire | Pale, white hair, red bat wings, red cape, a spell flash | 148,800 | 24 hours 48 minutes |
+| 23 | Orc with two swords | Blue-grey skin, a gold sword in each hand | 155,600 | 25 hours 56 minutes |
+| 24 | Zombie | Standing green corpse, drawn twice as tall, 26 pixels, no weapon | 162,400 | 27 hours 4 minutes |
+| 25 | Fire spirit | Yellow-orange flame with a face, a shot, a charge, and an explosion | 169,200 | 28 hours 12 minutes |
+| 26 | Skeleton | Bone figure, drawn twice as tall, 30 pixels; the archive sheet gives him a short blade | 176,000 | 29 hours 20 minutes |
+| 27 | Armored orc | Tall black hair, red and gold armor, two swords | 182,800 | 30 hours 28 minutes |
+| 28 | Fortress knight | Plate or a helm, sword and shield, or a spear, halberd, crossbow, or staff. Nine looks, one floor | 189,600 | 31 hours 36 minutes |
+| 29 | Barrow king | "The boss", rusty gold crown, notched sword, a 16 by 24 frame | 196,400 | 32 hours 44 minutes |
+| 30 | Lich | Seated on a spiked throne, blue robe, green eyes, green flames. No walk cycle | 203,200 | 33 hours 52 minutes |
 
-The floors are 14,000 tiles apart, which is 2 hours 20 minutes. Inside 6,000 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that easier foe. Past 132,000 tiles, including the corners at about 34 hours, the den is the barrow king.
+The floors are 6,800 tiles apart, which is 1 hour 8 minutes. Inside 6,000 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that foe. The straight edge, at 24 hours, falls in the shaman's band. The winged vampire and everyone after him stand past that edge, toward the corners. The lich's floor is the corner.
 
-A claim stays a small patch around the den: 48 tiles for a pack, 64 for one large figure. The grave rat's text says a pack, so the den shows four. Wolves show four, boars three. The ghoul shows two. The imp shows two. The wraith, the bear, the zombie, the skeleton, and the barrow king show one. Sprites exist while a citizen is inside the claim. Marks on the ground stay in the chunk texture.
+A claim stays a small patch around the den: 48 tiles for a pack, 64 for one large figure. The grave rat shows four. Plain slimes show three, one of each ordinary color. Wolves show four, boars three, goblins three. The ghoul and the imp show two. One large figure shows one: the wraith, the bear, each orc, each vampire, the zombie, the skeleton, a knight, the barrow king, and the lich. Sprites exist while a citizen is inside the claim. Marks on the ground stay in the chunk texture.
+
+These sheets are not dens. Deer, hare, fox, and black grouse are hunt animals, and the fox has no attack. Farm animals are stock. The orange crab has no attack. The island humans and the three roguelike heroes are people, not dens. Eye stalks, jaws, spikes, tentacles, and the other cursed growths dress the poison plant's land. Dead trees and mushrooms dress the lich's land.
 
 The night raid on the camp is separate and still comes to the fire. Camp-era nights stay wolves; boars join in the Village era and bears in the Town era. Those raids are not dens on this ladder.
 

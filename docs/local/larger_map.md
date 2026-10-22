@@ -129,4 +129,51 @@ Pushing the frontier is a series of those 6-tile bands. If the walker stays at t
 
 Encounters sit on region crossings: an ambush, a camp, a ruin. They are checked when the traveler enters that region. The road between crossings has no simulation.
 
+## Areas and their guardians
+
+A region is a kind of land, one den, and a border. Clawed bark, wallows, bones, and mounds are painted into the chunk texture with the ground. A beast sprite exists while a citizen is inside that den's claim. An empty claim is the seed and one den record.
+
+One claim keeps a small pack: four wolves, three boars, or one bear. A village with people in five places shows at most a few dozen beast sprites. The thousands of trees and territory marks stay in the chunk textures. Dungeon foes stay inside the run. A far hunt is one line until someone walks there.
+
+The night raid on the camp keeps today's list. A bear in a far range stays in that range. Camp-era nights stay wolves; boars join in the Village era and bears in the Town era, as they do now.
+
+Today's 120 by 90 land is the home vale. These rings are the 2,000 by 1,500 land. The camp stays in the middle. Distance is tiles from the camp. Time is the healthy server clock, 0.6 seconds a tile, in a straight line.
+
+| Ring | Tiles from camp | Walk | Dens on the whole land | Guardian at the den | What the claim holds |
+|---|---:|---:|---:|---|---|
+| Home vale | 0–60 | under a minute | none | the camp raid, at night | today's workplaces, the cave, the lookout |
+| Meadows | 60–200 | 1–2 minutes | 6 wolf dens | 4 wolves | rabbits, berries |
+| Mast woods | 200–400 | 2–4 minutes | 6 boar stands | 3 boars | thickets, deer |
+| Bear ranges | 400–700 | 4–7 minutes | 8 bear dens | 1 bear | deep wood, a pass |
+| Barrow downs | 700–1,000 | 7–10 minutes | 4 mounds | the dungeon floors, indoors | ore and ruin goods, through the door |
+
+The long edge is 1,000 tiles, about 10 minutes. A corner is 1,250 tiles, about 12 minutes 30 seconds, and it is still barrow downs.
+
+### Where a den sits
+
+Dens are a short list, the same way the cave and the lookout are. The ring decides which guardian is allowed. The village seed picks the sector and the den tile. Six wolf dens on a ring about 130 tiles out sit roughly 140 tiles apart, about a minute and a half of open meadow between claims. Six boar stands sit a few minutes apart. Eight bears sit a few minutes apart, with a ridge between neighbors. Four mounds sit toward the four corners.
+
+A claim is the ground that den protects:
+
+| Den | Claim radius | Walk across the claim |
+|---|---:|---:|
+| Wolf | 48 tiles | about 30 seconds |
+| Boar | 48 tiles | about 30 seconds |
+| Bear | 64 tiles, and the pass it sits on | about 40 seconds |
+| Barrow | the mound and the dungeon | the run that exists today |
+
+The river, a ridge, and the ravine are borders even when both sides are the same ring. A ford or a pass is the crossing. The encounter is the guardian of the side you are entering. Open ground between claims has the same beast as a stray: the small per-cycle chance work already uses, and a single sprite for that fight. The stray does not stay after the fight.
+
+### What protection means
+
+Work inside a claim uses that one kind as its danger list, the way rabbit woods lists the wolf today. The chance stays a small chance per work cycle. Come within sight of an occupied den, the 6 tiles a walker already sees, and the pack is there.
+
+Clearing the den quiets the claim for the whole village, the way fog is shared. Wolves return the next night. Boars return after one village day, 4 real hours. A bear returns after three village days. A cleared mound stays empty for one village day, then the same floors are there again. The pack does not follow onto the road. Leave the claim and the sprites go away. Come back while the den is occupied and they are at the den, unless a fight in that claim is already running.
+
+A barrow has no wandering dead on the grass. The mound is a door. Inside, the floors keep the foes they have: grave rats, imps, ghouls, wraiths, and a barrow king. Those kinds stay off the camp raid and off the wild roads.
+
+### Day-scale land
+
+Past the first land, a day's walk is a chain of these claims along a route the village has seen. A den record is written when the 6-tile reveal band first uncovers the chunk that holds it. The guardian comes from the seed and the ring, and it is stored with that chunk. Unseen land has no den and no sprites. A new kind of guardian, when one is added, is one more den record in a ring. The rings and the claim radii stay as they are.
+
 There is no useful tile cap after those three. A week from the edge is about a million tiles and stays cheap, because an empty region is a seed and a journey is one record. The 2,000 by 1,500 land remains the first size to build. Day-scale routes come after chunk-local coordinates and route fog.

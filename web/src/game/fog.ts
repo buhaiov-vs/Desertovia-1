@@ -1,10 +1,8 @@
 import { CanvasSource, Sprite, Texture } from 'pixi.js'
 import { TILE } from './sheets'
+import { LAND_CHUNK as CHUNK } from './landChunk'
 import { MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH } from './worldMap'
 import type { ExploredChunk, TileArea } from '../api'
-
-/** Tiles on a side of one fog chunk. Matches the server's Exploration.ChunkSize. */
-const CHUNK = 32
 
 /** Base64 from the server. A bad string leaves that chunk fog instead of stopping the map. */
 function decodeBits(encoded: string) {

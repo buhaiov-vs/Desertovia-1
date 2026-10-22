@@ -2,7 +2,7 @@
 
 Fog on the current 120 by 90 land is stored as the 32 by 32 chunks someone has seen. A missing chunk is fog. The land size, version, and server are unchanged.
 
-Still planned, and still at today's size first: chunked drawing, per-chunk generation, a delta village feed, nearby interest, and region pathfinding. The land grows only after those.
+The screen now keeps a texture for each 32 by 32 block near the camera. Those blocks use the same coordinates as the fog chunks. Joining still builds the whole 120 by 90 once, so the picture stays the same. Still planned, and still at today's size first: per-chunk generation, a delta village feed, nearby interest, and region pathfinding. The land grows only after those.
 
 Target land: **2,000 by 1,500 tiles**, with the camp in the middle. That is about **280 times** today's area (120 by 90). A phone still draws one screen. The server still simulates only the places where someone is.
 
@@ -52,9 +52,7 @@ Citizens are already incremental: the full list on join, then only the citizens 
 
 ### 1. Draw the land in chunks
 
-Joining the village currently creates one sprite per ground tile, then hides the ones off screen. Three million sprites at the target size will not run on a phone.
-
-Build a texture for each block of about **32 by 32** tiles near the camera, and drop blocks that scroll away. The screen stays about 34 tiles wide, so a handful of blocks is enough. The minimap keeps a coarse copy of the whole land.
+This is in the client for the current land. A wide view keeps the blocks around the camera, plus one block of margin, and drops the rest. Each block is baked to one texture. Ponds, marsh, the ravine, and the rock under peaks stay one drawing, because there are few of them and they must keep today's pixels. The minimap still reads the whole land. Three million sprites at the target size are not created: a block is drawn only when the view reaches it. The generator still walks the 120 by 90 once, which is what keeps the picture. That walk becomes per chunk before the land grows.
 
 ### 2. Generate each chunk from the seed
 
@@ -95,7 +93,7 @@ Sprite coordinates are ordinary numbers. Past a few thousand tiles from the orig
 ## Order
 
 1. Per-chunk generation, still at 120 by 90, so the picture matches today's map.
-2. Chunked drawing at the same size.
+2. Chunked drawing at the same size. The ground of the current land is drawn this way.
 3. Delta feed. Visited-chunk fog is already how the current map stores and sends what the village has seen.
 4. Nearby interest for entities and battles.
 5. Region activities and region pathfinding.

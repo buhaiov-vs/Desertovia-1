@@ -9,7 +9,7 @@ import { HospitalConstruction } from './HospitalConstruction'
 import { HutConstruction, siteVisualKey } from './HutConstruction'
 import { BuildingLighting, hasPreparedBuilding, preparedBuildingBounds } from './BuildingLighting'
 import { registerReportCanvas } from '../reports/capture'
-import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Sprite, Text, Texture, type Ticker } from 'pixi.js'
+import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Rectangle, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
 import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type Tsar, type VillageState, type Wilds } from '../api'
 import { WildlifeLayer } from './animals'
@@ -17,10 +17,12 @@ import { EnemyLayer } from './enemies'
 import { CharacterPainter, appearanceKey } from './appearance'
 import { darknessAt } from './daylight'
 import { Fog, type Viewer } from './fog'
+import { chunksNear, type LandChunkRect } from './landChunk'
 import { TILE, TileSet, battle, dungeon, tileKey, town, type TileRef } from './sheets'
 import {
   BUILDING_TILES,
   CAMPFIRE,
+  type MapLayout,
   MAP_HEIGHT,
   MAP_LEFT,
   MONASTERY,
@@ -258,6 +260,9 @@ export class VillageWorld {
   private panY = 0.5
   private readonly groundLayer = new Container()
   private terrainSeed: number | null = null
+  /** The authored 120 by 90, kept so a block can be baked when the camera reaches it. */
+  private landLayout: MapLayout | null = null
+  private readonly groundChunks = new Map<string, Sprite>()
   private minimap: Minimap | null = null
   private minimapUpdatedAt = 0
   /** Until the player pans or zooms, a resize keeps showing the camp at the default zoom. */
@@ -378,6 +383,7 @@ export class VillageWorld {
     window.removeEventListener(PREFERENCES_EVENT, this.onPreferences)
     window.removeEventListener('storage', this.onPreferences)
     this.minimap?.destroy()
+    this.dropGroundChunks()
     this.app.canvas.remove()
     this.app.destroy(true, { children: true })
     this.fog.destroy()
@@ -387,14 +393,8 @@ export class VillageWorld {
   /** The land is generated from the village id, so it is built once the village is known. */
   private buildTerrain(seed: number, wilds: Wilds | null) {
     const layout = buildLayout(seed, wilds)
-    const ground = new Container()
-    layout.ground.forEach((row, y) =>
-      row.forEach((tile, x) => {
-        const sprite = new Sprite(this.tiles.get(tile))
-        sprite.position.set((x + MAP_LEFT) * TILE, (y + MAP_TOP) * TILE)
-        ground.addChild(sprite)
-      }),
-    )
+    this.landLayout = layout
+    this.dropGroundChunks()
     const water = new Graphics()
     for (const pond of layout.ponds) {
       water
@@ -457,9 +457,7 @@ export class VillageWorld {
       .fill({ color: 0x8a6a3f, alpha: 0.55 })
       .ellipse(CAMPFIRE.x * TILE, CAMPFIRE.y * TILE, 1.6 * TILE, 1.1 * TILE)
       .fill({ color: 0x7a5a32, alpha: 0.5 })
-    ground.addChild(water)
-    ground.cacheAsTexture(true)
-    this.groundLayer.addChild(ground)
+    this.groundLayer.addChild(water)
 
     const cull = <T extends Container>(view: T) => {
       view.cullable = true
@@ -485,6 +483,60 @@ export class VillageWorld {
     this.wildlife.setTerrain(layout.terrain)
     this.enemies.setTerrain(layout.terrain)
     this.cullDirty = true
+  }
+
+  /**
+   * Bakes the ground tiles of each block near the camera into one texture, and drops blocks that have scrolled away.
+   * The tiles are the same ones `buildLayout` placed; only the ones on screen are turned into sprites.
+   */
+  private syncGroundChunks() {
+    const layout = this.landLayout
+    if (!layout) return
+    const land = { x: MAP_LEFT, y: MAP_TOP, width: MAP_WIDTH, height: MAP_HEIGHT }
+    const needed = chunksNear(this.visibleArea(), land)
+    const keep = new Set(needed.map((chunk) => `${chunk.x},${chunk.y}`))
+    for (const [key, sprite] of this.groundChunks) {
+      if (keep.has(key)) continue
+      sprite.destroy({ texture: true, textureSource: true })
+      this.groundChunks.delete(key)
+    }
+    for (const chunk of needed) {
+      const key = `${chunk.x},${chunk.y}`
+      if (this.groundChunks.has(key)) continue
+      const baked = this.bakeGroundChunk(layout, chunk)
+      this.groundChunks.set(key, baked)
+      this.groundLayer.addChildAt(baked, 0)
+    }
+  }
+
+  private bakeGroundChunk(layout: MapLayout, chunk: LandChunkRect) {
+    const batch = new Container()
+    for (let row = 0; row < chunk.height; row++) {
+      const tileY = chunk.originY + row
+      const groundRow = layout.ground[tileY - MAP_TOP]
+      for (let column = 0; column < chunk.width; column++) {
+        const sprite = new Sprite(this.tiles.get(groundRow[chunk.originX + column - MAP_LEFT]))
+        sprite.position.set(column * TILE, row * TILE)
+        batch.addChild(sprite)
+      }
+    }
+    const texture = this.app.renderer.generateTexture({
+      target: batch,
+      frame: new Rectangle(0, 0, chunk.width * TILE, chunk.height * TILE),
+      resolution: this.app.renderer.resolution,
+      antialias: false,
+      clearColor: [0, 0, 0, 0],
+      textureSourceOptions: { scaleMode: 'nearest' },
+    })
+    batch.destroy({ children: true })
+    const baked = new Sprite(texture)
+    baked.position.set(chunk.originX * TILE, chunk.originY * TILE)
+    return baked
+  }
+
+  private dropGroundChunks() {
+    for (const sprite of this.groundChunks.values()) sprite.destroy({ texture: true, textureSource: true })
+    this.groundChunks.clear()
   }
 
   /** Adds trees that grew back and removes felled ones. */
@@ -1925,6 +1977,7 @@ export class VillageWorld {
     const view = this.visibleArea()
     this.viewCenter = { x: view.x + view.width / 2, y: view.y + view.height / 2 }
     this.minimap?.setView(view)
+    this.syncGroundChunks()
     this.cullDirty = true
   }
 

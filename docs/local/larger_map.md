@@ -176,4 +176,43 @@ The night raid on the camp is separate and still comes to the fire. Camp-era nig
 
 The 2,000 by 1,500 land ends about 1,000 tiles from the camp, inside the first hour, so it has no wild den from this list. A den record on the day-scale land is written when the 6-tile reveal band first uncovers its chunk, and only when that chunk is past the foe's floor. Unseen land has no den.
 
+## Areas
+
+The open grounds in the archives are six. Island: sea, foam, sand, pebbles, grass, dirt, a dirt path, brown cliffs, a cave mouth. Undead: grey cracked earth, black cliffs, pits with a green rim, pebble patches. Cursed: pink flesh, red vein cliffs, pits. Fortress: grass, dirt, grey paving, a pit. Grey dungeon: slab, cobble, floors with a blue water rim. Roguelike rooms: grey stone floor, a darker cracked floor. There is no lava, no ash field, no snow field, and no desert of dunes. Snow bushes and a cactus exist, and they have no ground to stand on, so they stay unused. Sand is a shore, not a dune sea, and no foe claims it. The sea, the foam, and the pebbles are a coast that can cross the nearer bands. The crab stands on that sand as a prop.
+
+Dungeon rooms, tables, chairs, and bookshelves are the inside of a door, not the open land. The game's own grass, river, reeds, marsh, mountains, ravine, thicket, and cave stay the home vale. A ploughed field tile is the game's farm beds. The archive crops are plants, not soil.
+
+| Area | Walk | Ground | Decorations | Foes |
+|---|---|---|---|---|
+| Home vale | under 1 hour | The game's own land | Camp, pier, fields, today's trees | None. The night raid still comes to the fire |
+| Slime marsh | 1 hour to 2 hours 8 minutes | Island grass, the game's marsh, shallow water and foam | Ferns, flowering bushes, reeds | Plain slime |
+| Burrows | 2 hours 8 minutes to 4 hours 24 minutes | Dirt, beige rock outcrops | A few loose bones, small beige mushrooms | Grave rat, then imp |
+| Hunting wood | 4 hours 24 minutes to 7 hours 48 minutes | Island grass, dirt path | Ball trees, plain green bushes. Deer, hare, and grouse are animals here, not foes | Small goblin, wolf, boar |
+| Goblin camp and field | 7 hours 48 minutes to 11 hours 12 minutes | Grass and dirt. The field uses the game's farm beds | Autumn bushes, tan tents, crates, a campfire. Sunflower, onion, and berry bushes on the beds | Club goblin, hooded orc, scarecrow |
+| First graves | 11 hours 12 minutes to 12 hours 20 minutes | Grey cracked earth | Grave stones, thorn bushes, dead trees, small blue mushrooms | Ghoul |
+| Brown ruin | 12 hours 20 minutes to 14 hours 36 minutes | Grass, with brown masonry on it | Broken walls, an arch, rubble, a round tower | Sword goblin, banner goblin |
+| White dead wood | 14 hours 36 minutes to 15 hours 44 minutes | Grey cracked earth, black cliff edges | White bare trees, bone piles, pale mushrooms | Wraith |
+| Flesh pits | 15 hours 44 minutes to 16 hours 52 minutes | Pink flesh, red vein cliffs, pits | Eye stalks, a mound of eyes, jaws, red spines, tentacles, a meat flower, pustules | Poison plant |
+| Burned rock | 16 hours 52 minutes to 18 hours | No ground matches. The nearest sheets are dark rock props | A burned black trunk, orange-spotted rocks, red and yellow crystals, a brazier | Flaming slime |
+| Rocky wood | 18 hours to 20 hours 16 minutes | Dirt and brown cliffs. Loose grey rocks are props, not a floor | Fern trees, oval-leaf trees, black and orange mushrooms, cave mouths, a deer statue, two red-roofed yurts. Ents and tree idols can stand among the trees | Orc with one axe, bear |
+| Warrior camp | 20 hours 16 minutes to 21 hours 24 minutes | The same dirt and cliffs | More yurts, weapon racks, loose axes, dragon bones as a prop | Orc warrior |
+| Blue ruin | 21 hours 24 minutes to 22 hours 32 minutes | Grey paving, cobble, blue-grey masonry | Mossy walls, columns, luminous trees, a chest, wall torches | Vampire |
+| Berserk camp | 22 hours 32 minutes to 23 hours 40 minutes | Dirt and cliffs again | Bones, horned skull trophies, the racks | Orc berserk |
+| Ritual ground | 23 hours 40 minutes to 24 hours 48 minutes | Dirt, beige rock | Dark totems, a bone magic circle, a bone-ring fire, the caveman statue | Orc shaman. This band reaches the straight edge |
+| High ruin | 24 hours 48 minutes to 27 hours 4 minutes | Fortress grey walls and paving, the small keep | A barred gate, arrow slits, a wooden door, a pit in the grass, white and luminous trees | Winged vampire, orc with two swords |
+| Deep graves | 27 hours 4 minutes to 28 hours 12 minutes | Black cliffs, pits with a green rim | Skull doorway, reaching dead arms, piles of skulls, rib cages | Zombie |
+| Fire waste | 28 hours 12 minutes to 29 hours 20 minutes | No ground matches | Red, yellow, and orange crystals, braziers, the bone-ring fire, orange-spotted rock | Fire spirit |
+| Bone field | 29 hours 20 minutes to 30 hours 28 minutes | Grey cracked earth | The large bone piles, a human skeleton prop, scattered skulls | Skeleton |
+| Keep | 30 hours 28 minutes to 32 hours 44 minutes | Fortress walls and the grey dungeon floor, inside the doors | Portcullis, chests, weapon racks, shields, barrels, a guillotine as a prop | Armored orc, then the nine knights on one floor |
+| Barrow | 32 hours 44 minutes to 33 hours 52 minutes | Grey cracked earth, grave rows | Mounds, a standing stone, the skull doorway | Barrow king |
+| Throne | 33 hours 52 minutes to the corner | Dead-land cliffs, the green glow along the pit rims | The spiked throne, the cairn with skulls and green smoke, green flames | Lich |
+
+Three grounds are missing, so three foes stand on props.
+
+- The imp has no brimstone and no lava. He stands on dirt and beige rock.
+- The flaming slime and the fire spirit have no ash field and no lava. They stand on dark rocks, crystals, and fire props.
+- The scarecrow's soil is the game's farm tile. The archive only supplies the crops on it.
+
+The distance order also breaks two themes in half. The brown ruin, with living goblins, sits between the ghoul's graves and the wraith's dead wood. The bear, the unwinged vampire, and the zombie each sit between orc bands, so the rocky camp stops and starts again. The ground changes at those floors. It does not slide sideways to keep one theme together.
+
 There is no useful tile cap after those three. A week from the edge is about a million tiles and stays cheap, because an empty region is a seed and a journey is one record. The 2,000 by 1,500 land remains the first size to build. Day-scale routes come after chunk-local coordinates and route fog.

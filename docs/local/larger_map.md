@@ -207,29 +207,31 @@ The creatures that live on a point leave one good when they are slain. That good
 
 Destroying the point makes that point calm. It leaves the nights, and its locals are gone, so its good stops. The other points of that level stay, and a level that was already opened stays open. The village chooses per point: keep it and keep the good, or destroy it and take the calm.
 
-The plain recipes stay. The drop is spent beside the plain recipe. Without the drop, the plain piece can still be made.
+A point never leaves a weapon. A sword, a spear, a bow, an arrow, and a shield are made only from their camp recipes. No fang, tusk, tooth, bone, or plate is one of those weapons, and none of them is spent on making one.
+
+The other recipes stay. The drop is spent beside the plain recipe. Without the drop, the plain piece can still be made.
 
 | Who lives there | The good | Spent beside |
 |---|---|---|
 | Plain slime | Jelly | The poultice. Berries still make the ordinary remedy. Jelly makes the strong one |
 | Grave rat | Grease | A worn tool, and some of its wear comes back |
 | Imp | Cinder | The vigor drink, so the drink lasts longer |
-| Every goblin | Sinew | The bow |
-| Wolf | Fang | The spear |
-| Boar | Tusk | The arrows |
+| Every goblin | Sinew | The leather armor, to stitch it |
+| Wolf | Fang | A meal. Food and a fang make a ration for a longer walk |
+| Boar | Tusk | The kitchen. A tusk makes a richer stew than food alone |
 | Scarecrow | Straw | The leather armor, to quilt it |
-| Ghoul | Nail | An arrow that already has a tusk tip, to poison it |
+| Ghoul | Nail | The poultice, with jelly, for a wound that has sickened |
 | Wraith | Ash | The library. It is research the books do not give |
-| Poison plant | Sap | A weapon, to poison it. The poultice does not use sap |
-| Flaming slime | Ember | The smith, in place of coal, when making a steel tool |
-| Bear | Claw | The shield, as its boss |
-| Every orc | Tooth | A sword or an iron axe, to temper the edge |
+| Poison plant | Sap | A tonic. Sap and food make a remedy for poison |
+| Flaming slime | Ember | The smith, in place of coal, when making a steel axe or a steel pick |
+| Bear | Claw | The library, a specimen |
+| Every orc | Tooth | The vigor drink. One tooth makes a harsh draught |
 | Either vampire | Dust | The library, a larger grant than wraith ash |
 | Zombie | Salt | A stack of food, so it keeps longer |
-| Fire spirit | Heart | The smith. One heart makes a steel tool with no coal |
-| Skeleton | Bone | The shield, as its frame, before the bear claw is set on it |
+| Fire spirit | Heart | The smith. One heart makes a steel axe or a steel pick with no coal |
+| Skeleton | Bone | The kitchen, a broth |
 | Fortress knight | Plate scrap | The leather armor, to add a plate |
-| Barrow king | Crown flake | Gold at the smith, to gild a sword |
+| Barrow king | Crown flake | The library, a grant. It is not gold for the smith |
 | Lich | Green flame | The library, with wraith ash and vampire dust, for the last grant |
 
 ## Areas

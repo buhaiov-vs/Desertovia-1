@@ -103,7 +103,7 @@ Far work uses a journey to a place, then a local job. The 2-second work walk sta
 
 ## Days of travel
 
-A walk uses the same pace: **0.6 seconds per tile**, healthy. The sprite at 26 pixels per second only plays while the figure is on screen. Watching the whole way is about 3 percent longer than the server clock, so one real day on screen is about **140,000 tiles** instead of **144,000**. The clock does not carry a hero through a fight while the player is away. An unfought attack on a fog march is a fall, not a finished trip.
+A walk uses the same pace: **0.6 seconds per tile**, healthy. The sprite at 26 pixels per second only plays while the figure is on screen. Watching the whole way is about 3 percent longer than the server clock, so one real day on screen is about **140,000 tiles** instead of **144,000**. The clock does not finish a fog march while the player is away. Quiet hands on that march spawn a faster pursuer, and a catch is a fall, not a finished trip.
 
 One village day is **4 real hours**.
 
@@ -125,9 +125,13 @@ A dense fog bitmap of that land is about **7.8 GB** per village. `Exploration.Se
 
 On today's map a click on fog does nothing. Building on unseen land stays refused. On the large map a click in the fog is allowed, and it is a march into the black, not a timer. The hero walks that way and reveals the 6 tiles they actually see. The march does not look ahead and does not plot a safe road.
 
-If an attack comes during that march and the player is not there to fight it, the hero falls. Every good they carried drops on that tile. The body stays down until another citizen raises them, or until they stand up themselves. Either way they rise knocked: **1%** of health, and a walk far slower than the healthy pace. The dropped goods stay on the tile for whoever picks them up.
+The march watches the hands. A mouse move or a key counts on a desk. On a phone the client must answer a presence ping. **15 seconds** with none of those, and a pursuer appears **12 tiles** ahead in the fog. The contact tile is the hero's tile at that moment. The check keeps running for the whole march. Breaking off one pursuer and going quiet again brings another. A tap at the edge and a device left on the table does not scout the late land.
 
-A walk that stays on revealed ground and out of a living claim has no attack. Entering a claim, or marching into the fog, is the fight the player has to watch. The road between claims is not simulated.
+The pursuer is faster than the hero, so a chase the hero can always win does not exist. The hero takes 0.6 seconds a tile. The pursuer takes **0.48** seconds a tile, one quarter faster. It leaves when the hero is more than **24 tiles** from the contact tile. A hero who turns within about 14 seconds and runs back covers those 24 tiles while the pursuer is still short of a strike, and the pursuer goes. A hero who keeps the order walks into it and is caught in a few seconds. The pursuer leaves none of a point's goods. This is the run. It is not the fight inside a claim.
+
+A catch lays the hero on that tile. Every good they carried drops there and stays for whoever picks it up. Another citizen who reaches the body cures them, and they get up then, at the healthy pace. If nobody comes, the hero wakes alone after **30 minutes**, at **1%** of health, and walks at **2.4 seconds** a tile, four times the healthy pace. The crawl home is the cost of the tap. A 10-minute walk back takes 40 minutes. A fall at the day edge is about four real days of crawling. The road home has no new pursuer while it stays on revealed ground and out of a living claim.
+
+A walk that stays on revealed ground and out of a living claim has no attack. Entering a claim is the fight the player has to watch. Marching into the fog is the run above. The road between claims is not simulated.
 
 Pushing the frontier is those watched steps. If the walker stays at the edge, the time to reveal a line is the same as walking it: **one real day** of scouting reaches **144,000 tiles** out. A known road that bends around fog is longer than the straight line, and each bend still has to be walked on revealed tiles.
 
@@ -170,7 +174,7 @@ On the square of about 288,000 tiles, the camp is in the middle and each edge is
 
 The first floor is 10 minutes out, 1,000 tiles. Later floors stay 6,800 tiles apart, which is 1 hour 8 minutes. Inside those 1,000 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that foe. The straight edge, at 24 hours, is the winged vampire's floor. Everyone after him stands past that edge, toward the corners. The lich's floor is short of the corner, and the throne band runs from there to the corner.
 
-Each level is one row. The seed places several points of that foe around the camp, on the ring, so their directions differ. A point's direction is the line from the campfire to the point.
+Each level is one row. The seed places **eight** points of that foe around the camp, one every eighth of the circle, so the nights come from different directions. A point's direction is the line from the campfire to the point. On the first 2,000 by 1,500 land a point is kept only when it lies inside the land and past that foe's floor, so level 1 has the east and west points on the long edge. The north and south points fall outside the short edge.
 
 A claim stays a small patch around the den: 48 tiles for a pack, 64 for one large figure. The grave rat shows four. Plain slimes show three, one of each ordinary color. Wolves show four, boars three, goblins three. The ghoul and the imp show two. One large figure shows one: the wraith, the bear, each orc, each vampire, the zombie, the skeleton, a knight, the barrow king, and the lich. Sprites exist while a citizen is inside the claim. Marks on the ground stay in the chunk texture.
 
@@ -209,33 +213,39 @@ Destroying the point makes that point calm. It leaves the nights, and its locals
 
 A point never leaves a weapon. A sword, a spear, a bow, an arrow, and a shield are still made only from their camp recipes, after the technology that allows them. The tusk, the sinew, the claw, and the plate pay for that research. They are not the weapon.
 
-Each good is the pile a technology eats before its research can start. The cycles and the crew do not begin until the village has turned in **1,000** of that good. The pile is consumed. One slain local leaves one of the good. Destroy the point before the pile is in, and that supply stops. Another living point of the same creature can still fill it. Once the 1,000 are turned in, the technology no longer needs the point.
+Each good is the pile a technology eats before its research can start. The cycles and the crew do not begin until the village has turned that pile in. The pile is consumed. One slain local leaves one of the good. Destroy the point before the pile is in, and that supply stops. Another living point of the same creature can still fill it. Once the pile is turned in, the technology no longer needs the point.
+
+The count is the time, not a flat 1,000. These are the working numbers. A slain local is back after **10 minutes**. Hands hold **10** of that good, the same carry as today. A kill takes **15 seconds**, which is already inside the times below. The gatherer walks to the nearest living point, stays until the hands are full, and walks home. Eight points means eight gatherers can do that at once, one point each. Extra people shorten a pile only when it is more than one load. A pile of 10 is one person's expedition.
+
+A flat 1,000 is 100 loads. On the slime ring one load is 52 minutes, so 1,000 is about **88 hours**, three and a half days of one walker. On the skeleton ring one load is already **59 hours**, so 1,000 is about **240 days**. The pile below is what one gatherer carries home in one real day, rounded to the nearest 10, and it is never under 10. Past the ghoul the round trip itself is longer than a day, so the pile stays one load and the time is that expedition.
+
+| Technology | Pile | From | One gatherer |
+|---|---|---|---:|
+| Herb lore | 270 jelly | Plain slime, a pack of 3, 10 minutes | 24 hours |
+| Stone tools | 80 grease | Grave rat, a pack of 4 | 24 hours |
+| Mining | 40 cinder | Imp, a pair | 22 hours |
+| Archery | 30 sinew | The nearest goblin, a pack of 3 | 23 hours |
+| Tracking | 20 fang | Wolf, a pack of 4 | 20 hours |
+| Weaponcraft | 20 tusk | Boar, a pack of 3 | 24 hours |
+| Agriculture | 10 straw | Scarecrow, one | 20 hours |
+| Alchemy | 10 nail | Ghoul, a pair | 21 hours |
+| Writing | 10 ash | Wraith, one | 29 hours |
+| Brewing | 10 sap | Poison plant, one | 31 hours |
+| Smelting | 10 ember | Flaming slime, one | 34 hours |
+| Mechanics | 10 tooth | The nearest orc, the hooded one | 18 hours |
+| Warfare | 10 claws, and 10 plate scraps | Bear, then a knight | 38 hours, then 63 hours |
+| Bookkeeping | 10 dust | The nearer vampire | 43 hours |
+| Baking | 10 salt | Zombie, one | 54 hours |
+| Forging | 10 heart | Fire spirit, one | 56 hours |
+| Carpentry | 10 bone | Skeleton, one | 59 hours |
+| Music | 10 crown flakes | Barrow king, one | 65 hours |
+| Vigor drinks | 10 green flames, and the sap already spent on brewing | Lich, one | 68 hours |
 
 Weaving and weather lore take no creature good. Reeds and the sky still finish those two. Every other technology waits on a pile.
 
-| Technology | 1,000 of | From | Not closer than |
-|---|---|---|---:|
-| Herb lore | Jelly | Plain slime | 10 minutes |
-| Stone tools | Grease | Grave rat | 1 hour 18 minutes |
-| Mining | Cinder | Imp | 2 hours 26 minutes |
-| Archery | Sinew | Any goblin | 3 hours 34 minutes |
-| Tracking | Fang | Wolf | 4 hours 42 minutes |
-| Weaponcraft | Tusk | Boar | 5 hours 50 minutes |
-| Agriculture | Straw | Scarecrow | 9 hours 14 minutes |
-| Alchemy | Nail | Ghoul | 10 hours 22 minutes |
-| Writing | Ash | Wraith | 13 hours 46 minutes |
-| Brewing | Sap | Poison plant | 14 hours 54 minutes |
-| Smelting | Ember | Flaming slime | 16 hours 2 minutes |
-| Warfare | Claw, and 1,000 plate scraps | Bear, and a knight | 18 hours 18 minutes, and 30 hours 46 minutes |
-| Mechanics | Tooth | Any orc | 8 hours 6 minutes |
-| Bookkeeping | Dust | Either vampire | 20 hours 34 minutes |
-| Baking | Salt | Zombie | 26 hours 14 minutes |
-| Forging | Heart | Fire spirit | 27 hours 22 minutes |
-| Carpentry | Bone | Skeleton | 28 hours 30 minutes |
-| Music | Crown flake | Barrow king | 31 hours 54 minutes |
-| Vigor drinks | Green flame, and the sap already spent on brewing | Lich | 33 hours 2 minutes |
+One slime load is the 10-minute walk out, 30 minutes while the pack of 3 refills the hands, the kills, and the 10-minute walk home. Twenty-seven of those loads are the 270. A rat load waits 20 minutes because four rats refill faster. A single figure waits 90 minutes for the other nine. The far rows are almost all walking: the lich is 33 hours out and 33 hours back, plus that 90-minute wait.
 
-Warfare does not start until both piles are in. Vigor drinks do not start until the flame is in, and brewing has already consumed its own 1,000 sap. A child technology still waits on its parent in the catalog. The pile does not replace that. The pile can be gathered before the parent is finished.
+Warfare does not start until both piles are in. Vigor drinks do not start until the flame is in, and brewing has already consumed its own sap. A child technology still waits on its parent in the catalog. The pile does not replace that. The pile can be gathered before the parent is finished. Eight gatherers on the slime ring finish the 270 in about 3 hours. Eight gatherers do not shorten the lich's 68 hours, because 10 flames are already one load.
 
 ## Areas
 

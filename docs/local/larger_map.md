@@ -135,46 +135,69 @@ On the square of about 288,000 tiles, the camp is in the middle and each edge is
 
 | Order | Foe | What the sprite says | Not closer than | Walk, healthy |
 |---|---|---|---:|---:|
-| 1 | Plain slime | Round blue, green, or red jelly; teal or dark-blue blob; island green slime. Eyes, no weapon | 6,000 | 1 hour |
-| 2 | Grave rat | "Fast, weak", a pack, body about 10 pixels | 12,800 | 2 hours 8 minutes |
-| 3 | Imp | "Small", about 9 pixels tall, stubby horns, no weapon | 19,600 | 3 hours 16 minutes |
-| 4 | Small goblin | Small green goblin, no weapon drawn | 26,400 | 4 hours 24 minutes |
-| 5 | Wolf | Low grey animal, 9 pixels tall, yellow eyes, no weapon | 33,200 | 5 hours 32 minutes |
-| 6 | Boar | Short tusks on a low heavy body | 40,000 | 6 hours 40 minutes |
-| 7 | Goblin with a club | Green goblin, wooden club | 46,800 | 7 hours 48 minutes |
-| 8 | Hooded orc | Green orc in a brown hood, a club | 53,600 | 8 hours 56 minutes |
-| 9 | Scarecrow | Straw hat, stick arms | 60,400 | 10 hours 4 minutes |
-| 10 | Ghoul | Hunched, about 11 pixels, long claws | 67,200 | 11 hours 12 minutes |
-| 11 | Goblin with a sword | Green goblin, a sword | 74,000 | 12 hours 20 minutes |
-| 12 | Banner goblin | Green goblin carrying a red-and-white banner | 80,800 | 13 hours 28 minutes |
-| 13 | Wraith | Floating, hooded, dark empty eyes, no weapon | 87,600 | 14 hours 36 minutes |
-| 14 | Poison plant | Dark purple bulb, leafy crown, poison puff and poison cloud | 94,400 | 15 hours 44 minutes |
-| 15 | Flaming slime | Dark cracked blob with yellow flames | 101,200 | 16 hours 52 minutes |
-| 16 | Orc with one axe | Smaller orc, leather and cloth, one axe | 108,000 | 18 hours |
-| 17 | Bear | Widest animal, pale claws, 11 pixels tall | 114,800 | 19 hours 8 minutes |
-| 18 | Orc warrior | Large orc, topknot, one axe | 121,600 | 20 hours 16 minutes |
-| 19 | Vampire | Pale, a cape, a spell flash, no wings | 128,400 | 21 hours 24 minutes |
-| 20 | Orc berserk | Large, tusks, bare chest, a cleaver in each hand | 135,200 | 22 hours 32 minutes |
-| 21 | Orc shaman | Large, grey tunic, wooden staff, two spell casts | 142,000 | 23 hours 40 minutes |
-| 22 | Winged vampire | Pale, white hair, red bat wings, red cape, a spell flash | 148,800 | 24 hours 48 minutes |
-| 23 | Orc with two swords | Blue-grey skin, a gold sword in each hand | 155,600 | 25 hours 56 minutes |
-| 24 | Zombie | Standing green corpse, drawn twice as tall, 26 pixels, no weapon | 162,400 | 27 hours 4 minutes |
-| 25 | Fire spirit | Yellow-orange flame with a face, a shot, a charge, and an explosion | 169,200 | 28 hours 12 minutes |
-| 26 | Skeleton | Bone figure, drawn twice as tall, 30 pixels; the archive sheet gives him a short blade | 176,000 | 29 hours 20 minutes |
-| 27 | Armored orc | Tall black hair, red and gold armor, two swords | 182,800 | 30 hours 28 minutes |
-| 28 | Fortress knight | Plate or a helm, sword and shield, or a spear, halberd, crossbow, or staff. Nine looks, one floor | 189,600 | 31 hours 36 minutes |
-| 29 | Barrow king | "The boss", rusty gold crown, notched sword, a 16 by 24 frame | 196,400 | 32 hours 44 minutes |
-| 30 | Lich | Seated on a spiked throne, blue robe, green eyes, green flames. No walk cycle | 203,200 | 33 hours 52 minutes |
+| 1 | Plain slime | Round blue, green, or red jelly; teal or dark-blue blob; island green slime. Eyes, no weapon | 1,000 | 10 minutes |
+| 2 | Grave rat | "Fast, weak", a pack, body about 10 pixels | 7,800 | 1 hour 18 minutes |
+| 3 | Imp | "Small", about 9 pixels tall, stubby horns, no weapon | 14,600 | 2 hours 26 minutes |
+| 4 | Small goblin | Small green goblin, no weapon drawn | 21,400 | 3 hours 34 minutes |
+| 5 | Wolf | Low grey animal, 9 pixels tall, yellow eyes, no weapon | 28,200 | 4 hours 42 minutes |
+| 6 | Boar | Short tusks on a low heavy body | 35,000 | 5 hours 50 minutes |
+| 7 | Goblin with a club | Green goblin, wooden club | 41,800 | 6 hours 58 minutes |
+| 8 | Hooded orc | Green orc in a brown hood, a club | 48,600 | 8 hours 6 minutes |
+| 9 | Scarecrow | Straw hat, stick arms | 55,400 | 9 hours 14 minutes |
+| 10 | Ghoul | Hunched, about 11 pixels, long claws | 62,200 | 10 hours 22 minutes |
+| 11 | Goblin with a sword | Green goblin, a sword | 69,000 | 11 hours 30 minutes |
+| 12 | Banner goblin | Green goblin carrying a red-and-white banner | 75,800 | 12 hours 38 minutes |
+| 13 | Wraith | Floating, hooded, dark empty eyes, no weapon | 82,600 | 13 hours 46 minutes |
+| 14 | Poison plant | Dark purple bulb, leafy crown, poison puff and poison cloud | 89,400 | 14 hours 54 minutes |
+| 15 | Flaming slime | Dark cracked blob with yellow flames | 96,200 | 16 hours 2 minutes |
+| 16 | Orc with one axe | Smaller orc, leather and cloth, one axe | 103,000 | 17 hours 10 minutes |
+| 17 | Bear | Widest animal, pale claws, 11 pixels tall | 109,800 | 18 hours 18 minutes |
+| 18 | Orc warrior | Large orc, topknot, one axe | 116,600 | 19 hours 26 minutes |
+| 19 | Vampire | Pale, a cape, a spell flash, no wings | 123,400 | 20 hours 34 minutes |
+| 20 | Orc berserk | Large, tusks, bare chest, a cleaver in each hand | 130,200 | 21 hours 42 minutes |
+| 21 | Orc shaman | Large, grey tunic, wooden staff, two spell casts | 137,000 | 22 hours 50 minutes |
+| 22 | Winged vampire | Pale, white hair, red bat wings, red cape, a spell flash | 143,800 | 23 hours 58 minutes |
+| 23 | Orc with two swords | Blue-grey skin, a gold sword in each hand | 150,600 | 25 hours 6 minutes |
+| 24 | Zombie | Standing green corpse, drawn twice as tall, 26 pixels, no weapon | 157,400 | 26 hours 14 minutes |
+| 25 | Fire spirit | Yellow-orange flame with a face, a shot, a charge, and an explosion | 164,200 | 27 hours 22 minutes |
+| 26 | Skeleton | Bone figure, drawn twice as tall, 30 pixels; the archive sheet gives him a short blade | 171,000 | 28 hours 30 minutes |
+| 27 | Armored orc | Tall black hair, red and gold armor, two swords | 177,800 | 29 hours 38 minutes |
+| 28 | Fortress knight | Plate or a helm, sword and shield, or a spear, halberd, crossbow, or staff. Nine looks, one floor | 184,600 | 30 hours 46 minutes |
+| 29 | Barrow king | "The boss", rusty gold crown, notched sword, a 16 by 24 frame | 191,400 | 31 hours 54 minutes |
+| 30 | Lich | Seated on a spiked throne, blue robe, green eyes, green flames. No walk cycle | 198,200 | 33 hours 2 minutes |
 
-The floors are 6,800 tiles apart, which is 1 hour 8 minutes. Inside 6,000 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that foe. The straight edge, at 24 hours, falls in the shaman's band. The winged vampire and everyone after him stand past that edge, toward the corners. The lich's floor is the corner.
+The first floor is 10 minutes out, 1,000 tiles. Later floors stay 6,800 tiles apart, which is 1 hour 8 minutes. Inside those 1,000 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that foe. The straight edge, at 24 hours, is the winged vampire's floor. Everyone after him stands past that edge, toward the corners. The lich's floor is short of the corner, and the throne band runs from there to the corner.
+
+Each level is one row. The seed places several points of that foe around the camp, on the ring, so their directions differ. A point's direction is the line from the campfire to the point.
 
 A claim stays a small patch around the den: 48 tiles for a pack, 64 for one large figure. The grave rat shows four. Plain slimes show three, one of each ordinary color. Wolves show four, boars three, goblins three. The ghoul and the imp show two. One large figure shows one: the wraith, the bear, each orc, each vampire, the zombie, the skeleton, a knight, the barrow king, and the lich. Sprites exist while a citizen is inside the claim. Marks on the ground stay in the chunk texture.
 
 These sheets are not dens. Deer, hare, fox, and black grouse are hunt animals, and the fox has no attack. Farm animals are stock. The orange crab has no attack. The island humans and the three roguelike heroes are people, not dens. Eye stalks, jaws, spikes, tentacles, and the other cursed growths dress the poison plant's land. Dead trees and mushrooms dress the lich's land.
 
-The night raid on the camp is separate and still comes to the fire. Camp-era nights stay wolves; boars join in the Village era and bears in the Town era. Those raids are not dens on this ladder.
+A night attack on the camp comes from one spawn point, and the fighters arrive from that point's direction. The other points stay out that night.
 
-The 2,000 by 1,500 land ends about 1,000 tiles from the camp, inside the first hour, so it has no wild den from this list. A den record on the day-scale land is written when the 6-tile reveal band first uncovers its chunk, and only when that chunk is past the foe's floor. Unseen land has no den.
+While the village has discovered no spawn point, the night picks a level 1 point. Discovering a level 1 point adds every level 2 point to the nights. A night can then come from a level 1 point or a level 2 point, still one point, from that point's direction. Discovering a point of a later level adds the next level in the same way. A level that has joined the nights keeps sending attackers. A point counts as discovered when the 6-tile reveal band uncovers it. An opened level can attack from a point the village has not seen yet.
+
+The 2,000 by 1,500 land reaches 1,000 tiles on the long edge, which is this 10-minute line, so a level 1 point can sit on that edge. The short edge is 750 tiles, 7 minutes 30 seconds, still inside the line. A den record is written when the reveal band uncovers its chunk, and only when that chunk is past the foe's floor. Unseen land has no den.
+
+## Wild goods
+
+Goods that are gathered sit away from the camp, so a trip is the reason to go out. The walk to a patch is at least as long as one bout of work there. Coming home takes the same walk again. Staying for another bout spends the work again, and the walk home waits until the citizen leaves.
+
+Berries are the near patch. They stand 300 tiles out, which is 3 minutes. Picking lasts 3 minutes. The walk home is another 3 minutes, or the picker stays and picks again. The scarecrow's beds, hours farther out, are a later garden. They are not this patch.
+
+The other wild goods are farther than the berries, and the richer ones are past the 10-minute line, so the path to them crosses a spawn point.
+
+| Good | Not closer than | Walk | Where |
+|---|---:|---:|---|
+| Berries | 300 | 3 minutes | Inside the quiet ring. One bout is 3 minutes |
+| Reeds | 600 | 6 minutes | Still inside the quiet ring, by the water |
+| Wood | 1,000 | 10 minutes | On the first foe line |
+| Stone | 2,000 | 20 minutes | In the slime marsh |
+| Birds | 4,000 | 40 minutes | Deeper in that marsh |
+| Rabbits, deer, ore | the band that holds them | the walk to that band | Rabbits and deer in the hunting wood, ore in the burrows and the later rock |
+
+Fish at the pier and gold past the bridge stay where those projects stand. Crafted goods are made in the camp. They are not patches on the land.
 
 ## Areas
 
@@ -184,28 +207,28 @@ Dungeon rooms, tables, chairs, and bookshelves are the inside of a door, not the
 
 | Area | Walk | Ground | Decorations | Foes |
 |---|---|---|---|---|
-| Home vale | under 1 hour | The game's own land | Camp, pier, fields, today's trees | None. The night raid still comes to the fire |
-| Slime marsh | 1 hour to 2 hours 8 minutes | Island grass, the game's marsh, shallow water and foam | Ferns, flowering bushes, reeds | Plain slime |
-| Burrows | 2 hours 8 minutes to 4 hours 24 minutes | Dirt, beige rock outcrops | A few loose bones, small beige mushrooms | Grave rat, then imp |
-| Hunting wood | 4 hours 24 minutes to 7 hours 48 minutes | Island grass, dirt path | Ball trees, plain green bushes. Deer, hare, and grouse are animals here, not foes | Small goblin, wolf, boar |
-| Goblin camp and field | 7 hours 48 minutes to 11 hours 12 minutes | Grass and dirt. The field uses the game's farm beds | Autumn bushes, tan tents, crates, a campfire. Sunflower, onion, and berry bushes on the beds | Club goblin, hooded orc, scarecrow |
-| First graves | 11 hours 12 minutes to 12 hours 20 minutes | Grey cracked earth | Grave stones, thorn bushes, dead trees, small blue mushrooms | Ghoul |
-| Brown ruin | 12 hours 20 minutes to 14 hours 36 minutes | Grass, with brown masonry on it | Broken walls, an arch, rubble, a round tower | Sword goblin, banner goblin |
-| White dead wood | 14 hours 36 minutes to 15 hours 44 minutes | Grey cracked earth, black cliff edges | White bare trees, bone piles, pale mushrooms | Wraith |
-| Flesh pits | 15 hours 44 minutes to 16 hours 52 minutes | Pink flesh, red vein cliffs, pits | Eye stalks, a mound of eyes, jaws, red spines, tentacles, a meat flower, pustules | Poison plant |
-| Burned rock | 16 hours 52 minutes to 18 hours | No ground matches. The nearest sheets are dark rock props | A burned black trunk, orange-spotted rocks, red and yellow crystals, a brazier | Flaming slime |
-| Rocky wood | 18 hours to 20 hours 16 minutes | Dirt and brown cliffs. Loose grey rocks are props, not a floor | Fern trees, oval-leaf trees, black and orange mushrooms, cave mouths, a deer statue, two red-roofed yurts. Ents and tree idols can stand among the trees | Orc with one axe, bear |
-| Warrior camp | 20 hours 16 minutes to 21 hours 24 minutes | The same dirt and cliffs | More yurts, weapon racks, loose axes, dragon bones as a prop | Orc warrior |
-| Blue ruin | 21 hours 24 minutes to 22 hours 32 minutes | Grey paving, cobble, blue-grey masonry | Mossy walls, columns, luminous trees, a chest, wall torches | Vampire |
-| Berserk camp | 22 hours 32 minutes to 23 hours 40 minutes | Dirt and cliffs again | Bones, horned skull trophies, the racks | Orc berserk |
-| Ritual ground | 23 hours 40 minutes to 24 hours 48 minutes | Dirt, beige rock | Dark totems, a bone magic circle, a bone-ring fire, the caveman statue | Orc shaman. This band reaches the straight edge |
-| High ruin | 24 hours 48 minutes to 27 hours 4 minutes | Fortress grey walls and paving, the small keep | A barred gate, arrow slits, a wooden door, a pit in the grass, white and luminous trees | Winged vampire, orc with two swords |
-| Deep graves | 27 hours 4 minutes to 28 hours 12 minutes | Black cliffs, pits with a green rim | Skull doorway, reaching dead arms, piles of skulls, rib cages | Zombie |
-| Fire waste | 28 hours 12 minutes to 29 hours 20 minutes | No ground matches | Red, yellow, and orange crystals, braziers, the bone-ring fire, orange-spotted rock | Fire spirit |
-| Bone field | 29 hours 20 minutes to 30 hours 28 minutes | Grey cracked earth | The large bone piles, a human skeleton prop, scattered skulls | Skeleton |
-| Keep | 30 hours 28 minutes to 32 hours 44 minutes | Fortress walls and the grey dungeon floor, inside the doors | Portcullis, chests, weapon racks, shields, barrels, a guillotine as a prop | Armored orc, then the nine knights on one floor |
-| Barrow | 32 hours 44 minutes to 33 hours 52 minutes | Grey cracked earth, grave rows | Mounds, a standing stone, the skull doorway | Barrow king |
-| Throne | 33 hours 52 minutes to the corner | Dead-land cliffs, the green glow along the pit rims | The spiked throne, the cairn with skulls and green smoke, green flames | Lich |
+| Home vale | under 10 minutes | The game's own land, then open ground out to the first ring | Camp, pier, fields, today's trees. Berry and reed patches sit in this ring | None by day. A night comes from one undiscovered level 1 point, from that point's direction |
+| Slime marsh | 10 minutes to 1 hour 18 minutes | Island grass, the game's marsh, shallow water and foam | Ferns, flowering bushes, reeds. Wood, stone, and birds are gathered here | Plain slime |
+| Burrows | 1 hour 18 minutes to 3 hours 34 minutes | Dirt, beige rock outcrops | A few loose bones, small beige mushrooms | Grave rat, then imp. Ore starts here |
+| Hunting wood | 3 hours 34 minutes to 6 hours 58 minutes | Island grass, dirt path | Ball trees, plain green bushes. Deer, hare, and grouse are animals here, not foes | Small goblin, wolf, boar. Rabbits and deer are hunted here |
+| Goblin camp and field | 6 hours 58 minutes to 10 hours 22 minutes | Grass and dirt. The field uses the game's farm beds | Autumn bushes, tan tents, crates, a campfire. Sunflower, onion, and berry bushes on the beds | Club goblin, hooded orc, scarecrow |
+| First graves | 10 hours 22 minutes to 11 hours 30 minutes | Grey cracked earth | Grave stones, thorn bushes, dead trees, small blue mushrooms | Ghoul |
+| Brown ruin | 11 hours 30 minutes to 13 hours 46 minutes | Grass, with brown masonry on it | Broken walls, an arch, rubble, a round tower | Sword goblin, banner goblin |
+| White dead wood | 13 hours 46 minutes to 14 hours 54 minutes | Grey cracked earth, black cliff edges | White bare trees, bone piles, pale mushrooms | Wraith |
+| Flesh pits | 14 hours 54 minutes to 16 hours 2 minutes | Pink flesh, red vein cliffs, pits | Eye stalks, a mound of eyes, jaws, red spines, tentacles, a meat flower, pustules | Poison plant |
+| Burned rock | 16 hours 2 minutes to 17 hours 10 minutes | No ground matches. The nearest sheets are dark rock props | A burned black trunk, orange-spotted rocks, red and yellow crystals, a brazier | Flaming slime |
+| Rocky wood | 17 hours 10 minutes to 19 hours 26 minutes | Dirt and brown cliffs. Loose grey rocks are props, not a floor | Fern trees, oval-leaf trees, black and orange mushrooms, cave mouths, a deer statue, two red-roofed yurts. Ents and tree idols can stand among the trees | Orc with one axe, bear |
+| Warrior camp | 19 hours 26 minutes to 20 hours 34 minutes | The same dirt and cliffs | More yurts, weapon racks, loose axes, dragon bones as a prop | Orc warrior |
+| Blue ruin | 20 hours 34 minutes to 21 hours 42 minutes | Grey paving, cobble, blue-grey masonry | Mossy walls, columns, luminous trees, a chest, wall torches | Vampire |
+| Berserk camp | 21 hours 42 minutes to 22 hours 50 minutes | Dirt and cliffs again | Bones, horned skull trophies, the racks | Orc berserk |
+| Ritual ground | 22 hours 50 minutes to 23 hours 58 minutes | Dirt, beige rock | Dark totems, a bone magic circle, a bone-ring fire, the caveman statue | Orc shaman. This band reaches the straight edge |
+| High ruin | 23 hours 58 minutes to 26 hours 14 minutes | Fortress grey walls and paving, the small keep | A barred gate, arrow slits, a wooden door, a pit in the grass, white and luminous trees | Winged vampire, orc with two swords |
+| Deep graves | 26 hours 14 minutes to 27 hours 22 minutes | Black cliffs, pits with a green rim | Skull doorway, reaching dead arms, piles of skulls, rib cages | Zombie |
+| Fire waste | 27 hours 22 minutes to 28 hours 30 minutes | No ground matches | Red, yellow, and orange crystals, braziers, the bone-ring fire, orange-spotted rock | Fire spirit |
+| Bone field | 28 hours 30 minutes to 29 hours 38 minutes | Grey cracked earth | The large bone piles, a human skeleton prop, scattered skulls | Skeleton |
+| Keep | 29 hours 38 minutes to 31 hours 54 minutes | Fortress walls and the grey dungeon floor, inside the doors | Portcullis, chests, weapon racks, shields, barrels, a guillotine as a prop | Armored orc, then the nine knights on one floor |
+| Barrow | 31 hours 54 minutes to 33 hours 2 minutes | Grey cracked earth, grave rows | Mounds, a standing stone, the skull doorway | Barrow king |
+| Throne | 33 hours 2 minutes to the corner | Dead-land cliffs, the green glow along the pit rims | The spiked throne, the cairn with skulls and green smoke, green flames | Lich |
 
 Three grounds are missing, so three foes stand on props.
 

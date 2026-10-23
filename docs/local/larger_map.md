@@ -103,7 +103,7 @@ Far work uses a journey to a place, then a local job. The 2-second work walk sta
 
 ## Days of travel
 
-A walk of hours or days uses the same arrival clock: **0.6 seconds per tile**, healthy, and that clock keeps running when the player is away. The sprite at 26 pixels per second only plays while the figure is on screen. Watching the whole way is about 3 percent longer than the server clock, so one real day on screen is about **140,000 tiles** instead of **144,000**.
+A walk uses the same pace: **0.6 seconds per tile**, healthy. The sprite at 26 pixels per second only plays while the figure is on screen. Watching the whole way is about 3 percent longer than the server clock, so one real day on screen is about **140,000 tiles** instead of **144,000**. The clock does not carry a hero through a fight while the player is away. An unfought attack on a fog march is a fall, not a finished trip.
 
 One village day is **4 real hours**.
 
@@ -119,15 +119,17 @@ The land is twice that on the long side if the camp stays in the middle. One rea
 
 A dense fog bitmap of that land is about **7.8 GB** per village. `Exploration.Seen` also copies the whole bitmap, and `Reveal` scans the rectangle around the entire trip. A diagonal day's walk makes that rectangle about 144,000 tiles on a side. Day-scale trips need three further changes on top of the 2,000-tile plan:
 
-1. **The journey is one timed route over land the village has already seen.** The destination is a revealed tile, or a tile someone can see right now. The route stays on those tiles; it does not cut through fog. Start, destination, and departure are enough. The position at any moment is a point along that route. The server does not step the walker tile by tile. The client draws them only in the chunks around the camera.
+1. **A walk is the next step, on revealed ground.** The player orders a tile the village has already seen. The hero walks there. The order does not cross fog, and it does not reveal land by itself. There is no route the server finishes while the player is away from the fight. The client draws the hero only in the chunks around the camera.
 2. **Coordinates are local to a chunk.** One real day is about 2.3 million pixels from the camp. A few days past that, ordinary sprite positions can no longer represent every pixel. Each chunk keeps its own origin.
 3. **Fog is the chunks someone has seen.** A chunk is stored when a walker sees it or someone changes it. A walker sees **6 tiles** around them. Standing on the edge of known land reveals about 6 tiles past it, and the next order can go there. Scenery in the black is generated from the seed only when that band is revealed. Unseen land is not stored, and it is not a destination.
 
-A click on fog already does nothing. Building on unseen land is already refused. The server still accepts any walk coordinate; on the large map it refuses a destination, or a route, that leaves revealed land.
+On today's map a click on fog does nothing. Building on unseen land stays refused. On the large map a click in the fog is allowed, and it is a march into the black, not a timer. The hero walks that way and reveals the 6 tiles they actually see. The march does not look ahead and does not plot a safe road.
 
-Pushing the frontier is a series of those 6-tile bands. If the walker stays at the edge, the time to reveal a line is the same as walking it: **one real day** of scouting reaches **144,000 tiles** out. One order cannot name a ruin in the black and travel there overnight. An overnight journey only crosses land the village has already seen, and a known road that bends around fog is longer than the straight line.
+If an attack comes during that march and the player is not there to fight it, the hero falls. Every good they carried drops on that tile. The body stays down until another citizen raises them, or until they stand up themselves. Either way they rise knocked: **1%** of health, and a walk far slower than the healthy pace. The dropped goods stay on the tile for whoever picks them up.
 
-Encounters sit on region crossings: an ambush, a camp, a ruin. They are checked when the traveler enters that region. The road between crossings has no simulation.
+A walk that stays on revealed ground and out of a living claim has no attack. Entering a claim, or marching into the fog, is the fight the player has to watch. The road between claims is not simulated.
+
+Pushing the frontier is those watched steps. If the walker stays at the edge, the time to reveal a line is the same as walking it: **one real day** of scouting reaches **144,000 tiles** out. A known road that bends around fog is longer than the straight line, and each bend still has to be walked on revealed tiles.
 
 ## How far out each foe starts
 

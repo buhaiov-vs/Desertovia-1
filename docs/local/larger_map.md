@@ -131,7 +131,9 @@ The pursuer is faster than the hero, so a chase the hero can always win does not
 
 A catch lays the hero on that tile. Every good they carried drops there and stays for whoever picks it up. Another citizen who reaches the body cures them, and they get up then, at the healthy pace. If nobody comes, the hero wakes alone after **30 minutes**, at **1%** of health, and walks at **2.4 seconds** a tile, four times the healthy pace. The crawl home is the cost of the tap. A 10-minute walk back takes 40 minutes. A fall at the day edge is about four real days of crawling. The road home has no new pursuer while it stays on revealed ground and out of a living claim.
 
-A walk that stays on revealed ground and out of a living claim has no attack. Entering a claim is the fight the player has to watch. Marching into the fog is the run above. The road between claims is not simulated.
+A walk that stays on revealed ground and out of a living claim has no attack. Marching into the fog is the run above. The road between claims is not simulated.
+
+The player controls one citizen. A click on an enemy is an attack. The dungeon uses this same attack. A click on the ground is a walk. The controlled citizen can enter one claim, and the player clicks the enemies there. Each other citizen stops at the edge of a claim. Those citizens can walk and carry on the safe road. Those citizens do not enter a claim, and they do not attack. One player can fight at one point.
 
 Pushing the frontier is those watched steps. If the walker stays at the edge, the time to reveal a line is the same as walking it: **one real day** of scouting reaches **144,000 tiles** out. A known road that bends around fog is longer than the straight line, and each bend still has to be walked on revealed tiles.
 
@@ -209,13 +211,26 @@ Fish at the pier and gold past the bridge stay where those projects stand. Craft
 
 The creatures that live on a point leave one good when they are slain. That good is the reason to keep the point. The same creature in a night raid leaves none of it. While the point stands, the locals return, so the good can be taken again. Ordinary patches, the berries and the wood and the stone, do not depend on the point.
 
-Destroying the point makes that point calm. It leaves the nights, and its locals are gone, so its good stops. The other points of that level stay, and a level that was already opened stays open. The village chooses per point: keep it and keep the good, or destroy it and take the calm.
+Destroying a point makes that point calm. It leaves the nights, and its locals are gone, so its good stops. A level that was already opened stays open. There is no undo. The destroy action is not an attack. The locals do not strike during it.
+
+Different levels use different actions.
+
+| Action | Levels | What it takes | What becomes calm |
+|---|---|---|---|
+| Stand | Slime, grave rat, imp, wolf, boar, bear | Eight citizens, one in each of the eight claims, for 1 minute | All eight points of that level |
+| Flare | Scarecrow, ghoul, wraith, poison plant, both vampires, zombie, skeleton, barrow king, lich | One flare, used at that point. A flare is 1 wood and 1 feather, made in the camp | That point only |
+| Wood | Every goblin | 10 wood, used at that point | That point only |
+| Wood and ore | Every orc | 10 wood and 10 iron ore, used at that point | That point only |
+| Stone | Flaming slime, fire spirit | 10 stone, used at that point | That point only |
+| Stone and iron | The nine knights | 10 stone and 10 iron ingots, used at that point | That point only |
+
+The stand clears a whole level, so the village keeps every point of that level or loses the supply from all of them. The other actions clear one point. The other points of that level keep their good, and they can still send a night. Ten wood is one pair of hands. A cost of 100 wood would be ten walks, and the goblin ring is about 7 hours out.
 
 A point never leaves a weapon. A sword, a spear, a bow, an arrow, and a shield are still made only from their camp recipes, after the technology that allows them. The tusk, the sinew, the claw, and the plate pay for that research. They are not the weapon.
 
 Each good is the pile a technology eats before its research can start. The cycles and the crew do not begin until the village has turned that pile in. The pile is consumed. One slain local leaves one of the good. Destroy the point before the pile is in, and that supply stops. Another living point of the same creature can still fill it. Once the pile is turned in, the technology no longer needs the point.
 
-The count is the time, not a flat 1,000. These are the working numbers. A slain local is back after **10 minutes**. Hands hold **10** of that good, the same carry as today. A kill takes **15 seconds**, which is already inside the times below. The gatherer walks to the nearest living point, stays until the hands are full, and walks home. Eight points means eight gatherers can do that at once, one point each. Extra people shorten a pile only when it is more than one load. A pile of 10 is one person's expedition.
+The count is the time, not a flat 1,000. These are the working numbers. A slain local is back after **10 minutes**. Hands hold **10** of that good, the same carry as today. A kill takes **15 seconds**, which is already inside the times below. One fighter walks to the nearest living point and stays until the hands are full. A carrier can take that load home on the safe road. The fighter can stay. The carrier does not fight. A pile of 10 is one fight and one walk home.
 
 A flat 1,000 is 100 loads. On the slime ring one load is 52 minutes, so 1,000 is about **88 hours**, three and a half days of one walker. On the skeleton ring one load is already **59 hours**, so 1,000 is about **240 days**. The pile below is what one gatherer carries home in one real day, rounded to the nearest 10, and it is never under 10. Past the ghoul the round trip itself is longer than a day, so the pile stays one load and the time is that expedition.
 
@@ -245,7 +260,7 @@ Weaving and weather lore take no creature good. Reeds and the sky still finish t
 
 One slime load is the 10-minute walk out, 30 minutes while the pack of 3 refills the hands, the kills, and the 10-minute walk home. Twenty-seven of those loads are the 270. A rat load waits 20 minutes because four rats refill faster. A single figure waits 90 minutes for the other nine. The far rows are almost all walking: the lich is 33 hours out and 33 hours back, plus that 90-minute wait.
 
-Warfare does not start until both piles are in. Vigor drinks do not start until the flame is in, and brewing has already consumed its own sap. A child technology still waits on its parent in the catalog. The pile does not replace that. The pile can be gathered before the parent is finished. Eight gatherers on the slime ring finish the 270 in about 3 hours. Eight gatherers do not shorten the lich's 68 hours, because 10 flames are already one load.
+Warfare does not start until both piles are in. Vigor drinks do not start until the flame is in, and brewing has already consumed its own sap. A child technology still waits on its parent in the catalog. The pile does not replace that. The pile can be gathered before the parent is finished. A carrier can take each slime load home, so the fighter does not walk back between loads. The 270 jelly is then about 14 hours at the point, after the first 10-minute walk. The lich stays one fight and one walk of 68 hours. A second fighter cannot work a second point at the same time, because the player has one attack.
 
 ## The shape of the land
 
@@ -274,7 +289,13 @@ The quiet ring is the land inside the ten-minute line, past the vale the game al
 | 10 minutes west | Sand and the first slime marsh inland of it |
 | 10 minutes east, and the other dry directions | The slime line on grass |
 
-Houses, workshops, farms, storage, and walls stay in the vale, on the rules the camp already uses. Revealed land outside the vale takes no plot and no chest. Goods in hand are the load, and a fall leaves them on that tile. A chest at a far point would turn the long walk into one delivery of a stockpile.
+A citizen carries food for the walk, or gathers it on the way: berries, birds, rabbits, and deer, at the distances already set. Fish stay at the pier.
+
+A fire is the checkpoint. It costs **5 wood** to light on revealed ground, outside a claim, and not on water, a ridge, or a pit. It burns **8 hours**. Another 5 wood adds 8 hours. At a burning fire a citizen eats carried food and rests, and energy returns there. Without a fire, the citizen cannot rest on the road.
+
+A new building must stand within **16 tiles** of a burning fire. The camp fire already permits the vale. A journey fire permits the same buildings beside it. Research still starts only at the camp. A store beside a journey fire can hold wood, stone, and food. It does not accept a technology pile.
+
+A burning fire is also a raid target. One night still comes from one spawn point. The night can strike the camp fire or one journey fire. The fighters appear on the fog nearest that fire, on the line toward the chosen point. A dead fire is not a target. The buildings remain, but nobody can rest there or add a building until the fire burns again.
 
 ## Areas
 

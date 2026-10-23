@@ -247,15 +247,44 @@ One slime load is the 10-minute walk out, 30 minutes while the pack of 3 refills
 
 Warfare does not start until both piles are in. Vigor drinks do not start until the flame is in, and brewing has already consumed its own sap. A child technology still waits on its parent in the catalog. The pile does not replace that. The pile can be gathered before the parent is finished. Eight gatherers on the slime ring finish the 270 in about 3 hours. Eight gatherers do not shorten the lich's 68 hours, because 10 flames are already one load.
 
+## The shape of the land
+
+The ring stays the rule for who lives there. A foe is never closer than its floor, and the ground changes at the next floor. The river, the coast, and the ridges do not move a floor. They are the reason one direction is not the same walk as another.
+
+Three features are enough. Each is a function of the seed and the coordinate, so a chunk can draw its piece without looking at the chunk beside it.
+
+The camp's river runs on north and south out of the vale. It is the same water, four tiles wide, with a slow bend. It blocks a step. The bridge in the vale is the first crossing. The next ford is twenty minutes upstream, and another is twenty minutes downstream. After those, the river has one ford each hour of its length. Fish stay at the pier, and gold stays past the bridge. A point that would sit in the water slides along its ring to the nearest dry tile, and that tile is still at least the foe's floor away.
+
+The sea is a bay on the west. Its nearest sand is the ten-minute line. Sand, then pebbles, then foam, then water that blocks. The sea fills the west beyond that shore and crosses the later bands, so the west edge is water, not a day of grass. A western den stands on the inland edge of the sand, still no closer than its own floor. The crab is a prop on the sand. Nothing is hunted in the sea, and nothing sails. On the first 2,000 by 1,500 land the west edge is this beach, and the east edge is the slime line on grass.
+
+Two ridges, and no more. Each is an arc of about a third of its circle, with two passes of open trail, and the seed picks where the arc sits. The first is at the seven-hour line, where the goblin camp starts. The second is at the day edge, between the ritual ground and the high ruin. The rest of those rings is open. A pass is the crossing a region path uses. The ridge itself is mountain, and it blocks.
+
+What stops a step stays close to today's feet. Water, a mountain ridge, and a ravine block. A pit blocks: the green-rim pits, the flesh pits, and the fortress pit. A standing wall, a barred gate, a portcullis, and a cave mouth block. Trees, bushes, reeds, crops, mushrooms, bones, rubble, crystals, tents, grave stones, and the flesh floor do not. Broken masonry is floor. A thicket is a work site you are sent to clear, not a maze of the hunting wood. Rockfall sits on the ridge, beside the passes.
+
+The quiet ring is the land inside the ten-minute line, past the vale the game already draws.
+
+| From the camp | What you walk through |
+|---|---|
+| The vale, under a minute | Today's grass, river, bridge, pier, fields, and trees. Unchanged |
+| Out to 3 minutes | Grass and dirt. The trees thin. No berries yet, and no den |
+| 3 minutes | Eight berry patches on the dry circle. A patch that would fall in the river slides to the bank. One bout is 3 minutes |
+| 3 to 6 minutes | More of that grass. The river is the only break |
+| 6 minutes | Reed beds on both banks, and on the bay shore. These are the reeds that are cut |
+| 6 to 10 minutes | The grass lowers toward the west. The other directions stay dry |
+| 10 minutes west | Sand and the first slime marsh inland of it |
+| 10 minutes east, and the other dry directions | The slime line on grass |
+
+Houses, workshops, farms, storage, and walls stay in the vale, on the rules the camp already uses. Revealed land outside the vale takes no plot and no chest. Goods in hand are the load, and a fall leaves them on that tile. A chest at a far point would turn the long walk into one delivery of a stockpile.
+
 ## Areas
 
-The open grounds in the archives are six. Island: sea, foam, sand, pebbles, grass, dirt, a dirt path, brown cliffs, a cave mouth. Undead: grey cracked earth, black cliffs, pits with a green rim, pebble patches. Cursed: pink flesh, red vein cliffs, pits. Fortress: grass, dirt, grey paving, a pit. Grey dungeon: slab, cobble, floors with a blue water rim. Roguelike rooms: grey stone floor, a darker cracked floor. There is no lava, no ash field, no snow field, and no desert of dunes. Snow bushes and a cactus exist, and they have no ground to stand on, so they stay unused. Sand is a shore, not a dune sea, and no foe claims it. The sea, the foam, and the pebbles are a coast that can cross the nearer bands. The crab stands on that sand as a prop.
+The open grounds in the archives are six. Island: sea, foam, sand, pebbles, grass, dirt, a dirt path, brown cliffs, a cave mouth. Undead: grey cracked earth, black cliffs, pits with a green rim, pebble patches. Cursed: pink flesh, red vein cliffs, pits. Fortress: grass, dirt, grey paving, a pit. Grey dungeon: slab, cobble, floors with a blue water rim. Roguelike rooms: grey stone floor, a darker cracked floor. There is no lava, no ash field, no snow field, and no desert of dunes. Snow bushes and a cactus exist, and they have no ground to stand on, so they stay unused. Sand is the western bay, not a dune sea, and no foe claims it. The crab stands on that sand as a prop.
 
 Dungeon rooms, tables, chairs, and bookshelves are the inside of a door, not the open land. The game's own grass, river, reeds, marsh, mountains, ravine, thicket, and cave stay the home vale. A ploughed field tile is the game's farm beds. The archive crops are plants, not soil.
 
 | Area | Walk | Ground | Decorations | Foes |
 |---|---|---|---|---|
-| Home vale | under 10 minutes | The game's own land, then open ground out to the first ring | Camp, pier, fields, today's trees. Berry and reed patches sit in this ring | None by day. A night comes from one undiscovered level 1 point, from that point's direction |
+| Home vale | under 10 minutes | Today's land, then grass out to the berry circle, the river north and south, and the western sand at the slime line | Camp, pier, fields, thinning trees. Eight berry patches at 3 minutes, reed beds at 6 minutes on the banks and the bay | None by day. A night comes from one undiscovered level 1 point, from that point's direction |
 | Slime marsh | 10 minutes to 1 hour 18 minutes | Island grass, the game's marsh, shallow water and foam | Ferns, flowering bushes, reeds. Wood, stone, and birds are gathered here | Plain slime |
 | Burrows | 1 hour 18 minutes to 3 hours 34 minutes | Dirt, beige rock outcrops | A few loose bones, small beige mushrooms | Grave rat, then imp. Ore starts here |
 | Hunting wood | 3 hours 34 minutes to 6 hours 58 minutes | Island grass, dirt path | Ball trees, plain green bushes. Deer, hare, and grouse are animals here, not foes | Small goblin, wolf, boar. Rabbits and deer are hunted here |

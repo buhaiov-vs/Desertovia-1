@@ -174,7 +174,7 @@ A claim stays a small patch around the den: 48 tiles for a pack, 64 for one larg
 
 These sheets are not dens. Deer, hare, fox, and black grouse are hunt animals, and the fox has no attack. Farm animals are stock. The orange crab has no attack. The island humans and the three roguelike heroes are people, not dens. Eye stalks, jaws, spikes, tentacles, and the other cursed growths dress the poison plant's land. Dead trees and mushrooms dress the lich's land.
 
-A night attack on the camp comes from one spawn point, and the fighters arrive from that point's direction. The other points stay out that night.
+A night attack on the camp comes from one spawn point. The fighters appear on the fog nearest the camp along the line toward that point, and they come from that direction. They do not walk in from the point itself. If that line has already been revealed out to the point, they appear at the point, because that direction has no nearer fog. The other points stay out that night. A night fighter leaves none of the point's goods.
 
 While the village has discovered no spawn point, the night picks a level 1 point. Discovering a level 1 point adds every level 2 point to the nights. A night can then come from a level 1 point or a level 2 point, still one point, from that point's direction. Discovering a point of a later level adds the next level in the same way. A level that has joined the nights keeps sending attackers. A point counts as discovered when the 6-tile reveal band uncovers it. An opened level can attack from a point the village has not seen yet.
 
@@ -198,6 +198,37 @@ The other wild goods are farther than the berries, and the richer ones are past 
 | Rabbits, deer, ore | the band that holds them | the walk to that band | Rabbits and deer in the hunting wood, ore in the burrows and the later rock |
 
 Fish at the pier and gold past the bridge stay where those projects stand. Crafted goods are made in the camp. They are not patches on the land.
+
+## What a living point gives
+
+The creatures that live on a point leave one good when they are slain. That good is the reason to keep the point. The same creature in a night raid leaves none of it. While the point stands, the locals return, so the good can be taken again. Ordinary patches, the berries and the wood and the stone, do not depend on the point.
+
+Destroying the point makes that point calm. It leaves the nights, and its locals are gone, so its good stops. The other points of that level stay, and a level that was already opened stays open. The village chooses per point: keep it and keep the good, or destroy it and take the calm.
+
+The plain recipes stay. The drop is spent beside the plain recipe. Without the drop, the plain piece can still be made.
+
+| Who lives there | The good | Spent beside |
+|---|---|---|
+| Plain slime | Jelly | The poultice. Berries still make the ordinary remedy. Jelly makes the strong one |
+| Grave rat | Grease | A worn tool, and some of its wear comes back |
+| Imp | Cinder | The vigor drink, so the drink lasts longer |
+| Every goblin | Sinew | The bow |
+| Wolf | Fang | The spear |
+| Boar | Tusk | The arrows |
+| Scarecrow | Straw | The leather armor, to quilt it |
+| Ghoul | Nail | An arrow that already has a tusk tip, to poison it |
+| Wraith | Ash | The library. It is research the books do not give |
+| Poison plant | Sap | A weapon, to poison it. The poultice does not use sap |
+| Flaming slime | Ember | The smith, in place of coal, when making a steel tool |
+| Bear | Claw | The shield, as its boss |
+| Every orc | Tooth | A sword or an iron axe, to temper the edge |
+| Either vampire | Dust | The library, a larger grant than wraith ash |
+| Zombie | Salt | A stack of food, so it keeps longer |
+| Fire spirit | Heart | The smith. One heart makes a steel tool with no coal |
+| Skeleton | Bone | The shield, as its frame, before the bear claw is set on it |
+| Fortress knight | Plate scrap | The leather armor, to add a plate |
+| Barrow king | Crown flake | Gold at the smith, to gild a sword |
+| Lich | Green flame | The library, with wraith ash and vampire dust, for the last grant |
 
 ## Areas
 

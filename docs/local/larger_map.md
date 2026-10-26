@@ -133,7 +133,7 @@ A catch lays the hero on that tile. Every good they carried drops there and stay
 
 A walk that stays on revealed ground and out of a living claim has no attack. Marching into the fog is the run above. The ground between claims is not a road, and that distance is not simulated as its own trip.
 
-There is no road yet. A road is a later building. Its job is to make farming faster, including at a patch that a den protects. Until that road is built, every walk takes the full 0.6 seconds a tile.
+There is no road. A road is postponed. Its job, when it is designed, is to make farming faster, including at a patch that a den protects. The cost, the speed, and whether that speed is only the patch or the whole walk are not decided. They are not part of this map. Every walk takes the full 0.6 seconds a tile.
 
 The player controls one citizen. A click on an enemy is an attack. The dungeon uses this same attack. A click on the ground is a walk. The controlled citizen can enter one claim, and the player clicks the enemies there. Each other citizen stops at the edge of a claim. Those citizens can walk and carry across revealed ground. Those citizens do not enter a claim, and they do not attack. One player can fight at one point.
 

@@ -220,7 +220,7 @@ The creatures that live on a point leave one good when they are slain. That good
 
 To destroy one spawn point, kill every protector of that point. Then all eight small spots around that spawn point must be occupied for 3 seconds. One citizen stands on one spot. The point is destroyed when every protector is dead and the eight spots have been occupied together for those 3 seconds. If a citizen leaves a spot before 3 seconds, that point is not destroyed. A destroyed spawn point does not come back by itself. No counter is shown. The stay is not an attack. The point then leaves the nights, and its good stops. A level that was already opened stays open.
 
-A destroyed point of level N can be renewed. The cost is a unique resource that grows in the level N+1 area. It is a plant of that area, not the creature good and not a weapon. The amount is not set. The names are not set. A renewed point sends again, its protectors return, and its good returns. The lich is the last level, so no next area grows a resource for that point.
+A destroyed point of level N can be renewed. The cost is a unique resource from the level N+1 area. It is not always a plant. It can be a resource such as stone, and that stone needs a high Mining skill. It is not the creature good, and it is not a weapon. The amount is not set. The names are not set. The skill level is not set. A renewed point sends again, its protectors return, and its good returns. The lich is the last level, so no next area has a resource for that point.
 
 A point never leaves a weapon. A sword, a spear, a bow, an arrow, and a shield are still made only from their camp recipes, after the technology that allows them. The tusk, the sinew, the claw, and the plate pay for that research. They are not the weapon.
 

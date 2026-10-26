@@ -189,7 +189,7 @@ The wave is sized by health, and the health comes from the spawn points that are
 
 A living level 1 point keeps its creature in the night, including in the endgame. If at least one level 1 point still stands, the wave also brings that creature. Their health is one local from each living level 1 point. They come on the same fog line as the chosen point. They are not a second attack, and they are not dropped when a later level opens. If the chosen point is already level 1, those bodies are not added twice. When every level 1 point is destroyed, the later nights have none of that creature.
 
-A point that was destroyed does not add health, and it cannot be the direction. A point the timer has not destroyed yet still counts. While nobody has found a point, all eight level 1 points count. The wave is eight slimes, and the direction is one of those eight points.
+A point that was destroyed does not add health, and it cannot be the direction. While nobody has found a point, all eight level 1 points count. The wave is eight slimes, and the direction is one of those eight points.
 
 While no citizen has ever uncovered a spawn point, only level 1 points count. If any citizen has ever uncovered a level 1 point, every level 2 point joins the nights. The same step opens each next level: uncovering a point of level N adds level N+1. A level that has joined stays in the nights. A point counts as discovered when the 6-tile reveal band uncovers it. An opened level can attack from a point the village has not seen yet. The night still picks one living point for the direction. The extra points only add their health.
 
@@ -224,14 +224,14 @@ Different levels use different actions.
 
 | Action | Levels | What it takes | What becomes calm |
 |---|---|---|---|
-| Hold | Slime, grave rat, imp, wolf, boar, bear | Eight citizens, one standing on each of the eight points. They do not attack. A timer destroys one point at a time | That spawn point does not restore. No counter is shown |
+| Hold | Slime, grave rat, imp, wolf, boar, bear | Eight citizens, one standing on each of the eight points. They do not attack | Those spawn points are destroyed. They do not restore. No counter is shown |
 | Flare | Scarecrow, ghoul, wraith, poison plant, both vampires, zombie, skeleton, barrow king, lich | One flare, used at that point. A flare is 1 wood and 1 feather, made in the camp | That point only |
 | Wood | Every goblin | 10 wood, used at that point | That point only |
 | Wood and ore | Every orc | 10 wood and 10 iron ore, used at that point | That point only |
 | Stone | Flaming slime, fire spirit | 10 stone, used at that point | That point only |
 | Stone and iron | The nine knights | 10 stone and 10 iron ingots, used at that point | That point only |
 
-The hold is a mechanism, not a fight and not eight attacks. Eight citizens stand, one on each of the eight points. They do not attack. A timer then destroys the points of that level one by one. No counter is shown. A destroyed spawn point does not restore. A citizen who steps off does not restore it. The timer stops when a citizen steps off. The length of one step is not set. A point the timer has not reached still gives its good, and it can still send a night. The other actions clear one point, and they do not turn back on. Ten wood is one pair of hands. A cost of 100 wood would be ten walks, and the goblin ring is about 7 hours out.
+The hold is a mechanism, not a fight and not eight attacks. Eight citizens stand, one on each of the eight points. They do not attack. Those eight spawn points are destroyed. A destroyed spawn point does not restore. A citizen who steps off does not restore it. No counter is shown. No timer runs. The other actions clear one point, and they do not turn back on. Ten wood is one pair of hands. A cost of 100 wood would be ten walks, and the goblin ring is about 7 hours out.
 
 A point never leaves a weapon. A sword, a spear, a bow, an arrow, and a shield are still made only from their camp recipes, after the technology that allows them. The tusk, the sinew, the claw, and the plate pay for that research. They are not the weapon.
 

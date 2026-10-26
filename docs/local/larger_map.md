@@ -102,7 +102,7 @@ Far work uses a journey to a place, then a local job. The 2-second work walk sta
 
 A walk uses the same pace: **0.6 seconds per tile**, healthy. The sprite at 26 pixels per second only plays while the figure is on screen. Watching the whole way is about 3 percent longer than the server clock, so one real day on screen is about **140,000 tiles** instead of **144,000**. The clock does not finish a fog march while the player is away. Quiet hands on that march spawn a faster pursuer, and a catch is a fall, not a finished trip.
 
-One village day is **4 real hours**. A night is half of that day, **2 real hours**. Every allowed spawn point sends attackers every night.
+One village day is **4 real hours**. A night is half of that day, **2 real hours**. One combined wave comes every night.
 
 | Time to the camp, straight line | Tiles from the edge to the center |
 |---|---:|
@@ -183,13 +183,13 @@ A claim stays a small patch around the den: 48 tiles for a pack, 64 for one larg
 
 These sheets are not dens. Deer, hare, fox, and black grouse are hunt animals, and the fox has no attack. Farm animals are stock. The orange crab has no attack. The island humans and the three roguelike heroes are people, not dens. Eye stalks, jaws, spikes, tentacles, and the other cursed growths dress the poison plant's land. Dead trees and mushrooms dress the lich's land.
 
-Every allowed living spawn point sends attackers every night. The attackers appear on the nearest fog on the straight line from that spawn point to the camp. They do not start the march at the spawn point. If that line is already revealed out to the point, they appear at the point. A night attacker leaves none of the point's goods. This attack replaces the old night pack of wolves, then boars, then bears.
+One combined wave comes every night. The attackers of each point in that wave appear on the nearest fog on the straight line from that spawn point to the camp. They do not start the march at the spawn point. If that line is already revealed out to the point, they appear at the point. A night attacker leaves none of the point's goods. This attack replaces the old night pack of wolves, then boars, then bears.
 
-Each spawn sends its own attackers on its own line. The bodies are that point's creature. Their health is the health of one protector of that point. Add a body while the health is still short. A body is not split. At least one body comes.
+The bodies from a point are that point's creature. Their health is the health of one protector of that point. Add a body while the health is still short. A body is not split. At least one body comes from each point in the wave.
 
-Level 1 points send from the start. A later level sends when at least one spawn point of the previous level has been spotted. One spotted level 1 point makes every level 2 point send. One spotted point of level N makes every point of level N+1 send. A level that has started to send stays. A point is spotted when the 6-tile reveal uncovers it. An opened level can send from a point the village has not seen. A destroyed point does not send. A destroyed spawn point does not restore. While no point has been spotted, each of the eight level 1 points sends on its own line.
+Level 1 points send from the start. While no point has been spotted, the wave is the living level 1 points. A point is spotted when the 6-tile reveal uncovers it. One spotted point of level N makes every point of level N+1 send. The night is then one combined wave of level N and level N+1. A point of that pair can send even when the village has not seen that point. A destroyed point does not send. A destroyed spawn point does not restore.
 
-A living level 1 point still sends every night, including in the endgame, on its own line to the camp. When every level 1 point is destroyed, later nights have none of that creature.
+When a higher level is spotted, that level is the new N. The wave is that level and the next level. A living level 1 point still joins the same wave, including in the endgame. Those bodies are not added twice when level 1 is already in the pair. When every level 1 point is destroyed, later nights have none of that creature.
 
 Each edge is one day out. A level 1 point sits 10 minutes out, and all eight directions have one. A den record is written when the reveal band uncovers its chunk, and only when that chunk is past the foe's floor. Unseen land has no den.
 
@@ -287,7 +287,7 @@ A fire is the checkpoint. It costs **5 wood** to light on revealed ground, outsi
 
 A new building must stand within **16 tiles** of a burning fire. The camp fire already permits the vale. A journey fire permits the same buildings beside it. Research still starts only at the camp. A store beside a journey fire can hold wood, stone, and food. It does not accept a technology pile.
 
-Each allowed spawn sends its attackers toward the camp every night. They appear on the nearest fog on the line from that spawn to the camp. The buildings remain at a dead fire, but nobody can rest there or add a building until the fire burns again.
+The night is one wave toward the camp. Each point in that wave appears on the nearest fog on the line from that point to the camp. The buildings remain at a dead fire, but nobody can rest there or add a building until the fire burns again.
 
 ## Areas
 
@@ -297,7 +297,7 @@ Dungeon rooms, tables, chairs, and bookshelves are the inside of a door, not the
 
 | Area | Walk | Ground | Decorations | Foes |
 |---|---|---|---|---|
-| Home vale | under 10 minutes | Today's land, then grass out to the berry circle, the river north and south, and the western sand at the slime line | Camp, pier, fields, thinning trees. Eight berry patches at 3 minutes, reed beds at 6 minutes on the banks and the bay | None by day. Each living level 1 point sends its own attackers every night, on the line from that point to the camp |
+| Home vale | under 10 minutes | Today's land, then grass out to the berry circle, the river north and south, and the western sand at the slime line | Camp, pier, fields, thinning trees. Eight berry patches at 3 minutes, reed beds at 6 minutes on the banks and the bay | None by day. The night is one wave. Before a point is spotted, the wave is the living level 1 points |
 | Slime marsh | 10 minutes to 1 hour 18 minutes | Island grass, the game's marsh, shallow water and foam | Ferns, flowering bushes, reeds. Wood, stone, and birds are gathered here | Plain slime |
 | Burrows | 1 hour 18 minutes to 3 hours 34 minutes | Dirt, beige rock outcrops | A few loose bones, small beige mushrooms | Grave rat, then imp. Ore starts here |
 | Hunting wood | 3 hours 34 minutes to 6 hours 58 minutes | Island grass, dirt path | Ball trees, plain green bushes. Deer, hare, and grouse are animals here, not foes | Small goblin, wolf, boar. Rabbits and deer are hunted here |

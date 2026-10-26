@@ -1,12 +1,10 @@
 # Larger map
 
-Fog on the current 120 by 90 land is stored as the 32 by 32 chunks someone has seen. A missing chunk is fog. The land size, version, and server are unchanged.
+The map is one land, about **288,000 by 288,000** tiles. The camp is in the middle. Each edge is one real day from the camp, **144,000** tiles. A corner is about **34 hours**. There is no smaller land in front of this one. A citizen can build on seen ground anywhere on it, within 16 tiles of a burning fire.
 
-The screen now keeps a texture for each 32 by 32 block near the camera. Those blocks use the same coordinates as the fog chunks. Joining still builds the whole 120 by 90 once, so the picture stays the same. Still planned, and still at today's size first: per-chunk generation, a delta village feed, nearby interest, and region pathfinding. The land grows only after those.
+Today's live land is still 120 by 90. Fog there is stored as the 32 by 32 chunks someone has seen. A missing chunk is fog. The live land, the version, and the server are unchanged. This document does not build the large land yet.
 
-Target land: **2,000 by 1,500 tiles**, with the camp in the middle. That is about **280 times** today's area (120 by 90). A phone still draws one screen. The server still simulates only the places where someone is.
-
-Past about **8,000 tiles** on the long side, positions and fog need a further change. That size is the ceiling of this plan, not the goal.
+The screen now keeps a texture for each 32 by 32 block near the camera. Those blocks use the same coordinates as the fog chunks. Joining still builds the whole 120 by 90 once, so the picture stays the same. These checks stay on today's land: per-chunk generation, a delta village feed, nearby interest, and region pathfinding. They do not make a second map. Chunk-local coordinates and fog stored as visited chunks belong to this same land. A phone still draws one screen. The server still simulates only the places where someone is.
 
 ## Travel time, edge to center
 
@@ -26,15 +24,14 @@ Today the campfire sits in the middle of the rectangle. The left and right edges
 | Top or bottom edge | 45 | 28 seconds | 27 seconds | 1 minute 30 seconds |
 | A corner | 75 | 46 seconds | 45 seconds | 2 minutes 30 seconds |
 
-On the target map the camp stays in the middle. Half the width is **1,000** tiles, half the height is **750**, and a corner is **1,250** (a 3-4-5 triangle).
+On this map the camp stays in the middle. Each edge is **144,000** tiles away. A corner is about **203,650** tiles.
 
 | From | Tiles | On screen (26 px/s) | Server, healthy (0.6 s/tile) | Added to a work cycle (2 s/tile) |
 |---|---:|---:|---:|---:|
-| Left or right edge | 1,000 | 10 minutes 15 seconds | 10 minutes | 33 minutes 20 seconds |
-| Top or bottom edge | 750 | 7 minutes 42 seconds | 7 minutes 30 seconds | 25 minutes |
-| A corner | 1,250 | 12 minutes 49 seconds | 12 minutes 30 seconds | 41 minutes 40 seconds |
+| Any edge | 144,000 | 24 hours 37 minutes | 24 hours | 80 hours |
+| A corner | 203,650 | 34 hours 49 minutes | 34 hours | 113 hours |
 
-A wide screen shows about **34 tiles** across, so the long edge is about **29 screens** from the camp, and a corner about **37 screens**.
+A wide screen shows about **34 tiles** across, so one edge is about **4,200 screens** from the camp.
 
 A ten-minute walk is still one session. A half-hour work trip is not a normal job. Far activities are places you travel to, then work inside. The camp, a ruin, and a hunting ground each stay small. The distance between them is what grows.
 
@@ -52,7 +49,7 @@ Citizens are already incremental: the full list on join, then only the citizens 
 
 ### 1. Draw the land in chunks
 
-This is in the client for the current land. A wide view keeps the blocks around the camera, plus one block of margin, and drops the rest. Each block is baked to one texture. Ponds, marsh, the ravine, and the rock under peaks stay one drawing, because there are few of them and they must keep today's pixels. The minimap still reads the whole land. Three million sprites at the target size are not created: a block is drawn only when the view reaches it. The generator still walks the 120 by 90 once, which is what keeps the picture. That walk becomes per chunk before the land grows.
+This is in the client for the current land. A wide view keeps the blocks around the camera, plus one block of margin, and drops the rest. Each block is baked to one texture. Ponds, marsh, the ravine, and the rock under peaks stay one drawing, because there are few of them and they must keep today's pixels. The minimap still reads the whole land. A sprite is not created for every tile of this land. A block is drawn only when the view reaches it. The generator still walks the 120 by 90 once, which is what keeps the picture. That walk becomes per chunk before this land replaces today's land.
 
 ### 2. Generate each chunk from the seed
 
@@ -60,13 +57,13 @@ This is in the client for the current land. A wide view keeps the blocks around 
 
 Each chunk must come from the village seed and the chunk coordinate alone. Rivers, ridges, and clearings stay continuous because neighboring chunks use the same function. Authored points (cave, lookout, a ruin) stay a short list, not a tile grid.
 
-The client and the server use the same rectangle today (`MAP_WIDTH` / `MAP_HEIGHT` and `WorldMap.Land`). They keep one definition. The size constant changes only after generation is per chunk.
+The client and the server use the same rectangle today (`MAP_WIDTH` / `MAP_HEIGHT` and `WorldMap.Land`). They keep one definition. The size becomes this 288,000 by 288,000 land only after generation is per chunk.
 
 ### 3. Split the village feed
 
 The slow message keeps resources, research, housing, and weather.
 
-Map changes go out as deltas: a tree felled, a node emptied, a building placed, one fog chunk revealed. A chunk is resent when it changes. The explored bitmap of a 2,000 by 1,500 map would be about **366 KB** if it were sent whole; visited chunks stay far smaller.
+Map changes go out as deltas: a tree felled, a node emptied, a building placed, one fog chunk revealed. A chunk is resent when it changes. A dense bitmap of this land is about **10.4 GB**. It is not sent. Visited chunks stay far smaller.
 
 ### 4. Full detail only nearby
 
@@ -78,7 +75,7 @@ A battle snapshot today includes every unit and goes to every viewer. On the lar
 
 Work, raids, and dungeon runs are already separate activities. A node, camp, ruin, or caravan is an entity in one region. The server simulates that region when someone is there, or on a slow timer.
 
-Pathfinding stays inside the region and uses crossings between regions. One grid for the whole land does not grow to three million tiles.
+Pathfinding stays inside the region and uses crossings between regions. One grid does not cover this whole land.
 
 The live budget is how many places are active at once. A few hundred entities near players fit the current process. Empty tiles do not.
 
@@ -86,9 +83,9 @@ The live budget is how many places are active at once. A few hundred entities ne
 
 This is in the current map. The saved column is still one byte array, now headed `FCH1`. Each block is 32 by 32 tiles (128 bytes), or a complete flag and no bits when every tile in it has been seen. An old 1,350-byte bitmap is read once and written back as chunks. Reveal walks the route, about every 4 tiles, and only looks at the tiles within sight of that sample. The village message sends `exploredChunks`. It also still sends the old `explored` bitmap, because the published page decodes that string and throws if it is missing. The bitmap goes away when that page is replaced.
 
-The client still paints fog on one canvas for the current land. That is the picture, not the store. At the target size a dense bitmap is acceptable, and visited chunks are better. At about 8,000 by 6,000 a dense bitmap is about **6 MB** per village, and the server would load all of it to reveal a few tiles. Only visited chunks are stored.
+The client still paints fog on one canvas for the current land. That is the picture, not the store. On this map only visited chunks are stored. A dense bitmap is about **10.4 GB** per village, and the server must not load all of it to reveal a few tiles.
 
-Sprite coordinates are ordinary numbers. Past a few thousand tiles from the origin, sub-pixel steps start to quantize. Chunk-local coordinates are the fix, and they belong with the 8,000-tile ceiling, not with the 2,000-tile target.
+Sprite coordinates are ordinary numbers. One real day is about 2.3 million pixels from the camp. Ordinary positions cannot represent every pixel at that distance. Each chunk keeps its own origin.
 
 ## Order
 
@@ -97,7 +94,7 @@ Sprite coordinates are ordinary numbers. Past a few thousand tiles from the orig
 3. Delta feed. Visited-chunk fog is already how the current map stores and sends what the village has seen.
 4. Nearby interest for entities and battles.
 5. Region activities and region pathfinding.
-6. Raise the land to 2,000 by 1,500.
+6. This map is the 288,000 by 288,000 land. The steps above are how that one land runs. There is no smaller land between today's 120 by 90 and this map.
 
 Far work uses a journey to a place, then a local job. The 2-second work walk stays for distance inside that place.
 
@@ -115,9 +112,9 @@ One village day is **4 real hours**. A night is half of that day, **2 real hours
 | 3 real days | 432,000 |
 | 7 real days | 1,008,000 |
 
-The land is twice that on the long side if the camp stays in the middle. One real day from the edge means a map about **288,000 by 216,000** tiles, keeping today's 4:3 shape. A corner is 1.25 times the edge time, so **30 hours** on that map.
+The map is that square. The camp stays in the middle. Each edge is one real day. A corner is about 34 hours.
 
-A dense fog bitmap of that land is about **7.8 GB** per village. `Exploration.Seen` also copies the whole bitmap, and `Reveal` scans the rectangle around the entire trip. A diagonal day's walk makes that rectangle about 144,000 tiles on a side. Day-scale trips need three further changes on top of the 2,000-tile plan:
+A dense fog bitmap of that land is about **10.4 GB** per village. `Exploration.Seen` also copies the whole bitmap, and `Reveal` scans the rectangle around the entire trip. A diagonal day's walk makes that rectangle about 144,000 tiles on a side. This land uses three rules:
 
 1. **A walk is the next step, on revealed ground.** The player orders a tile the village has already seen. The hero walks there. The order does not cross fog, and it does not reveal land by itself. There is no route the server finishes while the player is away from the fight. The client draws the hero only in the chunks around the camera.
 2. **Coordinates are local to a chunk.** One real day is about 2.3 million pixels from the camp. A few days past that, ordinary sprite positions can no longer represent every pixel. Each chunk keeps its own origin.
@@ -188,7 +185,7 @@ These pictures only face sideways. Each needs a later drawing that faces up, dow
 - Fire spirit.
 - Archive skeleton with the short blade. The game's own skeleton already faces the map, and it stands on that floor until the blade picture is redrawn.
 
-Each level is one row. The seed places **eight** points of that foe around the camp, one every eighth of the circle, so the nights come from different directions. A point's direction is the line from the campfire to the point. On the first 2,000 by 1,500 land a point is kept only when it lies inside the land and past that foe's floor, so level 1 has the east and west points on the long edge. The north and south points fall outside the short edge.
+Each level is one row. The seed places **eight** points of that foe around the camp, one every eighth of the circle, so the nights come from different directions. A point's direction is the line from the campfire to the point. A point is kept when it lies inside the land and past that foe's floor. Levels out to the winged vampire have all eight points. Past the straight edge, the four points toward the middle of each edge fall outside the land. The four points toward the corners stay, through the lich.
 
 A claim stays a small patch around the den: 48 tiles for a pack, 64 for one large figure. The grave rat shows four. Plain slimes show three, one of each ordinary color. Wolves show four, boars three, goblins three. The ghoul and the imp show two. One large figure shows one: the wraith, the bear, each orc, each vampire, the zombie, the skeleton, a knight, the barrow king, and the lich. Sprites exist while a citizen is inside the claim. Marks on the ground stay in the chunk texture.
 
@@ -200,11 +197,11 @@ The wave is sized by health, and the health comes from the spawn points that are
 
 A living level 1 point keeps its creature in the night, including in the endgame. If at least one level 1 point still stands, the wave also brings that creature. Their health is one local from each living level 1 point. They come on the same fog line as the chosen point. They are not a second attack, and they are not dropped when a later level opens. If the chosen point is already level 1, those bodies are not added twice. When every level 1 point is destroyed, or that level is held, the later nights have none of that creature.
 
-A point that was destroyed does not add health, and it cannot be the direction. A level that is held adds nothing, because it is not spawning. On the first land only the east and west level 1 points exist, and nobody has found one, so the wave is two slimes and the direction is one of those two points.
+A point that was destroyed does not add health, and it cannot be the direction. A level that is held adds nothing, because it is not spawning. While nobody has found a point, all eight level 1 points count. The wave is eight slimes, and the direction is one of those eight points.
 
 While no citizen has ever uncovered a spawn point, only level 1 points count. If any citizen has ever uncovered a level 1 point, every level 2 point joins the nights. The same step opens each next level: uncovering a point of level N adds level N+1. A level that has joined stays in the nights. A point counts as discovered when the 6-tile reveal band uncovers it. An opened level can attack from a point the village has not seen yet. The night still picks one living point for the direction. The extra points only add their health.
 
-The 2,000 by 1,500 land reaches 1,000 tiles on the long edge, which is this 10-minute line, so a level 1 point can sit on that edge. The short edge is 750 tiles, 7 minutes 30 seconds, still inside the line. A den record is written when the reveal band uncovers its chunk, and only when that chunk is past the foe's floor. Unseen land has no den.
+Each edge is one day out. A level 1 point sits 10 minutes out, and all eight directions have one. A den record is written when the reveal band uncovers its chunk, and only when that chunk is past the foe's floor. Unseen land has no den.
 
 ## Wild goods
 
@@ -288,7 +285,7 @@ Three features are enough. Each is a function of the seed and the coordinate, so
 
 The camp's river runs on north and south out of the vale. It is the same water, four tiles wide, with a slow bend. It blocks a step. The bridge in the vale is the first crossing. The next ford is twenty minutes upstream, and another is twenty minutes downstream. After those, the river has one ford each hour of its length. Fish stay at the pier, and gold stays past the bridge. A point that would sit in the water slides along its ring to the nearest dry tile, and that tile is still at least the foe's floor away.
 
-The sea is a bay on the west. Its nearest sand is the ten-minute line. Sand, then pebbles, then foam, then water that blocks. The sea fills the west beyond that shore and crosses the later bands, so the west edge is water, not a day of grass. A western den stands on the inland edge of the sand, still no closer than its own floor. The crab is a prop on the sand. Nothing is hunted in the sea, and nothing sails. On the first 2,000 by 1,500 land the west edge is this beach, and the east edge is the slime line on grass.
+The sea is a bay on the west. Its nearest sand is the ten-minute line. Sand, then pebbles, then foam, then water that blocks. The sea fills the west beyond that shore and crosses the later bands, so the west edge is water, not a day of grass. A western den stands on the inland edge of the sand, still no closer than its own floor. The crab is a prop on the sand. Nothing is hunted in the sea, and nothing sails. The east edge is one day away. The slime line is 10 minutes out, on the dry ground inland of the sand and on the grass in the other directions.
 
 Two ridges, and no more. Each is an arc of about a third of its circle, with two passes of open trail, and the seed picks where the arc sits. The first is at the seven-hour line, where the goblin camp starts. The second is at the day edge, between the ritual ground and the high ruin. The rest of those rings is open. A pass is the crossing a region path uses. The ridge itself is mountain, and it blocks.
 
@@ -354,4 +351,4 @@ Three grounds are missing, so three foes stand on props.
 
 The distance order also breaks two themes in half. The brown ruin, with living goblins, sits between the ghoul's graves and the wraith's dead wood. The bear, the unwinged vampire, and the zombie each sit between orc bands, so the rocky camp stops and starts again. The ground changes at those floors. It does not slide sideways to keep one theme together.
 
-There is no useful tile cap after those three. A week from the edge is about a million tiles and stays cheap, because an empty region is a seed and a journey is one record. The 2,000 by 1,500 land remains the first size to build. Day-scale routes come after chunk-local coordinates and route fog.
+There is no useful tile cap after those three. A week of travel is about a million tiles and stays cheap, because an empty region is a seed and a journey is one record. This map is the 288,000 by 288,000 land. Chunk-local coordinates and fog stored as visited chunks are part of it.

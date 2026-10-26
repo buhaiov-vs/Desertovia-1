@@ -196,7 +196,9 @@ These sheets are not dens. Deer, hare, fox, and black grouse are hunt animals, a
 
 A night attack comes from one living spawn point. The fighters appear on the fog nearest the target along the line toward that point, and they come from that direction. They do not walk in from the point itself. If that line has already been revealed out to the point, they appear at the point, because that direction has no nearer fog. A night fighter leaves none of the point's goods. This attack replaces the old night pack of wolves, then boars, then bears.
 
-The wave is sized by health, and the health comes from the spawn points that are allowed to attack. Each of those points adds the health of one of its locals. The bodies are the creature of the chosen point. Add a body while the wave's health is still short of that sum. A body is not split. At least one body comes.
+The wave is sized by health, and the health comes from the spawn points that are allowed to attack. Each of those points adds the health of one of its locals. The bodies of the chosen point are that point's creature. Add a body while that part of the wave is still short of the chosen point's health. A body is not split. At least one body comes.
+
+A living level 1 point keeps its creature in the night, including in the endgame. If at least one level 1 point still stands, the wave also brings that creature. Their health is one local from each living level 1 point. They come on the same fog line as the chosen point. They are not a second attack, and they are not dropped when a later level opens. If the chosen point is already level 1, those bodies are not added twice. When every level 1 point is destroyed, or that level is held, the later nights have none of that creature.
 
 A point that was destroyed does not add health, and it cannot be the direction. A level that is held adds nothing, because it is not spawning. On the first land only the east and west level 1 points exist, and nobody has found one, so the wave is two slimes and the direction is one of those two points.
 

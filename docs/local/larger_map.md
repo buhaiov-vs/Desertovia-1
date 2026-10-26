@@ -105,7 +105,7 @@ Far work uses a journey to a place, then a local job. The 2-second work walk sta
 
 A walk uses the same pace: **0.6 seconds per tile**, healthy. The sprite at 26 pixels per second only plays while the figure is on screen. Watching the whole way is about 3 percent longer than the server clock, so one real day on screen is about **140,000 tiles** instead of **144,000**. The clock does not finish a fog march while the player is away. Quiet hands on that march spawn a faster pursuer, and a catch is a fall, not a finished trip.
 
-One village day is **4 real hours**.
+One village day is **4 real hours**. A night is half of that day, **2 real hours**. One attack comes every night.
 
 | Time to the camp, straight line | Tiles from the edge to the center |
 |---|---:|
@@ -194,9 +194,13 @@ A claim stays a small patch around the den: 48 tiles for a pack, 64 for one larg
 
 These sheets are not dens. Deer, hare, fox, and black grouse are hunt animals, and the fox has no attack. Farm animals are stock. The orange crab has no attack. The island humans and the three roguelike heroes are people, not dens. Eye stalks, jaws, spikes, tentacles, and the other cursed growths dress the poison plant's land. Dead trees and mushrooms dress the lich's land.
 
-A night attack on the camp comes from one spawn point. The fighters appear on the fog nearest the camp along the line toward that point, and they come from that direction. They do not walk in from the point itself. If that line has already been revealed out to the point, they appear at the point, because that direction has no nearer fog. The other points stay out that night. A night fighter leaves none of the point's goods.
+A night attack comes from one living spawn point. The fighters appear on the fog nearest the target along the line toward that point, and they come from that direction. They do not walk in from the point itself. If that line has already been revealed out to the point, they appear at the point, because that direction has no nearer fog. A night fighter leaves none of the point's goods. This attack replaces the old night pack of wolves, then boars, then bears.
 
-While the village has discovered no spawn point, the night picks a level 1 point. Discovering a level 1 point adds every level 2 point to the nights. A night can then come from a level 1 point or a level 2 point, still one point, from that point's direction. Discovering a point of a later level adds the next level in the same way. A level that has joined the nights keeps sending attackers. A point counts as discovered when the 6-tile reveal band uncovers it. An opened level can attack from a point the village has not seen yet.
+The wave is sized by health, and the health comes from the spawn points that are allowed to attack. Each of those points adds the health of one of its locals. The bodies are the creature of the chosen point. Add a body while the wave's health is still short of that sum. A body is not split. At least one body comes.
+
+A point that was destroyed does not add health, and it cannot be the direction. A level that is held adds nothing, because it is not spawning. On the first land only the east and west level 1 points exist, and nobody has found one, so the wave is two slimes and the direction is one of those two points.
+
+While no citizen has ever uncovered a spawn point, only level 1 points count. If any citizen has ever uncovered a level 1 point, every level 2 point joins the nights. The same step opens each next level: uncovering a point of level N adds level N+1. A level that has joined stays in the nights. A point counts as discovered when the 6-tile reveal band uncovers it. An opened level can attack from a point the village has not seen yet. The night still picks one living point for the direction. The extra points only add their health.
 
 The 2,000 by 1,500 land reaches 1,000 tiles on the long edge, which is this 10-minute line, so a level 1 point can sit on that edge. The short edge is 750 tiles, 7 minutes 30 seconds, still inside the line. A den record is written when the reveal band uncovers its chunk, and only when that chunk is past the foe's floor. Unseen land has no den.
 
@@ -307,7 +311,7 @@ A fire is the checkpoint. It costs **5 wood** to light on revealed ground, outsi
 
 A new building must stand within **16 tiles** of a burning fire. The camp fire already permits the vale. A journey fire permits the same buildings beside it. Research still starts only at the camp. A store beside a journey fire can hold wood, stone, and food. It does not accept a technology pile.
 
-A burning fire is also a raid target. One night still comes from one spawn point. The night can strike the camp fire or one journey fire. The fighters appear on the fog nearest that fire, on the line toward the chosen point. A dead fire is not a target. The buildings remain, but nobody can rest there or add a building until the fire burns again.
+A burning fire is also a raid target. The night can strike the camp fire or one journey fire. The fighters appear on the fog nearest that fire, on the line toward the chosen point. A dead fire is not a target. The buildings remain, but nobody can rest there or add a building until the fire burns again.
 
 ## Areas
 
@@ -317,7 +321,7 @@ Dungeon rooms, tables, chairs, and bookshelves are the inside of a door, not the
 
 | Area | Walk | Ground | Decorations | Foes |
 |---|---|---|---|---|
-| Home vale | under 10 minutes | Today's land, then grass out to the berry circle, the river north and south, and the western sand at the slime line | Camp, pier, fields, thinning trees. Eight berry patches at 3 minutes, reed beds at 6 minutes on the banks and the bay | None by day. A night comes from one undiscovered level 1 point, from that point's direction |
+| Home vale | under 10 minutes | Today's land, then grass out to the berry circle, the river north and south, and the western sand at the slime line | Camp, pier, fields, thinning trees. Eight berry patches at 3 minutes, reed beds at 6 minutes on the banks and the bay | None by day. Each night comes from one level 1 point, and the wave's health is one slime for each living level 1 point |
 | Slime marsh | 10 minutes to 1 hour 18 minutes | Island grass, the game's marsh, shallow water and foam | Ferns, flowering bushes, reeds. Wood, stone, and birds are gathered here | Plain slime |
 | Burrows | 1 hour 18 minutes to 3 hours 34 minutes | Dirt, beige rock outcrops | A few loose bones, small beige mushrooms | Grave rat, then imp. Ore starts here |
 | Hunting wood | 3 hours 34 minutes to 6 hours 58 minutes | Island grass, dirt path | Ball trees, plain green bushes. Deer, hare, and grouse are animals here, not foes | Small goblin, wolf, boar. Rabbits and deer are hunted here |

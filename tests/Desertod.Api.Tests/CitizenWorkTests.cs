@@ -74,7 +74,7 @@ public sealed class CitizenWorkTests(DesertodApiFactory factory)
     {
         var (_, citizen) = await CitizenAsync("Edge Walker");
 
-        var response = await citizen.Client.PostAsJsonAsync($"{citizen.Path}/me/goto", new { spot = new { x = 100000, y = 100000 } });
+        var response = await citizen.Client.PostAsJsonAsync($"{citizen.Path}/me/goto", new { spot = new { x = 200000, y = 200000 } });
 
         await AssertRuleBrokenAsync(response, "spot.outsideLand");
     }

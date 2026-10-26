@@ -457,7 +457,7 @@ public static class RaidSimulation
         foreach(var f in battle.Fighters.Where(f=>!f.IsTsar&&!f.Wounded))
             if(people.TryGetValue(f.CitizenId,out var c)&&c.CycleSettled)
             {c.Spot=f.Position;c.IdleSpot=f.Position;c.Trip=null;}
-        foreach(var good in battle.Units.Where(u=>u.Health<=0).SelectMany(u=>EnemyCatalog.Get(u.Enemy??raid.Enemy).Loot)
+        foreach(var good in (raid.Source==RaidSource.Night?[]:battle.Units.Where(u=>u.Health<=0).SelectMany(u=>EnemyCatalog.Get(u.Enemy??raid.Enemy).Loot).ToArray())
             .GroupBy(g=>g.Resource))
         {
             var amount=village.Store(good.Key,good.Sum(g=>g.Amount));

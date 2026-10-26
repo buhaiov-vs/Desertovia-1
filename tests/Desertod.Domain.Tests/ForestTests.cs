@@ -160,7 +160,7 @@ public class ForestTests
         Assert.Equal("spot.notForTask", Assert.Throws<GameRuleException>(() =>
             CycleEngine.Start(citizen, Task("tend-fire"), context, Now, new TilePoint(5.5, 8.5))).Code);
         Assert.Equal("spot.outsideLand", Assert.Throws<GameRuleException>(() =>
-            CycleEngine.Start(citizen, Task("forage"), context, Now, new TilePoint(500, 500))).Code);
+            CycleEngine.Start(citizen, Task("forage"), context, Now, new TilePoint(WorldMap.Land.X - 1, WorldMap.Land.Y))).Code);
     }
 
     [Fact]

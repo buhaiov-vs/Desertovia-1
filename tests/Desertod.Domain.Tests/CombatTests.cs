@@ -295,7 +295,7 @@ public class CombatTests
         Assert.Equal(2, report.Defenders.Count);
         Assert.Equal(RaidOutcome.Repelled, raid.Outcome);
         Assert.True(report.Killed >= 1);
-        Assert.Equal(leather + report.Killed, village.Stock(ResourceKind.Leather));
+        Assert.Equal(leather, village.Stock(ResourceKind.Leather));
         Assert.True(report.MoraleChange > 0);
         Assert.True(first.Renown > 0);
         Assert.Null(village.NextRaidAt);
@@ -364,11 +364,8 @@ public class CombatTests
         Assert.Null(RaidRules.PlanNight(village, 4, new ScriptedRandom(0), DayCycle.PeriodStart(night - 1)));
         var raid = RaidRules.PlanNight(village, 4, new ScriptedRandom(0, 0, 0.5), dusk);
 
-        Assert.NotNull(raid);
-        Assert.Equal(EnemyKind.Wolf, raid.Enemy);
-        Assert.InRange(raid.StrikesAt, dusk + DayCycle.PeriodLength * RaidRules.EarliestStrike, dusk + DayCycle.PeriodLength * RaidRules.LatestStrike);
-        Assert.Equal(raid.StrikesAt - RaidRules.Warning, raid.AnnouncedAt);
-        Assert.Equal(raid.StrikesAt, village.NextRaidAt);
+        Assert.Null(raid);
+        Assert.Equal(night, village.RaidsPlannedPeriod);
         Assert.Null(RaidRules.PlanNight(village, 4, new ScriptedRandom(0), dusk.AddMinutes(1)));
     }
 

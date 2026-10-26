@@ -85,8 +85,8 @@ public class ExplorationTests
         var chunks = Exploration.ImportLegacy(legacy);
 
         Assert.True(Exploration.IsChunkFormat(chunks));
-        Assert.True(Exploration.IsExplored(chunks, WorldMap.Land.X, WorldMap.Land.Y));
-        Assert.True(Exploration.IsExplored(chunks, WorldMap.Land.X + WorldMap.Land.Width - 1, WorldMap.Land.Y + WorldMap.Land.Height - 1));
+        Assert.True(Exploration.IsExplored(chunks, WorldMap.Vale.X, WorldMap.Vale.Y));
+        Assert.True(Exploration.IsExplored(chunks, WorldMap.Vale.X + WorldMap.Vale.Width - 1, WorldMap.Vale.Y + WorldMap.Vale.Height - 1));
         Assert.InRange(Exploration.EntireLand().Length, 1, 200);
         Assert.True(Exploration.Camp().Length < Exploration.LegacySize);
         Assert.Equal(legacy, Exploration.LegacyBitmap(chunks));
@@ -96,11 +96,11 @@ public class ExplorationTests
     public void WalkedLand_MatchesADenseScan_AndStaysSmallerThanTheOldBitmap()
     {
         var from = WorldMap.Places[WorldMap.Camp];
-        var to = new TilePoint(WorldMap.Land.X + 1.5, WorldMap.Land.Y + WorldMap.Land.Height - 1.5);
+        var to = new TilePoint(WorldMap.Vale.X + 1.5, WorldMap.Vale.Y + WorldMap.Vale.Height - 1.5);
         var trip = Trip.Start(from, to, Now);
         var revealed = Exploration.Reveal(Exploration.Camp(), trip, trip.ArrivesAt);
 
-        var land = WorldMap.Land;
+        var land = WorldMap.Vale;
         for (var y = land.Y; y < land.Y + land.Height; y++)
         {
             for (var x = land.X; x < land.X + land.Width; x++)

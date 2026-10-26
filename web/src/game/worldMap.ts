@@ -12,6 +12,13 @@ export const MAP_HEIGHT = 90
 export const MAP_RIGHT = MAP_LEFT + MAP_WIDTH
 export const MAP_BOTTOM = MAP_TOP + MAP_HEIGHT
 
+/** One edge of the land, in tiles. The camp tile sits in the middle. The picture of the camp stays MAP_*. */
+export const LAND_SIDE = 288_000
+export const LAND_LEFT = 15 - LAND_SIDE / 2
+export const LAND_TOP = 13 - LAND_SIDE / 2
+export const LAND_WIDTH = LAND_SIDE
+export const LAND_HEIGHT = LAND_SIDE
+
 const CORE_WIDTH = 44
 const CORE_HEIGHT = 26
 
@@ -479,11 +486,14 @@ export function findWay(
   to: TilePoint,
   bridge: boolean,
   crossings: TileArea[] = [],
+  seed = 1,
 ): TilePoint[] | WalkBlock {
   const startX = Math.floor(from.x)
   const startY = Math.floor(from.y)
   const goalX = Math.floor(to.x)
   const goalY = Math.floor(to.y)
+  const inVale = (x: number, y: number) => x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM
+  if (!inVale(startX, startY) || !inVale(goalX, goalY)) return farWay(terrain, from, to, seed)
   const inside = (x: number, y: number) => x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM
   const index = (x: number, y: number) => (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
   const onDeck = (x: number, y: number) =>
@@ -723,13 +733,61 @@ const PASS_ARM = 7
 const MARSH_PONDS = 0.5
 
 /** Centre column of the river in a row: straight through the camp area, meandering beyond it. */
-function riverCenter(y: number, seed: number) {
+export function riverCenter(y: number, seed: number) {
   const straight = (RIVER_LEFT + RIVER_RIGHT) / 2
   const distance = y < 0 ? -y : y >= CORE_HEIGHT ? y - CORE_HEIGHT + 1 : 0
   if (distance === 0) return straight
   const phase = (seed % 1000) / 160
   const sway = Math.sin(distance * 0.11 + phase) * 7 + Math.sin(distance * 0.27 + phase * 2) * 2
   return straight + sway * Math.min(1, distance / 10)
+}
+
+const RIVER_WIDTH = 4
+
+/** Water outside the camp picture, on the same river the camp already draws. */
+export function farWater(x: number, y: number, seed: number) {
+  const left = Math.round(riverCenter(y, seed) - 1.5)
+  return x >= left && x < left + RIVER_WIDTH
+}
+
+/** The ground picture of one tile outside the camp picture. */
+export function farGroundTile(x: number, y: number, seed: number): TileRef {
+  const left = Math.round(riverCenter(y, seed) - 1.5)
+  const offset = x - left
+  if (offset === 0) return battle(36)
+  if (offset === 1 || offset === 2) return battle(37)
+  if (offset === 3) return battle(38)
+  return town(0)
+}
+
+/**
+ * A walk that leaves the camp picture. Empty land is a straight line. The river is stepped around.
+ * The search does not allocate a grid of the whole land.
+ */
+function farWay(terrain: Uint8Array, from: TilePoint, to: TilePoint, seed: number): TilePoint[] | WalkBlock {
+  const onLand = (x: number, y: number) =>
+    x >= LAND_LEFT && x < LAND_LEFT + LAND_WIDTH && y >= LAND_TOP && y < LAND_TOP + LAND_HEIGHT
+  const goalX = Math.floor(to.x)
+  const goalY = Math.floor(to.y)
+  if (!onLand(goalX, goalY) || farBlocked(terrain, goalX, goalY, seed)) return 'water'
+  const distance = Math.hypot(to.x - from.x, to.y - from.y)
+  const steps = Math.max(1, Math.min(4000, Math.ceil(distance)))
+  for (let step = 1; step < steps; step++) {
+    const x = Math.floor(from.x + ((to.x - from.x) * step) / steps)
+    const y = Math.floor(from.y + ((to.y - from.y) * step) / steps)
+    if (!farBlocked(terrain, x, y, seed)) continue
+    const bank = Math.round(riverCenter(y, seed) - 1.5) - 1
+    return [{ x: bank + 0.5, y: y + 0.5 }, to]
+  }
+  return [to]
+}
+
+function farBlocked(terrain: Uint8Array, x: number, y: number, seed: number) {
+  if (x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM) {
+    const kind = terrain[(y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)]
+    return kind === Terrain.Water || kind === Terrain.Mountain || kind === Terrain.Ravine
+  }
+  return farWater(x, y, seed)
 }
 
 /**

@@ -6,6 +6,7 @@ using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Technologies;
 using Desertod.Domain.Weather;
+using Desertod.Domain.World;
 
 namespace Desertod.Domain.Combat;
 
@@ -100,7 +101,7 @@ public static class RaidRules
     /// coming is not planned. New villages and villages nobody works in are left alone.
     /// </summary>
     /// <param name="activeCitizens">Citizens who worked lately; the pack grows with the village.</param>
-    public static Raid? PlanNight(Village village, int activeCitizens, Random random, DateTimeOffset now)
+    public static Raid? PlanNight(Village village, int activeCitizens, Random random, DateTimeOffset now, IReadOnlySet<string>? destroyedSpawns = null)
     {
         var period = DayCycle.PeriodOf(now);
         if (village.RaidsPlannedPeriod >= period || !DayCycle.IsNight(period))
@@ -109,8 +110,14 @@ public static class RaidRules
         }
 
         village.RaidsPlannedPeriod = period;
-        if (activeCitizens == 0 || CombatRules.IsPeaceful(village, now) || Pending(village).Any(r => r.Source == RaidSource.Night)
-            || random.NextDouble() >= NightRaidChance)
+        if (activeCitizens == 0 || CombatRules.IsPeaceful(village, now) || Pending(village).Any(r => r.Source == RaidSource.Night))
+        {
+            return null;
+        }
+
+        var seed = Wilderness.Seed(village.Id.ToString());
+        var senders = SpawnRings.Senders(SpawnRings.Points(seed), (x, y) => Exploration.IsExplored(village.Explored, x, y), destroyedSpawns);
+        if (senders.Count == 0)
         {
             return null;
         }
@@ -124,18 +131,27 @@ public static class RaidRules
             return null;
         }
 
-        var enemy = Beast(TechnologyRules.EraOf(village), random);
-        var raid = new Raid
+        var strikesAt = earliest + (latest - earliest) * random.NextDouble();
+        Raid? first = null;
+        var camp = WorldMap.Places[WorldMap.Camp];
+        foreach (var sender in senders)
         {
-            Source = RaidSource.Night,
-            Enemy = enemy,
-            Count = BeastCount(enemy, activeCitizens),
-            StrikesAt = earliest + (latest - earliest) * random.NextDouble(),
-        };
-        raid.AnnouncedAt = raid.StrikesAt - warning;
-        village.Raids.Add(raid);
+            var appeared = SpawnRings.Appearance(camp, sender.Center, (x, y) => Exploration.IsExplored(village.Explored, x, y));
+            var raid = new Raid
+            {
+                Source = RaidSource.Night,
+                Enemy = sender.Kind!.Value,
+                Count = SpawnRings.Bodies(SpawnRings.Levels[sender.Level - 1]),
+                StrikesAt = strikesAt,
+                ApproachPath = [new RaidWaypoint { X = (int)Math.Floor(appeared.X), Y = (int)Math.Floor(appeared.Y) }],
+            };
+            raid.AnnouncedAt = raid.StrikesAt - warning;
+            village.Raids.Add(raid);
+            first ??= raid;
+        }
+
         UpdateNextRaidAt(village);
-        return raid;
+        return first;
     }
 
     /// <summary>The Tsar calls the dead up: one wave, or more for a bigger event. One event at a time.</summary>
@@ -298,7 +314,7 @@ public static class RaidRules
         }
 
         var loot = new List<ResourceAmount>();
-        foreach (var good in enemy.Loot)
+        foreach (var good in raid.Source == RaidSource.Night ? [] : enemy.Loot)
         {
             var stored = village.Store(good.Resource, good.Amount * killed);
             if (stored > 0)

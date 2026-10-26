@@ -1,4 +1,4 @@
-import { CanvasSource, Sprite, Texture } from 'pixi.js'
+import { CanvasSource, Container, Sprite, Texture } from 'pixi.js'
 import { TILE } from './sheets'
 import { LAND_CHUNK as CHUNK } from './landChunk'
 import { MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH } from './worldMap'
@@ -35,6 +35,11 @@ const IN_SIGHT = 0.5
 export class Fog {
   readonly canvas = document.createElement('canvas')
   readonly sprite: Sprite
+  /** Darkness for chunks outside the camp picture. Only chunks near the camera are kept. */
+  readonly far = new Container()
+  private readonly farSprites = new Map<string, { sprite: Sprite; canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture }>()
+  private savedChunks: ExploredChunk[] = []
+  private viewers: Viewer[] = []
   private readonly texture: Texture
   private readonly context: CanvasRenderingContext2D
   private readonly image: ImageData
@@ -60,6 +65,11 @@ export class Fog {
 
   destroy() {
     this.texture.destroy(true)
+    for (const entry of this.farSprites.values()) {
+      entry.sprite.destroy()
+      entry.texture.destroy(true)
+    }
+    this.farSprites.clear()
   }
 
   /** Replaces the seen land with the visited chunks. A chunk that is absent stays fog. */
@@ -68,6 +78,7 @@ export class Fog {
     const signature = chunks.map(chunk => `${chunk.x},${chunk.y},${chunk.complete ? 1 : 0},${chunk.bits ?? ''}`).join(';')
     if (signature === this.lastExplored) return
     this.lastExplored = signature
+    this.savedChunks = chunks
     this.explored.fill(0)
     for (const chunk of chunks) {
       const originX = chunk.x * CHUNK
@@ -86,6 +97,7 @@ export class Fog {
   /** Lights the land around the viewers; whatever they see is explored from then on. */
   update(viewers: Viewer[], darkness: number) {
     this.darkness = darkness
+    this.viewers = viewers
     this.light.fill(0)
     for (const viewer of viewers) {
       const left = Math.max(MAP_LEFT, Math.floor(viewer.x - viewer.radius))
@@ -115,7 +127,9 @@ export class Fog {
   /** Whether the tile under a point, in tiles, has been seen. */
   isExplored(x: number, y: number) {
     const index = this.index(x, y)
-    return index >= 0 && this.explored[index] === 1
+    if (index >= 0) return this.explored[index] === 1
+    if (this.seenNow(x, y)) return true
+    return this.chunkSees(Math.floor(x), Math.floor(y))
   }
 
   isAreaExplored(area: TileArea) {
@@ -128,7 +142,86 @@ export class Fog {
   /** Whether someone sees the point, in tiles, right now. */
   inSight(x: number, y: number) {
     const index = this.index(x, y)
-    return index >= 0 && this.light[index] >= IN_SIGHT
+    if (index >= 0) return this.light[index] >= IN_SIGHT
+    return this.seenNow(x, y)
+  }
+
+  /**
+   * Paints darkness on the chunks near the camera that the camp picture does not cover.
+   * A chunk that scrolls away is dropped.
+   */
+  cover(chunks: TileArea[]) {
+    const wanted = new Set<string>()
+    for (const chunk of chunks) {
+      if (this.insideVale(chunk.x, chunk.y) && this.insideVale(chunk.x + chunk.width - 1, chunk.y + chunk.height - 1)) continue
+      const key = `${chunk.x},${chunk.y}`
+      wanted.add(key)
+      const entry = this.farSprites.get(key) ?? this.makeFar(chunk)
+      this.paintFar(entry, chunk)
+    }
+    for (const [key, entry] of this.farSprites) {
+      if (wanted.has(key)) continue
+      entry.sprite.destroy()
+      entry.texture.destroy(true)
+      this.farSprites.delete(key)
+    }
+  }
+
+  private insideVale(x: number, y: number) {
+    return x >= MAP_LEFT && y >= MAP_TOP && x < MAP_LEFT + MAP_WIDTH && y < MAP_TOP + MAP_HEIGHT
+  }
+
+  private seenNow(x: number, y: number) {
+    return this.viewers.some((viewer) => Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) <= viewer.radius)
+  }
+
+  private chunkSees(x: number, y: number) {
+    const chunkX = Math.floor(x / CHUNK)
+    const chunkY = Math.floor(y / CHUNK)
+    const chunk = this.savedChunks.find((item) => item.x === chunkX && item.y === chunkY)
+    if (!chunk) return false
+    if (chunk.complete || !chunk.bits) return chunk.complete
+    const bits = decodeBits(chunk.bits)
+    const local = (y - chunkY * CHUNK) * CHUNK + (x - chunkX * CHUNK)
+    return ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
+  }
+
+  private makeFar(chunk: TileArea) {
+    const canvas = document.createElement('canvas')
+    canvas.width = chunk.width
+    canvas.height = chunk.height
+    const context = canvas.getContext('2d')!
+    const texture = new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'nearest' }) })
+    const sprite = new Sprite(texture)
+    sprite.position.set(chunk.x * TILE, chunk.y * TILE)
+    sprite.scale.set(TILE)
+    this.far.addChild(sprite)
+    const entry = { sprite, canvas, context, texture }
+    this.farSprites.set(`${chunk.x},${chunk.y}`, entry)
+    return entry
+  }
+
+  private paintFar(
+    entry: { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture },
+    chunk: TileArea,
+  ) {
+    const image = entry.context.createImageData(chunk.width, chunk.height)
+    for (let row = 0; row < chunk.height; row++) {
+      for (let column = 0; column < chunk.width; column++) {
+        const x = chunk.x + column
+        const y = chunk.y + row
+        if (this.insideVale(x, y)) continue
+        const seen = this.chunkSees(x, y) || this.seenNow(x, y)
+        const alpha = seen ? Math.round(REMEMBERED_ALPHA * this.darkness * (this.seenNow(x, y) ? 0 : 1) * 255) : 255
+        const index = (row * chunk.width + column) * 4
+        image.data[index] = DARK[0]
+        image.data[index + 1] = DARK[1]
+        image.data[index + 2] = DARK[2]
+        image.data[index + 3] = alpha
+      }
+    }
+    entry.context.putImageData(image, 0, 0)
+    entry.texture.source.update()
   }
 
   private draw() {

@@ -57,7 +57,7 @@ public class WildernessTests
     {
         var wilds = Wilderness.Generate(new Guid(seed, 0, 0, new byte[8]));
 
-        Assert.Equal(WorldMap.Land.X, wilds.Ravine[0].X);
+        Assert.Equal(WorldMap.Vale.X, wilds.Ravine[0].X);
         for (var i = 1; i < wilds.Ravine.Count; i++)
         {
             Assert.Equal(wilds.Ravine[i - 1].X + 1, wilds.Ravine[i].X);

@@ -63,8 +63,8 @@ public static class Exploration
     /// <summary>Bytes in a block that is only partly seen. A fully seen block stores no bits.</summary>
     public const int ChunkBytes = ChunkSize * ChunkSize / 8;
 
-    /// <summary>Length of the old dense bitmap, one bit per tile of <see cref="WorldMap.Land"/>.</summary>
-    public static int LegacySize => (WorldMap.Land.Width * WorldMap.Land.Height + 7) / 8;
+    /// <summary>Length of the old dense bitmap, one bit per tile of <see cref="WorldMap.Vale"/>.</summary>
+    public static int LegacySize => (WorldMap.Vale.Width * WorldMap.Vale.Height + 7) / 8;
 
     /// <summary>Same as <see cref="LegacySize"/>. Kept so saved rows can still be recognized.</summary>
     public static int Size => LegacySize;
@@ -83,7 +83,7 @@ public static class Exploration
     public static byte[] EntireLand()
     {
         var map = new ExploredChunks();
-        var land = WorldMap.Land;
+        var land = WorldMap.Vale;
         var x0 = ChunkOf(land.X);
         var x1 = ChunkOf(land.X + land.Width - 1);
         var y0 = ChunkOf(land.Y);
@@ -115,12 +115,13 @@ public static class Exploration
             return Decode(map).IsExplored(x, y);
         }
 
-        if (map.Length != LegacySize)
+        var vale = WorldMap.Vale;
+        if (map.Length != LegacySize || x < vale.X || y < vale.Y || x >= vale.X + vale.Width || y >= vale.Y + vale.Height)
         {
             return false;
         }
 
-        var index = (y - land.Y) * land.Width + (x - land.X);
+        var index = (y - vale.Y) * vale.Width + (x - vale.X);
         return (map[index >> 3] & (1 << (index & 7))) != 0;
     }
 
@@ -172,7 +173,7 @@ public static class Exploration
             return map.Encode();
         }
 
-        var land = WorldMap.Land;
+        var land = WorldMap.Vale;
         for (var y = land.Y; y < land.Y + land.Height; y++)
         {
             for (var x = land.X; x < land.X + land.Width; x++)
@@ -221,14 +222,14 @@ public static class Exploration
     public static IReadOnlyList<FogChunk> Chunks(byte[] map) => Decode(map).List();
 
     /// <summary>
-    /// The same seen land as one bit per tile of <see cref="WorldMap.Land"/>, the layout the current client decodes.
-    /// The map is still 120 by 90, so this stays a small bitmap beside the chunks.
+    /// The same seen land as one bit per tile of <see cref="WorldMap.Vale"/>, the layout the current client decodes.
+    /// The camp picture is still 120 by 90, so this stays a small bitmap beside the chunks.
     /// </summary>
     public static byte[] LegacyBitmap(byte[] map)
     {
         var seen = Decode(map);
         var legacy = new byte[LegacySize];
-        var land = WorldMap.Land;
+        var land = WorldMap.Vale;
         for (var y = land.Y; y < land.Y + land.Height; y++)
         {
             for (var x = land.X; x < land.X + land.Width; x++)

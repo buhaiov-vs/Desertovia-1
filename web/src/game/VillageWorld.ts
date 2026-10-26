@@ -23,6 +23,10 @@ import {
   BUILDING_TILES,
   CAMPFIRE,
   type MapLayout,
+  LAND_HEIGHT,
+  LAND_LEFT,
+  LAND_TOP,
+  LAND_WIDTH,
   MAP_HEIGHT,
   MAP_LEFT,
   MONASTERY,
@@ -55,6 +59,7 @@ import {
   canBridgeAt,
   canBuildAt,
   cropTile,
+  farGroundTile,
   findWay,
   footprint,
   seedFrom,
@@ -69,8 +74,10 @@ import {
   type WorldTarget,
 } from './worldMap'
 
-const WORLD_WIDTH = MAP_WIDTH * TILE
-const WORLD_HEIGHT = MAP_HEIGHT * TILE
+const WORLD_WIDTH = LAND_WIDTH * TILE
+const WORLD_HEIGHT = LAND_HEIGHT * TILE
+/** The furthest zoom still shows at most this many tiles across, so the view never asks for the whole land. */
+const WIDEST_VIEW_TILES = 128
 const WALK_SPEED = 26
 /** Hunters run after their prey; near the end of the chase they go faster if they must to reach it in time. */
 const RUN_SPEED = 44
@@ -325,7 +332,7 @@ export class VillageWorld {
     this.projectLayer.sortableChildren = true
     this.objects.addChild(this.campfireView(), this.projectLayer)
 
-    this.night.rect(MAP_LEFT * TILE, MAP_TOP * TILE, WORLD_WIDTH, WORLD_HEIGHT).fill({ color: 0x0b1640 })
+    this.night.rect(LAND_LEFT * TILE, LAND_TOP * TILE, WORLD_WIDTH, WORLD_HEIGHT).fill({ color: 0x0b1640 })
     this.night.alpha = 0
     this.lights.blendMode = 'add'
     this.lights.alpha = 0
@@ -336,7 +343,7 @@ export class VillageWorld {
     this.kingdomBorder.visible=false
     this.placementLayer.visible = false
     this.selection.visible = false
-    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite)
+    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite, this.fog.far)
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
@@ -492,7 +499,7 @@ export class VillageWorld {
   private syncGroundChunks() {
     const layout = this.landLayout
     if (!layout) return
-    const land = { x: MAP_LEFT, y: MAP_TOP, width: MAP_WIDTH, height: MAP_HEIGHT }
+    const land = { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT }
     const needed = chunksNear(this.visibleArea(), land)
     const keep = new Set(needed.map((chunk) => `${chunk.x},${chunk.y}`))
     for (const [key, sprite] of this.groundChunks) {
@@ -515,7 +522,9 @@ export class VillageWorld {
       const tileY = chunk.originY + row
       const groundRow = layout.ground[tileY - MAP_TOP]
       for (let column = 0; column < chunk.width; column++) {
-        const sprite = new Sprite(this.tiles.get(groundRow[chunk.originX + column - MAP_LEFT]))
+        const tileX = chunk.originX + column
+        const authored = groundRow?.[tileX - MAP_LEFT]
+        const sprite = new Sprite(this.tiles.get(authored ?? farGroundTile(tileX, tileY, this.terrainSeed ?? 1)))
         sprite.position.set(column * TILE, row * TILE)
         batch.addChild(sprite)
       }
@@ -652,7 +661,7 @@ export class VillageWorld {
 
   private way(walker: Walker, spot: TilePoint) {
     const crossings = this.village ? bridgeCrossings(this.village) : []
-    return findWay(this.terrain!, { x: walker.x / TILE, y: walker.y / TILE }, spot, this.bridgeDone(), crossings)
+    return findWay(this.terrain!, { x: walker.x / TILE, y: walker.y / TILE }, spot, this.bridgeDone(), crossings, this.terrainSeed ?? 1)
   }
 
   /** Sends a walker to a spot, in tiles, around water. An unreachable destination leaves the walker on their current dry ground. */
@@ -1952,7 +1961,7 @@ export class VillageWorld {
   /** The furthest zoom still fills the screen with map, so nothing beyond its edges is ever shown. */
   private scaleLimits() {
     const { width, height } = this.app.screen
-    const minimum = Math.max(width / WORLD_WIDTH, height / WORLD_HEIGHT)
+    const minimum = Math.max(width / WORLD_WIDTH, height / WORLD_HEIGHT, width / (WIDEST_VIEW_TILES * TILE), height / (WIDEST_VIEW_TILES * TILE))
     return { minimum, maximum: Math.max(minimum, MAXIMUM_SCALE) }
   }
 
@@ -1971,8 +1980,8 @@ export class VillageWorld {
     this.panX = Math.min(1, Math.max(0, this.panX))
     this.panY = Math.min(1, Math.max(0, this.panY))
     this.world.position.set(
-      Math.round(-MAP_LEFT * TILE * this.scale - overflowX * this.panX),
-      Math.round(-MAP_TOP * TILE * this.scale - overflowY * this.panY),
+      Math.round(-LAND_LEFT * TILE * this.scale - overflowX * this.panX),
+      Math.round(-LAND_TOP * TILE * this.scale - overflowY * this.panY),
     )
     const view = this.visibleArea()
     this.viewCenter = { x: view.x + view.width / 2, y: view.y + view.height / 2 }
@@ -1993,8 +2002,8 @@ export class VillageWorld {
     const { width, height } = this.app.screen
     const overflowX = WORLD_WIDTH * this.scale - width
     const overflowY = WORLD_HEIGHT * this.scale - height
-    if (overflowX > 0) this.panX = ((worldX - MAP_LEFT * TILE) * this.scale - screenX) / overflowX
-    if (overflowY > 0) this.panY = ((worldY - MAP_TOP * TILE) * this.scale - screenY) / overflowY
+    if (overflowX > 0) this.panX = ((worldX - LAND_LEFT * TILE) * this.scale - screenX) / overflowX
+    if (overflowY > 0) this.panY = ((worldY - LAND_TOP * TILE) * this.scale - screenY) / overflowY
     this.layoutCamera()
   }
 
@@ -2366,6 +2375,8 @@ export class VillageWorld {
     if (this.elapsed - this.fogUpdatedAt >= FOG_SECONDS) {
       this.fogUpdatedAt = this.elapsed
       this.fog.update(this.viewers(), this.nightAmount)
+      const near = chunksNear(this.visibleArea(), { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT })
+      this.fog.cover(near.map((chunk) => ({ x: chunk.originX, y: chunk.originY, width: chunk.width, height: chunk.height })))
     }
     this.wildlife.update(seconds, this.elapsed, [...this.walkers.values()], hunters, sortDepth)
     this.enemies.update(seconds, now, sortDepth)

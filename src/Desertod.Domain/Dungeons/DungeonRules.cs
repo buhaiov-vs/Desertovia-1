@@ -38,7 +38,7 @@ public static class DungeonRules
     public static TimeSpan ShownAfterEnd { get; } = TimeSpan.FromMinutes(2);
 
     /// <summary>The heroes gather at the west edge of the land, on the camp's row, and come back from there.</summary>
-    public static TilePoint MarchSpot { get; } = new(WorldMap.Land.X + 0.5, WorldMap.Places[WorldMap.Camp].Y);
+    public static TilePoint MarchSpot { get; } = new(WorldMap.Vale.X + 0.5, WorldMap.Places[WorldMap.Camp].Y);
 
     public static DungeonRun Open(Village village, string dungeonId, string tsarName, int seed, DateTimeOffset now)
     {

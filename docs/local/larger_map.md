@@ -102,7 +102,7 @@ Far work uses a journey to a place, then a local job. The 2-second work walk sta
 
 A walk uses the same pace: **0.6 seconds per tile**, healthy. The sprite at 26 pixels per second only plays while the figure is on screen. Watching the whole way is about 3 percent longer than the server clock, so one real day on screen is about **140,000 tiles** instead of **144,000**. The clock does not finish a fog march while the player is away. Quiet hands on that march spawn a faster pursuer, and a catch is a fall, not a finished trip.
 
-One village day is **4 real hours**. A night is half of that day, **2 real hours**. One attack comes every night.
+One village day is **4 real hours**. A night is half of that day, **2 real hours**. Every allowed spawn point sends attackers every night.
 
 | Time to the camp, straight line | Tiles from the edge to the center |
 |---|---:|
@@ -177,21 +177,19 @@ Missing enemy pictures are ignored for now. The lich does not walk. His throne p
 
 The first floor is 10 minutes out, 1,000 tiles. Later floors stay 6,800 tiles apart, which is 1 hour 8 minutes. Inside those 1,000 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that foe. The straight edge, at 24 hours, is the winged vampire's floor. Everyone after him stands past that edge, toward the corners. The lich's floor is short of the corner, and the throne band runs from there to the corner.
 
-Each level is one row. The seed places **eight** points of that foe around the camp, one every eighth of the circle, so the nights come from different directions. A point's direction is the line from the campfire to the point. A point is kept when it lies inside the land and past that foe's floor. Levels out to the winged vampire have all eight points. Past the straight edge, the four points toward the middle of each edge fall outside the land. The four points toward the corners stay, through the lich.
+Each level is a ring of spawn points around the camp. The seed places **eight** points of that foe on the ring, one every eighth of the circle. A point's line is the straight line from that point to the camp. A point is kept when it lies inside the land and past that foe's floor. Levels out to the winged vampire have all eight points. Past the straight edge, the four points toward the middle of each edge fall outside the land. The four points toward the corners stay, through the lich.
 
-A claim stays a small patch around the den: 48 tiles for a pack, 64 for one large figure. The grave rat shows four. Plain slimes show three, one of each ordinary color. Wolves show four, boars three, goblins three. The ghoul and the imp show two. One large figure shows one: the wraith, the bear, each orc, each vampire, the zombie, the skeleton, a knight, the barrow king, and the lich. Sprites exist while a citizen is inside the claim. Marks on the ground stay in the chunk texture.
+A claim stays a small patch around the den: 48 tiles for a pack, 64 for one large figure. The creatures on a point are its protectors. The grave rat shows four. Plain slimes show three, one of each ordinary color. Wolves show four, boars three, goblins three. The ghoul and the imp show two. One large figure shows one: the wraith, the bear, each orc, each vampire, the zombie, the skeleton, a knight, the barrow king, and the lich. Sprites exist while a citizen is inside the claim. Marks on the ground stay in the chunk texture. Eight small spots stand around each spawn point.
 
 These sheets are not dens. Deer, hare, fox, and black grouse are hunt animals, and the fox has no attack. Farm animals are stock. The orange crab has no attack. The island humans and the three roguelike heroes are people, not dens. Eye stalks, jaws, spikes, tentacles, and the other cursed growths dress the poison plant's land. Dead trees and mushrooms dress the lich's land.
 
-A night attack comes from one living spawn point. The fighters appear on the fog nearest the target along the line toward that point, and they come from that direction. They do not walk in from the point itself. If that line has already been revealed out to the point, they appear at the point, because that direction has no nearer fog. A night fighter leaves none of the point's goods. This attack replaces the old night pack of wolves, then boars, then bears.
+Every allowed living spawn point sends attackers every night. The attackers appear on the nearest fog on the straight line from that spawn point to the camp. They do not start the march at the spawn point. If that line is already revealed out to the point, they appear at the point. A night attacker leaves none of the point's goods. This attack replaces the old night pack of wolves, then boars, then bears.
 
-The wave is sized by health, and the health comes from the spawn points that are allowed to attack. Each of those points adds the health of one of its locals. The bodies of the chosen point are that point's creature. Add a body while that part of the wave is still short of the chosen point's health. A body is not split. At least one body comes.
+Each spawn sends its own attackers on its own line. The bodies are that point's creature. Their health is the health of one protector of that point. Add a body while the health is still short. A body is not split. At least one body comes.
 
-A living level 1 point keeps its creature in the night, including in the endgame. If at least one level 1 point still stands, the wave also brings that creature. Their health is one local from each living level 1 point. They come on the same fog line as the chosen point. They are not a second attack, and they are not dropped when a later level opens. If the chosen point is already level 1, those bodies are not added twice. When every level 1 point is destroyed, the later nights have none of that creature.
+Level 1 points send from the start. A later level sends when at least one spawn point of the previous level has been spotted. One spotted level 1 point makes every level 2 point send. One spotted point of level N makes every point of level N+1 send. A level that has started to send stays. A point is spotted when the 6-tile reveal uncovers it. An opened level can send from a point the village has not seen. A destroyed point does not send. A destroyed spawn point does not restore. While no point has been spotted, each of the eight level 1 points sends on its own line.
 
-A point that was destroyed does not add health, and it cannot be the direction. While nobody has found a point, all eight level 1 points count. The wave is eight slimes, and the direction is one of those eight points.
-
-While no citizen has ever uncovered a spawn point, only level 1 points count. If any citizen has ever uncovered a level 1 point, every level 2 point joins the nights. The same step opens each next level: uncovering a point of level N adds level N+1. A level that has joined stays in the nights. A point counts as discovered when the 6-tile reveal band uncovers it. An opened level can attack from a point the village has not seen yet. The night still picks one living point for the direction. The extra points only add their health.
+A living level 1 point still sends every night, including in the endgame, on its own line to the camp. When every level 1 point is destroyed, later nights have none of that creature.
 
 Each edge is one day out. A level 1 point sits 10 minutes out, and all eight directions have one. A den record is written when the reveal band uncovers its chunk, and only when that chunk is past the foe's floor. Unseen land has no den.
 
@@ -218,20 +216,7 @@ Fish stay at the pier. Gold stays where that project stands. Crafted goods are m
 
 The creatures that live on a point leave one good when they are slain. That good is the reason to keep the point. The same creature in a night raid leaves none of it. While the point stands, the locals return, so the good can be taken again. Ordinary patches, the berries and the wood and the stone, do not depend on the point.
 
-Destroying a point makes that point calm. It leaves the nights, and its locals are gone, so its good stops. A level that was already opened stays open. There is no undo. The destroy action is not an attack. The locals do not strike during it.
-
-Different levels use different actions.
-
-| Action | Levels | What it takes | What becomes calm |
-|---|---|---|---|
-| Hold | Slime, grave rat, imp, wolf, boar, bear | Eight citizens, one standing on each of the eight points. They do not attack | Those spawn points are destroyed. They do not restore. No counter is shown |
-| Flare | Scarecrow, ghoul, wraith, poison plant, both vampires, zombie, skeleton, barrow king, lich | One flare, used at that point. A flare is 1 wood and 1 feather, made in the camp | That point only |
-| Wood | Every goblin | 10 wood, used at that point | That point only |
-| Wood and ore | Every orc | 10 wood and 10 iron ore, used at that point | That point only |
-| Stone | Flaming slime, fire spirit | 10 stone, used at that point | That point only |
-| Stone and iron | The nine knights | 10 stone and 10 iron ingots, used at that point | That point only |
-
-The hold is a mechanism, not a fight and not eight attacks. Eight citizens stand, one on each of the eight points. They do not attack. Those eight spawn points are destroyed. A destroyed spawn point does not restore. A citizen who steps off does not restore it. No counter is shown. No timer runs. The other actions clear one point, and they do not turn back on. Ten wood is one pair of hands. A cost of 100 wood would be ten walks, and the goblin ring is about 7 hours out.
+To destroy one spawn point, kill every protector of that point. Then all eight small spots around that spawn point must be occupied for 3 seconds. One citizen stands on one spot. The point is destroyed when every protector is dead and the eight spots have been occupied together for those 3 seconds. If a citizen leaves a spot before 3 seconds, that point is not destroyed. A destroyed spawn point does not restore. No counter is shown. The stay is not an attack. The point then leaves the nights, and its good stops. A level that was already opened stays open.
 
 A point never leaves a weapon. A sword, a spear, a bow, an arrow, and a shield are still made only from their camp recipes, after the technology that allows them. The tusk, the sinew, the claw, and the plate pay for that research. They are not the weapon.
 
@@ -302,7 +287,7 @@ A fire is the checkpoint. It costs **5 wood** to light on revealed ground, outsi
 
 A new building must stand within **16 tiles** of a burning fire. The camp fire already permits the vale. A journey fire permits the same buildings beside it. Research still starts only at the camp. A store beside a journey fire can hold wood, stone, and food. It does not accept a technology pile.
 
-A burning fire is also a raid target. The night can strike the camp fire or one journey fire. The fighters appear on the fog nearest that fire, on the line toward the chosen point. A dead fire is not a target. The buildings remain, but nobody can rest there or add a building until the fire burns again.
+Each allowed spawn sends its attackers toward the camp every night. They appear on the nearest fog on the line from that spawn to the camp. The buildings remain at a dead fire, but nobody can rest there or add a building until the fire burns again.
 
 ## Areas
 
@@ -312,7 +297,7 @@ Dungeon rooms, tables, chairs, and bookshelves are the inside of a door, not the
 
 | Area | Walk | Ground | Decorations | Foes |
 |---|---|---|---|---|
-| Home vale | under 10 minutes | Today's land, then grass out to the berry circle, the river north and south, and the western sand at the slime line | Camp, pier, fields, thinning trees. Eight berry patches at 3 minutes, reed beds at 6 minutes on the banks and the bay | None by day. Each night comes from one level 1 point, and the wave's health is one slime for each living level 1 point |
+| Home vale | under 10 minutes | Today's land, then grass out to the berry circle, the river north and south, and the western sand at the slime line | Camp, pier, fields, thinning trees. Eight berry patches at 3 minutes, reed beds at 6 minutes on the banks and the bay | None by day. Each living level 1 point sends its own attackers every night, on the line from that point to the camp |
 | Slime marsh | 10 minutes to 1 hour 18 minutes | Island grass, the game's marsh, shallow water and foam | Ferns, flowering bushes, reeds. Wood, stone, and birds are gathered here | Plain slime |
 | Burrows | 1 hour 18 minutes to 3 hours 34 minutes | Dirt, beige rock outcrops | A few loose bones, small beige mushrooms | Grave rat, then imp. Ore starts here |
 | Hunting wood | 3 hours 34 minutes to 6 hours 58 minutes | Island grass, dirt path | Ball trees, plain green bushes. Deer, hare, and grouse are animals here, not foes | Small goblin, wolf, boar. Rabbits and deer are hunted here |

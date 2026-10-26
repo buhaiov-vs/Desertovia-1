@@ -224,14 +224,14 @@ Different levels use different actions.
 
 | Action | Levels | What it takes | What becomes calm |
 |---|---|---|---|
-| Hold | Slime, grave rat, imp, wolf, boar, bear | Eight citizens, one standing on each of the eight points. They do not attack. A timer destroys one point at a time | That point stays destroyed. The count shows 1, then 2, then 3 |
+| Hold | Slime, grave rat, imp, wolf, boar, bear | Eight citizens, one standing on each of the eight points. They do not attack. A timer destroys one point at a time | That spawn point does not restore. The count shows 1, then 2, then 3 |
 | Flare | Scarecrow, ghoul, wraith, poison plant, both vampires, zombie, skeleton, barrow king, lich | One flare, used at that point. A flare is 1 wood and 1 feather, made in the camp | That point only |
 | Wood | Every goblin | 10 wood, used at that point | That point only |
 | Wood and ore | Every orc | 10 wood and 10 iron ore, used at that point | That point only |
 | Stone | Flaming slime, fire spirit | 10 stone, used at that point | That point only |
 | Stone and iron | The nine knights | 10 stone and 10 iron ingots, used at that point | That point only |
 
-The hold is a mechanism, not a fight and not eight attacks. Eight citizens stand, one on each of the eight points. They do not attack. A timer then destroys the points of that level one by one. The village sees the count: 1 spawn destroyed, then 2, then 3, up to 8. A destroyed point stays destroyed. The spawn does not return. If a citizen steps off, the timer stops, and the count stays where it is. The length of one step is not set. A point the timer has not reached still gives its good, and it can still send a night. The other actions clear one point, and they do not turn back on. Ten wood is one pair of hands. A cost of 100 wood would be ten walks, and the goblin ring is about 7 hours out.
+The hold is a mechanism, not a fight and not eight attacks. Eight citizens stand, one on each of the eight points. They do not attack. A timer then destroys the points of that level one by one. The village sees the count: 1 spawn destroyed, then 2, then 3, up to 8. A destroyed spawn point does not restore. A citizen who steps off does not restore it. The count does not go back. The timer stops when a citizen steps off. The length of one step is not set. A point the timer has not reached still gives its good, and it can still send a night. The other actions clear one point, and they do not turn back on. Ten wood is one pair of hands. A cost of 100 wood would be ten walks, and the goblin ring is about 7 hours out.
 
 A point never leaves a weapon. A sword, a spear, a bow, an arrow, and a shield are still made only from their camp recipes, after the technology that allows them. The tusk, the sinew, the claw, and the plate pay for that research. They are not the weapon.
 

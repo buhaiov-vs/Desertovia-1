@@ -140,11 +140,11 @@ Pushing the frontier is those watched steps. If the walker stays at the edge, th
 
 On the square of about 288,000 tiles, the camp is in the middle and each edge is one real day away (144,000 tiles). A corner is about 34 hours. The order comes from the sprite descriptions, easiest first, including the archive sheets in `docs/local/pixel-sprite-archives.md`. A figure called weak or small, with no weapon, comes before a larger one. A tooth, a claw, a club, a blade, a spell, or armor comes later. Two weapons come after one. The crowned swordsman is near the end. The lich, seated on a throne with green flames and with no walk of his own, is last. Color variants of the same body share one floor. The fight numbers in the catalogs are not this order.
 
-The map is seen from above. A creature on it needs a picture that faces up, down, left, and right. Some pictures only face sideways. Those creatures stay on the map. A four-direction picture for each of them is later art, not a reason to drop the creature. The nine knights already have the four faces, so all nine stand on their floor. The lich does not walk. His throne picture stays.
+Missing enemy pictures are ignored for now. The lich does not walk. His throne picture stays.
 
 | Order | Foe | What the sprite says | Not closer than | Walk, healthy |
 |---|---|---|---:|---:|
-| 1 | Plain slime | Round blue, green, or red jelly, and the teal, dark-blue, and island green blobs. Eyes, no weapon. The round pictures only face sideways | 1,000 | 10 minutes |
+| 1 | Plain slime | Round blue, green, or red jelly, and the teal, dark-blue, and island green blobs. Eyes, no weapon | 1,000 | 10 minutes |
 | 2 | Grave rat | "Fast, weak", a pack, body about 10 pixels | 7,800 | 1 hour 18 minutes |
 | 3 | Imp | "Small", about 9 pixels tall, stubby horns, no weapon | 14,600 | 2 hours 26 minutes |
 | 4 | Small goblin | Small green goblin, no weapon drawn | 21,400 | 3 hours 34 minutes |
@@ -157,33 +157,25 @@ The map is seen from above. A creature on it needs a picture that faces up, down
 | 11 | Goblin with a sword | Green goblin, a sword | 69,000 | 11 hours 30 minutes |
 | 12 | Banner goblin | Green goblin carrying a red-and-white banner | 75,800 | 12 hours 38 minutes |
 | 13 | Wraith | Floating, hooded, dark empty eyes, no weapon | 82,600 | 13 hours 46 minutes |
-| 14 | Poison plant | Dark purple bulb, leafy crown, poison puff and poison cloud. The picture only faces sideways | 89,400 | 14 hours 54 minutes |
-| 15 | Flaming slime | Dark cracked blob with yellow flames. This slime faces four ways | 96,200 | 16 hours 2 minutes |
-| 16 | Orc with one axe | Smaller orc, leather and cloth, one axe. This orc faces four ways | 103,000 | 17 hours 10 minutes |
+| 14 | Poison plant | Dark purple bulb, leafy crown, poison puff and poison cloud | 89,400 | 14 hours 54 minutes |
+| 15 | Flaming slime | Dark cracked blob with yellow flames | 96,200 | 16 hours 2 minutes |
+| 16 | Orc with one axe | Smaller orc, leather and cloth, one axe | 103,000 | 17 hours 10 minutes |
 | 17 | Bear | Widest animal, pale claws, 11 pixels tall | 109,800 | 18 hours 18 minutes |
-| 18 | Orc warrior | Large orc, topknot, one axe. The picture only faces sideways | 116,600 | 19 hours 26 minutes |
+| 18 | Orc warrior | Large orc, topknot, one axe | 116,600 | 19 hours 26 minutes |
 | 19 | Vampire | Pale, a cape, a spell flash, no wings | 123,400 | 20 hours 34 minutes |
-| 20 | Orc berserk | Large, tusks, bare chest, a cleaver in each hand. The picture only faces sideways | 130,200 | 21 hours 42 minutes |
-| 21 | Orc shaman | Large, grey tunic, wooden staff, two spell casts. The picture only faces sideways | 137,000 | 22 hours 50 minutes |
+| 20 | Orc berserk | Large, tusks, bare chest, a cleaver in each hand | 130,200 | 21 hours 42 minutes |
+| 21 | Orc shaman | Large, grey tunic, wooden staff, two spell casts | 137,000 | 22 hours 50 minutes |
 | 22 | Winged vampire | Pale, white hair, red bat wings, red cape, a spell flash | 143,800 | 23 hours 58 minutes |
 | 23 | Orc with two swords | Blue-grey skin, a gold sword in each hand | 150,600 | 25 hours 6 minutes |
 | 24 | Zombie | Standing green corpse, drawn twice as tall, 26 pixels, no weapon | 157,400 | 26 hours 14 minutes |
-| 25 | Fire spirit | Yellow-orange flame with a face, a shot, a charge, and an explosion. The picture only faces sideways | 164,200 | 27 hours 22 minutes |
-| 26 | Skeleton | The game's bone figure, 30 pixels tall. The archive skeleton has a short blade and only faces sideways | 171,000 | 28 hours 30 minutes |
+| 25 | Fire spirit | Yellow-orange flame with a face, a shot, a charge, and an explosion | 164,200 | 27 hours 22 minutes |
+| 26 | Skeleton | The game's bone figure, 30 pixels tall, and the archive skeleton with a short blade | 171,000 | 28 hours 30 minutes |
 | 27 | Armored orc | Tall black hair, red and gold armor, two swords | 177,800 | 29 hours 38 minutes |
-| 28 | Fortress knight | Nine knights, each with four faces: sword and shield, crossbow, staff, spear, or halberd | 184,600 | 30 hours 46 minutes |
+| 28 | Fortress knight | Nine knights: sword and shield, crossbow, staff, spear, or halberd | 184,600 | 30 hours 46 minutes |
 | 29 | Barrow king | "The boss", rusty gold crown, notched sword, a 16 by 24 frame | 191,400 | 31 hours 54 minutes |
 | 30 | Lich | Seated on a spiked throne, blue robe, green eyes, green flames. No walk cycle | 198,200 | 33 hours 2 minutes |
 
 The first floor is 10 minutes out, 1,000 tiles. Later floors stay 6,800 tiles apart, which is 1 hour 8 minutes. Inside those 1,000 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that foe. The straight edge, at 24 hours, is the winged vampire's floor. Everyone after him stands past that edge, toward the corners. The lich's floor is short of the corner, and the throne band runs from there to the corner.
-
-These pictures only face sideways. Each needs a later drawing that faces up, down, left, and right. Until that drawing exists, the picture we have is the stand-in.
-
-- Round blue, green, and red slimes. The teal and dark-blue blobs already face four ways, and they can stand on the same floor.
-- Orc warrior, orc berserk, and orc shaman.
-- Poison plant.
-- Fire spirit.
-- Archive skeleton with the short blade. The game's own skeleton already faces the map, and it stands on that floor until the blade picture is redrawn.
 
 Each level is one row. The seed places **eight** points of that foe around the camp, one every eighth of the circle, so the nights come from different directions. A point's direction is the line from the campfire to the point. A point is kept when it lies inside the land and past that foe's floor. Levels out to the winged vampire have all eight points. Past the straight edge, the four points toward the middle of each edge fall outside the land. The four points toward the corners stay, through the lich.
 
@@ -195,9 +187,9 @@ A night attack comes from one living spawn point. The fighters appear on the fog
 
 The wave is sized by health, and the health comes from the spawn points that are allowed to attack. Each of those points adds the health of one of its locals. The bodies of the chosen point are that point's creature. Add a body while that part of the wave is still short of the chosen point's health. A body is not split. At least one body comes.
 
-A living level 1 point keeps its creature in the night, including in the endgame. If at least one level 1 point still stands, the wave also brings that creature. Their health is one local from each living level 1 point. They come on the same fog line as the chosen point. They are not a second attack, and they are not dropped when a later level opens. If the chosen point is already level 1, those bodies are not added twice. When every level 1 point is destroyed, or that level is held, the later nights have none of that creature.
+A living level 1 point keeps its creature in the night, including in the endgame. If at least one level 1 point still stands, the wave also brings that creature. Their health is one local from each living level 1 point. They come on the same fog line as the chosen point. They are not a second attack, and they are not dropped when a later level opens. If the chosen point is already level 1, those bodies are not added twice. When every level 1 point is destroyed, the later nights have none of that creature.
 
-A point that was destroyed does not add health, and it cannot be the direction. A level that is held adds nothing, because it is not spawning. While nobody has found a point, all eight level 1 points count. The wave is eight slimes, and the direction is one of those eight points.
+A point that was destroyed does not add health, and it cannot be the direction. A point the timer has not destroyed yet still counts. While nobody has found a point, all eight level 1 points count. The wave is eight slimes, and the direction is one of those eight points.
 
 While no citizen has ever uncovered a spawn point, only level 1 points count. If any citizen has ever uncovered a level 1 point, every level 2 point joins the nights. The same step opens each next level: uncovering a point of level N adds level N+1. A level that has joined stays in the nights. A point counts as discovered when the 6-tile reveal band uncovers it. An opened level can attack from a point the village has not seen yet. The night still picks one living point for the direction. The extra points only add their health.
 
@@ -220,7 +212,7 @@ The other wild goods are farther than the berries, and the richer ones are past 
 | Birds | 4,000 | 40 minutes | Deeper in that marsh |
 | Rabbits, deer, ore | the band that holds them | the walk to that band | Rabbits and deer in the hunting wood, ore in the burrows and the later rock |
 
-Fish at the pier and gold past the bridge stay where those projects stand. Crafted goods are made in the camp. They are not patches on the land.
+Fish stay at the pier. Gold stays where that project stands. Crafted goods are made in the camp. They are not patches on the land.
 
 ## What a living point gives
 
@@ -232,14 +224,14 @@ Different levels use different actions.
 
 | Action | Levels | What it takes | What becomes calm |
 |---|---|---|---|
-| Hold | Slime, grave rat, imp, wolf, boar, bear | Eight citizens, one standing on each of the eight points. They do not attack | Spawn at that level stops while all eight remain |
+| Hold | Slime, grave rat, imp, wolf, boar, bear | Eight citizens, one standing on each of the eight points. They do not attack. A timer destroys one point at a time | That point stays destroyed. The count shows 1, then 2, then 3 |
 | Flare | Scarecrow, ghoul, wraith, poison plant, both vampires, zombie, skeleton, barrow king, lich | One flare, used at that point. A flare is 1 wood and 1 feather, made in the camp | That point only |
 | Wood | Every goblin | 10 wood, used at that point | That point only |
 | Wood and ore | Every orc | 10 wood and 10 iron ore, used at that point | That point only |
 | Stone | Flaming slime, fire spirit | 10 stone, used at that point | That point only |
 | Stone and iron | The nine knights | 10 stone and 10 iron ingots, used at that point | That point only |
 
-The hold is a mechanism, not a fight and not eight attacks. The eight citizens turn it on by staying on the eight points. While it is on, that level does not spawn, so its nights stop and its good stops. One citizen steps off, and the spawn returns. The other actions clear one point, and they do not turn back on. The other points of that level keep their good, and they can still send a night. Ten wood is one pair of hands. A cost of 100 wood would be ten walks, and the goblin ring is about 7 hours out.
+The hold is a mechanism, not a fight and not eight attacks. Eight citizens stand, one on each of the eight points. They do not attack. A timer then destroys the points of that level one by one. The village sees the count: 1 spawn destroyed, then 2, then 3, up to 8. A destroyed point stays destroyed. The spawn does not return. If a citizen steps off, the timer stops, and the count stays where it is. The length of one step is not set. A point the timer has not reached still gives its good, and it can still send a night. The other actions clear one point, and they do not turn back on. Ten wood is one pair of hands. A cost of 100 wood would be ten walks, and the goblin ring is about 7 hours out.
 
 A point never leaves a weapon. A sword, a spear, a bow, an arrow, and a shield are still made only from their camp recipes, after the technology that allows them. The tusk, the sinew, the claw, and the plate pay for that research. They are not the weapon.
 
@@ -283,7 +275,7 @@ The ring stays the rule for who lives there. A foe is never closer than its floo
 
 Three features are enough. Each is a function of the seed and the coordinate, so a chunk can draw its piece without looking at the chunk beside it.
 
-The camp's river runs on north and south out of the vale. It is the same water, four tiles wide, with a slow bend. It blocks a step. The bridge in the vale is the first crossing. The next ford is twenty minutes upstream, and another is twenty minutes downstream. After those, the river has one ford each hour of its length. Fish stay at the pier, and gold stays past the bridge. A point that would sit in the water slides along its ring to the nearest dry tile, and that tile is still at least the foe's floor away.
+The camp's river runs on north and south out of the vale. It is the same water, four tiles wide, with a slow bend. It blocks a step. The vale keeps today's bridge. This map adds no new bridge and no new ford. A new crossing would change the walk times. Fish stay at the pier. Gold stays where that project stands. A point that would sit in the water slides along its ring to the nearest dry tile, and that tile is still at least the foe's floor away.
 
 The sea is a bay on the west. Its nearest sand is the ten-minute line. Sand, then pebbles, then foam, then water that blocks. The sea fills the west beyond that shore and crosses the later bands, so the west edge is water, not a day of grass. A western den stands on the inland edge of the sand, still no closer than its own floor. The crab is a prop on the sand. Nothing is hunted in the sea, and nothing sails. The east edge is one day away. The slime line is 10 minutes out, on the dry ground inland of the sand and on the grass in the other directions.
 

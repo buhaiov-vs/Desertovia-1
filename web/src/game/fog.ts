@@ -13,6 +13,30 @@ function decodeBits(encoded: string) {
   }
 }
 
+/** Box blur. The samples that fall outside the buffer repeat the edge pixel. */
+function blurAlpha(values: Float32Array, width: number, height: number, radius: number) {
+  const tmp = new Float32Array(values.length)
+  const span = radius * 2 + 1
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let sum = 0
+      for (let dx = -radius; dx <= radius; dx++) {
+        sum += values[y * width + Math.min(width - 1, Math.max(0, x + dx))]
+      }
+      tmp[y * width + x] = sum / span
+    }
+  }
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      let sum = 0
+      for (let dy = -radius; dy <= radius; dy++) {
+        sum += tmp[Math.min(height - 1, Math.max(0, y + dy)) * width + x]
+      }
+      values[y * width + x] = sum / span
+    }
+  }
+}
+
 /** Something that sees the land around it; coordinates and radius in tiles. */
 export interface Viewer {
   x: number
@@ -25,23 +49,66 @@ const DARK: [number, number, number] = [12, 14, 20]
 const REMEMBERED_ALPHA = 0.5
 /** Tiles over which sight fades out at its edge. */
 const SIGHT_FADE = 1.5
+/**
+ * Far land is drawn much closer than the camp picture, so one pixel per tile becomes a stair-step.
+ * Several pixels per tile let the sight disc follow the walker and fade instead of popping a whole tile.
+ * Eight keeps each texel near two world pixels (TILE is 16) so linear stretch does not lattice.
+ */
+const FAR_PIXELS = 8
+/** Tiles across which the far-land disc fades. The outer edge stays on the sight radius. */
+const FAR_FADE = 2.5
+/**
+ * Softens server-seeded tile squares only. The live disc is already a smoothstep; a wide box blur on
+ * that ramp flattens it into visible bands.
+ */
+const FAR_BLUR = 2
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
+
+/** Smooth falloff from 1 inside the disc to 0 at the radius, over `fade` tiles. */
+function sightFalloff(distance: number, radius: number, fade: number) {
+  const opened = (radius - distance) / fade
+  if (opened <= 0) return 0
+  if (opened >= 1) return 1
+  return opened * opened * (3 - 2 * opened)
+}
+/**
+ * Extra fog pixels around the camp picture. Linear filtering otherwise blends the rim with empty
+ * texture and draws a bright teal fringe where the vale ends.
+ */
+const EDGE_PAD = 1
 
 /**
  * Fog of war over the map, one pixel per tile, stretched with smoothing so its edges are soft. The land the tribe
  * has seen comes from the server and is shared by all players; walkers on this map add what they see as they go.
  */
 export class Fog {
+  /** Camp picture only; the minimap reads this size. */
   readonly canvas = document.createElement('canvas')
   readonly sprite: Sprite
   /** Darkness for chunks outside the camp picture. Only chunks near the camera are kept. */
   readonly far = new Container()
   private readonly farSprites = new Map<string, { sprite: Sprite; canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture }>()
+  /**
+   * How strongly each pixel of a far chunk has been seen, 0 to 255.
+   * Kept as the walkers move, so the land behind them stays open instead of snapping shut and popping back.
+   */
+  private readonly farSeen = new Map<string, Uint8Array>()
+  /** Far chunks that held a live sight disc last cover; leaving the set freezes their fog once more. */
+  private liveFar = new Set<string>()
+  /** After a server sync, every on-screen far chunk must be painted again. */
+  private farPaintDirty = true
+  /** Reused by `paintFar` so a zoomed-out view does not allocate megabytes every fog tick. */
+  private farLight = new Float32Array(0)
+  private farAlpha = new Float32Array(0)
+  private farImage: ImageData | null = null
   private savedChunks: ExploredChunk[] = []
   private viewers: Viewer[] = []
+  /** Padded copy drawn on the map so filtering never samples transparent outside the vale. */
+  private readonly display = document.createElement('canvas')
   private readonly texture: Texture
   private readonly context: CanvasRenderingContext2D
+  private readonly displayContext: CanvasRenderingContext2D
   private readonly image: ImageData
   private readonly explored = new Uint8Array(MAP_WIDTH * MAP_HEIGHT)
   /** 0 out of sight, 1 in full sight. */
@@ -56,9 +123,12 @@ export class Fog {
     this.canvas.height = MAP_HEIGHT
     this.context = this.canvas.getContext('2d')!
     this.image = this.context.createImageData(MAP_WIDTH, MAP_HEIGHT)
-    this.texture = new Texture({ source: new CanvasSource({ resource: this.canvas, scaleMode: 'linear' }) })
+    this.display.width = MAP_WIDTH + EDGE_PAD * 2
+    this.display.height = MAP_HEIGHT + EDGE_PAD * 2
+    this.displayContext = this.display.getContext('2d')!
+    this.texture = new Texture({ source: new CanvasSource({ resource: this.display, scaleMode: 'linear' }) })
     this.sprite = new Sprite(this.texture)
-    this.sprite.position.set(MAP_LEFT * TILE, MAP_TOP * TILE)
+    this.sprite.position.set((MAP_LEFT - EDGE_PAD) * TILE, (MAP_TOP - EDGE_PAD) * TILE)
     this.sprite.scale.set(TILE)
     this.draw()
   }
@@ -70,16 +140,19 @@ export class Fog {
       entry.texture.destroy(true)
     }
     this.farSprites.clear()
+    this.farSeen.clear()
   }
 
-  /** Replaces the seen land with the visited chunks. A chunk that is absent stays fog. */
+  /**
+   * Merges visited chunks into the seen land. Exploration only grows: tiles the local walker already lit stay lit
+   * when a village update arrives, so a publish cannot wipe the path disc and snap fog onto a stale corridor.
+   */
   private lastExplored: string | null = null
   setChunks(chunks: ExploredChunk[]) {
     const signature = chunks.map(chunk => `${chunk.x},${chunk.y},${chunk.complete ? 1 : 0},${chunk.bits ?? ''}`).join(';')
     if (signature === this.lastExplored) return
     this.lastExplored = signature
     this.savedChunks = chunks
-    this.explored.fill(0)
     for (const chunk of chunks) {
       const originX = chunk.x * CHUNK
       const originY = chunk.y * CHUNK
@@ -91,6 +164,8 @@ export class Fog {
         if (index >= 0) this.explored[index] = 1
       }
     }
+    this.reseedFar()
+    this.farPaintDirty = true
     this.draw()
   }
 
@@ -114,6 +189,7 @@ export class Fog {
         }
       }
     }
+    this.stampFar()
     this.draw()
   }
 
@@ -147,17 +223,73 @@ export class Fog {
   }
 
   /**
+   * Darkness of each tile in a rectangle, 0 where someone is looking and 1 on land nobody has seen.
+   * `out` has one entry per tile, row by row, and must already be `width * height` long.
+   */
+  fillDarkness(x0: number, y0: number, width: number, height: number, out: Float32Array) {
+    const remembered = REMEMBERED_ALPHA * this.darkness
+    for (let row = 0; row < height; row++) {
+      const y = y0 + row
+      for (let column = 0; column < width; column++) {
+        const x = x0 + column
+        const index = this.index(x, y)
+        const seen = index >= 0 ? this.explored[index] === 1 : this.chunkSees(x, y)
+        out[row * width + column] = seen ? remembered : 1
+      }
+    }
+    for (const viewer of this.viewers) {
+      const left = Math.max(x0, Math.floor(viewer.x - viewer.radius))
+      const right = Math.min(x0 + width - 1, Math.ceil(viewer.x + viewer.radius))
+      const top = Math.max(y0, Math.floor(viewer.y - viewer.radius))
+      const bottom = Math.min(y0 + height - 1, Math.ceil(viewer.y + viewer.radius))
+      for (let y = top; y <= bottom; y++) {
+        for (let x = left; x <= right; x++) {
+          const lit = Math.min(1, (viewer.radius - Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y)) / SIGHT_FADE)
+          if (lit <= 0) continue
+          const index = (y - y0) * width + (x - x0)
+          const alpha = remembered * (1 - lit)
+          if (alpha < out[index]) out[index] = alpha
+        }
+      }
+    }
+  }
+
+  /**
    * Paints darkness on the chunks near the camera that the camp picture does not cover.
-   * A chunk that scrolls away is dropped.
+   * A chunk that scrolls away is dropped. Only chunks under a walker, newly created, leaving a
+   * walker's sight, or dirtied by a server sync are repainted — zooming out used to redraw every
+   * on-screen far chunk at 8 pixels per tile every fog tick and made the map lag.
    */
   cover(chunks: TileArea[]) {
     const wanted = new Set<string>()
+    const nextLive = new Set<string>()
     for (const chunk of chunks) {
       if (this.insideVale(chunk.x, chunk.y) && this.insideVale(chunk.x + chunk.width - 1, chunk.y + chunk.height - 1)) continue
       const key = `${chunk.x},${chunk.y}`
       wanted.add(key)
-      const entry = this.farSprites.get(key) ?? this.makeFar(chunk)
-      this.paintFar(entry, chunk)
+      let entry = this.farSprites.get(key)
+      let created = false
+      if (
+        !entry ||
+        entry.canvas.width !== chunk.width * FAR_PIXELS ||
+        entry.canvas.height !== chunk.height * FAR_PIXELS
+      ) {
+        if (entry) {
+          entry.sprite.destroy()
+          entry.texture.destroy(true)
+          this.farSprites.delete(key)
+        }
+        // Old farSeen buffers from a different pixel density would mis-sample; drop them with the sprite.
+        this.farSeen.delete(`${Math.floor(chunk.x / CHUNK)},${Math.floor(chunk.y / CHUNK)}`)
+        entry = this.makeFar(chunk)
+        created = true
+      }
+      const isLive = this.chunkMeetsViewers(chunk)
+      if (isLive) nextLive.add(key)
+      // Paint when new, under a sight disc, just left a disc (freeze remembered fog), or after sync.
+      if (created || isLive || this.liveFar.has(key) || this.farPaintDirty) {
+        this.paintFar(entry, chunk)
+      }
     }
     for (const [key, entry] of this.farSprites) {
       if (wanted.has(key)) continue
@@ -165,6 +297,20 @@ export class Fog {
       entry.texture.destroy(true)
       this.farSprites.delete(key)
     }
+    this.liveFar = nextLive
+    this.farPaintDirty = false
+  }
+
+  /** Whether any walker's sight disc reaches this far-land fog sprite. */
+  private chunkMeetsViewers(chunk: TileArea) {
+    for (const viewer of this.viewers) {
+      if (viewer.x + viewer.radius < chunk.x) continue
+      if (viewer.x - viewer.radius > chunk.x + chunk.width) continue
+      if (viewer.y + viewer.radius < chunk.y) continue
+      if (viewer.y - viewer.radius > chunk.y + chunk.height) continue
+      return true
+    }
+    return false
   }
 
   private insideVale(x: number, y: number) {
@@ -188,36 +334,236 @@ export class Fog {
 
   private makeFar(chunk: TileArea) {
     const canvas = document.createElement('canvas')
-    canvas.width = chunk.width
-    canvas.height = chunk.height
+    canvas.width = chunk.width * FAR_PIXELS
+    canvas.height = chunk.height * FAR_PIXELS
     const context = canvas.getContext('2d')!
-    const texture = new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'nearest' }) })
+    const texture = new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'linear' }) })
     const sprite = new Sprite(texture)
     sprite.position.set(chunk.x * TILE, chunk.y * TILE)
-    sprite.scale.set(TILE)
+    sprite.scale.set(TILE / FAR_PIXELS)
     this.far.addChild(sprite)
     const entry = { sprite, canvas, context, texture }
     this.farSprites.set(`${chunk.x},${chunk.y}`, entry)
     return entry
   }
 
+  /** Writes the smooth discs the walkers see now into the far-land memory, and keeps what they already crossed. */
+  private stampFar() {
+    const pixels = FAR_PIXELS
+    const stride = CHUNK * pixels
+    for (const viewer of this.viewers) {
+      const left = viewer.x - viewer.radius
+      const top = viewer.y - viewer.radius
+      const right = viewer.x + viewer.radius
+      const bottom = viewer.y + viewer.radius
+      for (let chunkY = Math.floor(top / CHUNK); chunkY <= Math.floor(bottom / CHUNK); chunkY++) {
+        for (let chunkX = Math.floor(left / CHUNK); chunkX <= Math.floor(right / CHUNK); chunkX++) {
+          const cells = this.ensureFar(chunkX, chunkY)
+          const originX = chunkX * CHUNK
+          const originY = chunkY * CHUNK
+          const x0 = Math.max(0, Math.floor((left - originX) * pixels))
+          const y0 = Math.max(0, Math.floor((top - originY) * pixels))
+          const x1 = Math.min(stride - 1, Math.ceil((right - originX) * pixels))
+          const y1 = Math.min(stride - 1, Math.ceil((bottom - originY) * pixels))
+          for (let py = y0; py <= y1; py++) {
+            for (let px = x0; px <= x1; px++) {
+              const x = originX + (px + 0.5) / pixels
+              const y = originY + (py + 0.5) / pixels
+              if (this.insideVale(Math.floor(x), Math.floor(y))) continue
+              const lit = Math.round(sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE) * 255)
+              if (lit <= 0) continue
+              const index = py * stride + px
+              if (lit > cells[index]) cells[index] = lit
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Drops hard tile fills the server sync used to stamp into walk memory. Server land is read softly in
+   * `farSeenAt` instead, so a publish along the path cannot square the fade into a +1 stair.
+   */
+  private reseedFar() {
+    for (const [key, cells] of this.farSeen) {
+      const [chunkX, chunkY] = key.split(',').map(Number)
+      this.clearHardServerTiles(chunkX, chunkY, cells)
+    }
+  }
+
+  private ensureFar(chunkX: number, chunkY: number) {
+    const key = `${chunkX},${chunkY}`
+    const length = CHUNK * FAR_PIXELS * CHUNK * FAR_PIXELS
+    const existing = this.farSeen.get(key)
+    if (existing && existing.length === length) return existing
+    const cells = new Uint8Array(length)
+    this.farSeen.set(key, cells)
+    return cells
+  }
+
+  private tileSoftTouched(cells: Uint8Array, stride: number, localX: number, localY: number) {
+    const pixels = FAR_PIXELS
+    const x0 = localX * pixels
+    const y0 = localY * pixels
+    for (let py = y0; py < y0 + pixels; py++) {
+      for (let px = x0; px < x0 + pixels; px++) {
+        if (cells[py * stride + px] > 0) return true
+      }
+    }
+    return false
+  }
+
+  /** Clears solid server fills on tiles the walk disc never touched, so soft edges stay soft after sync. */
+  private clearHardServerTiles(chunkX: number, chunkY: number, cells: Uint8Array) {
+    const pixels = FAR_PIXELS
+    const stride = CHUNK * pixels
+    const originX = chunkX * CHUNK
+    const originY = chunkY * CHUNK
+    for (let localY = 0; localY < CHUNK; localY++) {
+      for (let localX = 0; localX < CHUNK; localX++) {
+        if (!this.chunkSees(originX + localX, originY + localY)) continue
+        if (this.tileSoftTouched(cells, stride, localX, localY)) continue
+        const x0 = localX * pixels
+        const y0 = localY * pixels
+        for (let py = y0; py < y0 + pixels; py++) {
+          cells.fill(0, py * stride + x0, py * stride + x0 + pixels)
+        }
+      }
+    }
+  }
+
+  /**
+   * Open amount for land the server marked, faded toward sides that still face fog.
+   * A hard 1 on every pixel of those tiles was the +1 blocky rim when the northbound path synced on the way back.
+   */
+  private serverTileOpen(x: number, y: number) {
+    const tileX = Math.floor(x)
+    const tileY = Math.floor(y)
+    if (!this.chunkSees(tileX, tileY)) return 0
+    const fx = x - tileX
+    const fy = y - tileY
+    let open = 1
+    if (!this.chunkSees(tileX - 1, tileY)) open = Math.min(open, fx)
+    if (!this.chunkSees(tileX + 1, tileY)) open = Math.min(open, 1 - fx)
+    if (!this.chunkSees(tileX, tileY - 1)) open = Math.min(open, fy)
+    if (!this.chunkSees(tileX, tileY + 1)) open = Math.min(open, 1 - fy)
+    if (open <= 0) return 0
+    if (open >= 1) return 1
+    return open * open * (3 - 2 * open)
+  }
+
+  /** Remembered open amount of one far-land point, 0 to 1. */
+  private farSeenAt(x: number, y: number) {
+    const tileX = Math.floor(x)
+    const tileY = Math.floor(y)
+    const chunkX = Math.floor(tileX / CHUNK)
+    const chunkY = Math.floor(tileY / CHUNK)
+    const cells = this.farSeen.get(`${chunkX},${chunkY}`)
+    if (cells) {
+      const stride = CHUNK * FAR_PIXELS
+      const px = Math.min(stride - 1, Math.max(0, Math.floor((x - chunkX * CHUNK) * FAR_PIXELS)))
+      const py = Math.min(stride - 1, Math.max(0, Math.floor((y - chunkY * CHUNK) * FAR_PIXELS)))
+      const soft = cells[py * stride + px] / 255
+      if (soft > 0) return soft
+      const localX = tileX - chunkX * CHUNK
+      const localY = tileY - chunkY * CHUNK
+      // Walk disc already claimed this tile: keep unstamped pixels closed so a later publish cannot
+      // square the fade. Untouched server tiles still show through `serverTileOpen` below.
+      if (
+        localX >= 0 &&
+        localY >= 0 &&
+        localX < CHUNK &&
+        localY < CHUNK &&
+        this.tileSoftTouched(cells, stride, localX, localY)
+      ) {
+        return 0
+      }
+    }
+    return this.serverTileOpen(x, y)
+  }
+
+  /**
+   * Darkness from remembered open amount and live light, 0 clear to 1 full night.
+   * One continuous ramp — the old `seen > 0 ? half-night : full` branch jumped at the first lit
+   * texel and the blur turned that step into concentric bands.
+   */
+  private farShade(seen: number, light: number) {
+    const known = Math.max(seen, light)
+    if (known <= 0) return 1
+    const remembered = REMEMBERED_ALPHA * this.darkness
+    return 1 - known + known * (1 - light) * remembered
+  }
+
   private paintFar(
     entry: { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture },
     chunk: TileArea,
   ) {
-    const image = entry.context.createImageData(chunk.width, chunk.height)
-    for (let row = 0; row < chunk.height; row++) {
-      for (let column = 0; column < chunk.width; column++) {
-        const x = chunk.x + column
-        const y = chunk.y + row
-        if (this.insideVale(x, y)) continue
-        const seen = this.chunkSees(x, y) || this.seenNow(x, y)
-        const alpha = seen ? Math.round(REMEMBERED_ALPHA * this.darkness * (this.seenNow(x, y) ? 0 : 1) * 255) : 255
-        const index = (row * chunk.width + column) * 4
+    const pixels = FAR_PIXELS
+    const width = chunk.width * pixels
+    const height = chunk.height * pixels
+    const pad = FAR_BLUR
+    const fullWidth = width + pad * 2
+    const fullHeight = height + pad * 2
+    const cells = fullWidth * fullHeight
+    if (this.farLight.length !== cells) {
+      this.farLight = new Float32Array(cells)
+      this.farAlpha = new Float32Array(cells)
+    } else {
+      this.farLight.fill(0)
+      this.farAlpha.fill(0)
+    }
+    const light = this.farLight
+    const alpha = this.farAlpha
+    for (const viewer of this.viewers) {
+      const left = viewer.x - viewer.radius
+      const top = viewer.y - viewer.radius
+      const right = viewer.x + viewer.radius
+      const bottom = viewer.y + viewer.radius
+      const x0 = Math.max(-pad, Math.floor((left - chunk.x) * pixels))
+      const y0 = Math.max(-pad, Math.floor((top - chunk.y) * pixels))
+      const x1 = Math.min(width + pad - 1, Math.ceil((right - chunk.x) * pixels))
+      const y1 = Math.min(height + pad - 1, Math.ceil((bottom - chunk.y) * pixels))
+      for (let py = y0; py <= y1; py++) {
+        for (let px = x0; px <= x1; px++) {
+          const x = chunk.x + (px + 0.5) / pixels
+          const y = chunk.y + (py + 0.5) / pixels
+          const lit = sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE)
+          if (lit <= 0) continue
+          const index = (py + pad) * fullWidth + (px + pad)
+          if (lit > light[index]) light[index] = lit
+        }
+      }
+    }
+    for (let py = -pad; py < height + pad; py++) {
+      for (let px = -pad; px < width + pad; px++) {
+        const x = chunk.x + (px + 0.5) / pixels
+        const y = chunk.y + (py + 0.5) / pixels
+        const index = (py + pad) * fullWidth + (px + pad)
+        if (this.insideVale(Math.floor(x), Math.floor(y))) {
+          alpha[index] = 0
+          continue
+        }
+        alpha[index] = this.farShade(this.farSeenAt(x, y), light[index])
+      }
+    }
+    blurAlpha(alpha, fullWidth, fullHeight, pad)
+    if (!this.farImage || this.farImage.width !== width || this.farImage.height !== height) {
+      this.farImage = entry.context.createImageData(width, height)
+    }
+    const image = this.farImage
+    for (let row = 0; row < height; row++) {
+      for (let column = 0; column < width; column++) {
+        const index = (row * width + column) * 4
         image.data[index] = DARK[0]
         image.data[index + 1] = DARK[1]
         image.data[index + 2] = DARK[2]
-        image.data[index + 3] = alpha
+        image.data[index + 3] = 0
+        const x = chunk.x + (column + 0.5) / pixels
+        const y = chunk.y + (row + 0.5) / pixels
+        if (this.insideVale(Math.floor(x), Math.floor(y))) continue
+        const darkness = alpha[(row + pad) * fullWidth + (column + pad)]
+        image.data[index + 3] = Math.round(Math.min(1, Math.max(0, darkness)) * 255)
       }
     }
     entry.context.putImageData(image, 0, 0)
@@ -254,6 +600,29 @@ export class Fog {
       }
     }
     this.context.putImageData(this.image, 0, 0)
+    // Clamp the rim into the pad so linear filtering never samples empty texels at the vale edge.
+    this.displayContext.clearRect(0, 0, this.display.width, this.display.height)
+    this.displayContext.drawImage(this.canvas, EDGE_PAD, EDGE_PAD)
+    const pad = this.displayContext.getImageData(0, 0, this.display.width, this.display.height)
+    const width = this.display.width
+    const height = this.display.height
+    const sample = (x: number, y: number) => {
+      const cx = Math.min(MAP_WIDTH - 1, Math.max(0, x - EDGE_PAD))
+      const cy = Math.min(MAP_HEIGHT - 1, Math.max(0, y - EDGE_PAD))
+      return ((cy * MAP_WIDTH + cx) * 4) + 3
+    }
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (x >= EDGE_PAD && y >= EDGE_PAD && x < EDGE_PAD + MAP_WIDTH && y < EDGE_PAD + MAP_HEIGHT) continue
+        const source = sample(x, y)
+        const index = (y * width + x) * 4
+        pad.data[index] = DARK[0]
+        pad.data[index + 1] = DARK[1]
+        pad.data[index + 2] = DARK[2]
+        pad.data[index + 3] = data[source]
+      }
+    }
+    this.displayContext.putImageData(pad, 0, 0)
     this.texture.source.update()
   }
 }

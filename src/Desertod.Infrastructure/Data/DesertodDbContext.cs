@@ -410,5 +410,6 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
         trip.Ignore(t => t.From);
         trip.Ignore(t => t.To);
         trip.Ignore(t => t.ArrivesAt);
+        trip.OwnsMany(t => t.Way);
     }
 }

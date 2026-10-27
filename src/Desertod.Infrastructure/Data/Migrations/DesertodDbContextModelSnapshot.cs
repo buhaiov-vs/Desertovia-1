@@ -2066,6 +2066,27 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("CitizenId");
+
+                            b1.OwnsMany("Desertod.Domain.World.TripWaypoint", "Way", b2 =>
+                                {
+                                    b2.Property<Guid>("TripCitizenId");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<double>("X");
+
+                                    b2.Property<double>("Y");
+
+                                    b2.HasKey("TripCitizenId", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Citizens");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("TripCitizenId");
+                                });
+
+                            b1.Navigation("Way");
                         });
 
                     b.OwnsOne("Desertod.Domain.Entities.ExternalRecovery", "Recovery", b1 =>
@@ -3041,6 +3062,27 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("VillageId");
+
+                            b1.OwnsMany("Desertod.Domain.World.TripWaypoint", "Way", b2 =>
+                                {
+                                    b2.Property<Guid>("TripVillageId");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<double>("X");
+
+                                    b2.Property<double>("Y");
+
+                                    b2.HasKey("TripVillageId", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("TripVillageId");
+                                });
+
+                            b1.Navigation("Way");
                         });
 
                     b.OwnsMany("Desertod.Domain.Farming.FieldBed", "Fields", b1 =>

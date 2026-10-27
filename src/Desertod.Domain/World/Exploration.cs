@@ -1,5 +1,12 @@
 namespace Desertod.Domain.World;
 
+/// <summary>One turn on a foot path. Stored inside the trip JSON so old straight trips keep working.</summary>
+public sealed class TripWaypoint
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+}
+
 /// <summary>A walk across the map. The land along it is seen only as the walker gets there.</summary>
 public sealed class Trip
 {
@@ -10,20 +17,128 @@ public sealed class Trip
     public double SpeedMultiplier { get; set; } = 1;
     public DateTimeOffset SetOutAt { get; set; }
 
+    /// <summary>Turns after the start, ending at the destination. Null or empty is a straight From→To walk.</summary>
+    public List<TripWaypoint>? Way { get; set; }
+
     public TilePoint From => new(FromX, FromY);
     public TilePoint To => new(ToX, ToY);
 
-    public DateTimeOffset ArrivesAt => SetOutAt + TimeSpan.FromSeconds(From.DistanceTo(To) * Exploration.SecondsPerTile / Math.Max(.1,SpeedMultiplier));
+    public DateTimeOffset ArrivesAt =>
+        SetOutAt + TimeSpan.FromSeconds(PathLength() * Exploration.SecondsPerTile / Math.Max(.1, SpeedMultiplier));
 
-    public static Trip Start(TilePoint from, TilePoint to, DateTimeOffset now) =>
-        new() { FromX = from.X, FromY = from.Y, ToX = to.X, ToY = to.Y, SetOutAt = now };
+    public static Trip Start(TilePoint from, TilePoint to, DateTimeOffset now, IReadOnlyList<TilePoint>? way = null)
+    {
+        var trip = new Trip { FromX = from.X, FromY = from.Y, ToX = to.X, ToY = to.Y, SetOutAt = now };
+        if (way is { Count: > 0 })
+        {
+            trip.Way = way.Select(point => new TripWaypoint { X = point.X, Y = point.Y }).ToList();
+        }
+
+        return trip;
+    }
 
     /// <summary>Where the walker is: on the way, or at the end once arrived.</summary>
     public TilePoint PositionAt(DateTimeOffset now)
     {
+        var route = Route();
+        if (route.Count < 2)
+        {
+            return To;
+        }
+
         var total = (ArrivesAt - SetOutAt).TotalSeconds;
         var share = total <= 0 ? 1 : Math.Clamp((now - SetOutAt).TotalSeconds / total, 0, 1);
-        return new TilePoint(FromX + (ToX - FromX) * share, FromY + (ToY - FromY) * share);
+        var target = PathLength() * share;
+        var walked = 0.0;
+        for (var i = 0; i < route.Count - 1; i++)
+        {
+            var leg = route[i].DistanceTo(route[i + 1]);
+            if (walked + leg >= target || i == route.Count - 2)
+            {
+                var along = leg <= 0 ? 1 : Math.Clamp((target - walked) / leg, 0, 1);
+                return new TilePoint(
+                    route[i].X + (route[i + 1].X - route[i].X) * along,
+                    route[i].Y + (route[i + 1].Y - route[i].Y) * along);
+            }
+
+            walked += leg;
+        }
+
+        return To;
+    }
+
+    /// <summary>Points from the start through the current position, for progressive fog along the walked route.</summary>
+    public IReadOnlyList<TilePoint> WalkedRoute(DateTimeOffset now)
+    {
+        var route = Route();
+        var at = PositionAt(now);
+        if (route.Count < 2)
+        {
+            return [From, at];
+        }
+
+        var walked = new List<TilePoint> { route[0] };
+        for (var i = 0; i < route.Count - 1; i++)
+        {
+            if (PointOnLeg(route[i], route[i + 1], at))
+            {
+                walked.Add(at);
+                return walked;
+            }
+
+            walked.Add(route[i + 1]);
+        }
+
+        walked.Add(at);
+        return walked;
+    }
+
+    internal IReadOnlyList<TilePoint> Route()
+    {
+        if (Way is not { Count: > 0 })
+        {
+            return [From, To];
+        }
+
+        var points = new List<TilePoint>(Way.Count + 1) { From };
+        foreach (var turn in Way)
+        {
+            points.Add(new TilePoint(turn.X, turn.Y));
+        }
+
+        if (points[^1].DistanceTo(To) > 1e-6)
+        {
+            points.Add(To);
+        }
+
+        return points;
+    }
+
+    private double PathLength()
+    {
+        var route = Route();
+        var length = 0.0;
+        for (var i = 0; i < route.Count - 1; i++)
+        {
+            length += route[i].DistanceTo(route[i + 1]);
+        }
+
+        return length;
+    }
+
+    private static bool PointOnLeg(TilePoint from, TilePoint to, TilePoint point)
+    {
+        var dx = to.X - from.X;
+        var dy = to.Y - from.Y;
+        var lengthSquared = dx * dx + dy * dy;
+        if (lengthSquared <= 1e-12)
+        {
+            return point.DistanceTo(from) <= 1e-6;
+        }
+
+        var share = Math.Clamp(((point.X - from.X) * dx + (point.Y - from.Y) * dy) / lengthSquared, 0, 1);
+        var on = new TilePoint(from.X + dx * share, from.Y + dy * share);
+        return point.DistanceTo(on) <= 1e-4;
     }
 }
 
@@ -214,7 +329,12 @@ public static class Exploration
             chunks.RevealOval(peak, LookoutSightRadius, LookoutSightRadius);
         }
 
-        chunks.RevealSegment(trip.From, trip.PositionAt(now), SightRadius);
+        var walked = trip.WalkedRoute(now);
+        for (var i = 0; i < walked.Count - 1; i++)
+        {
+            chunks.RevealSegment(walked[i], walked[i + 1], SightRadius);
+        }
+
         return chunks.Encode();
     }
 
@@ -268,8 +388,16 @@ public static class Exploration
     /// <summary>
     /// A walker sets out to <paramref name="to"/>: the part of their last trip walked so far is written into the
     /// village's map, and the new trip starts where they are: on the way, or at <paramref name="resting"/>.
+    /// <paramref name="way"/> is the foot path after <c>from</c>, ending at <paramref name="to"/>; null means a straight walk.
     /// </summary>
-    public static Departure SetOut(byte[] explored, Trip? current, TilePoint resting, TilePoint to, DateTimeOffset now, TilePoint? lookout = null)
+    public static Departure SetOut(
+        byte[] explored,
+        Trip? current,
+        TilePoint resting,
+        TilePoint to,
+        DateTimeOffset now,
+        TilePoint? lookout = null,
+        IReadOnlyList<TilePoint>? way = null)
     {
         var from = resting;
         var map = explored;
@@ -282,7 +410,7 @@ public static class Exploration
             }
         }
 
-        return new Departure(Trip.Start(from, to, now), map);
+        return new Departure(Trip.Start(from, to, now, way), map);
     }
 
     private static int ChunkOf(int tile) => (int)Math.Floor(tile / (double)ChunkSize);

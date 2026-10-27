@@ -114,6 +114,63 @@ public class ExplorationTests
         Assert.True(revealed.Length < Exploration.LegacySize);
     }
 
+    [Fact]
+    public void DetourTrip_DoesNotRevealAheadOrAlongTheChord()
+    {
+        // Inside the vale, far from the camp oval, so only the trip corridor lights tiles.
+        var from = new TilePoint(50.5, -20.5);
+        var bend = new TilePoint(70.5, 0.5);
+        var to = new TilePoint(50.5, 20.5);
+        var trip = Trip.Start(from, to, Now, [bend, to]);
+        var chordLength = from.DistanceTo(to);
+        Assert.True((trip.ArrivesAt - trip.SetOutAt).TotalSeconds > chordLength * Exploration.SecondsPerTile);
+
+        var halfway = Now + (trip.ArrivesAt - Now) / 2;
+        var at = trip.PositionAt(halfway);
+        Assert.True(at.DistanceTo(bend) < 0.5);
+
+        var blank = Exploration.ImportLegacy(new byte[Exploration.LegacySize]);
+        var revealed = Exploration.Reveal(blank, trip, halfway);
+        Assert.True(Seen(revealed, at));
+        Assert.False(Seen(revealed, to));
+        Assert.False(Seen(revealed, new TilePoint(50.5, 0.5)));
+    }
+
+    [Fact]
+    public void OverlandPath_GoesAroundAWallOfWater()
+    {
+        var terrain = new byte[AuthoredTerrain.Width * AuthoredTerrain.Height];
+        for (var y = AuthoredTerrain.Top; y < AuthoredTerrain.Bottom; y++)
+        {
+            if (y == 25) continue;
+            terrain[AuthoredTerrain.Index(10, y)] = AuthoredTerrain.Water;
+        }
+
+        var from = new TilePoint(5.5, 13.5);
+        var to = new TilePoint(15.5, 13.5);
+        var way = OverlandPath.Find(terrain, from, to, bridge: false, crossings: [], seed: 1);
+
+        Assert.NotNull(way);
+        Assert.Contains(way, point => Math.Abs(point.Y - 25.5) < 1 || Math.Floor(point.Y) == 25);
+        foreach (var turn in way.SkipLast(1))
+        {
+            Assert.NotEqual(AuthoredTerrain.Water, terrain[AuthoredTerrain.Index((int)Math.Floor(turn.X), (int)Math.Floor(turn.Y))]);
+        }
+    }
+
+    [Fact]
+    public void TsarWalk_StoresTheFootPathOnTheTrip()
+    {
+        var village = NewVillage();
+        var far = new TilePoint(-30, -20);
+        village.TsarGoTo(far, Now);
+
+        Assert.NotNull(village.TsarTrip!.Way);
+        Assert.NotEmpty(village.TsarTrip.Way);
+        Assert.Equal(far.X, village.TsarTrip.Way[^1].X, 3);
+        Assert.Equal(far.Y, village.TsarTrip.Way[^1].Y, 3);
+    }
+
     private static bool InOval(TilePoint point, TilePoint center, double radiusX, double radiusY)
     {
         var dx = (point.X - center.X) / radiusX;

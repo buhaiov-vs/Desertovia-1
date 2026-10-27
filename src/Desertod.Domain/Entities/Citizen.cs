@@ -311,7 +311,11 @@ public sealed class Citizen
     public void SetOut(TilePoint to, Village village, DateTimeOffset now)
     {
         BankAccess.Require(village, to);
-        var departure = Exploration.SetOut(village.Explored, Trip, IdleSpot ?? WorldMap.Places[WorldMap.Camp], to, now, village.Wilds?.Lookout);
+        var from = Trip is not null && now < Trip.ArrivesAt
+            ? Trip.PositionAt(now)
+            : IdleSpot ?? WorldMap.Places[WorldMap.Camp];
+        var way = OverlandPath.Find(village, from, to);
+        var departure = Exploration.SetOut(village.Explored, Trip, IdleSpot ?? WorldMap.Places[WorldMap.Camp], to, now, village.Wilds?.Lookout, way);
         village.Explored = departure.Explored;
         Trip = departure.Trip;
         Trip.SpeedMultiplier = MedicalWalk(now);

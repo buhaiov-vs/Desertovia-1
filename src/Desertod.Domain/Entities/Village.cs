@@ -261,7 +261,11 @@ public sealed class Village
         }
 
         BankAccess.Require(this, spot);
-        var departure = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, Wilds?.Lookout);
+        var from = TsarTrip is not null && now < TsarTrip.ArrivesAt
+            ? TsarTrip.PositionAt(now)
+            : TsarSpot ?? WorldMap.Places[WorldMap.Camp];
+        var way = OverlandPath.Find(this, from, spot);
+        var departure = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, Wilds?.Lookout, way);
         Explored = departure.Explored;
         TsarTrip = departure.Trip;
         TsarSpot = spot;

@@ -16,34 +16,6 @@ function decodeBits(encoded: string) {
   }
 }
 
-/** Reused by `blurAlpha` so settle paints do not allocate a full chunk buffer each time. */
-let blurScratch = new Float32Array(0)
-
-/** Box blur. The samples that fall outside the buffer repeat the edge pixel. */
-function blurAlpha(values: Float32Array, width: number, height: number, radius: number) {
-  if (blurScratch.length < values.length) blurScratch = new Float32Array(values.length)
-  const tmp = blurScratch
-  const span = radius * 2 + 1
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      let sum = 0
-      for (let dx = -radius; dx <= radius; dx++) {
-        sum += values[y * width + Math.min(width - 1, Math.max(0, x + dx))]
-      }
-      tmp[y * width + x] = sum / span
-    }
-  }
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      let sum = 0
-      for (let dy = -radius; dy <= radius; dy++) {
-        sum += tmp[Math.min(height - 1, Math.max(0, y + dy)) * width + x]
-      }
-      values[y * width + x] = sum / span
-    }
-  }
-}
-
 /** Something that sees the land around it; coordinates and radius in tiles. */
 export interface Viewer {
   x: number
@@ -65,10 +37,10 @@ const FAR_PIXELS = 8
 /** Tiles across which the far-land disc fades. The outer edge stays on the sight radius. */
 const FAR_FADE = 2.5
 /**
- * Softens remembered open land when a chunk settles (created, left by a walker, or synced).
- * Live paints skip this blur — running it every fog tick made pan and walk feel laggy.
+ * Tiles across which server-explored land fades into fog. Distance to the nearest unseen tile, not a
+ * box blur — blur on settle was melting the rim then snapping to soft squares with a lag spike.
  */
-const FAR_BLUR = 3
+const SERVER_FADE = 1.25
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
 
@@ -107,13 +79,12 @@ export class Fog {
   /** After a server sync, every on-screen far chunk must be painted again. */
   private farPaintDirty = true
   /**
-   * Settled remembered open (0–1) per far chunk, after blur. Live paints reuse this and only restamp
-   * light, so pan/walk do not rebuild server tile fades every fog tick.
+   * Remembered open (0–1) per fog chunk, same grid as `farSeen`. Built once from walk memory + soft
+   * server rims; `stampFar` raises it with the sight disc so live paints never rebuild or blur.
    */
   private readonly farOpen = new Map<string, Float32Array>()
   /** Reused by `paintFar` so a zoomed-out view does not allocate megabytes every fog tick. */
   private farLight = new Float32Array(0)
-  private farAlpha = new Float32Array(0)
   private farImage: ImageData | null = null
   private savedChunks: ExploredChunk[] = []
   private viewers: Viewer[] = []
@@ -277,8 +248,8 @@ export class Fog {
    * on-screen far chunk at 8 pixels per tile every fog tick and made the map lag.
    *
    * Keys are chunk indices (`LandChunkRect.x/y`), not clipped origins, so panning cannot recreate
-   * sprites and wipe walk memory. Live walks paint without blur; blur runs only when a chunk is
-   * created, frozen, or synced — otherwise pan/walk stalls on soft rims every fog tick.
+   * sprites and wipe walk memory. Open land is cached; paints only restamp live light — no settle
+   * blur pass that melted the rim and lagged when a chunk froze.
    */
   cover(chunks: FogChunk[]) {
     const wanted = new Set<string>()
@@ -297,7 +268,6 @@ export class Fog {
           entry.sprite.destroy()
           entry.texture.destroy(true)
           this.farSprites.delete(key)
-          this.farOpen.delete(key)
         }
         entry = this.makeFar(chunk)
         created = true
@@ -308,9 +278,9 @@ export class Fog {
       const isLive = this.chunkMeetsViewers(area)
       if (isLive) nextLive.add(key)
       const leaving = this.liveFar.has(key) && !isLive
-      // Paint when new, under a sight disc, just left a disc (freeze remembered fog), or after sync.
+      // Paint when new, under a sight disc, just left a disc (clear live light), or after sync.
       if (created || isLive || leaving || this.farPaintDirty) {
-        this.paintFar(key, entry, area, created || leaving || this.farPaintDirty)
+        this.paintFar(key, entry, area)
       }
     }
     for (const [key, entry] of this.farSprites) {
@@ -318,7 +288,6 @@ export class Fog {
       entry.sprite.destroy()
       entry.texture.destroy(true)
       this.farSprites.delete(key)
-      this.farOpen.delete(key)
     }
     this.liveFar = nextLive
     this.farPaintDirty = false
@@ -385,6 +354,7 @@ export class Fog {
       for (let chunkY = Math.floor(top / CHUNK); chunkY <= Math.floor(bottom / CHUNK); chunkY++) {
         for (let chunkX = Math.floor(left / CHUNK); chunkX <= Math.floor(right / CHUNK); chunkX++) {
           const cells = this.ensureFar(chunkX, chunkY)
+          const open = this.farOpen.get(`${chunkX},${chunkY}`)
           const originX = chunkX * CHUNK
           const originY = chunkY * CHUNK
           const x0 = Math.max(0, Math.floor((left - originX) * pixels))
@@ -395,10 +365,12 @@ export class Fog {
             for (let px = x0; px <= x1; px++) {
               const x = originX + (px + 0.5) / pixels
               const y = originY + (py + 0.5) / pixels
-              const lit = Math.round(sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE) * 255)
+              const amount = sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE)
+              const lit = Math.round(amount * 255)
               if (lit <= 0) continue
               const index = py * stride + px
               if (lit > cells[index]) cells[index] = lit
+              if (open && amount > open[index]) open[index] = amount
             }
           }
         }
@@ -459,27 +431,49 @@ export class Fog {
   }
 
   /**
-   * Open amount for land the server marked, faded toward sides and corners that still face fog.
-   * Cardinal-only fades left diamond stairs on diagonal camp/path rims; corner neighbors round those.
+   * Open amount for land the server marked, from distance to the nearest unseen tile.
+   * Smooth over `SERVER_FADE` tiles — no per-tile diamond ramps and no settle box blur.
    */
   private serverTileOpen(x: number, y: number) {
     const tileX = Math.floor(x)
     const tileY = Math.floor(y)
     if (!this.tileSeen(tileX, tileY)) return 0
-    const fx = x - tileX
-    const fy = y - tileY
-    let open = 1
-    if (!this.tileSeen(tileX - 1, tileY)) open = Math.min(open, fx)
-    if (!this.tileSeen(tileX + 1, tileY)) open = Math.min(open, 1 - fx)
-    if (!this.tileSeen(tileX, tileY - 1)) open = Math.min(open, fy)
-    if (!this.tileSeen(tileX, tileY + 1)) open = Math.min(open, 1 - fy)
-    if (!this.tileSeen(tileX - 1, tileY - 1)) open = Math.min(open, Math.hypot(fx, fy))
-    if (!this.tileSeen(tileX + 1, tileY - 1)) open = Math.min(open, Math.hypot(1 - fx, fy))
-    if (!this.tileSeen(tileX - 1, tileY + 1)) open = Math.min(open, Math.hypot(fx, 1 - fy))
-    if (!this.tileSeen(tileX + 1, tileY + 1)) open = Math.min(open, Math.hypot(1 - fx, 1 - fy))
-    if (open <= 0) return 0
-    if (open >= 1) return 1
-    return open * open * (3 - 2 * open)
+    const reach = Math.ceil(SERVER_FADE) + 1
+    let nearest = SERVER_FADE
+    for (let dy = -reach; dy <= reach; dy++) {
+      for (let dx = -reach; dx <= reach; dx++) {
+        if (dx === 0 && dy === 0) continue
+        if (this.tileSeen(tileX + dx, tileY + dy)) continue
+        const left = tileX + dx
+        const top = tileY + dy
+        const cx = Math.min(left + 1, Math.max(left, x))
+        const cy = Math.min(top + 1, Math.max(top, y))
+        const distance = Math.hypot(x - cx, y - cy)
+        if (distance < nearest) nearest = distance
+      }
+    }
+    if (nearest >= SERVER_FADE) return 1
+    const opened = nearest / SERVER_FADE
+    return opened * opened * (3 - 2 * opened)
+  }
+
+  /** Full-chunk open grid matching `farSeen`; baked once, then raised by `stampFar`. */
+  private ensureOpen(chunkX: number, chunkY: number) {
+    const key = `${chunkX},${chunkY}`
+    const stride = CHUNK * FAR_PIXELS
+    const length = stride * stride
+    const existing = this.farOpen.get(key)
+    if (existing && existing.length === length) return existing
+    const open = new Float32Array(length)
+    const originX = chunkX * CHUNK
+    const originY = chunkY * CHUNK
+    for (let py = 0; py < stride; py++) {
+      for (let px = 0; px < stride; px++) {
+        open[py * stride + px] = this.openAmount(originX + (px + 0.5) / FAR_PIXELS, originY + (py + 0.5) / FAR_PIXELS)
+      }
+    }
+    this.farOpen.set(key, open)
+    return open
   }
 
   /**
@@ -525,44 +519,18 @@ export class Fog {
     key: string,
     entry: { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture },
     chunk: TileArea,
-    soften: boolean,
   ) {
     const pixels = FAR_PIXELS
     const width = chunk.width * pixels
     const height = chunk.height * pixels
-    const openCells = width * height
-    let open = this.farOpen.get(key)
-    if (soften || !open || open.length !== openCells) {
-      const pad = FAR_BLUR
-      const fullWidth = width + pad * 2
-      const fullHeight = height + pad * 2
-      const cells = fullWidth * fullHeight
-      if (this.farAlpha.length < cells) this.farAlpha = new Float32Array(cells)
-      else this.farAlpha.fill(0, 0, cells)
-      const alpha = this.farAlpha
-      for (let py = -pad; py < height + pad; py++) {
-        for (let px = -pad; px < width + pad; px++) {
-          const x = chunk.x + (px + 0.5) / pixels
-          const y = chunk.y + (py + 0.5) / pixels
-          alpha[(py + pad) * fullWidth + (px + pad)] = this.openAmount(x, y)
-        }
-      }
-      blurAlpha(alpha, fullWidth, fullHeight, pad)
-      if (!open || open.length !== openCells) {
-        open = new Float32Array(openCells)
-        this.farOpen.set(key, open)
-      }
-      for (let row = 0; row < height; row++) {
-        for (let column = 0; column < width; column++) {
-          open[row * width + column] = Math.min(
-            1,
-            Math.max(0, alpha[(row + pad) * fullWidth + (column + pad)]),
-          )
-        }
-      }
-    }
-    if (this.farLight.length < openCells) this.farLight = new Float32Array(openCells)
-    else this.farLight.fill(0, 0, openCells)
+    const cells = width * height
+    const [chunkX, chunkY] = key.split(',').map(Number)
+    const open = this.ensureOpen(chunkX, chunkY)
+    const stride = CHUNK * pixels
+    const localX0 = Math.round((chunk.x - chunkX * CHUNK) * pixels)
+    const localY0 = Math.round((chunk.y - chunkY * CHUNK) * pixels)
+    if (this.farLight.length < cells) this.farLight = new Float32Array(cells)
+    else this.farLight.fill(0, 0, cells)
     const light = this.farLight
     for (const viewer of this.viewers) {
       const left = viewer.x - viewer.radius
@@ -594,9 +562,10 @@ export class Fog {
         image.data[index] = DARK[0]
         image.data[index + 1] = DARK[1]
         image.data[index + 2] = DARK[2]
+        const seen = open[(localY0 + row) * stride + (localX0 + column)] ?? 0
         const cell = row * width + column
         image.data[index + 3] = Math.round(
-          Math.min(1, Math.max(0, this.farShade(open[cell], light[cell]))) * 255,
+          Math.min(1, Math.max(0, this.farShade(seen, light[cell]))) * 255,
         )
       }
     }

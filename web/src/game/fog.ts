@@ -29,8 +29,11 @@ export interface Viewer {
 }
 
 const DARK: [number, number, number] = [12, 14, 20]
-/** Land seen before but out of sight now is dimmed this much at night; land never seen is fully dark. */
-const REMEMBERED_ALPHA = 0.5
+/**
+ * Land seen before but out of sight now is dimmed this much at night; land never seen is fully dark.
+ * Half-strength used to paint whole village tiles grey outside the sight disc.
+ */
+const REMEMBERED_ALPHA = 0.18
 /** Tiles over which sight fades out at its edge. */
 const SIGHT_FADE = 1.5
 /**
@@ -53,7 +56,9 @@ const SERVER_FADE = 2.5
 const CAMP_RADIUS_X = 19
 const CAMP_RADIUS_Y = 17
 /** One-time bake blur (fog texels) to round remaining path-tile stairs after soft fill. */
-const SERVER_BAKE_BLUR = 5
+const SERVER_BAKE_BLUR = 2
+/** Below this, baked soft is treated as unseen so blur cannot leave grey pinholes in the black fog. */
+const SOFT_FLOOR = 0.12
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
 
@@ -548,7 +553,8 @@ export class Fog {
    * texel and the blur turned that step into concentric bands.
    */
   private farShade(seen: number, light: number) {
-    const known = Math.max(seen, light)
+    const soft = seen < SOFT_FLOOR ? 0 : seen
+    const known = Math.max(soft, light)
     if (known <= 0) return 1
     const remembered = REMEMBERED_ALPHA * this.darkness
     return 1 - known + known * (1 - light) * remembered

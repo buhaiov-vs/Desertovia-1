@@ -16,9 +16,13 @@ function decodeBits(encoded: string) {
   }
 }
 
+/** Reused by `blurAlpha` so settle paints do not allocate a full chunk buffer each time. */
+let blurScratch = new Float32Array(0)
+
 /** Box blur. The samples that fall outside the buffer repeat the edge pixel. */
 function blurAlpha(values: Float32Array, width: number, height: number, radius: number) {
-  const tmp = new Float32Array(values.length)
+  if (blurScratch.length < values.length) blurScratch = new Float32Array(values.length)
+  const tmp = blurScratch
   const span = radius * 2 + 1
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -61,10 +65,10 @@ const FAR_PIXELS = 8
 /** Tiles across which the far-land disc fades. The outer edge stays on the sight radius. */
 const FAR_FADE = 2.5
 /**
- * Softens remembered open land (server tiles and walk memory). Live light is applied after the blur
- * so the sight disc stays a smoothstep and does not crawl; only the frozen rim is rounded.
+ * Softens remembered open land when a chunk settles (created, left by a walker, or synced).
+ * Live paints skip this blur — running it every fog tick made pan and walk feel laggy.
  */
-const FAR_BLUR = 4
+const FAR_BLUR = 3
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
 
@@ -102,6 +106,11 @@ export class Fog {
   private liveFar = new Set<string>()
   /** After a server sync, every on-screen far chunk must be painted again. */
   private farPaintDirty = true
+  /**
+   * Settled remembered open (0–1) per far chunk, after blur. Live paints reuse this and only restamp
+   * light, so pan/walk do not rebuild server tile fades every fog tick.
+   */
+  private readonly farOpen = new Map<string, Float32Array>()
   /** Reused by `paintFar` so a zoomed-out view does not allocate megabytes every fog tick. */
   private farLight = new Float32Array(0)
   private farAlpha = new Float32Array(0)
@@ -146,6 +155,7 @@ export class Fog {
     }
     this.farSprites.clear()
     this.farSeen.clear()
+    this.farOpen.clear()
   }
 
   /**
@@ -170,6 +180,7 @@ export class Fog {
       }
     }
     this.reseedFar()
+    this.farOpen.clear()
     this.farPaintDirty = true
     this.draw()
   }
@@ -266,8 +277,8 @@ export class Fog {
    * on-screen far chunk at 8 pixels per tile every fog tick and made the map lag.
    *
    * Keys are chunk indices (`LandChunkRect.x/y`), not clipped origins, so panning cannot recreate
-   * sprites and wipe walk memory. Remembered open land is blurred every paint; live light is mixed
-   * in after, so server tile rims stay soft without the sight disc crawling.
+   * sprites and wipe walk memory. Live walks paint without blur; blur runs only when a chunk is
+   * created, frozen, or synced — otherwise pan/walk stalls on soft rims every fog tick.
    */
   cover(chunks: FogChunk[]) {
     const wanted = new Set<string>()
@@ -286,6 +297,7 @@ export class Fog {
           entry.sprite.destroy()
           entry.texture.destroy(true)
           this.farSprites.delete(key)
+          this.farOpen.delete(key)
         }
         entry = this.makeFar(chunk)
         created = true
@@ -298,7 +310,7 @@ export class Fog {
       const leaving = this.liveFar.has(key) && !isLive
       // Paint when new, under a sight disc, just left a disc (freeze remembered fog), or after sync.
       if (created || isLive || leaving || this.farPaintDirty) {
-        this.paintFar(entry, area)
+        this.paintFar(key, entry, area, created || leaving || this.farPaintDirty)
       }
     }
     for (const [key, entry] of this.farSprites) {
@@ -306,6 +318,7 @@ export class Fog {
       entry.sprite.destroy()
       entry.texture.destroy(true)
       this.farSprites.delete(key)
+      this.farOpen.delete(key)
     }
     this.liveFar = nextLive
     this.farPaintDirty = false
@@ -509,58 +522,66 @@ export class Fog {
   }
 
   private paintFar(
+    key: string,
     entry: { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture },
     chunk: TileArea,
+    soften: boolean,
   ) {
     const pixels = FAR_PIXELS
     const width = chunk.width * pixels
     const height = chunk.height * pixels
-    const pad = FAR_BLUR
-    const fullWidth = width + pad * 2
-    const fullHeight = height + pad * 2
-    const cells = fullWidth * fullHeight
-    if (this.farLight.length < cells) {
-      this.farLight = new Float32Array(cells)
-      this.farAlpha = new Float32Array(cells)
-    } else {
-      this.farLight.fill(0, 0, cells)
-      this.farAlpha.fill(0, 0, cells)
+    const openCells = width * height
+    let open = this.farOpen.get(key)
+    if (soften || !open || open.length !== openCells) {
+      const pad = FAR_BLUR
+      const fullWidth = width + pad * 2
+      const fullHeight = height + pad * 2
+      const cells = fullWidth * fullHeight
+      if (this.farAlpha.length < cells) this.farAlpha = new Float32Array(cells)
+      else this.farAlpha.fill(0, 0, cells)
+      const alpha = this.farAlpha
+      for (let py = -pad; py < height + pad; py++) {
+        for (let px = -pad; px < width + pad; px++) {
+          const x = chunk.x + (px + 0.5) / pixels
+          const y = chunk.y + (py + 0.5) / pixels
+          alpha[(py + pad) * fullWidth + (px + pad)] = this.openAmount(x, y)
+        }
+      }
+      blurAlpha(alpha, fullWidth, fullHeight, pad)
+      if (!open || open.length !== openCells) {
+        open = new Float32Array(openCells)
+        this.farOpen.set(key, open)
+      }
+      for (let row = 0; row < height; row++) {
+        for (let column = 0; column < width; column++) {
+          open[row * width + column] = Math.min(
+            1,
+            Math.max(0, alpha[(row + pad) * fullWidth + (column + pad)]),
+          )
+        }
+      }
     }
+    if (this.farLight.length < openCells) this.farLight = new Float32Array(openCells)
+    else this.farLight.fill(0, 0, openCells)
     const light = this.farLight
-    const alpha = this.farAlpha
     for (const viewer of this.viewers) {
       const left = viewer.x - viewer.radius
       const top = viewer.y - viewer.radius
       const right = viewer.x + viewer.radius
       const bottom = viewer.y + viewer.radius
-      const x0 = Math.max(-pad, Math.floor((left - chunk.x) * pixels))
-      const y0 = Math.max(-pad, Math.floor((top - chunk.y) * pixels))
-      const x1 = Math.min(width + pad - 1, Math.ceil((right - chunk.x) * pixels))
-      const y1 = Math.min(height + pad - 1, Math.ceil((bottom - chunk.y) * pixels))
+      const x0 = Math.max(0, Math.floor((left - chunk.x) * pixels))
+      const y0 = Math.max(0, Math.floor((top - chunk.y) * pixels))
+      const x1 = Math.min(width - 1, Math.ceil((right - chunk.x) * pixels))
+      const y1 = Math.min(height - 1, Math.ceil((bottom - chunk.y) * pixels))
       for (let py = y0; py <= y1; py++) {
         for (let px = x0; px <= x1; px++) {
           const x = chunk.x + (px + 0.5) / pixels
           const y = chunk.y + (py + 0.5) / pixels
           const lit = sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE)
           if (lit <= 0) continue
-          const index = (py + pad) * fullWidth + (px + pad)
+          const index = py * width + px
           if (lit > light[index]) light[index] = lit
         }
-      }
-    }
-    // Blur remembered open land first; shade with live light after so tile rims soften without crawling.
-    for (let py = -pad; py < height + pad; py++) {
-      for (let px = -pad; px < width + pad; px++) {
-        const x = chunk.x + (px + 0.5) / pixels
-        const y = chunk.y + (py + 0.5) / pixels
-        alpha[(py + pad) * fullWidth + (px + pad)] = this.openAmount(x, y)
-      }
-    }
-    blurAlpha(alpha, fullWidth, fullHeight, pad)
-    for (let py = -pad; py < height + pad; py++) {
-      for (let px = -pad; px < width + pad; px++) {
-        const index = (py + pad) * fullWidth + (px + pad)
-        alpha[index] = this.farShade(Math.min(1, Math.max(0, alpha[index])), light[index])
       }
     }
     if (!this.farImage || this.farImage.width !== width || this.farImage.height !== height) {
@@ -573,8 +594,10 @@ export class Fog {
         image.data[index] = DARK[0]
         image.data[index + 1] = DARK[1]
         image.data[index + 2] = DARK[2]
-        const darkness = alpha[(row + pad) * fullWidth + (column + pad)]
-        image.data[index + 3] = Math.round(Math.min(1, Math.max(0, darkness)) * 255)
+        const cell = row * width + column
+        image.data[index + 3] = Math.round(
+          Math.min(1, Math.max(0, this.farShade(open[cell], light[cell]))) * 255,
+        )
       }
     }
     entry.context.putImageData(image, 0, 0)

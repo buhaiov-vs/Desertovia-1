@@ -481,27 +481,16 @@ export class Fog {
     const chunkX = Math.floor(tileX / CHUNK)
     const chunkY = Math.floor(tileY / CHUNK)
     const cells = this.farSeen.get(`${chunkX},${chunkY}`)
+    let soft = 0
     if (cells) {
       const stride = CHUNK * FAR_PIXELS
       const px = Math.min(stride - 1, Math.max(0, Math.floor((x - chunkX * CHUNK) * FAR_PIXELS)))
       const py = Math.min(stride - 1, Math.max(0, Math.floor((y - chunkY * CHUNK) * FAR_PIXELS)))
-      const soft = cells[py * stride + px] / 255
-      if (soft > 0) return soft
-      const localX = tileX - chunkX * CHUNK
-      const localY = tileY - chunkY * CHUNK
-      // Walk disc already claimed this tile: keep unstamped pixels closed so a later publish cannot
-      // square the fade. Untouched server tiles still show through `serverTileOpen` below.
-      if (
-        localX >= 0 &&
-        localY >= 0 &&
-        localX < CHUNK &&
-        localY < CHUNK &&
-        this.tileSoftTouched(cells, stride, localX, localY)
-      ) {
-        return 0
-      }
+      soft = cells[py * stride + px] / 255
     }
-    return this.serverTileOpen(x, y)
+    // Soft walk memory and server camp/path bits share the land. Returning 0 on soft-touched but
+    // unstamped pixels used to punch a black ring between the live sight disc and the larger camp oval.
+    return Math.max(soft, this.serverTileOpen(x, y))
   }
 
   /**

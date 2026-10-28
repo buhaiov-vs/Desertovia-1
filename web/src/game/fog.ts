@@ -61,10 +61,10 @@ const FAR_PIXELS = 8
 /** Tiles across which the far-land disc fades. The outer edge stays on the sight radius. */
 const FAR_FADE = 2.5
 /**
- * Softens server-seeded tile squares only. The live disc is already a smoothstep; a wide box blur on
- * that ramp flattens it into visible bands.
+ * Softens remembered open land (server tiles and walk memory). Live light is applied after the blur
+ * so the sight disc stays a smoothstep and does not crawl; only the frozen rim is rounded.
  */
-const FAR_BLUR = 2
+const FAR_BLUR = 4
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
 
@@ -266,8 +266,8 @@ export class Fog {
    * on-screen far chunk at 8 pixels per tile every fog tick and made the map lag.
    *
    * Keys are chunk indices (`LandChunkRect.x/y`), not clipped origins, so panning cannot recreate
-   * sprites and wipe walk memory. Live walks paint without blur; blur runs only when a chunk is
-   * created, frozen, or synced — otherwise the soft edge crawls with the sight disc.
+   * sprites and wipe walk memory. Remembered open land is blurred every paint; live light is mixed
+   * in after, so server tile rims stay soft without the sight disc crawling.
    */
   cover(chunks: FogChunk[]) {
     const wanted = new Set<string>()
@@ -298,8 +298,7 @@ export class Fog {
       const leaving = this.liveFar.has(key) && !isLive
       // Paint when new, under a sight disc, just left a disc (freeze remembered fog), or after sync.
       if (created || isLive || leaving || this.farPaintDirty) {
-        // Blur only when the remembered edge should settle — not every walk tick.
-        this.paintFar(entry, area, created || leaving || this.farPaintDirty)
+        this.paintFar(entry, area)
       }
     }
     for (const [key, entry] of this.farSprites) {
@@ -447,8 +446,8 @@ export class Fog {
   }
 
   /**
-   * Open amount for land the server marked, faded toward sides that still face fog.
-   * A hard 1 on every pixel of those tiles was the +1 blocky rim when the northbound path synced on the way back.
+   * Open amount for land the server marked, faded toward sides and corners that still face fog.
+   * Cardinal-only fades left diamond stairs on diagonal camp/path rims; corner neighbors round those.
    */
   private serverTileOpen(x: number, y: number) {
     const tileX = Math.floor(x)
@@ -461,6 +460,10 @@ export class Fog {
     if (!this.tileSeen(tileX + 1, tileY)) open = Math.min(open, 1 - fx)
     if (!this.tileSeen(tileX, tileY - 1)) open = Math.min(open, fy)
     if (!this.tileSeen(tileX, tileY + 1)) open = Math.min(open, 1 - fy)
+    if (!this.tileSeen(tileX - 1, tileY - 1)) open = Math.min(open, Math.hypot(fx, fy))
+    if (!this.tileSeen(tileX + 1, tileY - 1)) open = Math.min(open, Math.hypot(1 - fx, fy))
+    if (!this.tileSeen(tileX - 1, tileY + 1)) open = Math.min(open, Math.hypot(fx, 1 - fy))
+    if (!this.tileSeen(tileX + 1, tileY + 1)) open = Math.min(open, Math.hypot(1 - fx, 1 - fy))
     if (open <= 0) return 0
     if (open >= 1) return 1
     return open * open * (3 - 2 * open)
@@ -508,12 +511,11 @@ export class Fog {
   private paintFar(
     entry: { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture },
     chunk: TileArea,
-    soften: boolean,
   ) {
     const pixels = FAR_PIXELS
     const width = chunk.width * pixels
     const height = chunk.height * pixels
-    const pad = soften ? FAR_BLUR : 0
+    const pad = FAR_BLUR
     const fullWidth = width + pad * 2
     const fullHeight = height + pad * 2
     const cells = fullWidth * fullHeight
@@ -546,15 +548,21 @@ export class Fog {
         }
       }
     }
+    // Blur remembered open land first; shade with live light after so tile rims soften without crawling.
     for (let py = -pad; py < height + pad; py++) {
       for (let px = -pad; px < width + pad; px++) {
         const x = chunk.x + (px + 0.5) / pixels
         const y = chunk.y + (py + 0.5) / pixels
-        const index = (py + pad) * fullWidth + (px + pad)
-        alpha[index] = this.farShade(this.openAmount(x, y), light[index])
+        alpha[(py + pad) * fullWidth + (px + pad)] = this.openAmount(x, y)
       }
     }
-    if (soften && pad > 0) blurAlpha(alpha, fullWidth, fullHeight, pad)
+    blurAlpha(alpha, fullWidth, fullHeight, pad)
+    for (let py = -pad; py < height + pad; py++) {
+      for (let px = -pad; px < width + pad; px++) {
+        const index = (py + pad) * fullWidth + (px + pad)
+        alpha[index] = this.farShade(Math.min(1, Math.max(0, alpha[index])), light[index])
+      }
+    }
     if (!this.farImage || this.farImage.width !== width || this.farImage.height !== height) {
       this.farImage = entry.context.createImageData(width, height)
     }

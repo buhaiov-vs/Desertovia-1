@@ -55,16 +55,15 @@ const SERVER_FADE = 2.5
  */
 const CAMP_RADIUS_X = 19
 const CAMP_RADIUS_Y = 17
-/** One-time bake blur (fog texels) to round remaining path-tile stairs after soft fill. */
-const SERVER_BAKE_BLUR = 2
-/** Below this, baked soft is treated as unseen so blur cannot leave grey pinholes in the black fog. */
-const SOFT_FLOOR = 0.12
+/**
+ * Memory at or above this counts as fully open when shading. Mid soft values used to paint grey
+ * grass tiles; live light alone keeps a soft disc edge.
+ */
+const MEMORY_OPEN = 0.4
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
 
-/** Reused when rounding a freshly baked chunk — not per frame. */
-let bakeBlurScratch = new Float32Array(0)
-/** Server soft is baked here then maxed into walk memory so blur never melts discs already walked. */
+/** Server soft is baked here then maxed into walk memory so a publish never overwrites walk discs. */
 let bakeServerScratch = new Uint8Array(0)
 
 /** Smooth falloff from 1 inside the disc to 0 at the radius, over `fade` tiles. */
@@ -434,9 +433,8 @@ export class Fog {
   }
 
   /**
-   * Soft server exploration into the same buffer walk discs use. Camp uses a smooth ellipse;
-   * other explored land fills interior tiles and fades only on the frontier, then a one-time blur
-   * rounds leftover tile stairs. Blur runs on a scratch buffer so walk discs are not melted.
+   * Soft server exploration into walk memory. Camp uses a smooth ellipse; other land fills
+   * explored tiles. Shading treats memory as open/closed so mid soft values never grey the grass.
    */
   private writeServerSoft(chunkX: number, chunkY: number, cells: Uint8Array) {
     const pixels = FAR_PIXELS
@@ -447,7 +445,6 @@ export class Fog {
     const baked = bakeServerScratch
     const originX = chunkX * CHUNK
     const originY = chunkY * CHUNK
-    const reach = Math.ceil(SERVER_FADE) + 1
     let wrote = false
     for (let py = 0; py < stride; py++) {
       for (let px = 0; px < stride; px++) {
@@ -462,99 +459,28 @@ export class Fog {
         const tileX = originX + localX
         const tileY = originY + localY
         if (!this.tileSeen(tileX, tileY)) continue
-        // Camp oval already covers starting land; skip tile stairs there.
         if (this.campOvalOpen(tileX + 0.5, tileY + 0.5) > 0) continue
-        let edge = false
-        for (let dy = -1; dy <= 1 && !edge; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue
-            if (!this.tileSeen(tileX + dx, tileY + dy)) {
-              edge = true
-              break
-            }
-          }
-        }
         const x0 = localX * pixels
         const y0 = localY * pixels
-        if (!edge) {
-          for (let py = y0; py < y0 + pixels; py++) {
-            baked.fill(255, py * stride + x0, py * stride + x0 + pixels)
-          }
-          wrote = true
-          continue
-        }
         for (let py = y0; py < y0 + pixels; py++) {
-          for (let px = x0; px < x0 + pixels; px++) {
-            const x = originX + (px + 0.5) / pixels
-            const y = originY + (py + 0.5) / pixels
-            let nearest = SERVER_FADE
-            for (let dy = -reach; dy <= reach; dy++) {
-              for (let dx = -reach; dx <= reach; dx++) {
-                if (dx === 0 && dy === 0) continue
-                if (this.tileSeen(tileX + dx, tileY + dy)) continue
-                const left = tileX + dx
-                const top = tileY + dy
-                const cx = Math.min(left + 1, Math.max(left, x))
-                const cy = Math.min(top + 1, Math.max(top, y))
-                const distance = Math.hypot(x - cx, y - cy)
-                if (distance < nearest) nearest = distance
-              }
-            }
-            let amount = 255
-            if (nearest < SERVER_FADE) {
-              const opened = nearest / SERVER_FADE
-              amount = Math.round(opened * opened * (3 - 2 * opened) * 255)
-            }
-            const index = py * stride + px
-            if (amount > baked[index]) baked[index] = amount
-            wrote = true
-          }
+          baked.fill(255, py * stride + x0, py * stride + x0 + pixels)
         }
+        wrote = true
       }
     }
     if (!wrote) return
-    this.blurSeenChunk(baked, stride, SERVER_BAKE_BLUR)
     for (let index = 0; index < length; index++) {
       if (baked[index] > cells[index]) cells[index] = baked[index]
     }
   }
 
-  /** Box-blur a baked fog chunk once so path-tile rims are not stair-steps. */
-  private blurSeenChunk(cells: Uint8Array, stride: number, radius: number) {
-    if (radius <= 0) return
-    const length = cells.length
-    if (bakeBlurScratch.length < length) bakeBlurScratch = new Float32Array(length)
-    const tmp = bakeBlurScratch
-    const span = radius * 2 + 1
-    const height = (length / stride) | 0
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < stride; x++) {
-        let sum = 0
-        for (let dx = -radius; dx <= radius; dx++) {
-          sum += cells[y * stride + Math.min(stride - 1, Math.max(0, x + dx))]
-        }
-        tmp[y * stride + x] = sum / span
-      }
-    }
-    for (let x = 0; x < stride; x++) {
-      for (let y = 0; y < height; y++) {
-        let sum = 0
-        for (let dy = -radius; dy <= radius; dy++) {
-          sum += tmp[Math.min(height - 1, Math.max(0, y + dy)) * stride + x]
-        }
-        cells[y * stride + x] = Math.round(sum / span)
-      }
-    }
-  }
-
   /**
-   * Darkness from remembered open amount and live light, 0 clear to 1 full night.
-   * One continuous ramp — the old `seen > 0 ? half-night : full` branch jumped at the first lit
-   * texel and the blur turned that step into concentric bands.
+   * Darkness from remembered land and live light. Memory is open or closed (no grey fringe);
+   * only the live sight disc fades softly into the fog.
    */
   private farShade(seen: number, light: number) {
-    const soft = seen < SOFT_FLOOR ? 0 : seen
-    const known = Math.max(soft, light)
+    const memory = seen >= MEMORY_OPEN ? 1 : 0
+    const known = Math.max(memory, light)
     if (known <= 0) return 1
     const remembered = REMEMBERED_ALPHA * this.darkness
     return 1 - known + known * (1 - light) * remembered

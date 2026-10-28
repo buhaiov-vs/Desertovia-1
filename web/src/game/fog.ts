@@ -37,10 +37,10 @@ const FAR_PIXELS = 8
 /** Tiles across which the far-land disc fades. The outer edge stays on the sight radius. */
 const FAR_FADE = 2.5
 /**
- * Tiles across which server-explored land fades into fog. Distance to the nearest unseen tile, not a
- * box blur — blur on settle was melting the rim then snapping to soft squares with a lag spike.
+ * Tiles across which server-explored land fades into fog (distance to nearest unseen tile).
+ * Written once into `farSeen` so paint never mixes a second tile map with the live disc.
  */
-const SERVER_FADE = 1.25
+const SERVER_FADE = 2.5
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
 
@@ -78,11 +78,6 @@ export class Fog {
   private liveFar = new Set<string>()
   /** After a server sync, every on-screen far chunk must be painted again. */
   private farPaintDirty = true
-  /**
-   * Remembered open (0–1) per fog chunk, same grid as `farSeen`. Built once from walk memory + soft
-   * server rims; `stampFar` raises it with the sight disc so live paints never rebuild or blur.
-   */
-  private readonly farOpen = new Map<string, Float32Array>()
   /** Reused by `paintFar` so a zoomed-out view does not allocate megabytes every fog tick. */
   private farLight = new Float32Array(0)
   private farImage: ImageData | null = null
@@ -126,7 +121,6 @@ export class Fog {
     }
     this.farSprites.clear()
     this.farSeen.clear()
-    this.farOpen.clear()
   }
 
   /**
@@ -150,8 +144,11 @@ export class Fog {
         if (index >= 0) this.explored[index] = 1
       }
     }
-    this.reseedFar()
-    this.farOpen.clear()
+    // Raise soft fog memory with new server bits; never replace walk discs with a second tile layer.
+    for (const [key, cells] of this.farSeen) {
+      const [chunkX, chunkY] = key.split(',').map(Number)
+      this.writeServerSoft(chunkX, chunkY, cells)
+    }
     this.farPaintDirty = true
     this.draw()
   }
@@ -248,8 +245,8 @@ export class Fog {
    * on-screen far chunk at 8 pixels per tile every fog tick and made the map lag.
    *
    * Keys are chunk indices (`LandChunkRect.x/y`), not clipped origins, so panning cannot recreate
-   * sprites and wipe walk memory. Open land is cached; paints only restamp live light — no settle
-   * blur pass that melted the rim and lagged when a chunk froze.
+   * sprites and wipe walk memory. Paint reads one soft buffer (`farSeen`) plus live light — no
+   * second server-tile layer that melted under the disc then snapped back with a hitch.
    */
   cover(chunks: FogChunk[]) {
     const wanted = new Set<string>()
@@ -354,7 +351,6 @@ export class Fog {
       for (let chunkY = Math.floor(top / CHUNK); chunkY <= Math.floor(bottom / CHUNK); chunkY++) {
         for (let chunkX = Math.floor(left / CHUNK); chunkX <= Math.floor(right / CHUNK); chunkX++) {
           const cells = this.ensureFar(chunkX, chunkY)
-          const open = this.farOpen.get(`${chunkX},${chunkY}`)
           const originX = chunkX * CHUNK
           const originY = chunkY * CHUNK
           const x0 = Math.max(0, Math.floor((left - originX) * pixels))
@@ -365,27 +361,14 @@ export class Fog {
             for (let px = x0; px <= x1; px++) {
               const x = originX + (px + 0.5) / pixels
               const y = originY + (py + 0.5) / pixels
-              const amount = sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE)
-              const lit = Math.round(amount * 255)
+              const lit = Math.round(sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE) * 255)
               if (lit <= 0) continue
               const index = py * stride + px
               if (lit > cells[index]) cells[index] = lit
-              if (open && amount > open[index]) open[index] = amount
             }
           }
         }
       }
-    }
-  }
-
-  /**
-   * Drops hard tile fills the server sync used to stamp into walk memory. Server land is read softly in
-   * `farSeenAt` instead, so a publish along the path cannot square the fade into a +1 stair.
-   */
-  private reseedFar() {
-    for (const [key, cells] of this.farSeen) {
-      const [chunkX, chunkY] = key.split(',').map(Number)
-      this.clearHardServerTiles(chunkX, chunkY, cells)
     }
   }
 
@@ -395,45 +378,32 @@ export class Fog {
     const existing = this.farSeen.get(key)
     if (existing && existing.length === length) return existing
     const cells = new Uint8Array(length)
+    this.writeServerSoft(chunkX, chunkY, cells)
     this.farSeen.set(key, cells)
     return cells
   }
 
-  private tileSoftTouched(cells: Uint8Array, stride: number, localX: number, localY: number) {
-    const pixels = FAR_PIXELS
-    const x0 = localX * pixels
-    const y0 = localY * pixels
-    for (let py = y0; py < y0 + pixels; py++) {
-      for (let px = x0; px < x0 + pixels; px++) {
-        if (cells[py * stride + px] > 0) return true
-      }
-    }
-    return false
-  }
-
-  /** Clears solid server fills on tiles the walk disc never touched, so soft edges stay soft after sync. */
-  private clearHardServerTiles(chunkX: number, chunkY: number, cells: Uint8Array) {
+  /**
+   * Soft server exploration into the same buffer walk discs use. Max-only, so a publish cannot
+   * square over land the walker already opened.
+   */
+  private writeServerSoft(chunkX: number, chunkY: number, cells: Uint8Array) {
     const pixels = FAR_PIXELS
     const stride = CHUNK * pixels
     const originX = chunkX * CHUNK
     const originY = chunkY * CHUNK
-    for (let localY = 0; localY < CHUNK; localY++) {
-      for (let localX = 0; localX < CHUNK; localX++) {
-        if (!this.tileSeen(originX + localX, originY + localY)) continue
-        if (this.tileSoftTouched(cells, stride, localX, localY)) continue
-        const x0 = localX * pixels
-        const y0 = localY * pixels
-        for (let py = y0; py < y0 + pixels; py++) {
-          cells.fill(0, py * stride + x0, py * stride + x0 + pixels)
-        }
+    for (let py = 0; py < stride; py++) {
+      for (let px = 0; px < stride; px++) {
+        const amount = Math.round(
+          this.serverTileOpen(originX + (px + 0.5) / pixels, originY + (py + 0.5) / pixels) * 255,
+        )
+        const index = py * stride + px
+        if (amount > cells[index]) cells[index] = amount
       }
     }
   }
 
-  /**
-   * Open amount for land the server marked, from distance to the nearest unseen tile.
-   * Smooth over `SERVER_FADE` tiles — no per-tile diamond ramps and no settle box blur.
-   */
+  /** Soft open for land the server marked, from distance to the nearest unseen tile. */
   private serverTileOpen(x: number, y: number) {
     const tileX = Math.floor(x)
     const tileY = Math.floor(y)
@@ -457,52 +427,6 @@ export class Fog {
     return opened * opened * (3 - 2 * opened)
   }
 
-  /** Full-chunk open grid matching `farSeen`; baked once, then raised by `stampFar`. */
-  private ensureOpen(chunkX: number, chunkY: number) {
-    const key = `${chunkX},${chunkY}`
-    const stride = CHUNK * FAR_PIXELS
-    const length = stride * stride
-    const existing = this.farOpen.get(key)
-    if (existing && existing.length === length) return existing
-    const open = new Float32Array(length)
-    const originX = chunkX * CHUNK
-    const originY = chunkY * CHUNK
-    for (let py = 0; py < stride; py++) {
-      for (let px = 0; px < stride; px++) {
-        open[py * stride + px] = this.openAmount(originX + (px + 0.5) / FAR_PIXELS, originY + (py + 0.5) / FAR_PIXELS)
-      }
-    }
-    this.farOpen.set(key, open)
-    return open
-  }
-
-  /**
-   * How open the land is at a point, 0 to 1. Camp and wild share walk memory + soft server edges —
-   * a separate hard explored fill on camp tiles was the straight village fog rim.
-   */
-  private openAmount(x: number, y: number) {
-    return this.farSeenAt(x, y)
-  }
-
-  /** Remembered open amount of one far-land point, 0 to 1. */
-  private farSeenAt(x: number, y: number) {
-    const tileX = Math.floor(x)
-    const tileY = Math.floor(y)
-    const chunkX = Math.floor(tileX / CHUNK)
-    const chunkY = Math.floor(tileY / CHUNK)
-    const cells = this.farSeen.get(`${chunkX},${chunkY}`)
-    let soft = 0
-    if (cells) {
-      const stride = CHUNK * FAR_PIXELS
-      const px = Math.min(stride - 1, Math.max(0, Math.floor((x - chunkX * CHUNK) * FAR_PIXELS)))
-      const py = Math.min(stride - 1, Math.max(0, Math.floor((y - chunkY * CHUNK) * FAR_PIXELS)))
-      soft = cells[py * stride + px] / 255
-    }
-    // Soft walk memory and server camp/path bits share the land. Returning 0 on soft-touched but
-    // unstamped pixels used to punch a black ring between the live sight disc and the larger camp oval.
-    return Math.max(soft, this.serverTileOpen(x, y))
-  }
-
   /**
    * Darkness from remembered open amount and live light, 0 clear to 1 full night.
    * One continuous ramp — the old `seen > 0 ? half-night : full` branch jumped at the first lit
@@ -523,14 +447,14 @@ export class Fog {
     const pixels = FAR_PIXELS
     const width = chunk.width * pixels
     const height = chunk.height * pixels
-    const cells = width * height
+    const count = width * height
     const [chunkX, chunkY] = key.split(',').map(Number)
-    const open = this.ensureOpen(chunkX, chunkY)
+    const seen = this.ensureFar(chunkX, chunkY)
     const stride = CHUNK * pixels
     const localX0 = Math.round((chunk.x - chunkX * CHUNK) * pixels)
     const localY0 = Math.round((chunk.y - chunkY * CHUNK) * pixels)
-    if (this.farLight.length < cells) this.farLight = new Float32Array(cells)
-    else this.farLight.fill(0, 0, cells)
+    if (this.farLight.length < count) this.farLight = new Float32Array(count)
+    else this.farLight.fill(0, 0, count)
     const light = this.farLight
     for (const viewer of this.viewers) {
       const left = viewer.x - viewer.radius
@@ -562,10 +486,10 @@ export class Fog {
         image.data[index] = DARK[0]
         image.data[index + 1] = DARK[1]
         image.data[index + 2] = DARK[2]
-        const seen = open[(localY0 + row) * stride + (localX0 + column)] ?? 0
+        const soft = seen[(localY0 + row) * stride + (localX0 + column)] / 255
         const cell = row * width + column
         image.data[index + 3] = Math.round(
-          Math.min(1, Math.max(0, this.farShade(seen, light[cell]))) * 255,
+          Math.min(1, Math.max(0, this.farShade(soft, light[cell]))) * 255,
         )
       }
     }

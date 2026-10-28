@@ -1,8 +1,11 @@
 import { CanvasSource, Container, Sprite, Texture } from 'pixi.js'
 import { TILE } from './sheets'
-import { LAND_CHUNK as CHUNK } from './landChunk'
+import { LAND_CHUNK as CHUNK, type LandChunkRect } from './landChunk'
 import { MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH } from './worldMap'
 import type { ExploredChunk, TileArea } from '../api'
+
+/** One fog sprite: stable `x`,`y` chunk indices, painted over the clipped tile rectangle. */
+type FogChunk = Pick<LandChunkRect, 'x' | 'y' | 'originX' | 'originY' | 'width' | 'height'>
 
 /** Base64 from the server. A bad string leaves that chunk fog instead of stopping the map. */
 function decodeBits(encoded: string) {
@@ -261,8 +264,12 @@ export class Fog {
    * A chunk that scrolls away is dropped. Only chunks under a walker, newly created, leaving a
    * walker's sight, or dirtied by a server sync are repainted — zooming out used to redraw every
    * on-screen far chunk at 8 pixels per tile every fog tick and made the map lag.
+   *
+   * Keys are chunk indices (`LandChunkRect.x/y`), not clipped origins, so panning cannot recreate
+   * sprites and wipe walk memory. Live walks paint without blur; blur runs only when a chunk is
+   * created, frozen, or synced — otherwise the soft edge crawls with the sight disc.
    */
-  cover(chunks: TileArea[]) {
+  cover(chunks: FogChunk[]) {
     const wanted = new Set<string>()
     const nextLive = new Set<string>()
     for (const chunk of chunks) {
@@ -280,16 +287,19 @@ export class Fog {
           entry.texture.destroy(true)
           this.farSprites.delete(key)
         }
-        // Old farSeen buffers from a different pixel density would mis-sample; drop them with the sprite.
-        this.farSeen.delete(`${Math.floor(chunk.x / CHUNK)},${Math.floor(chunk.y / CHUNK)}`)
         entry = this.makeFar(chunk)
         created = true
+      } else {
+        entry.sprite.position.set(chunk.originX * TILE, chunk.originY * TILE)
       }
-      const isLive = this.chunkMeetsViewers(chunk)
+      const area = { x: chunk.originX, y: chunk.originY, width: chunk.width, height: chunk.height }
+      const isLive = this.chunkMeetsViewers(area)
       if (isLive) nextLive.add(key)
+      const leaving = this.liveFar.has(key) && !isLive
       // Paint when new, under a sight disc, just left a disc (freeze remembered fog), or after sync.
-      if (created || isLive || this.liveFar.has(key) || this.farPaintDirty) {
-        this.paintFar(entry, chunk)
+      if (created || isLive || leaving || this.farPaintDirty) {
+        // Blur only when the remembered edge should settle — not every walk tick.
+        this.paintFar(entry, area, created || leaving || this.farPaintDirty)
       }
     }
     for (const [key, entry] of this.farSprites) {
@@ -329,14 +339,21 @@ export class Fog {
     return ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
   }
 
-  private makeFar(chunk: TileArea) {
+  /** Server or local explored bit for any tile — camp and wild use the same check. */
+  private tileSeen(x: number, y: number) {
+    const index = this.index(x, y)
+    if (index >= 0 && this.explored[index] === 1) return true
+    return this.chunkSees(x, y)
+  }
+
+  private makeFar(chunk: FogChunk) {
     const canvas = document.createElement('canvas')
     canvas.width = chunk.width * FAR_PIXELS
     canvas.height = chunk.height * FAR_PIXELS
     const context = canvas.getContext('2d')!
     const texture = new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'linear' }) })
     const sprite = new Sprite(texture)
-    sprite.position.set(chunk.x * TILE, chunk.y * TILE)
+    sprite.position.set(chunk.originX * TILE, chunk.originY * TILE)
     sprite.scale.set(TILE / FAR_PIXELS)
     this.far.addChild(sprite)
     const entry = { sprite, canvas, context, texture }
@@ -418,7 +435,7 @@ export class Fog {
     const originY = chunkY * CHUNK
     for (let localY = 0; localY < CHUNK; localY++) {
       for (let localX = 0; localX < CHUNK; localX++) {
-        if (!this.chunkSees(originX + localX, originY + localY)) continue
+        if (!this.tileSeen(originX + localX, originY + localY)) continue
         if (this.tileSoftTouched(cells, stride, localX, localY)) continue
         const x0 = localX * pixels
         const y0 = localY * pixels
@@ -436,26 +453,24 @@ export class Fog {
   private serverTileOpen(x: number, y: number) {
     const tileX = Math.floor(x)
     const tileY = Math.floor(y)
-    if (!this.chunkSees(tileX, tileY)) return 0
+    if (!this.tileSeen(tileX, tileY)) return 0
     const fx = x - tileX
     const fy = y - tileY
     let open = 1
-    if (!this.chunkSees(tileX - 1, tileY)) open = Math.min(open, fx)
-    if (!this.chunkSees(tileX + 1, tileY)) open = Math.min(open, 1 - fx)
-    if (!this.chunkSees(tileX, tileY - 1)) open = Math.min(open, fy)
-    if (!this.chunkSees(tileX, tileY + 1)) open = Math.min(open, 1 - fy)
+    if (!this.tileSeen(tileX - 1, tileY)) open = Math.min(open, fx)
+    if (!this.tileSeen(tileX + 1, tileY)) open = Math.min(open, 1 - fx)
+    if (!this.tileSeen(tileX, tileY - 1)) open = Math.min(open, fy)
+    if (!this.tileSeen(tileX, tileY + 1)) open = Math.min(open, 1 - fy)
     if (open <= 0) return 0
     if (open >= 1) return 1
     return open * open * (3 - 2 * open)
   }
 
   /**
-   * How open the land is at a point, 0 to 1. Camp tiles use the shared explored bitmap; wild tiles use
-   * walk memory and server chunks — same shade path either way, so the camp rectangle is not special.
+   * How open the land is at a point, 0 to 1. Camp and wild share walk memory + soft server edges —
+   * a separate hard explored fill on camp tiles was the straight village fog rim.
    */
   private openAmount(x: number, y: number) {
-    const index = this.index(Math.floor(x), Math.floor(y))
-    if (index >= 0) return this.explored[index] === 1 ? 1 : this.light[index]
     return this.farSeenAt(x, y)
   }
 
@@ -504,20 +519,21 @@ export class Fog {
   private paintFar(
     entry: { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture },
     chunk: TileArea,
+    soften: boolean,
   ) {
     const pixels = FAR_PIXELS
     const width = chunk.width * pixels
     const height = chunk.height * pixels
-    const pad = FAR_BLUR
+    const pad = soften ? FAR_BLUR : 0
     const fullWidth = width + pad * 2
     const fullHeight = height + pad * 2
     const cells = fullWidth * fullHeight
-    if (this.farLight.length !== cells) {
+    if (this.farLight.length < cells) {
       this.farLight = new Float32Array(cells)
       this.farAlpha = new Float32Array(cells)
     } else {
-      this.farLight.fill(0)
-      this.farAlpha.fill(0)
+      this.farLight.fill(0, 0, cells)
+      this.farAlpha.fill(0, 0, cells)
     }
     const light = this.farLight
     const alpha = this.farAlpha
@@ -549,7 +565,7 @@ export class Fog {
         alpha[index] = this.farShade(this.openAmount(x, y), light[index])
       }
     }
-    blurAlpha(alpha, fullWidth, fullHeight, pad)
+    if (soften && pad > 0) blurAlpha(alpha, fullWidth, fullHeight, pad)
     if (!this.farImage || this.farImage.width !== width || this.farImage.height !== height) {
       this.farImage = entry.context.createImageData(width, height)
     }

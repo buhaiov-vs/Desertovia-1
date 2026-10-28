@@ -2397,7 +2397,7 @@ export class VillageWorld {
       this.fogUpdatedAt = this.elapsed
       this.fog.update(this.viewers(), this.nightAmount)
       const near = chunksNear(this.visibleArea(), { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT })
-      this.fog.cover(near.map((chunk) => ({ x: chunk.originX, y: chunk.originY, width: chunk.width, height: chunk.height })))
+      this.fog.cover(near)
     }
     this.wildlife.update(seconds, this.elapsed, [...this.walkers.values()], hunters, sortDepth)
     this.enemies.update(seconds, now, sortDepth)

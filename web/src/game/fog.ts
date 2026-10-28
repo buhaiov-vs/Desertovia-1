@@ -1,7 +1,7 @@
 import { CanvasSource, Container, Sprite, Texture } from 'pixi.js'
 import { TILE } from './sheets'
 import { LAND_CHUNK as CHUNK, type LandChunkRect } from './landChunk'
-import { MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH } from './worldMap'
+import { CAMPFIRE, MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH } from './worldMap'
 import type { ExploredChunk, TileArea } from '../api'
 
 /** One fog sprite: stable `x`,`y` chunk indices, painted over the clipped tile rectangle. */
@@ -46,8 +46,21 @@ const FAR_FADE = 2.5
  * Written once into `farSeen` so paint never mixes a second tile map with the live disc.
  */
 const SERVER_FADE = 2.5
+/**
+ * Same oval a new tribe knows on the server (`Exploration.CampRadiusX/Y`). Tile bits stair-step that
+ * rim; fog memory stamps this smooth ellipse instead so the camp edge is not a grid.
+ */
+const CAMP_RADIUS_X = 19
+const CAMP_RADIUS_Y = 17
+/** One-time bake blur (fog texels) to round remaining path-tile stairs after soft fill. */
+const SERVER_BAKE_BLUR = 5
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
+
+/** Reused when rounding a freshly baked chunk — not per frame. */
+let bakeBlurScratch = new Float32Array(0)
+/** Server soft is baked here then maxed into walk memory so blur never melts discs already walked. */
+let bakeServerScratch = new Uint8Array(0)
 
 /** Smooth falloff from 1 inside the disc to 0 at the radius, over `fade` tiles. */
 function sightFalloff(distance: number, radius: number, fade: number) {
@@ -403,21 +416,49 @@ export class Fog {
     return cells
   }
 
+  /** Smooth open 0–1 for the starting camp oval (not the stair-stepped tile mask). */
+  private campOvalOpen(x: number, y: number) {
+    const nx = (x - CAMPFIRE.x) / CAMP_RADIUS_X
+    const ny = (y - CAMPFIRE.y) / CAMP_RADIUS_Y
+    const r = Math.hypot(nx, ny)
+    if (r >= 1) return 0
+    const fade = SERVER_FADE / Math.min(CAMP_RADIUS_X, CAMP_RADIUS_Y)
+    if (r <= 1 - fade) return 1
+    const opened = (1 - r) / fade
+    return opened * opened * (3 - 2 * opened)
+  }
+
   /**
-   * Soft server exploration into the same buffer walk discs use. Interior tiles fill solid;
-   * only fog-frontier tiles run the distance fade — a full per-pixel bake stalled the map.
+   * Soft server exploration into the same buffer walk discs use. Camp uses a smooth ellipse;
+   * other explored land fills interior tiles and fades only on the frontier, then a one-time blur
+   * rounds leftover tile stairs. Blur runs on a scratch buffer so walk discs are not melted.
    */
   private writeServerSoft(chunkX: number, chunkY: number, cells: Uint8Array) {
     const pixels = FAR_PIXELS
     const stride = CHUNK * pixels
+    const length = stride * stride
+    if (bakeServerScratch.length < length) bakeServerScratch = new Uint8Array(length)
+    else bakeServerScratch.fill(0, 0, length)
+    const baked = bakeServerScratch
     const originX = chunkX * CHUNK
     const originY = chunkY * CHUNK
     const reach = Math.ceil(SERVER_FADE) + 1
+    let wrote = false
+    for (let py = 0; py < stride; py++) {
+      for (let px = 0; px < stride; px++) {
+        const amount = Math.round(this.campOvalOpen(originX + (px + 0.5) / pixels, originY + (py + 0.5) / pixels) * 255)
+        if (amount <= 0) continue
+        baked[py * stride + px] = amount
+        wrote = true
+      }
+    }
     for (let localY = 0; localY < CHUNK; localY++) {
       for (let localX = 0; localX < CHUNK; localX++) {
         const tileX = originX + localX
         const tileY = originY + localY
         if (!this.tileSeen(tileX, tileY)) continue
+        // Camp oval already covers starting land; skip tile stairs there.
+        if (this.campOvalOpen(tileX + 0.5, tileY + 0.5) > 0) continue
         let edge = false
         for (let dy = -1; dy <= 1 && !edge; dy++) {
           for (let dx = -1; dx <= 1; dx++) {
@@ -432,11 +473,9 @@ export class Fog {
         const y0 = localY * pixels
         if (!edge) {
           for (let py = y0; py < y0 + pixels; py++) {
-            for (let px = x0; px < x0 + pixels; px++) {
-              const index = py * stride + px
-              if (cells[index] < 255) cells[index] = 255
-            }
+            baked.fill(255, py * stride + x0, py * stride + x0 + pixels)
           }
+          wrote = true
           continue
         }
         for (let py = y0; py < y0 + pixels; py++) {
@@ -462,9 +501,43 @@ export class Fog {
               amount = Math.round(opened * opened * (3 - 2 * opened) * 255)
             }
             const index = py * stride + px
-            if (amount > cells[index]) cells[index] = amount
+            if (amount > baked[index]) baked[index] = amount
+            wrote = true
           }
         }
+      }
+    }
+    if (!wrote) return
+    this.blurSeenChunk(baked, stride, SERVER_BAKE_BLUR)
+    for (let index = 0; index < length; index++) {
+      if (baked[index] > cells[index]) cells[index] = baked[index]
+    }
+  }
+
+  /** Box-blur a baked fog chunk once so path-tile rims are not stair-steps. */
+  private blurSeenChunk(cells: Uint8Array, stride: number, radius: number) {
+    if (radius <= 0) return
+    const length = cells.length
+    if (bakeBlurScratch.length < length) bakeBlurScratch = new Float32Array(length)
+    const tmp = bakeBlurScratch
+    const span = radius * 2 + 1
+    const height = (length / stride) | 0
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < stride; x++) {
+        let sum = 0
+        for (let dx = -radius; dx <= radius; dx++) {
+          sum += cells[y * stride + Math.min(stride - 1, Math.max(0, x + dx))]
+        }
+        tmp[y * stride + x] = sum / span
+      }
+    }
+    for (let x = 0; x < stride; x++) {
+      for (let y = 0; y < height; y++) {
+        let sum = 0
+        for (let dy = -radius; dy <= radius; dy++) {
+          sum += tmp[Math.min(height - 1, Math.max(0, y + dy)) * stride + x]
+        }
+        cells[y * stride + x] = Math.round(sum / span)
       }
     }
   }

@@ -73,20 +73,21 @@ function sightFalloff(distance: number, radius: number, fade: number) {
   return opened * opened * (3 - 2 * opened)
 }
 /**
- * Extra fog pixels around the camp picture. Linear filtering otherwise blends the rim with empty
- * texture and draws a bright teal fringe where the vale ends.
+ * Extra fog pixels around the camp picture canvas (minimap). Linear filtering otherwise blends the
+ * rim with empty texture and draws a bright teal fringe where the vale ends.
  */
 const EDGE_PAD = 1
 
 /**
- * Fog of war over the map, one pixel per tile, stretched with smoothing so its edges are soft. The land the tribe
- * has seen comes from the server and is shared by all players; walkers on this map add what they see as they go.
+ * Fog of war over the map. One chunk-sprite layer covers camp land and far land alike, so the old
+ * rectangular camp-picture fog edge does not appear. The small `canvas` stays for the minimap only.
  */
 export class Fog {
-  /** Camp picture only; the minimap reads this size. */
+  /** Camp picture bitmap for the minimap; not drawn on the world. */
   readonly canvas = document.createElement('canvas')
+  /** Kept for destroy/layout; hidden — world fog is only `far`. */
   readonly sprite: Sprite
-  /** Darkness for chunks outside the camp picture. Only chunks near the camera are kept. */
+  /** Darkness for every land chunk near the camera, camp and wild together. */
   readonly far = new Container()
   private readonly farSprites = new Map<string, { sprite: Sprite; canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture }>()
   /**
@@ -130,6 +131,7 @@ export class Fog {
     this.sprite = new Sprite(this.texture)
     this.sprite.position.set((MAP_LEFT - EDGE_PAD) * TILE, (MAP_TOP - EDGE_PAD) * TILE)
     this.sprite.scale.set(TILE)
+    this.sprite.visible = false
     this.draw()
   }
 
@@ -255,7 +257,7 @@ export class Fog {
   }
 
   /**
-   * Paints darkness on the chunks near the camera that the camp picture does not cover.
+   * Paints darkness on land chunks near the camera (camp picture and far land use the same sprites).
    * A chunk that scrolls away is dropped. Only chunks under a walker, newly created, leaving a
    * walker's sight, or dirtied by a server sync are repainted — zooming out used to redraw every
    * on-screen far chunk at 8 pixels per tile every fog tick and made the map lag.
@@ -264,7 +266,6 @@ export class Fog {
     const wanted = new Set<string>()
     const nextLive = new Set<string>()
     for (const chunk of chunks) {
-      if (this.insideVale(chunk.x, chunk.y) && this.insideVale(chunk.x + chunk.width - 1, chunk.y + chunk.height - 1)) continue
       const key = `${chunk.x},${chunk.y}`
       wanted.add(key)
       let entry = this.farSprites.get(key)
@@ -301,7 +302,7 @@ export class Fog {
     this.farPaintDirty = false
   }
 
-  /** Whether any walker's sight disc reaches this far-land fog sprite. */
+  /** Whether any walker's sight disc reaches this fog sprite. */
   private chunkMeetsViewers(chunk: TileArea) {
     for (const viewer of this.viewers) {
       if (viewer.x + viewer.radius < chunk.x) continue
@@ -311,10 +312,6 @@ export class Fog {
       return true
     }
     return false
-  }
-
-  private insideVale(x: number, y: number) {
-    return x >= MAP_LEFT && y >= MAP_TOP && x < MAP_LEFT + MAP_WIDTH && y < MAP_TOP + MAP_HEIGHT
   }
 
   private seenNow(x: number, y: number) {
@@ -369,7 +366,6 @@ export class Fog {
             for (let px = x0; px <= x1; px++) {
               const x = originX + (px + 0.5) / pixels
               const y = originY + (py + 0.5) / pixels
-              if (this.insideVale(Math.floor(x), Math.floor(y))) continue
               const lit = Math.round(sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE) * 255)
               if (lit <= 0) continue
               const index = py * stride + px
@@ -451,6 +447,16 @@ export class Fog {
     if (open <= 0) return 0
     if (open >= 1) return 1
     return open * open * (3 - 2 * open)
+  }
+
+  /**
+   * How open the land is at a point, 0 to 1. Camp tiles use the shared explored bitmap; wild tiles use
+   * walk memory and server chunks — same shade path either way, so the camp rectangle is not special.
+   */
+  private openAmount(x: number, y: number) {
+    const index = this.index(Math.floor(x), Math.floor(y))
+    if (index >= 0) return this.explored[index] === 1 ? 1 : this.light[index]
+    return this.farSeenAt(x, y)
   }
 
   /** Remembered open amount of one far-land point, 0 to 1. */
@@ -540,11 +546,7 @@ export class Fog {
         const x = chunk.x + (px + 0.5) / pixels
         const y = chunk.y + (py + 0.5) / pixels
         const index = (py + pad) * fullWidth + (px + pad)
-        if (this.insideVale(Math.floor(x), Math.floor(y))) {
-          alpha[index] = 0
-          continue
-        }
-        alpha[index] = this.farShade(this.farSeenAt(x, y), light[index])
+        alpha[index] = this.farShade(this.openAmount(x, y), light[index])
       }
     }
     blurAlpha(alpha, fullWidth, fullHeight, pad)
@@ -558,10 +560,6 @@ export class Fog {
         image.data[index] = DARK[0]
         image.data[index + 1] = DARK[1]
         image.data[index + 2] = DARK[2]
-        image.data[index + 3] = 0
-        const x = chunk.x + (column + 0.5) / pixels
-        const y = chunk.y + (row + 0.5) / pixels
-        if (this.insideVale(Math.floor(x), Math.floor(y))) continue
         const darkness = alpha[(row + pad) * fullWidth + (column + pad)]
         image.data[index + 3] = Math.round(Math.min(1, Math.max(0, darkness)) * 255)
       }

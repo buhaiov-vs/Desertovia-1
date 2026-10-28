@@ -60,6 +60,7 @@ import {
   canBuildAt,
   cropTile,
   farGroundTile,
+  farHasTree,
   findWay,
   footprint,
   seedFrom,
@@ -270,6 +271,8 @@ export class VillageWorld {
   /** The authored 120 by 90, kept so a block can be baked when the camera reaches it. */
   private landLayout: MapLayout | null = null
   private readonly groundChunks = new Map<string, Sprite>()
+  /** Trees grown on far-land chunks near the camera, keyed like `groundChunks`. */
+  private readonly farTrees = new Map<string, Container[]>()
   private minimap: Minimap | null = null
   private minimapUpdatedAt = 0
   /** Until the player pans or zooms, a resize keeps showing the camp at the default zoom. */
@@ -343,7 +346,8 @@ export class VillageWorld {
     this.kingdomBorder.visible=false
     this.placementLayer.visible = false
     this.selection.visible = false
-    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.sprite, this.fog.far)
+    // Fog is only the chunk layer (`fog.far`). The old camp-picture sprite made a straight rectangle at the vale rim.
+    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.far)
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
@@ -354,7 +358,7 @@ export class VillageWorld {
         this.cameraMoved = true
         this.centerOn(x, y)
       })
-      this.minimap.setFog(this.fog.canvas)
+      this.minimap.setFog(this.fog.canvas, (x, y, width, height, out) => this.fog.fillDarkness(x, y, width, height, out))
     }
     this.layoutCamera()
     app.renderer.on('resize', () => {
@@ -441,23 +445,6 @@ export class VillageWorld {
     for (const step of layout.trail) {
       water.rect(step.x * TILE + 5, step.y * TILE, 6, TILE).fill({ color: 0x9c7f5a })
     }
-    // The ravine: a dark cleft with its north wall showing and pale lips on both rims.
-    for (const span of wilds?.ravine ?? []) {
-      const x = span.x * TILE
-      const top = span.top * TILE
-      const bottom = (span.top + span.height) * TILE
-      water
-        .rect(x - 0.5, top - 3, TILE + 1, 3)
-        .fill({ color: 0xa8865a })
-        .rect(x - 0.5, top, TILE + 1, bottom - top)
-        .fill({ color: 0x2b2018 })
-        .rect(x - 0.5, top, TILE + 1, 6)
-        .fill({ color: 0x5e4630 })
-        .rect(x + 3 + pseudo(span.x, span.top) * 8, top + 12, 3, 2)
-        .fill({ color: 0x46342a })
-        .rect(x - 0.5, bottom - 2, TILE + 1, 2)
-        .fill({ color: 0x7a5c3e })
-    }
     // Trampled earth around the campfire.
     water
       .ellipse(CAMPFIRE.x * TILE, CAMPFIRE.y * TILE, 2.6 * TILE, 1.9 * TILE)
@@ -506,6 +493,7 @@ export class VillageWorld {
       if (keep.has(key)) continue
       sprite.destroy({ texture: true, textureSource: true })
       this.groundChunks.delete(key)
+      this.dropFarTrees(key)
     }
     for (const chunk of needed) {
       const key = `${chunk.x},${chunk.y}`
@@ -513,6 +501,7 @@ export class VillageWorld {
       const baked = this.bakeGroundChunk(layout, chunk)
       this.groundChunks.set(key, baked)
       this.groundLayer.addChildAt(baked, 0)
+      this.plantFarTrees(key, chunk)
     }
   }
 
@@ -546,6 +535,36 @@ export class VillageWorld {
   private dropGroundChunks() {
     for (const sprite of this.groundChunks.values()) sprite.destroy({ texture: true, textureSource: true })
     this.groundChunks.clear()
+    for (const key of [...this.farTrees.keys()]) this.dropFarTrees(key)
+  }
+
+  /** Grows the same wild forest past the camp picture so the vale rim does not stop mid-tree. */
+  private plantFarTrees(key: string, chunk: LandChunkRect) {
+    const seed = this.terrainSeed ?? 1
+    const planted: Container[] = []
+    for (let row = 0; row < chunk.height; row++) {
+      const tileY = chunk.originY + row
+      for (let column = 0; column < chunk.width; column++) {
+        const tileX = chunk.originX + column
+        if (tileX >= MAP_LEFT && tileX < MAP_LEFT + MAP_WIDTH && tileY >= MAP_TOP && tileY < MAP_TOP + MAP_HEIGHT) continue
+        if (!farHasTree(tileX, tileY, seed)) continue
+        const view = this.scattered(this.decorView(treeAt(tileX, tileY)), tileX, tileY)
+        view.cullable = true
+        this.objects.addChild(view)
+        planted.push(view)
+      }
+    }
+    if (planted.length > 0) {
+      this.farTrees.set(key, planted)
+      this.cullDirty = true
+    }
+  }
+
+  private dropFarTrees(key: string) {
+    const planted = this.farTrees.get(key)
+    if (!planted) return
+    for (const view of planted) view.destroy({ children: true })
+    this.farTrees.delete(key)
   }
 
   /** Adds trees that grew back and removes felled ones. */
@@ -1464,7 +1483,9 @@ export class VillageWorld {
     if(sameWorld){
       this.wildlife.setHerds(state.wildlife)
       this.enemies.setRaids(state.raids)
-      if(previousFighters.size!==presentFighters.size||[...presentFighters].some(id=>!previousFighters.has(id))){this.setCitizens(this.citizens,this.highlightId);this.setTsar(state.tsar)}
+      if(previousFighters.size!==presentFighters.size||[...presentFighters].some(id=>!previousFighters.has(id)))this.setCitizens(this.citizens,this.highlightId)
+      // A walk only changes the Tsar's spot. The picture stays the same, so this path still has to start the walk.
+      this.setTsar(state.tsar)
       return
     }
     this.staticUpdate=true
@@ -2440,8 +2461,12 @@ export class VillageWorld {
       }
     }
     const citizens = [...this.walkers.values()]
-      .filter((walker) => walker.id !== PRIEST_ID && walker.id !== TSAR_ID)
-      .map((walker) => ({ x: walker.x / TILE, y: walker.y / TILE, highlighted: walker.id === this.highlightId }))
+      .filter((walker) => walker.id !== PRIEST_ID)
+      .map((walker) => ({
+        x: walker.x / TILE,
+        y: walker.y / TILE,
+        kind: walker.id === TSAR_ID ? 'tsar' as const : walker.id === this.highlightId ? 'you' as const : 'citizen' as const,
+      }))
     return { buildings, citizens, camp: CAMPFIRE }
   }
 }

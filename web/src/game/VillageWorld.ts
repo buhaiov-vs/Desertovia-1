@@ -112,7 +112,7 @@ const ANIMAL_REACH = TILE * 0.8
 /** How close to the fire, in tiles, a click picks the campfire. */
 const CAMPFIRE_REACH = 1.2
 /** Seconds between two updates of what walkers see through the fog of war. */
-const FOG_SECONDS = 0.1
+const FOG_SECONDS = 0.2
 /** Tiles seen around a building or a construction site, from the middle of its plot. */
 const BUILDING_SIGHT = 4
 /** Until the catalog arrives; the server sends the real radius with the rules. */
@@ -2438,7 +2438,8 @@ export class VillageWorld {
     for (const walker of this.walkers.values()) viewers.push({ x: walker.x / TILE, y: walker.y / TILE, radius: sight })
     if (this.village) {
       for (const area of buildingFootprints(this.village)) {
-        viewers.push({ x: area.x + area.width / 2, y: area.y + area.height / 2, radius: BUILDING_SIGHT })
+        // Sticky: open land once into fog memory, but do not keep every nearby chunk live/repainting.
+        viewers.push({ x: area.x + area.width / 2, y: area.y + area.height / 2, radius: BUILDING_SIGHT, sticky: true })
       }
     }
     return viewers

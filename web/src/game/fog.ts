@@ -21,6 +21,11 @@ export interface Viewer {
   x: number
   y: number
   radius: number
+  /**
+   * Buildings and sites: stamped into walk memory, but they must not keep fog chunks “live”
+   * every tick or the whole village repaints and the map hitchs.
+   */
+  sticky?: boolean
 }
 
 const DARK: [number, number, number] = [12, 14, 20]
@@ -82,6 +87,8 @@ export class Fog {
   private farLight = new Float32Array(0)
   private farImage: ImageData | null = null
   private savedChunks: ExploredChunk[] = []
+  /** Decoded exploration bits per chunk key — `chunkSees` used to `atob` on every tile probe. */
+  private readonly decodedBits = new Map<string, string>()
   private viewers: Viewer[] = []
   /** Padded copy drawn on the map so filtering never samples transparent outside the vale. */
   private readonly display = document.createElement('canvas')
@@ -121,6 +128,7 @@ export class Fog {
     }
     this.farSprites.clear()
     this.farSeen.clear()
+    this.decodedBits.clear()
   }
 
   /**
@@ -133,10 +141,13 @@ export class Fog {
     if (signature === this.lastExplored) return
     this.lastExplored = signature
     this.savedChunks = chunks
+    this.decodedBits.clear()
     for (const chunk of chunks) {
       const originX = chunk.x * CHUNK
       const originY = chunk.y * CHUNK
+      const key = `${chunk.x},${chunk.y}`
       const bits = chunk.bits ? decodeBits(chunk.bits) : ''
+      if (chunk.bits) this.decodedBits.set(key, bits)
       for (let local = 0; local < CHUNK * CHUNK; local++) {
         const seen = chunk.complete || ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
         if (!seen) continue
@@ -290,9 +301,10 @@ export class Fog {
     this.farPaintDirty = false
   }
 
-  /** Whether any walker's sight disc reaches this fog sprite. */
+  /** Whether a moving sight disc (walker or campfire) reaches this fog sprite. */
   private chunkMeetsViewers(chunk: TileArea) {
     for (const viewer of this.viewers) {
+      if (viewer.sticky) continue
       if (viewer.x + viewer.radius < chunk.x) continue
       if (viewer.x - viewer.radius > chunk.x + chunk.width) continue
       if (viewer.y + viewer.radius < chunk.y) continue
@@ -309,10 +321,15 @@ export class Fog {
   private chunkSees(x: number, y: number) {
     const chunkX = Math.floor(x / CHUNK)
     const chunkY = Math.floor(y / CHUNK)
+    const key = `${chunkX},${chunkY}`
     const chunk = this.savedChunks.find((item) => item.x === chunkX && item.y === chunkY)
     if (!chunk) return false
     if (chunk.complete || !chunk.bits) return chunk.complete
-    const bits = decodeBits(chunk.bits)
+    let bits = this.decodedBits.get(key)
+    if (bits === undefined) {
+      bits = decodeBits(chunk.bits)
+      this.decodedBits.set(key, bits)
+    }
     const local = (y - chunkY * CHUNK) * CHUNK + (x - chunkX * CHUNK)
     return ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
   }
@@ -343,7 +360,10 @@ export class Fog {
   private stampFar() {
     const pixels = FAR_PIXELS
     const stride = CHUNK * pixels
+    // Sticky building discs only when memory is dirty — every-tick stamps over the whole village were costly.
+    const stampSticky = this.farPaintDirty
     for (const viewer of this.viewers) {
+      if (viewer.sticky && !stampSticky) continue
       const left = viewer.x - viewer.radius
       const top = viewer.y - viewer.radius
       const right = viewer.x + viewer.radius
@@ -384,47 +404,69 @@ export class Fog {
   }
 
   /**
-   * Soft server exploration into the same buffer walk discs use. Max-only, so a publish cannot
-   * square over land the walker already opened.
+   * Soft server exploration into the same buffer walk discs use. Interior tiles fill solid;
+   * only fog-frontier tiles run the distance fade — a full per-pixel bake stalled the map.
    */
   private writeServerSoft(chunkX: number, chunkY: number, cells: Uint8Array) {
     const pixels = FAR_PIXELS
     const stride = CHUNK * pixels
     const originX = chunkX * CHUNK
     const originY = chunkY * CHUNK
-    for (let py = 0; py < stride; py++) {
-      for (let px = 0; px < stride; px++) {
-        const amount = Math.round(
-          this.serverTileOpen(originX + (px + 0.5) / pixels, originY + (py + 0.5) / pixels) * 255,
-        )
-        const index = py * stride + px
-        if (amount > cells[index]) cells[index] = amount
-      }
-    }
-  }
-
-  /** Soft open for land the server marked, from distance to the nearest unseen tile. */
-  private serverTileOpen(x: number, y: number) {
-    const tileX = Math.floor(x)
-    const tileY = Math.floor(y)
-    if (!this.tileSeen(tileX, tileY)) return 0
     const reach = Math.ceil(SERVER_FADE) + 1
-    let nearest = SERVER_FADE
-    for (let dy = -reach; dy <= reach; dy++) {
-      for (let dx = -reach; dx <= reach; dx++) {
-        if (dx === 0 && dy === 0) continue
-        if (this.tileSeen(tileX + dx, tileY + dy)) continue
-        const left = tileX + dx
-        const top = tileY + dy
-        const cx = Math.min(left + 1, Math.max(left, x))
-        const cy = Math.min(top + 1, Math.max(top, y))
-        const distance = Math.hypot(x - cx, y - cy)
-        if (distance < nearest) nearest = distance
+    for (let localY = 0; localY < CHUNK; localY++) {
+      for (let localX = 0; localX < CHUNK; localX++) {
+        const tileX = originX + localX
+        const tileY = originY + localY
+        if (!this.tileSeen(tileX, tileY)) continue
+        let edge = false
+        for (let dy = -1; dy <= 1 && !edge; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue
+            if (!this.tileSeen(tileX + dx, tileY + dy)) {
+              edge = true
+              break
+            }
+          }
+        }
+        const x0 = localX * pixels
+        const y0 = localY * pixels
+        if (!edge) {
+          for (let py = y0; py < y0 + pixels; py++) {
+            for (let px = x0; px < x0 + pixels; px++) {
+              const index = py * stride + px
+              if (cells[index] < 255) cells[index] = 255
+            }
+          }
+          continue
+        }
+        for (let py = y0; py < y0 + pixels; py++) {
+          for (let px = x0; px < x0 + pixels; px++) {
+            const x = originX + (px + 0.5) / pixels
+            const y = originY + (py + 0.5) / pixels
+            let nearest = SERVER_FADE
+            for (let dy = -reach; dy <= reach; dy++) {
+              for (let dx = -reach; dx <= reach; dx++) {
+                if (dx === 0 && dy === 0) continue
+                if (this.tileSeen(tileX + dx, tileY + dy)) continue
+                const left = tileX + dx
+                const top = tileY + dy
+                const cx = Math.min(left + 1, Math.max(left, x))
+                const cy = Math.min(top + 1, Math.max(top, y))
+                const distance = Math.hypot(x - cx, y - cy)
+                if (distance < nearest) nearest = distance
+              }
+            }
+            let amount = 255
+            if (nearest < SERVER_FADE) {
+              const opened = nearest / SERVER_FADE
+              amount = Math.round(opened * opened * (3 - 2 * opened) * 255)
+            }
+            const index = py * stride + px
+            if (amount > cells[index]) cells[index] = amount
+          }
+        }
       }
     }
-    if (nearest >= SERVER_FADE) return 1
-    const opened = nearest / SERVER_FADE
-    return opened * opened * (3 - 2 * opened)
   }
 
   /**
@@ -457,6 +499,7 @@ export class Fog {
     else this.farLight.fill(0, 0, count)
     const light = this.farLight
     for (const viewer of this.viewers) {
+      if (viewer.sticky) continue
       const left = viewer.x - viewer.radius
       const top = viewer.y - viewer.radius
       const right = viewer.x + viewer.radius

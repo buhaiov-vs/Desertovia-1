@@ -1447,8 +1447,9 @@ public sealed partial class GameService(
             .Where(a => a.Id == village.OwnerAccountId)
             .Select(a => new { a.DisplayName, a.Character })
             .SingleAsync(cancellationToken);
+        var tsarAt = village.TsarTrip is { } trip ? trip.PositionAt(now) : village.TsarSpot;
         var tsar = new TsarDto(owner.Character?.Name ?? owner.DisplayName, owner.Character?.Appearance, village.TsarSpot, village.TsarInjuredUntil)
-            { AccountId=village.OwnerAccountId, HospitalizedAt=village.TsarHospitalizedAt, RescueByCitizenId=village.TsarRescueByCitizenId, RescueRequestedAt=village.TsarRescueRequestedAt };
+            { AccountId=village.OwnerAccountId, HospitalizedAt=village.TsarHospitalizedAt, RescueByCitizenId=village.TsarRescueByCitizenId, RescueRequestedAt=village.TsarRescueRequestedAt, At=tsarAt };
         var trips = await LoadTripsAsync(db, village.Id, cancellationToken);
         var shownSince = now - DungeonRules.ShownAfterEnd;
         var dungeon = await db.DungeonRuns.AsNoTracking()

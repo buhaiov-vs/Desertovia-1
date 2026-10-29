@@ -225,13 +225,18 @@ public sealed record RelocationDto(string PlotId,int Residents,int Available);
 public sealed record HousingDto(string PlotId, int Beds, int Occupied, int Level, int Number = 0, Guid? OwnerAccountId = null, string? OwnerName = null, DateTimeOffset? BuiltAt = null);
 
 /// <param name="Appearance">Null until the owner creates their character.</param>
-/// <param name="Spot">Where the Tsar walked to; null while they stand at the campfire.</param>
+/// <param name="Spot">Where the Tsar is walking to; null while they stand at the campfire.</param>
 public sealed record TsarDto(string Name, Appearance? Appearance, TilePoint? Spot, DateTimeOffset? InjuredUntil = null)
 {
     public Guid? AccountId { get; init; }
     public DateTimeOffset? HospitalizedAt { get; init; }
     public Guid? RescueByCitizenId { get; init; }
     public DateTimeOffset? RescueRequestedAt { get; init; }
+    /// <summary>
+    /// Where the Tsar is right now on an active trip (same clock as fog). Null uses <see cref="Spot"/>.
+    /// Keeps the sprite aligned with revealed land after a background tab freezes client walking.
+    /// </summary>
+    public TilePoint? At { get; init; }
 }
 
 /// <param name="Objectives">Rulers' objectives (planning) carry no numbers; citizen objectives carry progress.</param>

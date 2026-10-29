@@ -1097,8 +1097,13 @@ export interface Tsar {
   name: string
   /** Null until the owner creates their character. */
   appearance: Appearance | null
-  /** Where the Tsar walked to; null while they stand at the campfire. */
+  /** Where the Tsar is walking to; null while they stand at the campfire. */
   spot: TilePoint | null
+  /**
+   * Where the Tsar is right now on the trip (same clock as fog). Prefer this for the sprite so a
+   * background tab cannot leave fog ahead of a frozen walker.
+   */
+  at?: TilePoint | null
 }
 
 export type Gender = 'Male' | 'Female'

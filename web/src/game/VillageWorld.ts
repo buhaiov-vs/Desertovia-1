@@ -643,11 +643,13 @@ export class VillageWorld {
 
   /** The Tsar stands where they last walked to, or by the campfire; a new spot makes them walk there. */
   private setTsar(tsar: Tsar) {
-    const spot = tsar.spot ?? TSAR_HOME
+    const destination = tsar.spot ?? TSAR_HOME
+    // Server trip clock (same as fog). Falling back to the destination keeps old payloads working.
+    const at = tsar.at ?? destination
     const texture = this.lookTexture(TSAR_ID, tsar.appearance)
     let walker = this.walkers.get(TSAR_ID)
     if (!walker) {
-      walker = this.addWalker(TSAR_ID, tsar.name, texture, spot.x * TILE, spot.y * TILE)
+      walker = this.addWalker(TSAR_ID, tsar.name, texture, at.x * TILE, at.y * TILE)
       walker.label.style.fill = TSAR_LABEL
       walker.subtitle.text = this.tsarTitle
       walker.subtitle.visible = this.tsarTitle !== ''
@@ -666,12 +668,22 @@ export class VillageWorld {
     if (walker.injuredUntil > Date.now()) {
       walker.way = []
       if (!walker.carrierId) {
-        walker.x = spot.x * TILE
-        walker.y = spot.y * TILE
+        walker.x = at.x * TILE
+        walker.y = at.y * TILE
       }
       walker.targetX = walker.x
       walker.targetY = walker.y
-    } else if (!fighting) this.walkTo(walker, spot)
+    } else if (!fighting) {
+      // Snap when the server is ahead (background tab freezes the 0.1s walk cap). Fog already
+      // follows this clock; walking from a stale sprite left a revealed corridor with nobody in it.
+      const gap = Math.hypot(walker.x / TILE - at.x, walker.y / TILE - at.y)
+      if (gap > 0.4) {
+        walker.x = at.x * TILE
+        walker.y = at.y * TILE
+        walker.way = []
+      }
+      this.walkTo(walker, destination)
+    }
   }
 
   private bridgeDone() {

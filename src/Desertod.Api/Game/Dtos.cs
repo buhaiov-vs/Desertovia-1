@@ -234,10 +234,24 @@ public sealed record TsarDto(string Name, Appearance? Appearance, TilePoint? Spo
     public DateTimeOffset? RescueRequestedAt { get; init; }
     /// <summary>
     /// Where the Tsar is right now on an active trip (same clock as fog). Null uses <see cref="Spot"/>.
-    /// Keeps the sprite aligned with revealed land after a background tab freezes client walking.
     /// </summary>
     public TilePoint? At { get; init; }
+    /// <summary>
+    /// Active foot trip so the client can place the Tsar on the same wall clock as fog after a background tab.
+    /// </summary>
+    public TsarWalkDto? Walk { get; init; }
 }
+
+/// <summary>Tsar foot trip mirrors domain <c>Trip</c> fields the client needs for <c>PositionAt</c>.</summary>
+public sealed record TsarWalkDto(
+    double FromX,
+    double FromY,
+    double ToX,
+    double ToY,
+    DateTimeOffset SetOutAt,
+    DateTimeOffset ArrivesAt,
+    double SpeedMultiplier,
+    IReadOnlyList<TilePoint>? Way);
 
 /// <param name="Objectives">Rulers' objectives (planning) carry no numbers; citizen objectives carry progress.</param>
 public sealed record QuestDto(Guid Id, QuestKind Kind, ResourceKind? Resource, DateTimeOffset StartedAt, IReadOnlyList<QuestObjective> Objectives);

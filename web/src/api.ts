@@ -1088,6 +1088,18 @@ export interface Wilds {
   lookoutY: number
 }
 
+/** Active Tsar foot trip — client places the sprite with the same wall clock as fog. */
+export interface TsarWalk {
+  fromX: number
+  fromY: number
+  toX: number
+  toY: number
+  setOutAt: string
+  arrivesAt: string
+  speedMultiplier: number
+  way?: TilePoint[] | null
+}
+
 export interface Tsar {
   accountId?:string|null
   hospitalizedAt?:string|null
@@ -1104,6 +1116,8 @@ export interface Tsar {
    * background tab cannot leave fog ahead of a frozen walker.
    */
   at?: TilePoint | null
+  /** Active walk; when set the map follows wall-clock position instead of the 0.1s walk cap. */
+  walk?: TsarWalk | null
 }
 
 export type Gender = 'Male' | 'Female'

@@ -17,6 +17,7 @@ import { EnemyLayer } from './enemies'
 import { CharacterPainter, appearanceKey } from './appearance'
 import { darknessAt } from './daylight'
 import { Fog, type Viewer } from './fog'
+import { tsarPositionAt, tsarWalkActive } from './tsarWalk'
 import { chunksNear, type LandChunkRect } from './landChunk'
 import { TILE, TileSet, battle, dungeon, tileKey, town, type TileRef } from './sheets'
 import {
@@ -644,8 +645,12 @@ export class VillageWorld {
   /** The Tsar stands where they last walked to, or by the campfire; a new spot makes them walk there. */
   private setTsar(tsar: Tsar) {
     const destination = tsar.spot ?? TSAR_HOME
-    // Server trip clock (same as fog). Falling back to the destination keeps old payloads working.
-    const at = tsar.at ?? destination
+    const now = Date.now()
+    // Wall-clock trip position (same as fog). Falls back to `at` / destination for older payloads.
+    const at =
+      tsar.walk && tsarWalkActive(tsar.walk, now)
+        ? tsarPositionAt(tsar.walk, now)
+        : (tsar.at ?? destination)
     const texture = this.lookTexture(TSAR_ID, tsar.appearance)
     let walker = this.walkers.get(TSAR_ID)
     if (!walker) {
@@ -674,15 +679,14 @@ export class VillageWorld {
       walker.targetX = walker.x
       walker.targetY = walker.y
     } else if (!fighting) {
-      // Snap when the server is ahead (background tab freezes the 0.1s walk cap). Fog already
-      // follows this clock; walking from a stale sprite left a revealed corridor with nobody in it.
-      const gap = Math.hypot(walker.x / TILE - at.x, walker.y / TILE - at.y)
-      if (gap > 0.4) {
-        walker.x = at.x * TILE
-        walker.y = at.y * TILE
-        walker.way = []
-      }
-      this.walkTo(walker, destination)
+      // Always place on the trip clock — the 0.1s walk cap cannot catch up after alt-tab.
+      walker.x = at.x * TILE
+      walker.y = at.y * TILE
+      walker.sprite.position.set(walker.x, walker.y)
+      walker.targetX = destination.x * TILE
+      walker.targetY = destination.y * TILE
+      walker.way = []
+      if (!tsarWalkActive(tsar.walk, now)) this.walkTo(walker, destination)
     }
   }
 
@@ -1502,6 +1506,10 @@ export class VillageWorld {
     }
     this.staticUpdate=true
     this.drawKingdomBorder()
+    // Place the Tsar on the trip clock, refresh fog viewers, then merge server exploration —
+    // so alt-tab cannot open land ahead of a frozen sprite.
+    this.setTsar(state.tsar)
+    this.fog.update(this.viewers(), this.nightAmount)
     this.fog.setChunks(state.exploredChunks ?? [])
     this.drawTrees(state.trees)
     this.drawObstacles(state.wilds)
@@ -1511,7 +1519,6 @@ export class VillageWorld {
     this.enemies.setBattles(state.battles??[])
     this.activeProjectId = state.project?.definitionId ?? null
     this.setCitizens(this.citizens, this.highlightId)
-    this.setTsar(state.tsar)
 
     const project = state.project
     const key = JSON.stringify([
@@ -2309,7 +2316,21 @@ export class VillageWorld {
         walker.wanderAt = 0
       }
       if (walker.sleepsAt !== null && now >= walker.sleepsAt) walker.staying = true
-      if (walker.hunt) {
+      // Tsar foot trip: wall clock matches fog. The 0.1s step cap cannot catch up after alt-tab.
+      const tsarWalk = walker.id === TSAR_ID ? this.village?.tsar?.walk : null
+      if (!hurt && tsarWalkActive(tsarWalk, now) && tsarWalk) {
+        const at = tsarPositionAt(tsarWalk, now)
+        const dx = at.x * TILE - walker.x
+        if (Math.abs(dx) > 0.01) walker.sprite.scale.x = dx < 0 ? -1 : 1
+        walker.x = at.x * TILE
+        walker.y = at.y * TILE
+        walker.targetX = walker.x
+        walker.targetY = walker.y
+        walker.way = []
+        walker.staying = true
+        walker.roaming = false
+        walker.hunt = null
+      } else if (walker.hunt) {
         hunters.add(walker.id)
         const secondsLeft = (walker.hunt.catchAt - now) / 1000
         const chase = this.wildlife.chase(walker.id, walker.hunt.prey, walker.x, walker.y, secondsLeft)

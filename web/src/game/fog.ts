@@ -1,7 +1,7 @@
 import { CanvasSource, Container, Sprite, Texture } from 'pixi.js'
 import { TILE } from './sheets'
 import { LAND_CHUNK as CHUNK, type LandChunkRect } from './landChunk'
-import { CAMPFIRE, MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH } from './worldMap'
+import { MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH } from './worldMap'
 import type { ExploredChunk, TileArea } from '../api'
 
 /** One fog sprite: stable `x`,`y` chunk indices, painted over the clipped tile rectangle. */
@@ -42,19 +42,16 @@ const SIGHT_FADE = 1.5
  * Eight keeps each texel near two world pixels (TILE is 16) so linear stretch does not lattice.
  */
 const FAR_PIXELS = 8
-/** Tiles across which the far-land disc fades. The outer edge stays on the sight radius. */
-const FAR_FADE = 2.5
+/**
+ * Tiles across which live sight fades into black fog. Keep this short — a wide fade paints a grey
+ * grass ring outside explored memory.
+ */
+const FAR_FADE = 1.1
 /**
  * Tiles across which server-explored land fades into fog (distance to nearest unseen tile).
- * Written once into `farSeen` so paint never mixes a second tile map with the live disc.
+ * Same fade for camp and wild — no separate camp oval.
  */
-const SERVER_FADE = 2.5
-/**
- * Same oval a new tribe knows on the server (`Exploration.CampRadiusX/Y`). Tile bits stair-step that
- * rim; fog memory stamps this smooth ellipse instead so the camp edge is not a grid.
- */
-const CAMP_RADIUS_X = 19
-const CAMP_RADIUS_Y = 17
+const SERVER_FADE = 1.5
 /**
  * Memory at or above this counts as fully open when shading. Mid soft values used to paint grey
  * grass tiles; live light alone keeps a soft disc edge.
@@ -172,11 +169,16 @@ export class Fog {
         if (index >= 0) this.explored[index] = 1
       }
     }
-    // Raise soft fog memory with new server bits; never replace walk discs with a second tile layer.
-    for (const [key, cells] of this.farSeen) {
+    // Rebuild soft memory from server bits (same rule for camp and wild), then re-stamp live discs.
+    // Raising only used to leave an old camp-oval bake sitting under the village forever.
+    const length = CHUNK * FAR_PIXELS * CHUNK * FAR_PIXELS
+    for (const key of [...this.farSeen.keys()]) {
       const [chunkX, chunkY] = key.split(',').map(Number)
+      const cells = new Uint8Array(length)
       this.writeServerSoft(chunkX, chunkY, cells)
+      this.farSeen.set(key, cells)
     }
+    this.stampFar()
     this.farPaintDirty = true
     this.draw()
   }
@@ -214,10 +216,25 @@ export class Fog {
 
   /** Whether the tile under a point, in tiles, has been seen. */
   isExplored(x: number, y: number) {
-    const index = this.index(x, y)
-    if (index >= 0) return this.explored[index] === 1
     if (this.seenNow(x, y)) return true
+    if (this.memorySees(x, y)) return true
+    const index = this.index(x, y)
+    if (index >= 0 && this.explored[index] === 1) return true
     return this.chunkSees(Math.floor(x), Math.floor(y))
+  }
+
+  /** Walk/server fog memory at a tile — same buffer for camp and wild. */
+  private memorySees(x: number, y: number) {
+    const tileX = Math.floor(x)
+    const tileY = Math.floor(y)
+    const chunkX = Math.floor(tileX / CHUNK)
+    const chunkY = Math.floor(tileY / CHUNK)
+    const cells = this.farSeen.get(`${chunkX},${chunkY}`)
+    if (!cells) return false
+    const stride = CHUNK * FAR_PIXELS
+    const px = Math.min(stride - 1, Math.max(0, Math.floor((x - chunkX * CHUNK) * FAR_PIXELS)))
+    const py = Math.min(stride - 1, Math.max(0, Math.floor((y - chunkY * CHUNK) * FAR_PIXELS)))
+    return cells[py * stride + px] >= MEMORY_OPEN * 255
   }
 
   isAreaExplored(area: TileArea) {
@@ -244,9 +261,7 @@ export class Fog {
       const y = y0 + row
       for (let column = 0; column < width; column++) {
         const x = x0 + column
-        const index = this.index(x, y)
-        const seen = index >= 0 ? this.explored[index] === 1 : this.chunkSees(x, y)
-        out[row * width + column] = seen ? remembered : 1
+        out[row * width + column] = this.isExplored(x, y) ? remembered : 1
       }
     }
     for (const viewer of this.viewers) {
@@ -351,11 +366,12 @@ export class Fog {
     return ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
   }
 
-  /** Server or local explored bit for any tile — camp and wild use the same check. */
-  private tileSeen(x: number, y: number) {
-    const index = this.index(x, y)
-    if (index >= 0 && this.explored[index] === 1) return true
-    return this.chunkSees(x, y)
+  /**
+   * Server exploration only — same for camp and wild. Local vale `explored` must not open fog memory
+   * alone, or the camp picture rectangle shades differently from the land around it.
+   */
+  private serverSees(x: number, y: number) {
+    return this.chunkSees(Math.floor(x), Math.floor(y))
   }
 
   private makeFar(chunk: FogChunk) {
@@ -363,7 +379,8 @@ export class Fog {
     canvas.width = chunk.width * FAR_PIXELS
     canvas.height = chunk.height * FAR_PIXELS
     const context = canvas.getContext('2d')!
-    const texture = new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'linear' }) })
+    // Nearest: linear filtering bled a grey strip along hard open/closed and chunk seams.
+    const texture = new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'nearest' }) })
     const sprite = new Sprite(texture)
     sprite.position.set(chunk.originX * TILE, chunk.originY * TILE)
     sprite.scale.set(TILE / FAR_PIXELS)
@@ -420,21 +437,9 @@ export class Fog {
     return cells
   }
 
-  /** Smooth open 0–1 for the starting camp oval (not the stair-stepped tile mask). */
-  private campOvalOpen(x: number, y: number) {
-    const nx = (x - CAMPFIRE.x) / CAMP_RADIUS_X
-    const ny = (y - CAMPFIRE.y) / CAMP_RADIUS_Y
-    const r = Math.hypot(nx, ny)
-    if (r >= 1) return 0
-    const fade = SERVER_FADE / Math.min(CAMP_RADIUS_X, CAMP_RADIUS_Y)
-    if (r <= 1 - fade) return 1
-    const opened = (1 - r) / fade
-    return opened * opened * (3 - 2 * opened)
-  }
-
   /**
-   * Soft server exploration into walk memory. Camp uses a smooth ellipse; other land fills
-   * explored tiles. Shading treats memory as open/closed so mid soft values never grey the grass.
+   * Soft server exploration into walk memory — identical rules for camp and wild.
+   * Interior explored tiles fill solid; only the fog frontier gets a short distance fade.
    */
   private writeServerSoft(chunkX: number, chunkY: number, cells: Uint8Array) {
     const pixels = FAR_PIXELS
@@ -445,27 +450,59 @@ export class Fog {
     const baked = bakeServerScratch
     const originX = chunkX * CHUNK
     const originY = chunkY * CHUNK
+    const reach = Math.ceil(SERVER_FADE) + 1
     let wrote = false
-    for (let py = 0; py < stride; py++) {
-      for (let px = 0; px < stride; px++) {
-        const amount = Math.round(this.campOvalOpen(originX + (px + 0.5) / pixels, originY + (py + 0.5) / pixels) * 255)
-        if (amount <= 0) continue
-        baked[py * stride + px] = amount
-        wrote = true
-      }
-    }
     for (let localY = 0; localY < CHUNK; localY++) {
       for (let localX = 0; localX < CHUNK; localX++) {
         const tileX = originX + localX
         const tileY = originY + localY
-        if (!this.tileSeen(tileX, tileY)) continue
-        if (this.campOvalOpen(tileX + 0.5, tileY + 0.5) > 0) continue
+        if (!this.serverSees(tileX, tileY)) continue
+        let edge = false
+        for (let dy = -1; dy <= 1 && !edge; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue
+            if (!this.serverSees(tileX + dx, tileY + dy)) {
+              edge = true
+              break
+            }
+          }
+        }
         const x0 = localX * pixels
         const y0 = localY * pixels
-        for (let py = y0; py < y0 + pixels; py++) {
-          baked.fill(255, py * stride + x0, py * stride + x0 + pixels)
+        if (!edge) {
+          for (let py = y0; py < y0 + pixels; py++) {
+            baked.fill(255, py * stride + x0, py * stride + x0 + pixels)
+          }
+          wrote = true
+          continue
         }
-        wrote = true
+        for (let py = y0; py < y0 + pixels; py++) {
+          for (let px = x0; px < x0 + pixels; px++) {
+            const x = originX + (px + 0.5) / pixels
+            const y = originY + (py + 0.5) / pixels
+            let nearest = SERVER_FADE
+            for (let dy = -reach; dy <= reach; dy++) {
+              for (let dx = -reach; dx <= reach; dx++) {
+                if (dx === 0 && dy === 0) continue
+                if (this.serverSees(tileX + dx, tileY + dy)) continue
+                const left = tileX + dx
+                const top = tileY + dy
+                const cx = Math.min(left + 1, Math.max(left, x))
+                const cy = Math.min(top + 1, Math.max(top, y))
+                const distance = Math.hypot(x - cx, y - cy)
+                if (distance < nearest) nearest = distance
+              }
+            }
+            let amount = 255
+            if (nearest < SERVER_FADE) {
+              const opened = nearest / SERVER_FADE
+              amount = Math.round(opened * opened * (3 - 2 * opened) * 255)
+            }
+            const index = py * stride + px
+            if (amount > baked[index]) baked[index] = amount
+            wrote = true
+          }
+        }
       }
     }
     if (!wrote) return

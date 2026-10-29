@@ -352,7 +352,6 @@ export class Fog {
     const stampSticky = this.farPaintDirty
     for (const viewer of this.viewers) {
       if (viewer.sticky && !stampSticky) continue
-      const reach = Math.ceil(viewer.radius)
       const left = Math.floor(viewer.x - viewer.radius)
       const right = Math.ceil(viewer.x + viewer.radius)
       const top = Math.floor(viewer.y - viewer.radius)

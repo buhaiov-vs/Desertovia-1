@@ -105,7 +105,7 @@ public class ExplorationTests
         {
             for (var x = land.X; x < land.X + land.Width; x++)
             {
-                var onTrip = DistanceToSegment(new TilePoint(x + 0.5, y + 0.5), from, to) <= Exploration.SightRadius;
+                var onTrip = DistanceToSegment(new TilePoint(x + 0.5, y + 0.5), from, to) <= Exploration.PathRevealRadius;
                 var inCamp = InOval(new TilePoint(x + 0.5, y + 0.5), WorldMap.Places[WorldMap.Camp], Exploration.CampRadiusX, Exploration.CampRadiusY);
                 Assert.Equal(onTrip || inCamp, Exploration.IsExplored(revealed, x, y));
             }

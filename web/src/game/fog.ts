@@ -37,9 +37,35 @@ const FAR_PIXELS = 1
 const MEMORY_OPEN = 0.4
 /** A point is in sight when it is lit at least this much (gameplay; fog paint does not use a disc). */
 const IN_SIGHT = 0.5
+/**
+ * Outer band of the sight disc, in tiles. Inside is always open; in this rim each tile opens or stays
+ * fog by a stable hash so the edge looks organic instead of a perfect stair-circle.
+ */
+const SIGHT_RIM = 1.75
 
 /** Server exploration is baked here then maxed into walk memory so a publish never overwrites walk discs. */
 let bakeServerScratch = new Uint8Array(0)
+
+/** Stable 0…1 per tile — same rim bumps every visit. */
+function rimRoll(tileX: number, tileY: number) {
+  let value = Math.imul(tileX | 0, 0x27d4eb2d) ^ Math.imul(tileY | 0, 0x165667b1) ^ 0x9e3779b9
+  value = Math.imul(value ^ (value >>> 16), 0x85ebca6b)
+  value = Math.imul(value ^ (value >>> 13), 0xc2b2ae35)
+  return ((value ^ (value >>> 16)) >>> 0) / 4294967296
+}
+
+/**
+ * Whether fog memory opens this tile for a viewer. Gameplay `inSight` still uses the full disc;
+ * only the painted/stamped rim is dithered.
+ */
+function fogOpensTile(tileX: number, tileY: number, viewer: Viewer) {
+  const distance = Math.hypot(tileX + 0.5 - viewer.x, tileY + 0.5 - viewer.y)
+  const inner = Math.max(0, viewer.radius - SIGHT_RIM)
+  if (distance <= inner) return true
+  if (distance > viewer.radius) return false
+  const depth = (viewer.radius - distance) / SIGHT_RIM
+  return rimRoll(tileX, tileY) < depth * depth
+}
 /**
  * Extra fog pixels around the camp picture canvas (minimap). Linear filtering otherwise blends the
  * rim with empty texture and draws a bright teal fringe where the vale ends.
@@ -147,7 +173,7 @@ export class Fog {
     this.draw()
   }
 
-  /** Updates gameplay sight and opens whole sight-radius tiles into fog memory (hard bumps, no soft rim). */
+  /** Updates gameplay sight (full disc) and opens organic hard tiles into fog memory. */
   update(viewers: Viewer[], darkness: number) {
     this.darkness = darkness
     this.viewers = viewers
@@ -159,10 +185,11 @@ export class Fog {
       const bottom = Math.min(MAP_TOP + MAP_HEIGHT - 1, Math.ceil(viewer.y + viewer.radius))
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          if (Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) > viewer.radius) continue
+          const distance = Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y)
+          if (distance > viewer.radius) continue
           const index = (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
           this.light[index] = 1
-          this.explored[index] = 1
+          if (fogOpensTile(x, y, viewer)) this.explored[index] = 1
         }
       }
     }
@@ -345,8 +372,8 @@ export class Fog {
   }
 
   /**
-   * Opens whole tiles whose centres lie in the viewer's sight. Hard tile bumps — no soft fade ring —
-   * but still a full sight radius so the hero is not pressed against the fog.
+   * Opens whole tiles in sight. Interior of the disc is solid; the outer rim dither-opens by tile hash
+   * so the frontier looks organic (still binary open/closed — no soft grey ring).
    */
   private stampFar() {
     const stampSticky = this.farPaintDirty
@@ -358,7 +385,7 @@ export class Fog {
       const bottom = Math.ceil(viewer.y + viewer.radius)
       for (let ty = top; ty <= bottom; ty++) {
         for (let tx = left; tx <= right; tx++) {
-          if (Math.hypot(tx + 0.5 - viewer.x, ty + 0.5 - viewer.y) > viewer.radius) continue
+          if (!fogOpensTile(tx, ty, viewer)) continue
           this.openTile(tx, ty)
         }
       }

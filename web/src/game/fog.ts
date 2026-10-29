@@ -28,9 +28,16 @@ export interface Viewer {
   sticky?: boolean
 }
 
-const DARK: [number, number, number] = [12, 14, 20]
-/** Explored land stays fully clear. Night still uses the world night overlay. */
-const REMEMBERED_ALPHA = 0
+/**
+ * Unseen fog ink — cool night blue that sits with the map night wash (`0x0b1640`), not flat grey-black.
+ * Grain nudges these channels per texel so the void is not a plastic slab.
+ */
+const DARK: [number, number, number] = [8, 12, 28]
+/**
+ * How much explored-but-unseen land is dimmed at full night. Day (`darkness` 0) stays fully clear so
+ * wilderness never greys in daylight; only night softens memory behind the hero.
+ */
+const REMEMBERED_ALPHA = 0.14
 /**
  * Fog texels per tile. Eight keeps each texel near two world pixels (TILE is 16), so a hard
  * open/closed disc reads as a round silhouette instead of tile stairs — still no soft grey ring.
@@ -40,9 +47,27 @@ const FAR_PIXELS = 8
 const MEMORY_OPEN = 0.4
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
+/** How far fog RGB may drift from `DARK` for grain (−n…n). */
+const FOG_GRAIN = 7
 
 /** Server exploration is baked here then maxed into walk memory so a publish never overwrites walk discs. */
 let bakeServerScratch = new Uint8Array(0)
+
+/** Stable −FOG_GRAIN…FOG_GRAIN for one fog texel, so the black does not shimmer each frame. */
+function fogGrain(worldX: number, worldY: number) {
+  let value = Math.imul(Math.floor(worldX * FAR_PIXELS), 0x27d4eb2d) ^ Math.imul(Math.floor(worldY * FAR_PIXELS), 0x165667b1)
+  value = Math.imul(value ^ (value >>> 16), 0x85ebca6b)
+  return ((value >>> 0) % (FOG_GRAIN * 2 + 1)) - FOG_GRAIN
+}
+
+function fogInk(worldX: number, worldY: number): [number, number, number] {
+  const grain = fogGrain(worldX, worldY)
+  return [
+    Math.max(0, Math.min(255, DARK[0] + grain)),
+    Math.max(0, Math.min(255, DARK[1] + Math.floor(grain * 0.6))),
+    Math.max(0, Math.min(255, DARK[2] + Math.floor(grain * 0.35))),
+  ]
+}
 /**
  * Extra fog pixels around the camp picture canvas (minimap). Linear filtering otherwise blends the
  * rim with empty texture and draws a bright teal fringe where the vale ends.
@@ -86,6 +111,8 @@ export class Fog {
   private readonly light = new Float32Array(MAP_WIDTH * MAP_HEIGHT)
   /** 0 at full daylight, when remembered land is not dimmed, 1 deep in the night. */
   private darkness = 1
+  /** Last darkness painted into far sprites — night shifts must dirty the whole fog layer. */
+  private paintedDarkness = -1
 
   constructor() {
     this.canvas.width = MAP_WIDTH
@@ -152,6 +179,7 @@ export class Fog {
 
   /** Updates gameplay sight and stamps a hard high-resolution disc into fog memory. */
   update(viewers: Viewer[], darkness: number) {
+    if (Math.abs(darkness - this.paintedDarkness) > 0.04) this.farPaintDirty = true
     this.darkness = darkness
     this.viewers = viewers
     this.light.fill(0)
@@ -442,26 +470,33 @@ export class Fog {
     for (let row = 0; row < height; row++) {
       for (let column = 0; column < width; column++) {
         const index = (row * width + column) * 4
-        image.data[index] = DARK[0]
-        image.data[index + 1] = DARK[1]
-        image.data[index + 2] = DARK[2]
+        const worldX = chunk.x + (column + 0.5) / pixels
+        const worldY = chunk.y + (row + 0.5) / pixels
+        const [red, green, blue] = fogInk(worldX, worldY)
+        image.data[index] = red
+        image.data[index + 1] = green
+        image.data[index + 2] = blue
         const open = seen[(localY0 + row) * stride + (localX0 + column)] >= MEMORY_OPEN * 255
         image.data[index + 3] = Math.round((open ? remembered : 1) * 255)
       }
     }
     entry.context.putImageData(image, 0, 0)
     entry.texture.source.update()
+    this.paintedDarkness = this.darkness
   }
 
   private draw() {
     const data = this.image.data
+    const remembered = REMEMBERED_ALPHA * this.darkness
     for (let index = 0; index < this.explored.length; index++) {
-      const open = this.explored[index] === 1
+      const column = index % MAP_WIDTH
+      const row = (index - column) / MAP_WIDTH
+      const [red, green, blue] = fogInk(MAP_LEFT + column + 0.5, MAP_TOP + row + 0.5)
       const pixel = index * 4
-      data[pixel] = DARK[0]
-      data[pixel + 1] = DARK[1]
-      data[pixel + 2] = DARK[2]
-      data[pixel + 3] = Math.round((open ? REMEMBERED_ALPHA * this.darkness : 1) * 255)
+      data[pixel] = red
+      data[pixel + 1] = green
+      data[pixel + 2] = blue
+      data[pixel + 3] = Math.round((this.explored[index] === 1 ? remembered : 1) * 255)
     }
     this.context.putImageData(this.image, 0, 0)
     this.displayContext.clearRect(0, 0, this.display.width, this.display.height)
@@ -479,9 +514,9 @@ export class Fog {
         if (x >= EDGE_PAD && y >= EDGE_PAD && x < EDGE_PAD + MAP_WIDTH && y < EDGE_PAD + MAP_HEIGHT) continue
         const source = sample(x, y)
         const index = (y * width + x) * 4
-        pad.data[index] = DARK[0]
-        pad.data[index + 1] = DARK[1]
-        pad.data[index + 2] = DARK[2]
+        pad.data[index] = data[source - 3]
+        pad.data[index + 1] = data[source - 2]
+        pad.data[index + 2] = data[source - 1]
         pad.data[index + 3] = data[source]
       }
     }

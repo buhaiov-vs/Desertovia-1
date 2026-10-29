@@ -155,11 +155,8 @@ public static class Exploration
     /// <summary>How far, in tiles, a walker sees around them (gameplay / lookout, not the walk fog trail).</summary>
     public const double SightRadius = 6;
 
-    /// <summary>
-    /// How wide the fog opens along a walk. A full <see cref="SightRadius"/> disc left a clear ring around the
-    /// hero; a short bump trail matches tile steps instead.
-    /// </summary>
-    public const double PathRevealRadius = 2;
+    /// <summary>How wide the fog opens along a walk (same reach as live sight; hard tile bumps on the client).</summary>
+    public const double PathRevealRadius = SightRadius;
 
     /// <summary>The camp land a new tribe knows: an oval around the campfire, reaching the river bank.</summary>
     public const double CampRadiusX = 19;

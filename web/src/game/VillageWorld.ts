@@ -2448,13 +2448,10 @@ export class VillageWorld {
     combatDiagnostics.frame(ticker.elapsedMS,performance.now()-measuredAt)
   }
 
-  /**
-   * Who sees the land now. Walkers keep a sight radius for gameplay (`inSight`); fog memory only opens the
-   * tile under their feet (plus sticky building squares), so the map does not grow a vision ring.
-   */
+  /** Who sees the land now: walkers, the campfire, and sticky building footprints. */
   private viewers(): Viewer[] {
     const sight = this.catalog?.rules.sightRadius ?? DEFAULT_SIGHT
-    const viewers: Viewer[] = []
+    const viewers: Viewer[] = [{ x: CAMPFIRE.x, y: CAMPFIRE.y, radius: sight, sticky: true }]
     for (const walker of this.walkers.values()) viewers.push({ x: walker.x / TILE, y: walker.y / TILE, radius: sight })
     if (this.village) {
       for (const area of buildingFootprints(this.village)) {

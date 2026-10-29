@@ -147,7 +147,7 @@ export class Fog {
     this.draw()
   }
 
-  /** Updates gameplay sight; fog memory opens only whole tiles under walkers, not a vision disc. */
+  /** Updates gameplay sight and opens whole sight-radius tiles into fog memory (hard bumps, no soft rim). */
   update(viewers: Viewer[], darkness: number) {
     this.darkness = darkness
     this.viewers = viewers
@@ -160,13 +160,11 @@ export class Fog {
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
           if (Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) > viewer.radius) continue
-          this.light[(y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)] = 1
+          const index = (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
+          this.light[index] = 1
+          this.explored[index] = 1
         }
       }
-      const tileX = Math.floor(viewer.x)
-      const tileY = Math.floor(viewer.y)
-      const index = this.index(tileX, tileY)
-      if (index >= 0) this.explored[index] = 1
     }
     this.stampFar()
     this.draw()
@@ -346,24 +344,25 @@ export class Fog {
     return entry
   }
 
-  /** Opens whole tiles under walkers (and a square of tiles around sticky buildings). No circular disc. */
+  /**
+   * Opens whole tiles whose centres lie in the viewer's sight. Hard tile bumps — no soft fade ring —
+   * but still a full sight radius so the hero is not pressed against the fog.
+   */
   private stampFar() {
     const stampSticky = this.farPaintDirty
     for (const viewer of this.viewers) {
       if (viewer.sticky && !stampSticky) continue
-      if (viewer.sticky) {
-        const reach = Math.ceil(viewer.radius)
-        const cx = Math.floor(viewer.x)
-        const cy = Math.floor(viewer.y)
-        for (let ty = cy - reach; ty <= cy + reach; ty++) {
-          for (let tx = cx - reach; tx <= cx + reach; tx++) {
-            if (Math.max(Math.abs(tx - cx), Math.abs(ty - cy)) > reach) continue
-            this.openTile(tx, ty)
-          }
+      const reach = Math.ceil(viewer.radius)
+      const left = Math.floor(viewer.x - viewer.radius)
+      const right = Math.ceil(viewer.x + viewer.radius)
+      const top = Math.floor(viewer.y - viewer.radius)
+      const bottom = Math.ceil(viewer.y + viewer.radius)
+      for (let ty = top; ty <= bottom; ty++) {
+        for (let tx = left; tx <= right; tx++) {
+          if (Math.hypot(tx + 0.5 - viewer.x, ty + 0.5 - viewer.y) > viewer.radius) continue
+          this.openTile(tx, ty)
         }
-        continue
       }
-      this.openTile(Math.floor(viewer.x), Math.floor(viewer.y))
     }
   }
 

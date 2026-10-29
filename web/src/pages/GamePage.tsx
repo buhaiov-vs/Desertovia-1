@@ -696,13 +696,18 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
       return true
     }
     if (tsar) {
-      return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => {
+      return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk = false) => {
         setEnemyPick(null)
-        if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
-        if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
-        const watched = target !== null && villageRef.current !== null && watchable(target, villageRef.current)
-        setPicked(watched ? { target, screen } : null)
-        if (watched || blocked(TSAR_ID, point)) return
+        if (!walk) {
+          if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
+          if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
+          const watched = target !== null && villageRef.current !== null && watchable(target, villageRef.current)
+          setPicked(watched ? { target, screen } : null)
+          if (watched || blocked(TSAR_ID, point)) return
+        } else {
+          setPicked(null)
+          if (blocked(TSAR_ID, point)) return
+        }
         const active=villageRef.current?.battles?.find(b=>!b.finishedAt&&!['Warning','Cancelled'].includes(b.phase))
         if(active){void api.battleOrder(slug,active.id,null,'intercept',point).catch(e=>setNotice(i18n.error(e)));return}
         api.tsarGoTo(slug, point).then(setVillageState, (exception) => {
@@ -712,16 +717,21 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
       }
     }
     if (!canWork || !ownId) return null
-    return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => {
+    return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk = false) => {
       setEnemyPick(null)
-      if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
-      if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
-      setError(null)
-      setPicked(target ? { target, screen } : null)
+      if (!walk) {
+        if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
+        if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
+        setError(null)
+        setPicked(target ? { target, screen } : null)
+        // Empty ground: "come here". A citizen busy with a task stays at work. A building click only opens the card.
+        if (target || working || blocked(ownId, point)) return
+      } else {
+        setPicked(null)
+        if (working || blocked(ownId, point)) return
+      }
       const battle=villageRef.current?.battles?.find(b=>!b.finishedAt&&!['Warning','Cancelled'].includes(b.phase))
       if(!target&&battle){void api.battleOrder(slug,battle.id,null,'intercept',point).catch(e=>setNotice(i18n.error(e)));return}
-      // Empty ground: "come here". A citizen busy with a task stays at work.
-      if (target || working || blocked(ownId, point)) return
       api.goTo(slug, point).then(applyCitizen, (exception) => {
         setNotice(i18n.error(exception))
         window.setTimeout(() => setNotice(null), 5000)

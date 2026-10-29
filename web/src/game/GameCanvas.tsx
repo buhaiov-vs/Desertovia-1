@@ -36,8 +36,8 @@ interface Props {
   selectedEnemyId?:string|null
   onEnemyPick?:((battleId:string,unitId:string)=>void)|null
   onCitizenPick?: ((citizenId: string) => void) | null
-  /** Called with what a citizen could work at where the map was clicked (null for nothing) and the clicked tile point; null turns clicking off. */
-  onWorldPick?: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => void) | null
+  /** Called with what a citizen could work at where the map was clicked (null for nothing) and the clicked tile point; `walk` skips opening buildings. Null turns clicking off. */
+  onWorldPick?: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk?: boolean) => void) | null
   /** Which clickable targets show the pointer cursor; null means every target. */
   worldPickable?: ((target: WorldTarget) => boolean) | null
   /** Tiles outlined on the map. */

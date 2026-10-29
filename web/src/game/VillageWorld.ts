@@ -278,7 +278,7 @@ export class VillageWorld {
   /** Until the player pans or zooms, a resize keeps showing the camp at the default zoom. */
   private cameraMoved = false
   private viewCenter = { x: CAMPFIRE.x, y: CAMPFIRE.y }
-  private dragging: { x: number; y: number; panX: number; panY: number; moved: boolean } | null = null
+  private dragging: { x: number; y: number; panX: number; panY: number; moved: boolean; button: number } | null = null
   private lastProjectKey = ''
   private activeProjectId: string | null = null
   private lastBuildingKey = ''
@@ -315,7 +315,7 @@ export class VillageWorld {
   setEnemySelection(id:string|null){this.enemies.select(id)}
   setEnemyPick(onPick:((battleId:string,unitId:string)=>void)|null){this.onEnemyPick=onPick}
   private onCitizenPick: ((citizenId: string) => void) | null = null
-  private onWorldPick: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => void) | null = null
+  private onWorldPick: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk?: boolean) => void) | null = null
   private worldPickable: ((target: WorldTarget) => boolean) | null = null
   /** Outline around what the player clicked while they choose what to do there. */
   private readonly selection = new Graphics()
@@ -795,7 +795,7 @@ export class VillageWorld {
    * the screen point and the map point in tiles, unless a building is being placed or a citizen was clicked.
    * Null turns it off.
    */
-  setWorldPick(onPick: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint) => void) | null) {
+  setWorldPick(onPick: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk?: boolean) => void) | null) {
     this.onWorldPick = onPick
     if (!onPick) this.app.canvas.style.cursor = ''
   }
@@ -2082,11 +2082,11 @@ export class VillageWorld {
       }
     }
 
-    /** Walks to the point, even onto a tree or a building. */
+    /** Walks to the point, even onto a tree or a building, without opening a building card. */
     const walkTo = (screen: { x: number; y: number }) => {
       if (this.onPick) return
       const point = this.world.toLocal(screen)
-      this.onWorldPick?.(null, screen, { x: point.x / TILE, y: point.y / TILE })
+      this.onWorldPick?.(null, screen, { x: point.x / TILE, y: point.y / TILE }, true)
     }
     let longPress = 0
 
@@ -2100,7 +2100,8 @@ export class VillageWorld {
         if (this.dragging) this.dragging.moved = true
         return
       }
-      const press = { x: event.clientX, y: event.clientY, panX: this.panX, panY: this.panY, moved: false }
+      // Remember the button from press: some browsers report the wrong button on pointerup after capture.
+      const press = { x: event.clientX, y: event.clientY, panX: this.panX, panY: this.panY, moved: false, button: event.button }
       this.dragging = press
       if (event.pointerType === 'mouse') return
       // Touch has no right click: holding a finger still walks there instead.
@@ -2128,7 +2129,7 @@ export class VillageWorld {
         // One finger stays down after a pinch: keep panning from where it is now.
         const [rest] = [...pointers.values()]
         const bounds = canvas.getBoundingClientRect()
-        this.dragging = { x: rest.x + bounds.left, y: rest.y + bounds.top, panX: this.panX, panY: this.panY, moved: true }
+        this.dragging = { x: rest.x + bounds.left, y: rest.y + bounds.top, panX: this.panX, panY: this.panY, moved: true, button: this.dragging.button }
       }
     }
     canvas.addEventListener('pointerup', release)
@@ -2140,10 +2141,14 @@ export class VillageWorld {
     }
     canvas.addEventListener('pointerup', (event) => {
       if (!this.dragging || this.dragging.moved) return
-      if (event.button === 2) {
+      const button = this.dragging.button
+      // Right mouse walks; it must not open buildings, citizens, or enemies.
+      if (button === 2 || event.button === 2) {
         walkTo(local(event))
         return
       }
+      // Only the primary button (and touch/pen) may pick or place. Middle click does nothing.
+      if (event.pointerType === 'mouse' && button !== 0) return
       if (!this.onPick) {
         const screen = local(event)
         const worldPoint=this.world.toLocal(screen)

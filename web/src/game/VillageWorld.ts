@@ -324,9 +324,18 @@ export class VillageWorld {
   private showPlayerNames = playerNamesVisible()
   private readonly onPreferences = () => { this.showPlayerNames = playerNamesVisible() }
 
+  private readonly onVisibility = () => {
+    if (document.hidden) return
+    // Background tabs freeze requestAnimationFrame; snap the Tsar onto the trip clock as soon as we are visible again.
+    if (this.village?.tsar) this.setTsar(this.village.tsar)
+    this.fog.update(this.viewers(), this.nightAmount)
+    this.app.render()
+  }
+
   private constructor(app: Application, tiles: TileSet, painter: CharacterPainter, host: HTMLElement, minimap: boolean) {
     window.addEventListener(PREFERENCES_EVENT, this.onPreferences)
     window.addEventListener('storage', this.onPreferences)
+    document.addEventListener('visibilitychange', this.onVisibility)
     this.app = app
     this.reportCaptureCleanup = registerReportCanvas(app.canvas, () => app.renderer.extract.canvas({ target: app.stage, frame: app.screen, resolution: 1 }) as HTMLCanvasElement, visible => { this.reportObscured = visible; this.setObscured(this.menuObscured) })
     this.tiles = tiles
@@ -394,6 +403,7 @@ export class VillageWorld {
     combatDiagnostics.stop()
     window.removeEventListener(PREFERENCES_EVENT, this.onPreferences)
     window.removeEventListener('storage', this.onPreferences)
+    document.removeEventListener('visibilitychange', this.onVisibility)
     this.minimap?.destroy()
     this.dropGroundChunks()
     this.app.canvas.remove()
@@ -686,7 +696,12 @@ export class VillageWorld {
       walker.targetX = destination.x * TILE
       walker.targetY = destination.y * TILE
       walker.way = []
-      if (!tsarWalkActive(tsar.walk, now)) this.walkTo(walker, destination)
+      // Local walkTo is only for standing / short hops without a server trip. An active Walk
+      // (or a live `at` short of the spot) must stay on the server clock so fog cannot run ahead.
+      const onTrip =
+        tsarWalkActive(tsar.walk, now) ||
+        (!!tsar.at && Math.hypot(tsar.at.x - destination.x, tsar.at.y - destination.y) > 0.05)
+      if (!onTrip) this.walkTo(walker, destination)
     }
   }
 
@@ -1502,6 +1517,8 @@ export class VillageWorld {
       if(previousFighters.size!==presentFighters.size||[...presentFighters].some(id=>!previousFighters.has(id)))this.setCitizens(this.citizens,this.highlightId)
       // A walk only changes the Tsar's spot. The picture stays the same, so this path still has to start the walk.
       this.setTsar(state.tsar)
+      // Keep fog viewers on the trip clock even when scenery is unchanged (alt-tab / background ticks).
+      this.fog.update(this.viewers(), this.nightAmount)
       return
     }
     this.staticUpdate=true

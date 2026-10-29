@@ -30,10 +30,10 @@ export interface Viewer {
 
 const DARK: [number, number, number] = [12, 14, 20]
 /**
- * Land seen before but out of sight now is dimmed this much at night; land never seen is fully dark.
- * Half-strength used to paint whole village tiles grey outside the sight disc.
+ * Explored land stays fully clear — no night grey wash. A remembered dim used to grey wilderness
+ * at the sight rim while the village under the hero stayed bright. Night still uses the world night overlay.
  */
-const REMEMBERED_ALPHA = 0.18
+const REMEMBERED_ALPHA = 0
 /** Tiles over which sight fades out at its edge. */
 const SIGHT_FADE = 1.5
 /**
@@ -43,18 +43,12 @@ const SIGHT_FADE = 1.5
  */
 const FAR_PIXELS = 8
 /**
- * Tiles across which live sight fades into black fog. Keep this short — a wide fade paints a grey
- * grass ring outside explored memory.
+ * Tiles across which live sight fades into black fog on land that is not yet in memory.
  */
 const FAR_FADE = 1.1
 /**
- * Tiles across which server-explored land fades into fog (distance to nearest unseen tile).
- * Same fade for camp and wild — no separate camp oval.
- */
-const SERVER_FADE = 1.5
-/**
- * Memory at or above this counts as fully open when shading. Mid soft values used to paint grey
- * grass tiles; live light alone keeps a soft disc edge.
+ * Memory at or above this counts as fully open when shading. Soft mid values are not used for walk
+ * memory anymore (stamps write solid open); live light alone softens the fog rim.
  */
 const MEMORY_OPEN = 0.4
 /** A point is in sight when it is lit at least this much. */
@@ -390,7 +384,10 @@ export class Fog {
     return entry
   }
 
-  /** Writes the smooth discs the walkers see now into the far-land memory, and keeps what they already crossed. */
+  /**
+   * Marks land the walkers see as fully open in memory (solid, not a soft disc). Soft edges come only
+   * from live light in `paintFar`, so the rim never leaves a grey half-open strip on wilderness.
+   */
   private stampFar() {
     const pixels = FAR_PIXELS
     const stride = CHUNK * pixels
@@ -415,10 +412,9 @@ export class Fog {
             for (let px = x0; px <= x1; px++) {
               const x = originX + (px + 0.5) / pixels
               const y = originY + (py + 0.5) / pixels
-              const lit = Math.round(sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE) * 255)
-              if (lit <= 0) continue
+              if (Math.hypot(x - viewer.x, y - viewer.y) > viewer.radius) continue
               const index = py * stride + px
-              if (lit > cells[index]) cells[index] = lit
+              cells[index] = 255
             }
           }
         }
@@ -437,10 +433,7 @@ export class Fog {
     return cells
   }
 
-  /**
-   * Soft server exploration into walk memory — identical rules for camp and wild.
-   * Interior explored tiles fill solid; only the fog frontier gets a short distance fade.
-   */
+  /** Server-explored tiles open solid in memory — same for camp and wild, no soft grey rim. */
   private writeServerSoft(chunkX: number, chunkY: number, cells: Uint8Array) {
     const pixels = FAR_PIXELS
     const stride = CHUNK * pixels
@@ -450,59 +443,16 @@ export class Fog {
     const baked = bakeServerScratch
     const originX = chunkX * CHUNK
     const originY = chunkY * CHUNK
-    const reach = Math.ceil(SERVER_FADE) + 1
     let wrote = false
     for (let localY = 0; localY < CHUNK; localY++) {
       for (let localX = 0; localX < CHUNK; localX++) {
-        const tileX = originX + localX
-        const tileY = originY + localY
-        if (!this.serverSees(tileX, tileY)) continue
-        let edge = false
-        for (let dy = -1; dy <= 1 && !edge; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue
-            if (!this.serverSees(tileX + dx, tileY + dy)) {
-              edge = true
-              break
-            }
-          }
-        }
+        if (!this.serverSees(originX + localX, originY + localY)) continue
         const x0 = localX * pixels
         const y0 = localY * pixels
-        if (!edge) {
-          for (let py = y0; py < y0 + pixels; py++) {
-            baked.fill(255, py * stride + x0, py * stride + x0 + pixels)
-          }
-          wrote = true
-          continue
-        }
         for (let py = y0; py < y0 + pixels; py++) {
-          for (let px = x0; px < x0 + pixels; px++) {
-            const x = originX + (px + 0.5) / pixels
-            const y = originY + (py + 0.5) / pixels
-            let nearest = SERVER_FADE
-            for (let dy = -reach; dy <= reach; dy++) {
-              for (let dx = -reach; dx <= reach; dx++) {
-                if (dx === 0 && dy === 0) continue
-                if (this.serverSees(tileX + dx, tileY + dy)) continue
-                const left = tileX + dx
-                const top = tileY + dy
-                const cx = Math.min(left + 1, Math.max(left, x))
-                const cy = Math.min(top + 1, Math.max(top, y))
-                const distance = Math.hypot(x - cx, y - cy)
-                if (distance < nearest) nearest = distance
-              }
-            }
-            let amount = 255
-            if (nearest < SERVER_FADE) {
-              const opened = nearest / SERVER_FADE
-              amount = Math.round(opened * opened * (3 - 2 * opened) * 255)
-            }
-            const index = py * stride + px
-            if (amount > baked[index]) baked[index] = amount
-            wrote = true
-          }
+          baked.fill(255, py * stride + x0, py * stride + x0 + pixels)
         }
+        wrote = true
       }
     }
     if (!wrote) return
@@ -512,15 +462,14 @@ export class Fog {
   }
 
   /**
-   * Darkness from remembered land and live light. Memory is open or closed (no grey fringe);
-   * only the live sight disc fades softly into the fog.
+   * Explored memory is fully clear. Soft fade into black fog only where live light meets unseen land.
    */
   private farShade(seen: number, light: number) {
     const memory = seen >= MEMORY_OPEN ? 1 : 0
-    const known = Math.max(memory, light)
-    if (known <= 0) return 1
+    if (memory >= 1) return REMEMBERED_ALPHA * this.darkness
+    if (light <= 0) return 1
     const remembered = REMEMBERED_ALPHA * this.darkness
-    return 1 - known + known * (1 - light) * remembered
+    return 1 - light + light * remembered
   }
 
   private paintFar(

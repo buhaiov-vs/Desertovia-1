@@ -31,41 +31,18 @@ export interface Viewer {
 const DARK: [number, number, number] = [12, 14, 20]
 /** Explored land stays fully clear. Night still uses the world night overlay. */
 const REMEMBERED_ALPHA = 0
-/** One fog texel per tile — hard bumps, not a smooth disc. */
-const FAR_PIXELS = 1
+/**
+ * Fog texels per tile. Eight keeps each texel near two world pixels (TILE is 16), so a hard
+ * open/closed disc reads as a round silhouette instead of tile stairs — still no soft grey ring.
+ */
+const FAR_PIXELS = 8
 /** Memory at or above this counts as fully open when shading. */
 const MEMORY_OPEN = 0.4
-/** A point is in sight when it is lit at least this much (gameplay; fog paint does not use a disc). */
+/** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
-/**
- * Outer band of the sight disc, in tiles. Inside is always open; in this rim each tile opens or stays
- * fog by a stable hash so the edge looks organic instead of a perfect stair-circle.
- */
-const SIGHT_RIM = 1.75
 
 /** Server exploration is baked here then maxed into walk memory so a publish never overwrites walk discs. */
 let bakeServerScratch = new Uint8Array(0)
-
-/** Stable 0…1 per tile — same rim bumps every visit. */
-function rimRoll(tileX: number, tileY: number) {
-  let value = Math.imul(tileX | 0, 0x27d4eb2d) ^ Math.imul(tileY | 0, 0x165667b1) ^ 0x9e3779b9
-  value = Math.imul(value ^ (value >>> 16), 0x85ebca6b)
-  value = Math.imul(value ^ (value >>> 13), 0xc2b2ae35)
-  return ((value ^ (value >>> 16)) >>> 0) / 4294967296
-}
-
-/**
- * Whether fog memory opens this tile for a viewer. Gameplay `inSight` still uses the full disc;
- * only the painted/stamped rim is dithered.
- */
-function fogOpensTile(tileX: number, tileY: number, viewer: Viewer) {
-  const distance = Math.hypot(tileX + 0.5 - viewer.x, tileY + 0.5 - viewer.y)
-  const inner = Math.max(0, viewer.radius - SIGHT_RIM)
-  if (distance <= inner) return true
-  if (distance > viewer.radius) return false
-  const depth = (viewer.radius - distance) / SIGHT_RIM
-  return rimRoll(tileX, tileY) < depth * depth
-}
 /**
  * Extra fog pixels around the camp picture canvas (minimap). Linear filtering otherwise blends the
  * rim with empty texture and draws a bright teal fringe where the vale ends.
@@ -74,7 +51,7 @@ const EDGE_PAD = 1
 
 /**
  * Fog of war over the map. One chunk-sprite layer covers camp land and far land alike.
- * Fog opens in whole tiles (server bits + tile under each walker), not a circular vision ring.
+ * Live sight is a hard high-resolution disc; explored memory stays fully clear.
  */
 export class Fog {
   /** Camp picture bitmap for the minimap; not drawn on the world. */
@@ -173,7 +150,7 @@ export class Fog {
     this.draw()
   }
 
-  /** Updates gameplay sight (full disc) and opens organic hard tiles into fog memory. */
+  /** Updates gameplay sight and stamps a hard high-resolution disc into fog memory. */
   update(viewers: Viewer[], darkness: number) {
     this.darkness = darkness
     this.viewers = viewers
@@ -185,11 +162,10 @@ export class Fog {
       const bottom = Math.min(MAP_TOP + MAP_HEIGHT - 1, Math.ceil(viewer.y + viewer.radius))
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          const distance = Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y)
-          if (distance > viewer.radius) continue
+          if (Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) > viewer.radius) continue
           const index = (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
           this.light[index] = 1
-          if (fogOpensTile(x, y, viewer)) this.explored[index] = 1
+          this.explored[index] = 1
         }
       }
     }
@@ -372,38 +348,37 @@ export class Fog {
   }
 
   /**
-   * Opens whole tiles in sight. Interior of the disc is solid; the outer rim dither-opens by tile hash
-   * so the frontier looks organic (still binary open/closed — no soft grey ring).
+   * Hard open/closed disc at fog-pixel resolution — round silhouette, no soft grey fade into grass.
    */
   private stampFar() {
+    const pixels = FAR_PIXELS
+    const stride = CHUNK * pixels
     const stampSticky = this.farPaintDirty
     for (const viewer of this.viewers) {
       if (viewer.sticky && !stampSticky) continue
-      const left = Math.floor(viewer.x - viewer.radius)
-      const right = Math.ceil(viewer.x + viewer.radius)
-      const top = Math.floor(viewer.y - viewer.radius)
-      const bottom = Math.ceil(viewer.y + viewer.radius)
-      for (let ty = top; ty <= bottom; ty++) {
-        for (let tx = left; tx <= right; tx++) {
-          if (!fogOpensTile(tx, ty, viewer)) continue
-          this.openTile(tx, ty)
+      const left = viewer.x - viewer.radius
+      const top = viewer.y - viewer.radius
+      const right = viewer.x + viewer.radius
+      const bottom = viewer.y + viewer.radius
+      for (let chunkY = Math.floor(top / CHUNK); chunkY <= Math.floor(bottom / CHUNK); chunkY++) {
+        for (let chunkX = Math.floor(left / CHUNK); chunkX <= Math.floor(right / CHUNK); chunkX++) {
+          const cells = this.ensureFar(chunkX, chunkY)
+          const originX = chunkX * CHUNK
+          const originY = chunkY * CHUNK
+          const x0 = Math.max(0, Math.floor((left - originX) * pixels))
+          const y0 = Math.max(0, Math.floor((top - originY) * pixels))
+          const x1 = Math.min(stride - 1, Math.ceil((right - originX) * pixels))
+          const y1 = Math.min(stride - 1, Math.ceil((bottom - originY) * pixels))
+          for (let py = y0; py <= y1; py++) {
+            for (let px = x0; px <= x1; px++) {
+              const x = originX + (px + 0.5) / pixels
+              const y = originY + (py + 0.5) / pixels
+              if (Math.hypot(x - viewer.x, y - viewer.y) > viewer.radius) continue
+              cells[py * stride + px] = 255
+            }
+          }
         }
       }
-    }
-  }
-
-  private openTile(tileX: number, tileY: number) {
-    const chunkX = Math.floor(tileX / CHUNK)
-    const chunkY = Math.floor(tileY / CHUNK)
-    const cells = this.ensureFar(chunkX, chunkY)
-    const stride = CHUNK * FAR_PIXELS
-    const localX = tileX - chunkX * CHUNK
-    const localY = tileY - chunkY * CHUNK
-    if (localX < 0 || localY < 0 || localX >= CHUNK || localY >= CHUNK) return
-    const x0 = localX * FAR_PIXELS
-    const y0 = localY * FAR_PIXELS
-    for (let py = y0; py < y0 + FAR_PIXELS; py++) {
-      cells.fill(255, py * stride + x0, py * stride + x0 + FAR_PIXELS)
     }
   }
 

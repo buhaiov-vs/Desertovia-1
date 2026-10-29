@@ -30,40 +30,21 @@ export interface Viewer {
 
 const DARK: [number, number, number] = [12, 14, 20]
 /**
- * Explored land stays fully clear — no night grey wash. A remembered dim used to grey wilderness
- * at the sight rim while the village under the hero stayed bright. Night still uses the world night overlay.
+ * Explored land stays fully clear — no night grey wash. Night still uses the world night overlay.
  */
 const REMEMBERED_ALPHA = 0
-/** Tiles over which sight fades out at its edge. */
-const SIGHT_FADE = 1.5
 /**
- * Far land is drawn much closer than the camp picture, so one pixel per tile becomes a stair-step.
- * Several pixels per tile let the sight disc follow the walker and fade instead of popping a whole tile.
- * Eight keeps each texel near two world pixels (TILE is 16) so linear stretch does not lattice.
+ * Pixels per tile on the world fog layer. One would stair-step harder; a few keep the disc rounder
+ * while the rim stays a hard open/closed edge (no soft vision ring).
  */
 const FAR_PIXELS = 8
-/**
- * Tiles across which live sight fades into black fog on land that is not yet in memory.
- */
-const FAR_FADE = 1.1
-/**
- * Memory at or above this counts as fully open when shading. Soft mid values are not used for walk
- * memory anymore (stamps write solid open); live light alone softens the fog rim.
- */
+/** Memory at or above this counts as fully open when shading. */
 const MEMORY_OPEN = 0.4
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
 
-/** Server soft is baked here then maxed into walk memory so a publish never overwrites walk discs. */
+/** Server exploration is baked here then maxed into walk memory so a publish never overwrites walk discs. */
 let bakeServerScratch = new Uint8Array(0)
-
-/** Smooth falloff from 1 inside the disc to 0 at the radius, over `fade` tiles. */
-function sightFalloff(distance: number, radius: number, fade: number) {
-  const opened = (radius - distance) / fade
-  if (opened <= 0) return 0
-  if (opened >= 1) return 1
-  return opened * opened * (3 - 2 * opened)
-}
 /**
  * Extra fog pixels around the camp picture canvas (minimap). Linear filtering otherwise blends the
  * rim with empty texture and draws a bright teal fringe where the vale ends.
@@ -107,8 +88,6 @@ export class Fog {
   private readonly explored = new Uint8Array(MAP_WIDTH * MAP_HEIGHT)
   /** 0 out of sight, 1 in full sight. */
   private readonly light = new Float32Array(MAP_WIDTH * MAP_HEIGHT)
-  /** Darkness of each tile before blurring, 0 to 1. */
-  private readonly alpha = new Float32Array(MAP_WIDTH * MAP_HEIGHT)
   /** 0 at full daylight, when remembered land is not dimmed, 1 deep in the night. */
   private darkness = 1
 
@@ -189,11 +168,10 @@ export class Fog {
       const bottom = Math.min(MAP_TOP + MAP_HEIGHT - 1, Math.ceil(viewer.y + viewer.radius))
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          const lit = Math.min(1, (viewer.radius - Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y)) / SIGHT_FADE)
-          if (lit <= 0) continue
+          if (Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) > viewer.radius) continue
           const index = (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
           this.explored[index] = 1
-          if (lit > this.light[index]) this.light[index] = lit
+          this.light[index] = 1
         }
       }
     }
@@ -265,11 +243,9 @@ export class Fog {
       const bottom = Math.min(y0 + height - 1, Math.ceil(viewer.y + viewer.radius))
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          const lit = Math.min(1, (viewer.radius - Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y)) / SIGHT_FADE)
-          if (lit <= 0) continue
+          if (Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) > viewer.radius) continue
           const index = (y - y0) * width + (x - x0)
-          const alpha = remembered * (1 - lit)
-          if (alpha < out[index]) out[index] = alpha
+          if (remembered < out[index]) out[index] = remembered
         }
       }
     }
@@ -461,15 +437,10 @@ export class Fog {
     }
   }
 
-  /**
-   * Explored memory is fully clear. Soft fade into black fog only where live light meets unseen land.
-   */
+  /** Open land is clear; everything else is full fog. No soft vision ring. */
   private farShade(seen: number, light: number) {
-    const memory = seen >= MEMORY_OPEN ? 1 : 0
-    if (memory >= 1) return REMEMBERED_ALPHA * this.darkness
-    if (light <= 0) return 1
-    const remembered = REMEMBERED_ALPHA * this.darkness
-    return 1 - light + light * remembered
+    if (seen >= MEMORY_OPEN || light > 0) return REMEMBERED_ALPHA * this.darkness
+    return 1
   }
 
   private paintFar(
@@ -503,10 +474,8 @@ export class Fog {
         for (let px = x0; px <= x1; px++) {
           const x = chunk.x + (px + 0.5) / pixels
           const y = chunk.y + (py + 0.5) / pixels
-          const lit = sightFalloff(Math.hypot(x - viewer.x, y - viewer.y), viewer.radius, FAR_FADE)
-          if (lit <= 0) continue
-          const index = py * width + px
-          if (lit > light[index]) light[index] = lit
+          if (Math.hypot(x - viewer.x, y - viewer.y) > viewer.radius) continue
+          light[py * width + px] = 1
         }
       }
     }
@@ -532,33 +501,14 @@ export class Fog {
   }
 
   private draw() {
-    const alpha = this.alpha
-    for (let index = 0; index < this.explored.length; index++) {
-      alpha[index] = this.explored[index] ? REMEMBERED_ALPHA * this.darkness * (1 - this.light[index]) : 1
-    }
-    // A 3×3 blur rounds off the tile steps that stretching alone leaves along the edges.
     const data = this.image.data
-    for (let row = 0; row < MAP_HEIGHT; row++) {
-      for (let column = 0; column < MAP_WIDTH; column++) {
-        let sum = 0
-        let weights = 0
-        for (let dy = -1; dy <= 1; dy++) {
-          const y = row + dy
-          if (y < 0 || y >= MAP_HEIGHT) continue
-          for (let dx = -1; dx <= 1; dx++) {
-            const x = column + dx
-            if (x < 0 || x >= MAP_WIDTH) continue
-            const weight = (dx === 0 ? 2 : 1) * (dy === 0 ? 2 : 1)
-            sum += alpha[y * MAP_WIDTH + x] * weight
-            weights += weight
-          }
-        }
-        const index = (row * MAP_WIDTH + column) * 4
-        data[index] = DARK[0]
-        data[index + 1] = DARK[1]
-        data[index + 2] = DARK[2]
-        data[index + 3] = Math.round((sum / weights) * 255)
-      }
+    for (let index = 0; index < this.explored.length; index++) {
+      const open = this.explored[index] === 1 || this.light[index] > 0
+      const pixel = index * 4
+      data[pixel] = DARK[0]
+      data[pixel + 1] = DARK[1]
+      data[pixel + 2] = DARK[2]
+      data[pixel + 3] = Math.round((open ? REMEMBERED_ALPHA * this.darkness : 1) * 255)
     }
     this.context.putImageData(this.image, 0, 0)
     // Clamp the rim into the pad so linear filtering never samples empty texels at the vale edge.

@@ -103,6 +103,8 @@ export function BottomBar({
   onDrink,
   remedies,
   onHeal,
+  scrolls = 0,
+  onTeleport = () => {},
   inCombat=false,
 }: {
   citizen: Citizen | null | undefined
@@ -128,6 +130,9 @@ export function BottomBar({
   /** Remedies in the citizen's hands and in village storage. */
   remedies: number
   onHeal: () => void
+  /** Scrolls of teleport in the citizen's personal goods, hands and village storage. */
+  scrolls?: number
+  onTeleport?: () => void
   inCombat?: boolean
 }) {
   const { t } = useI18n()
@@ -145,6 +150,8 @@ export function BottomBar({
             onDrink={onDrink}
             remedies={remedies}
             onHeal={onHeal}
+            scrolls={scrolls}
+            onTeleport={onTeleport}
           />
         )}
         <div className="hud-status">
@@ -185,6 +192,9 @@ export function BottomBar({
   )
 }
 
+/** Mirrors the server's TeleportScrolls.ReadingIntelligence. */
+const TELEPORT_INTELLIGENCE = 4
+
 /** Food and sleep of the player's citizen, with the numbers behind them. */
 function CitizenNeeds({
   citizen,
@@ -196,6 +206,8 @@ function CitizenNeeds({
   onDrink,
   remedies,
   onHeal,
+  scrolls,
+  onTeleport,
 }: {
   citizen: Citizen
   catalog: Catalog
@@ -206,6 +218,8 @@ function CitizenNeeds({
   onDrink: () => void
   remedies: number
   onHeal: () => void
+  scrolls: number
+  onTeleport: () => void
 }) {
   const i18n = useI18n()
   const { t } = i18n
@@ -278,6 +292,22 @@ function CitizenNeeds({
           {t('needs.drink', { energy: citizen.vigorEnergy ?? catalog.rules.vigorDrinkEnergy, count: drinks })}
         </button>
       )}
+      {scrolls > 0 && (() => {
+        const intelligence = citizen.stats.find((value) => value.stat === 'Intelligence')?.level ?? 0
+        const waystone = structures.some((s) => s.kind === 'Waystone' && !s.ruinedAt && s.damage < rules.maximumDamage
+          && (!s.ownerAccountId || s.ownerAccountId === citizen.accountId))
+        const working = citizen.state === 'Working'
+        const title = intelligence < TELEPORT_INTELLIGENCE
+          ? t('teleport.intelligenceHint', { minimum: TELEPORT_INTELLIGENCE })
+          : !waystone ? t('teleport.noWaystoneHint') : working ? t('teleport.workingHint') : t('teleport.title')
+        return (
+          <button className="drink-button" disabled={pending || working || !waystone || intelligence < TELEPORT_INTELLIGENCE}
+            onClick={onTeleport} title={title}>
+            <ResourceIcon kind="TeleportScroll" scale={1.5} />
+            {t('teleport.read', { count: scrolls })}
+          </button>
+        )
+      })()}
       {isInjured(citizen, now) && <InjuryChip citizen={citizen} remedies={remedies} pending={pending} onHeal={onHeal} />}
     </div>
   )

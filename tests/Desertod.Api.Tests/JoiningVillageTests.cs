@@ -79,6 +79,7 @@ public sealed class JoiningVillageTests(DesertodApiFactory factory)
     [InlineData("POST", "me/drop")]
     [InlineData("POST", "me/drink")]
     [InlineData("POST", "me/heal")]
+    [InlineData("POST", "me/teleport")]
     [InlineData("POST", "me/take")]
     [InlineData("POST", "me/goto")]
     [InlineData("POST", "me/job")]

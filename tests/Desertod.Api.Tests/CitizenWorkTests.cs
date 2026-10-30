@@ -1,7 +1,11 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Desertod.Domain.Buildings;
 using Desertod.Domain.Catalog;
+using Desertod.Domain.Rules;
+using Desertod.Domain.Stats;
 using Desertod.Domain.Storage;
+using Desertod.Domain.World;
 using static Desertod.Api.Tests.Players;
 
 namespace Desertod.Api.Tests;
@@ -169,6 +173,27 @@ public sealed class CitizenWorkTests(DesertodApiFactory factory)
         Assert.Equal(1, Carried(refreshed, "VigorDrink"));
         Assert.Equal(JsonValueKind.String, refreshed.GetProperty("drinkReadyAt").ValueKind);
         await AssertRuleBrokenAsync(await citizen.Client.PostAsync($"{citizen.Path}/me/drink", null), "drink.cooldown");
+    }
+
+    [Fact]
+    public async Task Citizen_reads_a_scroll_and_is_summoned_to_the_waystone()
+    {
+        var (village, citizen) = await CitizenAsync("Moonstone Ring");
+        await players.ArrangeCitizenAsync(citizen.Id, (c, _) => c.Stats.Set(Stat.Intelligence, TeleportScrolls.ReadingIntelligence));
+        await AssertRuleBrokenAsync(await citizen.Client.PostAsync($"{citizen.Path}/me/teleport", null), "teleport.noWaystone");
+        await players.ArrangeVillageAsync(village.Slug, (v, _) => v.Structures.Add(new() { Kind = BuildingKind.Waystone, PlotId = "30,30" }));
+        await AssertRuleBrokenAsync(await citizen.Client.PostAsync($"{citizen.Path}/me/teleport", null), "teleport.noScroll");
+        await players.ArrangeCitizenAsync(citizen.Id, (c, _) => c.Carry(ResourceKind.TeleportScroll, 1));
+
+        var summoned = await OkJsonAsync(await citizen.Client.PostAsync($"{citizen.Path}/me/teleport", null));
+
+        Assert.Equal(0, Carried(summoned, "TeleportScroll"));
+        var yard = WorldMap.Yard("30,30");
+        var seen = await OkJsonAsync(await village.Tsar.GetAsync(village.Path));
+        var listed = Assert.Single(seen.GetProperty("citizens").EnumerateArray());
+        Assert.Equal(yard.X, listed.GetProperty("idleSpot").GetProperty("x").GetDouble(), 3);
+        Assert.Equal(yard.Y, listed.GetProperty("idleSpot").GetProperty("y").GetDouble(), 3);
+        Assert.Equal(JsonValueKind.String, listed.GetProperty("teleportedAt").ValueKind);
     }
 
     [Fact]

@@ -81,6 +81,12 @@ export const en = {
     'needs.drinkTitle': 'Gulp a vigor drink: +{energy} energy. Personal goods first, then hands and common storage. Cooldown: {minutes} real minutes.',
     'needs.drinkCooldown': 'Your heart is still racing. Next drink in {minutes} min.',
     'needs.drinkFull': 'You are full of energy already.',
+    'teleport.read': 'Read scroll ({count})',
+    'teleport.title': 'Read a scroll of teleport: you are summoned to the nearest waystone at once. Personal goods first, then hands and common storage.',
+    'teleport.intelligenceHint': 'The runes are too hard to read: Intelligence {minimum} is needed.',
+    'teleport.noWaystoneHint': 'There is no whole waystone to be summoned to. Build one first.',
+    'teleport.workingHint': 'Finish the current task first.',
+    'teleport.done': 'The moonstone flares, and you stand at the waystone.',
     'hint.fed':
       'You are fed. One food is eaten after every {cycles} completed tasks: carried food first, then personal inventory. Village food is also available during public work.',
     'hint.meal': 'Eating is automatic. {done} of {cycles} tasks completed since your last meal. After task {cycles} you eat 1 food.',
@@ -890,6 +896,9 @@ export const en = {
     StonePickaxe: 'Stone pickaxe',
     IronPickaxe: 'Iron pickaxe',
     SteelPickaxe: 'Steel pickaxe',
+    Moonstone: 'Moonstone',
+    Parchment: 'Parchment',
+    TeleportScroll: 'Scrolls of teleport',
   } as Record<string, string>,
 
   enemies: {
@@ -1007,6 +1016,10 @@ export const en = {
       name: 'Rope bridge',
       description: 'Posts on both rims, ropes and a plank deck across the ravine. Place it where the ravine runs through its middle rows.',
     },
+    Waystone: {
+      name: 'Waystone',
+      description: 'A ring of standing stones around a moonstone. Whoever reads a scroll of teleport is summoned here.',
+    },
   } as Record<string, { name: string; description: string }>,
 
   stages: {
@@ -1021,6 +1034,7 @@ export const en = {
     cover: 'Cover',
     pile: 'Pile',
     ring: 'Ring',
+    runes: 'Runes',
     field: 'Field',
     fence: 'Fence',
     shaft: 'Shaft',
@@ -1061,6 +1075,8 @@ export const en = {
     'lay-floor': 'Lay the floor',
     'stretch-ropes': 'Stretch the ropes',
     'lay-deck': 'Lay the deck',
+    'bring-moonstones': 'Bring moonstones',
+    'carve-runes': 'Carve the runes',
     'lend-a-hand': 'Lend a hand',
   } as Record<string, string>,
 
@@ -1123,6 +1139,8 @@ export const en = {
     design: 'Draft plans',
     'brew-remedy': 'Brew remedies',
     'brew-vigor': 'Brew vigor drinks',
+    'scrape-parchment': 'Scrape parchment',
+    'write-teleport-scroll': 'Write a scroll of teleport',
     'lead-crew': 'Lead a crew',
     negotiate: 'Negotiate',
     command: 'Command',
@@ -1150,6 +1168,7 @@ export const en = {
     'clear-thicket': 'Clear the thicket',
     'break-rockfall': 'Break the rockfall',
     'dig-cave': 'Dig in the cave',
+    'chip-moonstone': 'Chip moonstone',
   } as Record<string, string>,
 
   projects: {
@@ -1412,6 +1431,11 @@ export const en = {
     'drink.cooldown': 'Your heart is still racing from the last drink. Try again at {readyAt}.',
     'drink.full': 'You are full of energy already. Save the drink for later.',
     'drink.none': 'There is no vigor drink in your hands or in storage. Someone has to brew it at the tavern.',
+    'teleport.intelligence': 'You cannot make out the runes on the scroll: Intelligence {minimum} is needed.',
+    'teleport.noWaystone': 'There is no whole waystone to be summoned to.',
+    'teleport.noScroll': 'There is no scroll of teleport in your hands or in storage. A scholar writes them at the library.',
+    'teleport.carrying': 'Put the wounded down before reading the scroll.',
+    'defense.busy': 'Leave combat first.',
     'task.veinEmpty': 'The gold vein is empty.',
     'task.unknown': 'Unknown task "{taskId}".',
     'storage.missingInput': 'Not enough {resource} in storage.',
@@ -1519,6 +1543,11 @@ export const en = {
       name: 'Vigor drinks',
       description:
         'Kvass, honey, beans from a passing merchant and three scholars who have not slept since Tuesday. Tastes like a thunderstorm; the elder forbids it after sunset. Brewed at the tavern, a drink gives energy back.',
+    },
+    waystones: {
+      name: 'Waystones',
+      description:
+        'Moonstone from the deep cave remembers the place it is set in. Laborers chip moonstone and scrape parchment; the tribe raises a waystone; a journeyman scholar writes scrolls of teleport. Reading one needs Intelligence 4.',
     },
   } as Record<string, { name: string; description: string }>,
 

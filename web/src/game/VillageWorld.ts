@@ -183,6 +183,8 @@ interface Walker {
   rescueJourney:CitizenSummary['rescueJourney']
   /** A citizen's foot trip from the server; the Tsar's lives on `village.tsar.walk`. */
   walk: TripWalk | null
+  /** Last scroll of teleport seen (wall clock, milliseconds); a newer one jumps the walker to its idle spot. */
+  teleportedAt: number
 }
 
 interface Bubble {
@@ -1047,6 +1049,16 @@ export class VillageWorld {
       const asleep = walker.sleepsAt !== null && Date.now() >= walker.sleepsAt
       walker.working = working || waitAt !== null
       walker.staying = stayAt !== null || asleep
+      const teleportedAt = citizen.teleportedAt ? Date.parse(citizen.teleportedAt) : 0
+      if (teleportedAt > walker.teleportedAt) {
+        if (!fresh && stayAt) {
+          walker.x = walker.targetX = stayAt.x * TILE
+          walker.y = walker.targetY = stayAt.y * TILE
+          walker.sprite.position.set(walker.x, walker.y)
+          walker.way = []
+        }
+        walker.teleportedAt = teleportedAt
+      }
       const roaming = working && citizen.workplace === WILDS
       if (roaming && !walker.roaming) walker.wanderAt = 0
       walker.roaming = roaming
@@ -1879,7 +1891,7 @@ export class VillageWorld {
       sleepsAt: null,
       way: [],
       injuredUntil: 0,
-      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,rescueJourney:null,walk:null,
+      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,rescueJourney:null,walk:null,teleportedAt:0,
     }
     this.walkers.set(id, walker)
     return walker

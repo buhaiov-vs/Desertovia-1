@@ -49,8 +49,14 @@ public static class BuiltVillage
         EnsureCharacter(villagerAccount, DevelopmentRoles.VillagerName, Gender.Female, 0);
         var village = Village.Create(Slug, Name, "Все здания, склады и стройки готовы: посмотреть, как они выглядят.", false, tsar.Id, now);
 
-        using var plots = FreePlots().GetEnumerator();
-        string NextPlot() => plots.MoveNext() ? plots.Current : throw new InvalidOperationException("The camp has no free plot left.");
+        var taken = new List<TileArea>();
+        string NextPlot()
+        {
+            var plot = FreePlots().FirstOrDefault(plotId => !taken.Any(WorldMap.Footprint(plotId)!.Value.Overlaps))
+                ?? throw new InvalidOperationException("The camp has no free plot left.");
+            taken.Add(WorldMap.Footprint(plot)!.Value);
+            return plot;
+        }
 
         foreach (var storage in StorageCatalog.Storages.Where(s => s.Kind != StorageKind.GreatGranary))
         {
@@ -164,15 +170,20 @@ public static class BuiltVillage
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>Plots of the camp that keep clear of reserved ground and natural places, nearest the campfire first.</summary>
-    private static IEnumerable<string> FreePlots()
+    /// <summary>
+    /// Plots of the camp that keep clear of reserved ground and natural places, nearest the campfire first:
+    /// the plot grid, then any tile position for the gaps the grid leaves.
+    /// </summary>
+    private static IEnumerable<string> FreePlots() => Plots(WorldMap.PlotWidth, WorldMap.PlotHeight).Concat(Plots(1, 1));
+
+    private static IEnumerable<string> Plots(int stepX, int stepY)
     {
         var area = WorldMap.BuildArea;
         var camp = WorldMap.Places[WorldMap.Camp];
         var plots = new List<string>();
-        for (var y = area.Y; y + WorldMap.PlotHeight <= area.Y + area.Height; y += WorldMap.PlotHeight)
+        for (var y = area.Y; y + WorldMap.PlotHeight <= area.Y + area.Height; y += stepY)
         {
-            for (var x = area.X; x + WorldMap.PlotWidth <= area.X + area.Width; x += WorldMap.PlotWidth)
+            for (var x = area.X; x + WorldMap.PlotWidth <= area.X + area.Width; x += stepX)
             {
                 var footprint = WorldMap.Footprint(x, y);
                 if (!WorldMap.ReservedAreas.Concat(KeptClear).Any(taken => taken.Overlaps(footprint)))

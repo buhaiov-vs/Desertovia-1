@@ -531,6 +531,20 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
     }
   }
 
+  const teleport = async () => {
+    setPending(true)
+    try {
+      applyCitizen(await api.teleport(slug))
+      setNotice(i18n.t('teleport.done'))
+      window.setTimeout(() => setNotice(null), 5000)
+    } catch (exception) {
+      setNotice(i18n.error(exception))
+      window.setTimeout(() => setNotice(null), 5000)
+    } finally {
+      setPending(false)
+    }
+  }
+
   const heal = async () => {
     setPending(true)
     try {
@@ -1028,6 +1042,12 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
                 (citizen?.personalGoods?.find((good) => good.kind === 'Remedy')?.amount ?? 0)
               }
               onHeal={heal}
+              scrolls={
+                (village.resources.find((r) => r.kind === 'TeleportScroll')?.amount ?? 0) +
+                (citizen?.load.find((good) => good.resource === 'TeleportScroll')?.amount ?? 0) +
+                (citizen?.personalGoods?.find((good) => good.kind === 'TeleportScroll')?.amount ?? 0)
+              }
+              onTeleport={teleport}
             />
           )}
         </ServerClock>

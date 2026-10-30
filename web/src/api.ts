@@ -1168,6 +1168,8 @@ export interface CitizenSummary {
   rescueJourney?:RescueJourney|null
   /** Foot trip still under way; the map follows it on the wall clock, like the fog. */
   walk?: TripWalk | null
+  /** Last scroll of teleport: the map puts the figure at its idle spot at once instead of walking it. */
+  teleportedAt?: string | null
   rescueRequestedAt?:string|null
   defenseSector?: string | null
   defenseReadyAt?: string | null
@@ -1613,6 +1615,7 @@ export const api = {
   eatMeal: (slug:string,resource:string)=>request<Citizen>('POST',`/api/villages/${encodeURIComponent(slug)}/me/meal`,{resource}),
   eat: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/eat`),
   drink: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/drink`),
+  teleport: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/teleport`),
   hospital: (slug: string) => request<HospitalStatus>('GET', `/api/villages/${encodeURIComponent(slug)}/hospital`),
   hospitalHeal: (slug: string, payment: HospitalPayment) => request<HospitalReceipt>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/heal`, payment),
   hospitalUpgrade: (slug: string, plot: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/hospital/${encodeURIComponent(plot)}/upgrade`),

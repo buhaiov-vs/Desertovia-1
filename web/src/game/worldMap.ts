@@ -303,6 +303,12 @@ export const BUILDING_TILES: Record<string, BuildingCell[][]> = {
     [[rogue(872), rogue(50)], rogue(873), [rogue(874), rogue(50)]],
     [rogue(869), [rogue(868), rogue(203)], rogue(871)],
   ],
+  /** A ring of rough stones around a glowing moonstone. */
+  Waystone: [
+    [rogue(1252), rogue(1251), rogue(1253)],
+    [rogue(1251), rogue(563), rogue(1252)],
+    [rogue(1253), rogue(1252), rogue(1251)],
+  ],
 }
 
 /** A wet farm bed: darker soil over the dry one. */
@@ -361,6 +367,7 @@ export const BUILDING_SIGNS: Record<string, TileRef> = {
   Market: farm(74),
   Barracks: dungeon(104),
   RopeBridge: town(73),
+  Waystone: rogue(563),
 }
 
 /** The old monastery on the far bank: the Tsar Bridge is meant to reach it. Scenery, not part of the village. */
@@ -1202,6 +1209,9 @@ export const RESOURCE_ICONS: Record<string, TileRef> = {
   StonePickaxe: PICKAXE,
   IronPickaxe: PICKAXE,
   SteelPickaxe: PICKAXE,
+  Moonstone: rogue(563),
+  Parchment: rogue(896),
+  TeleportScroll: rogue(898),
 }
 
 export const TASK_ICONS: Record<string, TileRef> = {
@@ -1315,6 +1325,11 @@ export const TASK_ICONS: Record<string, TileRef> = {
   'stretch-ropes': REEDS,
   'lay-deck': RESOURCE_ICONS.Planks,
   'lend-a-hand': HAMMER,
+  'chip-moonstone': RESOURCE_ICONS.Moonstone,
+  'scrape-parchment': RESOURCE_ICONS.Parchment,
+  'write-teleport-scroll': RESOURCE_ICONS.TeleportScroll,
+  'bring-moonstones': RESOURCE_ICONS.Moonstone,
+  'carve-runes': rogue(900),
 }
 
 /** Icon for a task or a construction job. Labor jobs without their own icon show a hammer. */

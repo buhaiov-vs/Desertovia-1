@@ -122,6 +122,8 @@ const BUILDING_SIGHT = 4
 /** Until the catalog arrives; the server sends the real radius with the rules. */
 const DEFAULT_SIGHT = 6
 const PEAK_SCALE = 2
+/** Depth of scrolled-away trees: sorts them behind every live object so they can be removed as one range. */
+const RETIRED_DEPTH = Number.MAX_SAFE_INTEGER
 
 const NATURE: Partial<Record<number, NatureKind>> = {
   [Terrain.Tree]: 'tree',
@@ -284,6 +286,11 @@ export class VillageWorld {
   private groundQueue: LandChunkRect[] = []
   /** Trees grown on far-land chunks near the camera, keyed like `groundChunks`. */
   private readonly farTrees = new Map<string, Container[]>()
+  /**
+   * Trees of blocks that scrolled away, hidden and sorted to the end of `objects`, then cut off in one range.
+   * Removing them one by one searches the whole `objects` list each time, and a block row holds thousands.
+   */
+  private retiredTrees: Container[] = []
   private minimap: Minimap | null = null
   private minimapUpdatedAt = 0
   /** Until the player pans or zooms, a resize keeps showing the camp at the default zoom. */
@@ -614,8 +621,23 @@ export class VillageWorld {
   private dropFarTrees(key: string) {
     const planted = this.farTrees.get(key)
     if (!planted) return
-    for (const view of planted) view.destroy({ children: true })
+    for (const view of planted) {
+      view.visible = false
+      view.zIndex = RETIRED_DEPTH
+      this.retiredTrees.push(view)
+    }
     this.farTrees.delete(key)
+  }
+
+  private destroyRetiredTrees() {
+    if (this.retiredTrees.length === 0) return
+    this.objects.sortChildren()
+    const children = this.objects.children
+    let first = children.length
+    while (first > 0 && children[first - 1].zIndex === RETIRED_DEPTH) first--
+    if (first < children.length) this.objects.removeChildren(first)
+    for (const view of this.retiredTrees) view.destroy({ children: true })
+    this.retiredTrees = []
   }
 
   /** Adds trees that grew back and removes felled ones. */
@@ -2329,6 +2351,7 @@ export class VillageWorld {
     const seconds = Math.min(ticker.deltaMS / 1000, 0.1)
     this.elapsed += seconds
     this.bakeQueuedGround()
+    this.destroyRetiredTrees()
 
     this.drawFlames()
     this.placementLayer.alpha = 0.65 + Math.sin(this.elapsed * 4) * 0.35

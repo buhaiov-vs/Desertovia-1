@@ -11,6 +11,7 @@ import atlas from '../assets/sprites.json'
 import atlasUrl from '../assets/sprites.png'
 import nightAtlasA from '../assets/night/buildings-a.json'
 import nightAtlasUrlA from '../assets/night/buildings-a.png'
+import { loadFoeSprites } from './foeSprites'
 import hospitalAtlas from '../assets/night/hospital.json'
 import hospitalAtlasUrl from '../assets/night/hospital.png'
 import nightAtlasB from '../assets/night/buildings-b.json'
@@ -111,6 +112,7 @@ export class TileSet {
         }))
         return {day:maps[0],night:maps[1]}
       })(),
+      loadFoeSprites(),
     ])
     return new TileSet(Object.fromEntries(entries) as Record<SheetName, TextureSource>, art, night, construction,fences)
   }

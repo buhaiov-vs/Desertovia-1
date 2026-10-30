@@ -1,25 +1,76 @@
 import { Container, Graphics } from 'pixi.js'
-import { enemyContext } from './enemies'
+import type { EnemyKind } from '../api'
+import { enemyFigure } from './enemies'
+import { foeFigure, type FoeAnimation, type FoeLook } from './foeSprites'
 import type { LandChunkRect, TileRect } from './landChunk'
 import { TILE } from './sheets'
 import { spotsAround, type SpawnPoint } from './spawnRings'
 
-/** Protectors stand this far from the den, inside the ring of spots, in tiles. */
-const GUARD_RADIUS = 1
-/** Dens this far past the view keep their protectors, so panning does not pop them in at the edge. */
+/** Protectors stand this far in front of the den, in tiles. */
+const GUARD_RADIUS = 1.1
+/** A lone protector stands this far from the den, in front on the camp side, in tiles. */
+const LONE_GUARD = 1
+/** Dens this far past the view keep their figures, so panning does not pop them in at the edge. */
 const MARGIN_TILES = 32
 /** A spot can sit across a chunk edge; it is drawn into every chunk it reaches. */
 const SPOT_REACH = 0.5
 
+/** One protector: an enemy the game already fights, or a figure of the archive atlas. */
+type Protector = EnemyKind | FoeLook
+type ProtectorOf = (index: number, direction: number) => Protector
+
+interface DenPicture {
+  /** Height of the den prop `den-<level>`, in world pixels. */
+  prop: number
+  protector: ProtectorOf
+}
+
+const look = (idle: FoeAnimation, height: number): ProtectorOf => () => ({ idle, height })
+const known = (kind: EnemyKind): ProtectorOf => () => kind
+const SLIMES: FoeAnimation[] = ['slime-blue', 'slime-green', 'slime-red']
+
+/** The picture of each foe ring, by level. The prop comes from the area of that foe. */
+const DEN_PICTURES: readonly DenPicture[] = [
+  { prop: 16, protector: (index) => ({ idle: SLIMES[index % SLIMES.length], height: 10 }) },
+  { prop: 36, protector: known('Rat') },
+  { prop: 28, protector: known('Imp') },
+  { prop: 14, protector: look('goblin-small', 12) },
+  { prop: 26, protector: known('Wolf') },
+  { prop: 22, protector: known('Boar') },
+  { prop: 16, protector: look('goblin-club', 14) },
+  { prop: 16, protector: look('orc-hooded', 19) },
+  { prop: 18, protector: look('scarecrow', 20) },
+  { prop: 16, protector: known('Ghoul') },
+  { prop: 40, protector: look('goblin-sword', 13) },
+  { prop: 28, protector: look('goblin-banner', 13) },
+  { prop: 40, protector: known('Wraith') },
+  { prop: 28, protector: look('poison-plant', 24) },
+  { prop: 24, protector: look('slime-flaming', 18) },
+  { prop: 36, protector: look('orc-axe', 22) },
+  { prop: 32, protector: known('Bear') },
+  { prop: 36, protector: look('orc-warrior', 30) },
+  { prop: 44, protector: look('vampire', 22) },
+  { prop: 20, protector: look('orc-berserk', 31) },
+  { prop: 36, protector: look('orc-shaman', 31) },
+  { prop: 40, protector: look('vampire-winged', 24) },
+  { prop: 40, protector: look('orc-swords', 24) },
+  { prop: 26, protector: known('Zombie') },
+  { prop: 32, protector: look('fire-spirit', 26) },
+  { prop: 24, protector: known('Skeleton') },
+  { prop: 36, protector: look('orc-armored', 27) },
+  { prop: 30, protector: (_, direction) => ({ idle: `knight-${(direction % 8) + 1}` as FoeAnimation, scale: 1.2 }) },
+  { prop: 40, protector: known('BarrowKing') },
+  { prop: 44, protector: look('lich', 40) },
+]
+
 interface Den {
   point: SpawnPoint
-  guards: Graphics[]
+  views: Container[]
 }
 
 /**
  * The foe rings on the land. The eight spots around each den are baked into the ground chunk under them.
- * Protectors stand on a den the village has seen, near the camera, with the look the game already draws for
- * that foe. A foe with no picture yet has its spots and no figure.
+ * A den the village has seen, near the camera, shows the prop of its area and its protectors in front of it.
  */
 export class DenLayer {
   private points: SpawnPoint[] = []
@@ -35,7 +86,7 @@ export class DenLayer {
     this.points = points
   }
 
-  /** Dens the village has seen, with or without a picture of their foe. */
+  /** Dens the village has seen. */
   spotted(explored: (x: number, y: number) => boolean): SpawnPoint[] {
     return this.points.filter((point) => explored(point.x, point.y))
   }
@@ -64,7 +115,7 @@ export class DenLayer {
     if (marks) batch.addChild(marks)
   }
 
-  /** Shows protectors on seen dens near `view` and drops the rest. Returns whether anything changed. */
+  /** Shows the figures of seen dens near `view` and drops the rest. Returns whether anything changed. */
   sync(view: TileRect, explored: (x: number, y: number) => boolean, camp: { x: number; y: number }): boolean {
     const left = view.x - MARGIN_TILES
     const top = view.y - MARGIN_TILES
@@ -73,11 +124,11 @@ export class DenLayer {
     let changed = false
     const keep = new Set<string>()
     for (const point of this.points) {
-      if (!point.kind || point.x < left || point.x > right || point.y < top || point.y > bottom) continue
+      if (point.x < left || point.x > right || point.y < top || point.y > bottom) continue
       if (!explored(point.x, point.y)) continue
       keep.add(point.id)
       if (this.shown.has(point.id)) continue
-      this.shown.set(point.id, { point, guards: this.guards(point, camp) })
+      this.shown.set(point.id, { point, views: this.figures(point, camp) })
       changed = true
     }
     for (const id of [...this.shown.keys()]) {
@@ -88,34 +139,43 @@ export class DenLayer {
     return changed
   }
 
-  private guards(point: SpawnPoint, camp: { x: number; y: number }): Graphics[] {
-    const kind = point.kind!
-    const centerX = point.x + 0.5
-    const centerY = point.y + 0.5
-    const facing = camp.x < centerX ? -1 : 1
-    const turn = (point.level * 0.9 + Number(point.id.split(':')[1]) * 0.35) % (Math.PI * 2)
-    const guards: Graphics[] = []
+  private figures(point: SpawnPoint, camp: { x: number; y: number }): Container[] {
+    const picture = DEN_PICTURES[point.level - 1]
+    if (!picture) return []
+    const centerX = (point.x + 0.5) * TILE
+    const centerY = (point.y + 0.5) * TILE
+    const views: Container[] = []
+    const prop = foeFigure({ idle: `den-${point.level}` as FoeAnimation, height: picture.prop })
+    if (prop) views.push(this.place(prop, centerX, centerY))
+
+    const direction = Number(point.id.split(':')[1])
+    const facing = camp.x * TILE < centerX ? -1 : 1
     for (let index = 0; index < point.protectors; index++) {
-      const angle = turn + (index * Math.PI * 2) / point.protectors
-      const radius = point.protectors === 1 ? 0 : GUARD_RADIUS
-      const view = new Graphics(enemyContext(kind))
-      view.position.set(
-        Math.round((centerX + Math.cos(angle) * radius) * TILE),
-        Math.round((centerY + Math.sin(angle) * radius * 0.6) * TILE),
-      )
-      view.scale.x = facing
-      view.zIndex = view.y
-      view.cullable = true
-      this.layer.addChild(view)
-      guards.push(view)
+      const protector = picture.protector(index, direction)
+      const figure = typeof protector === 'string' ? enemyFigure(protector) : foeFigure(protector)
+      if (!figure) continue
+      // Protectors stand on an arc in front of the prop, so the prop never covers them; a lone one stands aside so it does not cover the prop.
+      const lone = facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25
+      const angle = point.protectors === 1 ? lone : Math.PI * (0.15 + (0.7 * index) / (point.protectors - 1))
+      const radius = point.protectors === 1 ? LONE_GUARD : GUARD_RADIUS
+      figure.scale.x = facing
+      views.push(this.place(figure, centerX + Math.cos(angle) * radius * TILE, centerY + Math.sin(angle) * radius * 0.6 * TILE))
     }
-    return guards
+    return views
+  }
+
+  private place(view: Container, x: number, y: number) {
+    view.position.set(Math.round(x), Math.round(y))
+    view.zIndex = view.y
+    view.cullable = true
+    this.layer.addChild(view)
+    return view
   }
 
   private drop(id: string) {
     const den = this.shown.get(id)
     if (!den) return
-    for (const guard of den.guards) guard.destroy()
+    for (const view of den.views) view.destroy({ children: true })
     this.shown.delete(id)
   }
 }

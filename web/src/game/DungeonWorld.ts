@@ -11,7 +11,7 @@ import {
   type HeroState,
 } from '../api'
 import { appearanceKey, CharacterPainter } from './appearance'
-import { enemyContext, enemyHeight } from './enemies'
+import { enemyFigure, enemyHeight, setFigureMoving } from './enemies'
 import { dungeon as dungeonTile, TILE, TileSet } from './sheets'
 import { VILLAGER_SPRITES } from './worldMap'
 
@@ -468,10 +468,10 @@ export class DungeonWorld {
     return figure
   }
 
-  private addFoe(id: number, kind: Parameters<typeof enemyContext>[0], x: number, y: number): FoeFigure {
+  private addFoe(id: number, kind: Parameters<typeof enemyFigure>[0], x: number, y: number): FoeFigure {
     const view = new Container()
     const body = new Container()
-    body.addChild(new Graphics(enemyContext(kind)))
+    body.addChild(enemyFigure(kind))
     const bar = new Graphics()
     bar.position.set(0, -enemyHeight(kind) - 4)
     view.addChild(body, bar)
@@ -587,6 +587,7 @@ export class DungeonWorld {
       figure.view.position.set(Math.round(figure.x * TILE), Math.round(figure.y * TILE))
       figure.body.y = hop
       figure.view.zIndex = figure.y
+      return moving
     }
 
     for (const hero of this.heroes.values()) {
@@ -605,9 +606,10 @@ export class DungeonWorld {
         // Slain foes stay in every snapshot until the floor changes. The faded sprite stays
         // listed so a later snapshot does not spawn that corpse and play the death again.
         if (since > CORPSE_SECONDS) foe.view.visible = false
+        setFigureMoving(foe.body.children[0], false)
         continue
       }
-      move(foe)
+      setFigureMoving(foe.body.children[0], move(foe))
       foe.bar.visible = foe.health < foe.maximumHealth
       drawBar(foe.bar, foe.health / Math.max(1, foe.maximumHealth), 0xd03030)
     }

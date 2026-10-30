@@ -1,6 +1,7 @@
 import {receiveFighterSample,fighterPositionAt,fighterIsMoving,type FighterSample} from './fighterSamples'
 import { Container, Graphics, GraphicsContext } from 'pixi.js'
 import type { EnemyKind, Raid, RaidBattle } from '../api'
+import { FoeFigure, foeFigure, foeSpritesReady, type FoeLook } from './foeSprites'
 import { TILE } from './sheets'
 import { CAMPFIRE, MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH, Terrain } from './worldMap'
 
@@ -197,10 +198,17 @@ const LOOKS: Record<EnemyKind, EnemyLook> = {
   },
 }
 
+/** Enemies drawn from the archive atlas. The code-drawn look above stays as the stand-in until the atlas loads. */
+const SPRITE_LOOKS: Partial<Record<EnemyKind, FoeLook & { height: number }>> = {
+  Rat: { idle: 'rat', walk: 'rat-walk', height: 8 },
+  Boar: { idle: 'boar', walk: 'boar-walk', height: 14 },
+  Skeleton: { idle: 'skeleton', walk: 'skeleton-walk', height: 30 },
+}
+
 const SHARED_CONTEXTS = new Map<EnemyKind, GraphicsContext>()
 
 /** The code-drawn look of an enemy, shared by every layer that draws one; the feet are at (0, 0). */
-export function enemyContext(kind: EnemyKind): GraphicsContext {
+function enemyContext(kind: EnemyKind): GraphicsContext {
   let context = SHARED_CONTEXTS.get(kind)
   if (!context) {
     context = drawLook(LOOKS[kind])
@@ -209,8 +217,21 @@ export function enemyContext(kind: EnemyKind): GraphicsContext {
   return context
 }
 
+/** A figure of an enemy with its feet at (0, 0), facing right; turn it with `scale.x`. */
+export function enemyFigure(kind: EnemyKind): Container {
+  const look = SPRITE_LOOKS[kind]
+  return (look && foeFigure(look)) ?? new Graphics(enemyContext(kind))
+}
+
+/** Plays the walk of an atlas figure while it moves. A code-drawn figure only hops. */
+export function setFigureMoving(figure: Container, moving: boolean) {
+  if (figure instanceof FoeFigure) figure.setMoving(moving)
+}
+
 /** Height of an enemy's look, in world pixels. */
 export function enemyHeight(kind: EnemyKind) {
+  const look = SPRITE_LOOKS[kind]
+  if (look && foeSpritesReady()) return look.height
   return LOOKS[kind].pixels.length * (LOOKS[kind].size ?? 1)
 }
 
@@ -232,7 +253,7 @@ const FRONT_GAP = 1.5
 const BLOCKING: number[] = [Terrain.Water, Terrain.Reeds, Terrain.Mountain, Terrain.Ravine, Terrain.Thicket, Terrain.Rockfall]
 
 interface Raider {
-  view: Graphics
+  view: Container
   /** Place in the pack around its centre, in world pixels. */
   offsetX: number
   offsetY: number
@@ -289,12 +310,11 @@ function lerp(from: { x: number; y: number }, to: { x: number; y: number }, shar
  * local clock, like the rest of the map.
  */
 export class EnemyLayer {
-  private readonly contexts = new Map<EnemyKind, GraphicsContext>()
   private readonly packs = new Map<string, Pack>()
   private readonly layer: Container
   private raids: Raid[] = []
   private battles:RaidBattle[] = []
-  private liveViews=new Map<string,{actor:Graphics;bar:Graphics;health:number;hitAt:number;barKey:string;
+  private liveViews=new Map<string,{actor:Container;bar:Graphics;health:number;hitAt:number;barKey:string;
     facing:number}>()
   private liveSamples=new Map<string,FighterSample>()
   private warnings=new Map<string,{view:Graphics;key:string}>()
@@ -329,7 +349,7 @@ export class EnemyLayer {
       shown.add(id)
       let view=this.liveViews.get(id)
       if(!view){
-        view={actor:kind?new Graphics(this.context(kind)):new Graphics(),bar:new Graphics(),health:hp,hitAt:0,barKey:'',
+        view={actor:kind?enemyFigure(kind):new Graphics(),bar:new Graphics(),health:hp,hitAt:0,barKey:'',
           facing:1}
         view.actor.position.set(x*TILE,y*TILE);this.layer.addChild(view.actor,view.bar);this.liveViews.set(id,view)
       }
@@ -338,6 +358,7 @@ export class EnemyLayer {
       const beforeX=view.actor.x,moving=!!sample&&fighterIsMoving(sample,at)
       view.actor.position.set(position.x*TILE,position.y*TILE)
       if(Math.abs(view.actor.x-beforeX)>.0001)view.facing=view.actor.x<beforeX?-1:1
+      setFigureMoving(view.actor,moving&&!dead)
       const size=variant==='boss'?1.7:variant==='strong'?1.35:variant==='weak' ? .85 : 1
       view.actor.scale.set(view.facing*size,size)
       const strike=Math.max(0,Math.min(1,(now-attackAt)/240))
@@ -478,6 +499,7 @@ export class EnemyLayer {
 
     for (const raider of pack.raiders) {
       if (raider.slain) {
+        setFigureMoving(raider.view, false)
         raider.view.rotation = Math.PI / 2
         raider.view.alpha = fade
         raider.view.position.set(Math.round(raider.x), Math.round(raider.y))
@@ -489,6 +511,7 @@ export class EnemyLayer {
       const dy = targetY - raider.y
       const distance = Math.hypot(dx, dy)
       const moving = distance > 0.5
+      setFigureMoving(raider.view, moving)
       if (moving) {
         const charging = !resolved && now >= Date.parse(raid.strikesAt)
         const speed = look.speed * (resolved || charging ? FLEE_SPEED : 1)
@@ -516,7 +539,7 @@ export class EnemyLayer {
       const angle = (index % 4) * (Math.PI / 2) + ring * 0.8 + ((seed >> index) & 3) * 0.2
       const radius = index === 0 ? 0 : (0.7 + ring * 0.6) * TILE
       const raider: Raider = {
-        view: new Graphics(this.context(raid.enemy)),
+        view: enemyFigure(raid.enemy),
         offsetX: Math.cos(angle) * radius,
         offsetY: Math.sin(angle) * radius * 0.6,
         x: 0,
@@ -553,14 +576,5 @@ export class EnemyLayer {
     const row = Math.floor(worldY / TILE) - MAP_TOP
     if (column < 0 || row < 0 || column >= MAP_WIDTH || row >= MAP_HEIGHT) return false
     return !BLOCKING.includes(this.terrain[row * MAP_WIDTH + column])
-  }
-
-  private context(kind: EnemyKind) {
-    let context = this.contexts.get(kind)
-    if (!context) {
-      context = drawLook(LOOKS[kind])
-      this.contexts.set(kind, context)
-    }
-    return context
   }
 }

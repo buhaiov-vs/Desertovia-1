@@ -52,6 +52,7 @@ public static class StorageCatalog
                 ResourceKind.Shield, ResourceKind.LeatherArmor,
                 ResourceKind.WoodenAxe, ResourceKind.StoneAxe, ResourceKind.IronAxe, ResourceKind.SteelAxe,
                 ResourceKind.WoodenPickaxe, ResourceKind.StonePickaxe, ResourceKind.IronPickaxe, ResourceKind.SteelPickaxe,
+                ResourceKind.Moonstone, ResourceKind.Parchment, ResourceKind.TeleportScroll,
             ], 8, 15),
         new(StorageKind.Treasury, "Treasury", [ResourceKind.Gold], 2, 50),
         new(StorageKind.GreatGranary, "Great Granary", [ResourceKind.Food, ResourceKind.Porridge, ResourceKind.Stew, ResourceKind.Grain, ResourceKind.Wood, ResourceKind.Stone], 6, 100),

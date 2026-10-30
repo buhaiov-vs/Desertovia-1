@@ -317,6 +317,8 @@ public sealed record CitizenSummaryDto(
     /// on the same clock instead of its own frame steps, which stop in a background tab.
     /// </summary>
     public WalkDto? Walk { get; init; }
+    /// <summary>Last scroll of teleport; the map moves the figure to its idle spot at once instead of walking it.</summary>
+    public DateTimeOffset? TeleportedAt { get; init; }
     public DateTimeOffset? RescueRequestedAt { get; init; }
     public string? DefenseSector { get; init; }
     public DateTimeOffset? DefenseReadyAt { get; init; }
@@ -728,7 +730,7 @@ public static class DtoMapper
             citizen.Load.Select(g => g.Kind).ToList(),
             CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
             citizen.Weapon, citizen.Recovery) {WeaponSharpen=citizen.WeaponSharpen,HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId,RescueJourney=citizen.RescueJourney,RescueRequestedAt=citizen.RescueRequestedAt,DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,
-            Walk=citizen.Trip is { } trip && now < trip.ArrivesAt ? trip.ToWalkDto() : null};
+            Walk=citizen.Trip is { } trip && now < trip.ArrivesAt ? trip.ToWalkDto() : null,TeleportedAt=citizen.LastTeleportAt};
     }
 
     public static WalkDto ToWalkDto(this Trip trip) => new(

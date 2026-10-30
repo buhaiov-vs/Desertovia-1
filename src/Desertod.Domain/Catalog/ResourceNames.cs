@@ -20,6 +20,7 @@ public static class ResourceNames
         ResourceKind.Porridge => "grain porridge",
         ResourceKind.Stew => "hearty stew",
         ResourceKind.VigorDrink => "vigor drink",
+        ResourceKind.TeleportScroll => "scroll of teleport",
         _ => kind.ToString().ToLowerInvariant(),
     };
 }

@@ -747,6 +747,32 @@ public sealed partial class GameService(
         }, cancellationToken);
     }
 
+    /// <summary>The citizen reads a scroll of teleport and is summoned to the nearest waystone; see <see cref="TeleportScrolls.Read"/>.</summary>
+    public async Task<CitizenDto> TeleportAsync(string slug, Guid accountId, CancellationToken cancellationToken)
+    {
+        var key = await RequireCitizenAsync(slug, accountId, cancellationToken);
+        return await WithVillageAsync(key.VillageId, async db =>
+        {
+            await SyncHospitalAsync(db, key.VillageId, cancellationToken);
+            var citizen = await db.Citizens.SingleAsync(c => c.Id == key.Id, cancellationToken);
+            db.AuditActor = citizen.AccountId;
+            var village = await db.Villages.SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
+            var now = time.GetUtcNow();
+            village.EnsureCamp(now);
+            var battles = await db.RaidBattles.Where(b => b.VillageId == village.Id && b.FinishedAt == null).ToListAsync(cancellationToken);
+            if (battles.Any(b => b.Fighters.Any(f => f.Active && f.Health > 0 && !f.IsTsar && f.CitizenId == citizen.Id)))
+                throw new GameRuleException("defense.busy", "Leave combat first.");
+            var to = TeleportScrolls.Read(citizen, village, now);
+            db.AuditOperation = "teleport";
+            await db.SaveChangesAsync(cancellationToken);
+            logger.CitizenActed(citizen.Id, slug, "teleport", to.ToString());
+
+            await notifier.CitizenUpdated(slug, citizen.ToSummaryDto(now));
+            changes.Mark(village.Id);
+            return citizen.ToDto(village, now);
+        }, cancellationToken);
+    }
+
     /// <summary>The wounded citizen uses a remedy; see <see cref="CombatRules.Heal"/>.</summary>
     public async Task<CitizenDto> HealAsync(string slug, Guid accountId, CancellationToken cancellationToken)
     {

@@ -73,6 +73,9 @@ public sealed class Citizen
     public DateTimeOffset? MealUntil { get; set; }
     public DateTimeOffset? LastMealAt { get; set; }
     public DateTimeOffset? LastDrinkAt { get; set; }
+
+    /// <summary>When the citizen last read a scroll of teleport; clients jump the figure instead of walking it.</summary>
+    public DateTimeOffset? LastTeleportAt { get; set; }
     public DateTimeOffset? LastEnergyDrinkAt { get; set; }
 
     /// <summary>Hurt in a fight: no work until then, unless a remedy heals the wound sooner.</summary>

@@ -723,6 +723,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("LastMealAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("LastTeleportAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("MarriageCheckedAt")
                         .HasColumnType("timestamp with time zone");
 

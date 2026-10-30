@@ -36,4 +36,7 @@ public enum ResourceKind
     SteelPickaxe,
     Porridge,
     Stew,
+    Moonstone,
+    Parchment,
+    TeleportScroll,
 }

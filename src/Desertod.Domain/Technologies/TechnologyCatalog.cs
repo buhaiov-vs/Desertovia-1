@@ -66,6 +66,7 @@ public static class TechnologyCatalog
     public const string Weaponcraft = "weaponcraft";
     public const string Archery = "archery";
     public const string Warfare = "warfare";
+    public const string Waystones = "waystones";
 
     private static StatRequirement Needs(Stat stat, int minimum) => new(stat, minimum);
 
@@ -142,6 +143,11 @@ public static class TechnologyCatalog
         new(VigorDrinks, "Vigor drinks",
             "Kvass, honey, beans from a passing merchant and three scholars who have not slept since Tuesday. Tastes like a thunderstorm. Brewed at the tavern; a drink gives energy back.",
             Era.Town, BuildingKind.Tavern, [Brewing, Alchemy, Bookkeeping], [Needs(Stat.Charisma, 4), Needs(Stat.Intelligence, 4)],
+            Stat.Intelligence, Stat.Charisma, 12, 3,
+            []),
+        new(Waystones, "Waystones",
+            "Moonstone from the deep cave remembers the place it is set in. Written on parchment, its name calls the reader back to it. The tribe can raise a waystone; scholars write scrolls of teleport.",
+            Era.Town, BuildingKind.Library, [Writing], [Needs(Stat.Intelligence, 5)],
             Stat.Intelligence, Stat.Charisma, 12, 3,
             []),
     ];

@@ -35,6 +35,7 @@ public enum BuildingKind
     Longhouse,
     Castle,
     FortificationUpgrade,
+    Waystone,
 }
 
 public enum JobKind
@@ -112,6 +113,7 @@ public static class BuildingCatalog
         Haul("bring-reeds", "Bring reeds", ResourceKind.Reeds, 5, Stat.Endurance, Stat.Dexterity),
         Haul("bring-hides", "Bring hides", ResourceKind.Leather, 1, Stat.Endurance, Stat.Dexterity),
         Haul("bring-planks", "Bring planks", ResourceKind.Planks, 3, Stat.Endurance, Stat.Strength),
+        Haul("bring-moonstones", "Bring moonstones", ResourceKind.Moonstone, 1, Stat.Endurance, Stat.Intelligence),
         Labor(FellTrees, "Fell the trees", Stat.Strength, Stat.Endurance, needsMaterial: false, skill: Skill.Woodcutting),
         Labor("clear-ground", "Clear the ground", Stat.Strength, Stat.Endurance, needsMaterial: false),
         Labor("mark-outline", "Mark the outline", Stat.Intelligence, Stat.Dexterity, needsMaterial: false),
@@ -136,6 +138,7 @@ public static class BuildingCatalog
         Labor("lay-floor", "Lay the floor", Stat.Dexterity, Stat.Strength),
         Labor("stretch-ropes", "Stretch the ropes", Stat.Dexterity, Stat.Strength),
         Labor("lay-deck", "Lay the deck", Stat.Strength, Stat.Dexterity),
+        Labor("carve-runes", "Carve the runes", Stat.Intelligence, Stat.Dexterity),
         Labor(LendAHand, "Lend a hand", Stat.Endurance, Stat.Charisma, needsMaterial: false),
     ];
 
@@ -316,6 +319,14 @@ public static class BuildingCatalog
                 Stage("ropes", "Ropes", 2, Job("bring-reeds", 16), Job("stretch-ropes", 3)),
                 Stage("deck", "Deck", 3, Job("bring-logs", 16), Job("lay-deck", 3)),
             ]),
+        new(BuildingKind.Waystone, "Waystone",
+            "A ring of standing stones around a moonstone. Whoever reads a scroll of teleport is summoned here.", [],
+            [
+                Stage("ground", "Ground", 2, Job("clear-ground", 2), Job("mark-outline", 2)),
+                Stage("ring", "Ring", 3, Job("bring-stones", 30), Job("lay-ring", 6)),
+                Stage("runes", "Runes", 2, Job("bring-moonstones", 4), Job("carve-runes", 6)),
+            ],
+            Technology: TechnologyCatalog.Waystones),
     ];
 
     private static readonly Dictionary<BuildingKind, BuildingDefinition> ByKind = Buildings.ToDictionary(b => b.Kind);

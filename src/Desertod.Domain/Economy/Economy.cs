@@ -130,6 +130,9 @@ public static class EconomyRules
         ResourceKind.Planks or ResourceKind.Leather or ResourceKind.Coal => 8,
         ResourceKind.IronOre => 10,
         ResourceKind.IronIngot => 20,
+        ResourceKind.Parchment => 15,
+        ResourceKind.Moonstone => 40,
+        ResourceKind.TeleportScroll => 120,
         _ => 30,
     };
 }

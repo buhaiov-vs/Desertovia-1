@@ -7,15 +7,6 @@ import type { ExploredChunk, TileArea } from '../api'
 /** One fog sprite: stable `x`,`y` chunk indices, painted over the clipped tile rectangle. */
 type FogChunk = Pick<LandChunkRect, 'x' | 'y' | 'originX' | 'originY' | 'width' | 'height'>
 
-/** Base64 from the server. A bad string leaves that chunk fog instead of stopping the map. */
-function decodeBits(encoded: string) {
-  try {
-    return atob(encoded)
-  } catch {
-    return ''
-  }
-}
-
 /** Something that sees the land around it; coordinates and radius in tiles. */
 export interface Viewer {
   x: number
@@ -23,7 +14,7 @@ export interface Viewer {
   radius: number
   /**
    * Buildings and sites: stamped into walk memory, but they must not keep fog chunks “live”
-   * every tick or the whole village repaints and the map hitchs.
+   * every tick or the whole village repaints and the map hitches.
    */
   sticky?: boolean
 }
@@ -34,153 +25,203 @@ export interface Viewer {
  */
 const DARK: [number, number, number] = [8, 12, 28]
 /**
- * How much explored-but-unseen land is dimmed at full night. Day (`darkness` 0) stays fully clear so
+ * How much explored land outside live sight is dimmed at full night. Day (`darkness` 0) stays fully clear so
  * wilderness never greys in daylight; only night softens memory behind the hero.
  */
 const REMEMBERED_ALPHA = 0.14
-/**
- * Fog texels per tile. Eight keeps each texel near two world pixels (TILE is 16), so a hard
- * open/closed disc reads as a round silhouette instead of tile stairs — still no soft grey ring.
- */
+/** Fog texels per tile. Eight keeps each texel near two world pixels (TILE is 16). */
 const FAR_PIXELS = 8
-/** Memory at or above this counts as fully open when shading. */
-const MEMORY_OPEN = 0.4
+/** Fog texels along one side of a chunk. */
+const STRIDE = CHUNK * FAR_PIXELS
+const CELLS = STRIDE * STRIDE
+/** Width, in tiles, of the soft rim walked memory leaves, centred on the sight radius. */
+const MEMORY_FEATHER = 1.5
+/**
+ * Width, in tiles, of the glow at the edge of live sight. It ends exactly where the memory rim ends, so the
+ * land does not close or harden when the explorer walks on — at night only the dim of memory returns.
+ */
+const SIGHT_FEATHER = 3
+/** Memory at or above this counts as explored for gameplay; high enough that a soft rim never opens a closed tile. */
+const MEMORY_OPEN = 0.6
 /** A point is in sight when it is lit at least this much. */
 const IN_SIGHT = 0.5
 /** How far fog RGB may drift from `DARK` for grain (−n…n). */
 const FOG_GRAIN = 7
+/** Night must move this much before every fog chunk is repainted. */
+const DARKNESS_STEP = 0.04
+/** Walked chunks kept off screen (64 KiB each); older ones fall back to server exploration. */
+const MAX_WALKED_CHUNKS = 256
 
-/** Server exploration is baked here then maxed into walk memory so a publish never overwrites walk discs. */
-let bakeServerScratch = new Uint8Array(0)
+/** Base64 from the server. A bad string leaves that chunk fog instead of stopping the map. */
+function decodeBits(encoded: string) {
+  try {
+    return atob(encoded)
+  } catch {
+    return ''
+  }
+}
 
-/** Stable −FOG_GRAIN…FOG_GRAIN for one fog texel, so the black does not shimmer each frame. */
-function fogGrain(worldX: number, worldY: number) {
-  let value = Math.imul(Math.floor(worldX * FAR_PIXELS), 0x27d4eb2d) ^ Math.imul(Math.floor(worldY * FAR_PIXELS), 0x165667b1)
+/** Stable −FOG_GRAIN…FOG_GRAIN for one texel, so the dark does not shimmer each frame. */
+function fogGrain(x: number, y: number) {
+  let value = Math.imul(x, 0x27d4eb2d) ^ Math.imul(y, 0x165667b1)
   value = Math.imul(value ^ (value >>> 16), 0x85ebca6b)
   return ((value >>> 0) % (FOG_GRAIN * 2 + 1)) - FOG_GRAIN
 }
 
-function fogInk(worldX: number, worldY: number): [number, number, number] {
-  const grain = fogGrain(worldX, worldY)
-  return [
-    Math.max(0, Math.min(255, DARK[0] + grain)),
-    Math.max(0, Math.min(255, DARK[1] + Math.floor(grain * 0.6))),
-    Math.max(0, Math.min(255, DARK[2] + Math.floor(grain * 0.35))),
-  ]
+function writeInk(target: Uint8ClampedArray | Uint8Array, offset: number, grain: number) {
+  target[offset] = Math.max(0, Math.min(255, DARK[0] + grain))
+  target[offset + 1] = Math.max(0, Math.min(255, DARK[1] + Math.floor(grain * 0.6)))
+  target[offset + 2] = Math.max(0, Math.min(255, DARK[2] + Math.floor(grain * 0.35)))
 }
+
+/** Fog colour of every texel in a chunk. Only alpha changes when fog repaints, so the colour is built once. */
+const CHUNK_INK = (() => {
+  const ink = new Uint8Array(CELLS * 3)
+  for (let py = 0; py < STRIDE; py++) {
+    for (let px = 0; px < STRIDE; px++) writeInk(ink, (py * STRIDE + px) * 3, fogGrain(px, py))
+  }
+  return ink
+})()
+
 /**
- * Extra fog pixels around the camp picture canvas (minimap). Linear filtering otherwise blends the
- * rim with empty texture and draws a bright teal fringe where the vale ends.
+ * Server exploration is per tile. Tiles are blurred with their neighbours, then each texel samples the four
+ * nearest tile centres, so explored land gets smooth contours instead of tile stairs.
+ * `SAMPLE_CELL` indexes the blurred grid, which has one extra tile on every side.
  */
-const EDGE_PAD = 1
+const SAMPLE_CELL = new Int32Array(STRIDE)
+const SAMPLE_FRACTION = new Float32Array(STRIDE)
+for (let texel = 0; texel < STRIDE; texel++) {
+  const position = (texel + 0.5) / FAR_PIXELS - 0.5
+  const cell = Math.floor(position)
+  SAMPLE_CELL[texel] = cell + 1
+  SAMPLE_FRACTION[texel] = position - cell
+}
+/** Blurred tile grid side: the chunk plus one tile each way. */
+const BLURRED = CHUNK + 2
+/** Raw tile grid side: the blur reads one more tile each way. */
+const GRID = CHUNK + 4
+/** Half-width of the ramp around the blurred contour; smaller is crisper. */
+const CONTOUR_SOFTNESS = 0.3
+
+function smooth(value: number) {
+  const t = value <= 0 ? 0 : value >= 1 ? 1 : value
+  return t * t * (3 - 2 * t)
+}
+
+interface ServerChunk {
+  complete: boolean
+  /** The base64 the server sent, kept to notice changes without decoding again. */
+  source: string | null
+  bits: string
+}
+
+interface FogSprite {
+  sprite: Sprite
+  canvas: HTMLCanvasElement
+  context: CanvasRenderingContext2D
+  texture: Texture
+  /** Viewers that touched this chunk when it was last painted; unchanged means nothing to repaint. */
+  sightKey: string | null
+}
 
 /**
  * Fog of war over the map. One chunk-sprite layer covers camp land and far land alike.
- * Live sight is a hard high-resolution disc; explored memory stays fully clear.
+ * Memory keeps a soft rim forever; live sight is a softer glow inside it that clears night dimming.
  */
 export class Fog {
-  /** Camp picture bitmap for the minimap; not drawn on the world. */
+  /** Camp picture bitmap for the minimap, one pixel per tile; not drawn on the world. */
   readonly canvas = document.createElement('canvas')
-  /** Kept for destroy/layout; hidden — world fog is only `far`. */
-  readonly sprite: Sprite
   /** Darkness for every land chunk near the camera, camp and wild together. */
   readonly far = new Container()
-  private readonly farSprites = new Map<string, { sprite: Sprite; canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture }>()
-  /**
-   * How strongly each pixel of a far chunk has been seen, 0 to 255.
-   * Kept as the walkers move, so the land behind them stays open instead of snapping shut and popping back.
-   */
-  private readonly farSeen = new Map<string, Uint8Array>()
-  /** Far chunks that held a live walker last cover; leaving the set freezes their fog once more. */
-  private liveFar = new Set<string>()
-  /** After a server sync, every on-screen far chunk must be painted again. */
+  private readonly sprites = new Map<string, FogSprite>()
+  /** How strongly each texel of a chunk has been seen, 0 to 255. Only ever grows. */
+  private readonly memory = new Map<string, Uint8Array>()
+  /** Chunks with local walk memory, oldest first; the rest can be rebuilt from server exploration. */
+  private readonly walked = new Set<string>()
+  private server = new Map<string, ServerChunk>()
+  /** Every on-screen chunk must be painted again: server sync or a night shift. */
   private farPaintDirty = true
-  private farImage: ImageData | null = null
-  private savedChunks: ExploredChunk[] = []
-  /** Decoded exploration bits per chunk key — `chunkSees` used to `atob` on every tile probe. */
-  private readonly decodedBits = new Map<string, string>()
+  private fullImage: ImageData | null = null
+  private readonly occupancy = new Uint8Array(GRID * GRID)
+  private readonly blurred = new Float32Array(BLURRED * BLURRED)
   private viewers: Viewer[] = []
-  /** Padded copy drawn on the map so filtering never samples transparent outside the vale. */
-  private readonly display = document.createElement('canvas')
-  private readonly texture: Texture
   private readonly context: CanvasRenderingContext2D
-  private readonly displayContext: CanvasRenderingContext2D
   private readonly image: ImageData
   private readonly explored = new Uint8Array(MAP_WIDTH * MAP_HEIGHT)
-  /** 0 out of sight, 1 in full sight — gameplay `inSight` only; world fog ignores this disc. */
+  private exploredDirty = true
+  /** 0 out of sight, 1 in full sight — gameplay `inSight` only. */
   private readonly light = new Float32Array(MAP_WIDTH * MAP_HEIGHT)
   /** 0 at full daylight, when remembered land is not dimmed, 1 deep in the night. */
   private darkness = 1
-  /** Last darkness painted into far sprites — night shifts must dirty the whole fog layer. */
-  private paintedDarkness = -1
+  /** Night level every fog chunk is painted with, so neighbouring chunks never disagree. */
+  private paintedDarkness = 1
+  private drawnDarkness = -1
 
   constructor() {
     this.canvas.width = MAP_WIDTH
     this.canvas.height = MAP_HEIGHT
     this.context = this.canvas.getContext('2d')!
     this.image = this.context.createImageData(MAP_WIDTH, MAP_HEIGHT)
-    this.display.width = MAP_WIDTH + EDGE_PAD * 2
-    this.display.height = MAP_HEIGHT + EDGE_PAD * 2
-    this.displayContext = this.display.getContext('2d')!
-    this.texture = new Texture({ source: new CanvasSource({ resource: this.display, scaleMode: 'nearest' }) })
-    this.sprite = new Sprite(this.texture)
-    this.sprite.position.set((MAP_LEFT - EDGE_PAD) * TILE, (MAP_TOP - EDGE_PAD) * TILE)
-    this.sprite.scale.set(TILE)
-    this.sprite.visible = false
+    for (let row = 0; row < MAP_HEIGHT; row++) {
+      for (let column = 0; column < MAP_WIDTH; column++) writeInk(this.image.data, (row * MAP_WIDTH + column) * 4, fogGrain(column, row))
+    }
     this.draw()
   }
 
   destroy() {
-    this.texture.destroy(true)
-    for (const entry of this.farSprites.values()) {
-      entry.sprite.destroy()
-      entry.texture.destroy(true)
-    }
-    this.farSprites.clear()
-    this.farSeen.clear()
-    this.decodedBits.clear()
+    for (const entry of this.sprites.values()) this.dropSprite(entry)
+    this.sprites.clear()
+    this.memory.clear()
+    this.walked.clear()
+    this.server.clear()
   }
 
   /**
-   * Merges visited chunks into the seen land. Exploration only grows: tiles the local walker already lit stay lit
-   * when a village update arrives, so a publish cannot wipe the path and snap fog onto a stale corridor.
+   * Merges visited chunks into the seen land. Exploration only grows: what the local walker already lit stays lit
+   * when a village update arrives, so a publish cannot wipe the path or harden its soft edge.
    */
-  private lastExplored: string | null = null
   setChunks(chunks: ExploredChunk[]) {
-    const signature = chunks.map(chunk => `${chunk.x},${chunk.y},${chunk.complete ? 1 : 0},${chunk.bits ?? ''}`).join(';')
-    if (signature === this.lastExplored) return
-    this.lastExplored = signature
-    this.savedChunks = chunks
-    this.decodedBits.clear()
+    const next = new Map<string, ServerChunk>()
+    const changed: string[] = []
     for (const chunk of chunks) {
-      const originX = chunk.x * CHUNK
-      const originY = chunk.y * CHUNK
       const key = `${chunk.x},${chunk.y}`
-      const bits = chunk.bits ? decodeBits(chunk.bits) : ''
-      if (chunk.bits) this.decodedBits.set(key, bits)
-      for (let local = 0; local < CHUNK * CHUNK; local++) {
-        const seen = chunk.complete || ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
-        if (!seen) continue
-        const index = this.index(originX + (local % CHUNK), originY + Math.floor(local / CHUNK))
-        if (index >= 0) this.explored[index] = 1
+      const source = chunk.bits ?? null
+      const previous = this.server.get(key)
+      if (previous && previous.complete === chunk.complete && previous.source === source) {
+        next.set(key, previous)
+        continue
+      }
+      next.set(key, { complete: chunk.complete, source, bits: source ? decodeBits(source) : '' })
+      changed.push(key)
+    }
+    for (const key of this.server.keys()) if (!next.has(key)) changed.push(key)
+    if (changed.length === 0) return
+    this.server = next
+
+    const rebake = new Set<string>()
+    for (const key of changed) {
+      const [chunkX, chunkY] = key.split(',').map(Number)
+      this.markVale(chunkX, chunkY)
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const near = `${chunkX + dx},${chunkY + dy}`
+          if (this.memory.has(near)) rebake.add(near)
+        }
       }
     }
-    const length = CHUNK * FAR_PIXELS * CHUNK * FAR_PIXELS
-    for (const key of [...this.farSeen.keys()]) {
+    for (const key of rebake) {
       const [chunkX, chunkY] = key.split(',').map(Number)
-      const cells = new Uint8Array(length)
-      this.writeServerTiles(chunkX, chunkY, cells)
-      this.farSeen.set(key, cells)
+      this.bakeServer(chunkX, chunkY, this.memory.get(key)!)
     }
-    this.stampFar()
     this.farPaintDirty = true
+    this.stampMemory()
     this.draw()
   }
 
-  /** Updates gameplay sight and stamps a hard high-resolution disc into fog memory. */
+  /** Updates gameplay sight and stamps soft discs into fog memory. */
   update(viewers: Viewer[], darkness: number) {
-    if (Math.abs(darkness - this.paintedDarkness) > 0.04) this.farPaintDirty = true
     this.darkness = darkness
+    if (Math.abs(darkness - this.paintedDarkness) > DARKNESS_STEP) this.farPaintDirty = true
     this.viewers = viewers
     this.light.fill(0)
     for (const viewer of viewers) {
@@ -188,47 +229,32 @@ export class Fog {
       const right = Math.min(MAP_LEFT + MAP_WIDTH - 1, Math.ceil(viewer.x + viewer.radius))
       const top = Math.max(MAP_TOP, Math.floor(viewer.y - viewer.radius))
       const bottom = Math.min(MAP_TOP + MAP_HEIGHT - 1, Math.ceil(viewer.y + viewer.radius))
+      const reach = viewer.radius * viewer.radius
       for (let y = top; y <= bottom; y++) {
+        const dy = y + 0.5 - viewer.y
         for (let x = left; x <= right; x++) {
-          if (Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) > viewer.radius) continue
+          const dx = x + 0.5 - viewer.x
+          if (dx * dx + dy * dy > reach) continue
           const index = (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
           this.light[index] = 1
-          this.explored[index] = 1
+          if (this.explored[index] === 0) {
+            this.explored[index] = 1
+            this.exploredDirty = true
+          }
         }
       }
     }
-    this.stampFar()
+    this.stampMemory()
     this.draw()
-  }
-
-  private index(x: number, y: number) {
-    const column = Math.floor(x) - MAP_LEFT
-    const row = Math.floor(y) - MAP_TOP
-    if (column < 0 || row < 0 || column >= MAP_WIDTH || row >= MAP_HEIGHT) return -1
-    return row * MAP_WIDTH + column
   }
 
   /** Whether the tile under a point, in tiles, has been seen. */
   isExplored(x: number, y: number) {
-    if (this.seenNow(x, y)) return true
-    if (this.memorySees(x, y)) return true
     const index = this.index(x, y)
     if (index >= 0 && this.explored[index] === 1) return true
-    return this.chunkSees(Math.floor(x), Math.floor(y))
-  }
-
-  /** Walk/server fog memory at a tile — same buffer for camp and wild. */
-  private memorySees(x: number, y: number) {
-    const tileX = Math.floor(x)
-    const tileY = Math.floor(y)
-    const chunkX = Math.floor(tileX / CHUNK)
-    const chunkY = Math.floor(tileY / CHUNK)
-    const cells = this.farSeen.get(`${chunkX},${chunkY}`)
-    if (!cells) return false
-    const stride = CHUNK * FAR_PIXELS
-    const px = Math.min(stride - 1, Math.max(0, Math.floor((x - chunkX * CHUNK) * FAR_PIXELS)))
-    const py = Math.min(stride - 1, Math.max(0, Math.floor((y - chunkY * CHUNK) * FAR_PIXELS)))
-    return cells[py * stride + px] >= MEMORY_OPEN * 255
+    if (this.memorySees(x, y)) return true
+    if (this.serverSees(Math.floor(x), Math.floor(y))) return true
+    return this.seenNow(x, y)
   }
 
   isAreaExplored(area: TileArea) {
@@ -246,16 +272,14 @@ export class Fog {
   }
 
   /**
-   * Darkness of each tile in a rectangle, 0 where someone is looking and 1 on land nobody has seen.
-   * `out` has one entry per tile, row by row, and must already be `width * height` long.
+   * Darkness of each tile in a rectangle: 0 where someone is looking, the night dim on remembered land,
+   * 1 on land nobody has seen. `out` has one entry per tile, row by row, and must be `width * height` long.
    */
   fillDarkness(x0: number, y0: number, width: number, height: number, out: Float32Array) {
     const remembered = REMEMBERED_ALPHA * this.darkness
     for (let row = 0; row < height; row++) {
-      const y = y0 + row
       for (let column = 0; column < width; column++) {
-        const x = x0 + column
-        out[row * width + column] = this.isExplored(x, y) ? remembered : 1
+        out[row * width + column] = this.isExplored(x0 + column, y0 + row) ? remembered : 1
       }
     }
     for (const viewer of this.viewers) {
@@ -263,264 +287,324 @@ export class Fog {
       const right = Math.min(x0 + width - 1, Math.ceil(viewer.x + viewer.radius))
       const top = Math.max(y0, Math.floor(viewer.y - viewer.radius))
       const bottom = Math.min(y0 + height - 1, Math.ceil(viewer.y + viewer.radius))
+      const reach = viewer.radius * viewer.radius
       for (let y = top; y <= bottom; y++) {
+        const dy = y + 0.5 - viewer.y
         for (let x = left; x <= right; x++) {
-          if (Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) > viewer.radius) continue
-          const index = (y - y0) * width + (x - x0)
-          if (remembered < out[index]) out[index] = remembered
+          const dx = x + 0.5 - viewer.x
+          if (dx * dx + dy * dy <= reach) out[(y - y0) * width + (x - x0)] = 0
         }
       }
     }
   }
 
   /**
-   * Paints darkness on land chunks near the camera (camp picture and far land use the same sprites).
-   * A chunk that scrolls away is dropped. Only chunks under a walker, newly created, leaving a
-   * walker's sight, or dirtied by a server sync are repainted.
+   * Paints darkness on land chunks near the camera. A chunk that scrolls away is dropped. A chunk is repainted
+   * only when it is new, the night or server exploration moved, or the viewers over it moved.
    */
   cover(chunks: FogChunk[]) {
+    const repaintAll = this.farPaintDirty
+    if (repaintAll) this.paintedDarkness = this.darkness
     const wanted = new Set<string>()
-    const nextLive = new Set<string>()
     for (const chunk of chunks) {
       const key = `${chunk.x},${chunk.y}`
       wanted.add(key)
-      let entry = this.farSprites.get(key)
+      let entry = this.sprites.get(key)
       let created = false
-      if (
-        !entry ||
-        entry.canvas.width !== chunk.width * FAR_PIXELS ||
-        entry.canvas.height !== chunk.height * FAR_PIXELS
-      ) {
-        if (entry) {
-          entry.sprite.destroy()
-          entry.texture.destroy(true)
-          this.farSprites.delete(key)
-        }
-        entry = this.makeFar(chunk)
+      if (!entry || entry.canvas.width !== chunk.width * FAR_PIXELS || entry.canvas.height !== chunk.height * FAR_PIXELS) {
+        if (entry) this.dropSprite(entry)
+        entry = this.makeSprite(key, chunk)
         created = true
       } else {
         entry.sprite.position.set(chunk.originX * TILE, chunk.originY * TILE)
       }
-      const area = { x: chunk.originX, y: chunk.originY, width: chunk.width, height: chunk.height }
-      const isLive = this.chunkMeetsViewers(area)
-      if (isLive) nextLive.add(key)
-      const leaving = this.liveFar.has(key) && !isLive
-      if (created || isLive || leaving || this.farPaintDirty) {
-        this.paintFar(key, entry, area)
+      const sightKey = this.sightKey(chunk)
+      if (created || repaintAll || sightKey !== entry.sightKey) {
+        this.paint(entry, chunk)
+        entry.sightKey = sightKey
       }
     }
-    for (const [key, entry] of this.farSprites) {
+    for (const [key, entry] of this.sprites) {
       if (wanted.has(key)) continue
-      entry.sprite.destroy()
-      entry.texture.destroy(true)
-      this.farSprites.delete(key)
+      this.dropSprite(entry)
+      this.sprites.delete(key)
+      if (!this.walked.has(key)) this.memory.delete(key)
     }
-    this.liveFar = nextLive
     this.farPaintDirty = false
   }
 
-  /** Whether a moving walker reaches this fog sprite (repaint while they cross it). */
-  private chunkMeetsViewers(chunk: TileArea) {
-    for (const viewer of this.viewers) {
-      if (viewer.sticky) continue
-      if (viewer.x + viewer.radius < chunk.x) continue
-      if (viewer.x - viewer.radius > chunk.x + chunk.width) continue
-      if (viewer.y + viewer.radius < chunk.y) continue
-      if (viewer.y - viewer.radius > chunk.y + chunk.height) continue
-      return true
-    }
-    return false
+  private index(x: number, y: number) {
+    const column = Math.floor(x) - MAP_LEFT
+    const row = Math.floor(y) - MAP_TOP
+    if (column < 0 || row < 0 || column >= MAP_WIDTH || row >= MAP_HEIGHT) return -1
+    return row * MAP_WIDTH + column
+  }
+
+  /** Walk/server fog memory at a point — same buffer for camp and wild. */
+  private memorySees(x: number, y: number) {
+    const chunkX = Math.floor(Math.floor(x) / CHUNK)
+    const chunkY = Math.floor(Math.floor(y) / CHUNK)
+    const cells = this.memory.get(`${chunkX},${chunkY}`)
+    if (!cells) return false
+    const px = Math.min(STRIDE - 1, Math.max(0, Math.floor((x - chunkX * CHUNK) * FAR_PIXELS)))
+    const py = Math.min(STRIDE - 1, Math.max(0, Math.floor((y - chunkY * CHUNK) * FAR_PIXELS)))
+    return cells[py * STRIDE + px] >= MEMORY_OPEN * 255
   }
 
   private seenNow(x: number, y: number) {
-    return this.viewers.some((viewer) => Math.hypot(x + 0.5 - viewer.x, y + 0.5 - viewer.y) <= viewer.radius)
+    return this.viewers.some((viewer) => {
+      const dx = x + 0.5 - viewer.x
+      const dy = y + 0.5 - viewer.y
+      return dx * dx + dy * dy <= viewer.radius * viewer.radius
+    })
   }
 
-  private chunkSees(x: number, y: number) {
+  /** Server exploration of one tile — same for camp and wild. */
+  private serverSees(x: number, y: number) {
     const chunkX = Math.floor(x / CHUNK)
     const chunkY = Math.floor(y / CHUNK)
-    const key = `${chunkX},${chunkY}`
-    const chunk = this.savedChunks.find((item) => item.x === chunkX && item.y === chunkY)
+    const chunk = this.server.get(`${chunkX},${chunkY}`)
     if (!chunk) return false
     if (chunk.complete || !chunk.bits) return chunk.complete
-    let bits = this.decodedBits.get(key)
-    if (bits === undefined) {
-      bits = decodeBits(chunk.bits)
-      this.decodedBits.set(key, bits)
-    }
     const local = (y - chunkY * CHUNK) * CHUNK + (x - chunkX * CHUNK)
-    return ((bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
+    return ((chunk.bits.charCodeAt(local >> 3) >> (local & 7)) & 1) === 1
+  }
+
+  /** Copies server exploration of one chunk into the camp picture, only where the chunk meets the vale. */
+  private markVale(chunkX: number, chunkY: number) {
+    const left = Math.max(MAP_LEFT, chunkX * CHUNK)
+    const top = Math.max(MAP_TOP, chunkY * CHUNK)
+    const right = Math.min(MAP_LEFT + MAP_WIDTH, (chunkX + 1) * CHUNK)
+    const bottom = Math.min(MAP_TOP + MAP_HEIGHT, (chunkY + 1) * CHUNK)
+    for (let y = top; y < bottom; y++) {
+      for (let x = left; x < right; x++) {
+        const index = (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
+        if (this.explored[index] === 1 || !this.serverSees(x, y)) continue
+        this.explored[index] = 1
+        this.exploredDirty = true
+      }
+    }
+  }
+
+  /** Viewers that light this chunk, at texel precision; the chunk is repainted when this changes. */
+  private sightKey(chunk: FogChunk) {
+    let key = ''
+    for (const viewer of this.viewers) {
+      const reach = viewer.radius + MEMORY_FEATHER / 2
+      if (viewer.x + reach < chunk.originX || viewer.x - reach > chunk.originX + chunk.width) continue
+      if (viewer.y + reach < chunk.originY || viewer.y - reach > chunk.originY + chunk.height) continue
+      key += `${Math.round(viewer.x * FAR_PIXELS)},${Math.round(viewer.y * FAR_PIXELS)},${viewer.radius};`
+    }
+    return key
   }
 
   /**
-   * Server exploration only — same for camp and wild. Local vale `explored` must not open fog memory
-   * alone, or the camp picture rectangle shades differently from the land around it.
+   * Soft memory disc at fog-texel resolution. Sticky viewers are stamped only with a full repaint;
+   * their land does not move, and stamping every building each tick would cost the whole village.
    */
-  private serverSees(x: number, y: number) {
-    return this.chunkSees(Math.floor(x), Math.floor(y))
-  }
-
-  private makeFar(chunk: FogChunk) {
-    const canvas = document.createElement('canvas')
-    canvas.width = chunk.width * FAR_PIXELS
-    canvas.height = chunk.height * FAR_PIXELS
-    const context = canvas.getContext('2d')!
-    const texture = new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'nearest' }) })
-    const sprite = new Sprite(texture)
-    sprite.position.set(chunk.originX * TILE, chunk.originY * TILE)
-    sprite.scale.set(TILE / FAR_PIXELS)
-    this.far.addChild(sprite)
-    const entry = { sprite, canvas, context, texture }
-    this.farSprites.set(`${chunk.x},${chunk.y}`, entry)
-    return entry
-  }
-
-  /**
-   * Hard open/closed disc at fog-pixel resolution — round silhouette, no soft grey fade into grass.
-   */
-  private stampFar() {
-    const pixels = FAR_PIXELS
-    const stride = CHUNK * pixels
+  private stampMemory() {
     const stampSticky = this.farPaintDirty
     for (const viewer of this.viewers) {
       if (viewer.sticky && !stampSticky) continue
-      const left = viewer.x - viewer.radius
-      const top = viewer.y - viewer.radius
-      const right = viewer.x + viewer.radius
-      const bottom = viewer.y + viewer.radius
-      for (let chunkY = Math.floor(top / CHUNK); chunkY <= Math.floor(bottom / CHUNK); chunkY++) {
-        for (let chunkX = Math.floor(left / CHUNK); chunkX <= Math.floor(right / CHUNK); chunkX++) {
-          const cells = this.ensureFar(chunkX, chunkY)
+      const outer = viewer.radius + MEMORY_FEATHER / 2
+      const inner = Math.max(0, viewer.radius - MEMORY_FEATHER / 2)
+      const outerSquared = outer * outer
+      const innerSquared = inner * inner
+      for (let chunkY = Math.floor((viewer.y - outer) / CHUNK); chunkY <= Math.floor((viewer.y + outer) / CHUNK); chunkY++) {
+        for (let chunkX = Math.floor((viewer.x - outer) / CHUNK); chunkX <= Math.floor((viewer.x + outer) / CHUNK); chunkX++) {
+          const key = `${chunkX},${chunkY}`
+          const cells = this.ensureMemory(chunkX, chunkY)
+          this.walked.delete(key)
+          this.walked.add(key)
           const originX = chunkX * CHUNK
           const originY = chunkY * CHUNK
-          const x0 = Math.max(0, Math.floor((left - originX) * pixels))
-          const y0 = Math.max(0, Math.floor((top - originY) * pixels))
-          const x1 = Math.min(stride - 1, Math.ceil((right - originX) * pixels))
-          const y1 = Math.min(stride - 1, Math.ceil((bottom - originY) * pixels))
+          const x0 = Math.max(0, Math.floor((viewer.x - outer - originX) * FAR_PIXELS))
+          const y0 = Math.max(0, Math.floor((viewer.y - outer - originY) * FAR_PIXELS))
+          const x1 = Math.min(STRIDE - 1, Math.ceil((viewer.x + outer - originX) * FAR_PIXELS))
+          const y1 = Math.min(STRIDE - 1, Math.ceil((viewer.y + outer - originY) * FAR_PIXELS))
           for (let py = y0; py <= y1; py++) {
+            const dy = originY + (py + 0.5) / FAR_PIXELS - viewer.y
             for (let px = x0; px <= x1; px++) {
-              const x = originX + (px + 0.5) / pixels
-              const y = originY + (py + 0.5) / pixels
-              if (Math.hypot(x - viewer.x, y - viewer.y) > viewer.radius) continue
-              cells[py * stride + px] = 255
+              const dx = originX + (px + 0.5) / FAR_PIXELS - viewer.x
+              const squared = dx * dx + dy * dy
+              if (squared > outerSquared) continue
+              const value = squared <= innerSquared ? 255 : Math.round(smooth((outer - Math.sqrt(squared)) / (outer - inner)) * 255)
+              const index = py * STRIDE + px
+              if (value > cells[index]) cells[index] = value
             }
           }
         }
       }
     }
+    this.trimWalked()
   }
 
-  private ensureFar(chunkX: number, chunkY: number) {
+  /** Forgets the oldest off-screen walk memory past the cap; server exploration rebuilds it if needed. */
+  private trimWalked() {
+    if (this.walked.size <= MAX_WALKED_CHUNKS) return
+    for (const key of this.walked) {
+      if (this.walked.size <= MAX_WALKED_CHUNKS) return
+      if (this.sprites.has(key)) continue
+      this.walked.delete(key)
+      this.memory.delete(key)
+    }
+  }
+
+  private ensureMemory(chunkX: number, chunkY: number) {
     const key = `${chunkX},${chunkY}`
-    const length = CHUNK * FAR_PIXELS * CHUNK * FAR_PIXELS
-    const existing = this.farSeen.get(key)
-    if (existing && existing.length === length) return existing
-    const cells = new Uint8Array(length)
-    this.writeServerTiles(chunkX, chunkY, cells)
-    this.farSeen.set(key, cells)
+    const existing = this.memory.get(key)
+    if (existing) return existing
+    const cells = new Uint8Array(CELLS)
+    this.bakeServer(chunkX, chunkY, cells)
+    this.memory.set(key, cells)
     return cells
   }
 
-  /** Server-explored tiles open solid in memory — same for camp and wild. */
-  private writeServerTiles(chunkX: number, chunkY: number, cells: Uint8Array) {
-    const pixels = FAR_PIXELS
-    const stride = CHUNK * pixels
-    const length = stride * stride
-    if (bakeServerScratch.length < length) bakeServerScratch = new Uint8Array(length)
-    else bakeServerScratch.fill(0, 0, length)
-    const baked = bakeServerScratch
+  /** Raises memory to server exploration with smooth contours; never lowers what was walked. */
+  private bakeServer(chunkX: number, chunkY: number, cells: Uint8Array) {
     const originX = chunkX * CHUNK
     const originY = chunkY * CHUNK
-    let wrote = false
-    for (let localY = 0; localY < CHUNK; localY++) {
-      for (let localX = 0; localX < CHUNK; localX++) {
-        if (!this.serverSees(originX + localX, originY + localY)) continue
-        const x0 = localX * pixels
-        const y0 = localY * pixels
-        for (let py = y0; py < y0 + pixels; py++) {
-          baked.fill(255, py * stride + x0, py * stride + x0 + pixels)
-        }
-        wrote = true
+    const grid = this.occupancy
+    let open = 0
+    for (let gy = 0; gy < GRID; gy++) {
+      for (let gx = 0; gx < GRID; gx++) {
+        const seen = this.serverSees(originX + gx - 2, originY + gy - 2) ? 1 : 0
+        grid[gy * GRID + gx] = seen
+        open += seen
       }
     }
-    if (!wrote) return
-    for (let index = 0; index < length; index++) {
-      if (baked[index] > cells[index]) cells[index] = baked[index]
+    if (open === 0) return
+    if (open === GRID * GRID) {
+      cells.fill(255)
+      return
+    }
+    const field = this.blurred
+    for (let by = 0; by < BLURRED; by++) {
+      for (let bx = 0; bx < BLURRED; bx++) {
+        const centre = (by + 1) * GRID + bx + 1
+        field[by * BLURRED + bx] =
+          (grid[centre - GRID - 1] + 2 * grid[centre - GRID] + grid[centre - GRID + 1] +
+            2 * grid[centre - 1] + 4 * grid[centre] + 2 * grid[centre + 1] +
+            grid[centre + GRID - 1] + 2 * grid[centre + GRID] + grid[centre + GRID + 1]) / 16
+      }
+    }
+    for (let py = 0; py < STRIDE; py++) {
+      const upper = SAMPLE_CELL[py] * BLURRED
+      const lower = upper + BLURRED
+      const fy = SAMPLE_FRACTION[py]
+      for (let px = 0; px < STRIDE; px++) {
+        const cell = SAMPLE_CELL[px]
+        const fx = SAMPLE_FRACTION[px]
+        const top = field[upper + cell] + (field[upper + cell + 1] - field[upper + cell]) * fx
+        const bottom = field[lower + cell] + (field[lower + cell + 1] - field[lower + cell]) * fx
+        const level = top + (bottom - top) * fy
+        const value = Math.round(smooth((level - 0.5) / (2 * CONTOUR_SOFTNESS) + 0.5) * 255)
+        const index = py * STRIDE + px
+        if (value > cells[index]) cells[index] = value
+      }
     }
   }
 
-  private paintFar(
-    key: string,
-    entry: { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D; texture: Texture },
-    chunk: TileArea,
-  ) {
-    const pixels = FAR_PIXELS
-    const width = chunk.width * pixels
-    const height = chunk.height * pixels
-    const [chunkX, chunkY] = key.split(',').map(Number)
-    const seen = this.ensureFar(chunkX, chunkY)
-    const stride = CHUNK * pixels
-    const localX0 = Math.round((chunk.x - chunkX * CHUNK) * pixels)
-    const localY0 = Math.round((chunk.y - chunkY * CHUNK) * pixels)
-    if (!this.farImage || this.farImage.width !== width || this.farImage.height !== height) {
-      this.farImage = entry.context.createImageData(width, height)
-    }
-    const image = this.farImage
-    const remembered = REMEMBERED_ALPHA * this.darkness
+  private makeSprite(key: string, chunk: FogChunk): FogSprite {
+    const canvas = document.createElement('canvas')
+    canvas.width = chunk.width * FAR_PIXELS
+    canvas.height = chunk.height * FAR_PIXELS
+    const context = canvas.getContext('2d')!
+    const texture = new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'linear' }) })
+    const sprite = new Sprite(texture)
+    sprite.position.set(chunk.originX * TILE, chunk.originY * TILE)
+    sprite.scale.set(TILE / FAR_PIXELS)
+    this.far.addChild(sprite)
+    const entry: FogSprite = { sprite, canvas, context, texture, sightKey: null }
+    this.sprites.set(key, entry)
+    return entry
+  }
+
+  private dropSprite(entry: FogSprite) {
+    entry.sprite.destroy()
+    entry.texture.destroy(true)
+  }
+
+  /** Image with the fog ink already in place; painting only writes alpha. */
+  private imageFor(width: number, height: number, localX0: number, localY0: number) {
+    const full = width === STRIDE && height === STRIDE
+    if (full && this.fullImage) return this.fullImage
+    const image = new ImageData(width, height)
     for (let row = 0; row < height; row++) {
       for (let column = 0; column < width; column++) {
-        const index = (row * width + column) * 4
-        const worldX = chunk.x + (column + 0.5) / pixels
-        const worldY = chunk.y + (row + 0.5) / pixels
-        const [red, green, blue] = fogInk(worldX, worldY)
-        image.data[index] = red
-        image.data[index + 1] = green
-        image.data[index + 2] = blue
-        const open = seen[(localY0 + row) * stride + (localX0 + column)] >= MEMORY_OPEN * 255
-        image.data[index + 3] = Math.round((open ? remembered : 1) * 255)
+        const from = ((localY0 + row) * STRIDE + localX0 + column) * 3
+        const to = (row * width + column) * 4
+        image.data[to] = CHUNK_INK[from]
+        image.data[to + 1] = CHUNK_INK[from + 1]
+        image.data[to + 2] = CHUNK_INK[from + 2]
+      }
+    }
+    if (full) this.fullImage = image
+    return image
+  }
+
+  /**
+   * Fog alpha: unseen land opaque, remembered land dimmed by night, live sight clear. The live glow ends where
+   * the memory rim ends, so walking on only brings the night dim back and never moves the edge.
+   */
+  private paint(entry: FogSprite, chunk: FogChunk) {
+    const width = chunk.width * FAR_PIXELS
+    const height = chunk.height * FAR_PIXELS
+    const cells = this.ensureMemory(chunk.x, chunk.y)
+    const localX0 = (chunk.originX - chunk.x * CHUNK) * FAR_PIXELS
+    const localY0 = (chunk.originY - chunk.y * CHUNK) * FAR_PIXELS
+    const image = this.imageFor(width, height, localX0, localY0)
+    const data = image.data
+    const remembered = REMEMBERED_ALPHA * Math.max(0, this.paintedDarkness)
+    const alphaOf = new Uint8Array(256)
+    for (let seen = 0; seen < 256; seen++) alphaOf[seen] = Math.round((1 - (seen / 255) * (1 - remembered)) * 255)
+    for (let row = 0; row < height; row++) {
+      const source = (localY0 + row) * STRIDE + localX0
+      let target = row * width * 4 + 3
+      for (let column = 0; column < width; column++) {
+        data[target] = alphaOf[cells[source + column]]
+        target += 4
+      }
+    }
+    if (remembered > 0) {
+      const worldLeft = chunk.originX
+      const worldTop = chunk.originY
+      for (const viewer of this.viewers) {
+        const outer = viewer.radius + MEMORY_FEATHER / 2
+        const inner = Math.max(0, outer - SIGHT_FEATHER)
+        const x0 = Math.max(0, Math.floor((viewer.x - outer - worldLeft) * FAR_PIXELS))
+        const y0 = Math.max(0, Math.floor((viewer.y - outer - worldTop) * FAR_PIXELS))
+        const x1 = Math.min(width - 1, Math.ceil((viewer.x + outer - worldLeft) * FAR_PIXELS))
+        const y1 = Math.min(height - 1, Math.ceil((viewer.y + outer - worldTop) * FAR_PIXELS))
+        if (x0 > x1 || y0 > y1) continue
+        const outerSquared = outer * outer
+        const innerSquared = inner * inner
+        for (let py = y0; py <= y1; py++) {
+          const dy = worldTop + (py + 0.5) / FAR_PIXELS - viewer.y
+          for (let px = x0; px <= x1; px++) {
+            const dx = worldLeft + (px + 0.5) / FAR_PIXELS - viewer.x
+            const squared = dx * dx + dy * dy
+            if (squared > outerSquared) continue
+            const glow = squared <= innerSquared ? 1 : smooth((outer - Math.sqrt(squared)) / (outer - inner))
+            const index = (py * width + px) * 4 + 3
+            const clear = Math.round(data[index] * (1 - glow))
+            if (clear < data[index]) data[index] = clear
+          }
+        }
       }
     }
     entry.context.putImageData(image, 0, 0)
     entry.texture.source.update()
-    this.paintedDarkness = this.darkness
   }
 
+  /** Camp picture for the minimap; redrawn only when exploration or the night changed. */
   private draw() {
+    if (!this.exploredDirty && Math.abs(this.darkness - this.drawnDarkness) < 0.01) return
     const data = this.image.data
-    const remembered = REMEMBERED_ALPHA * this.darkness
-    for (let index = 0; index < this.explored.length; index++) {
-      const column = index % MAP_WIDTH
-      const row = (index - column) / MAP_WIDTH
-      const [red, green, blue] = fogInk(MAP_LEFT + column + 0.5, MAP_TOP + row + 0.5)
-      const pixel = index * 4
-      data[pixel] = red
-      data[pixel + 1] = green
-      data[pixel + 2] = blue
-      data[pixel + 3] = Math.round((this.explored[index] === 1 ? remembered : 1) * 255)
-    }
+    const remembered = Math.round(REMEMBERED_ALPHA * this.darkness * 255)
+    for (let index = 0; index < this.explored.length; index++) data[index * 4 + 3] = this.explored[index] === 1 ? remembered : 255
     this.context.putImageData(this.image, 0, 0)
-    this.displayContext.clearRect(0, 0, this.display.width, this.display.height)
-    this.displayContext.drawImage(this.canvas, EDGE_PAD, EDGE_PAD)
-    const pad = this.displayContext.getImageData(0, 0, this.display.width, this.display.height)
-    const width = this.display.width
-    const height = this.display.height
-    const sample = (x: number, y: number) => {
-      const cx = Math.min(MAP_WIDTH - 1, Math.max(0, x - EDGE_PAD))
-      const cy = Math.min(MAP_HEIGHT - 1, Math.max(0, y - EDGE_PAD))
-      return ((cy * MAP_WIDTH + cx) * 4) + 3
-    }
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (x >= EDGE_PAD && y >= EDGE_PAD && x < EDGE_PAD + MAP_WIDTH && y < EDGE_PAD + MAP_HEIGHT) continue
-        const source = sample(x, y)
-        const index = (y * width + x) * 4
-        pad.data[index] = data[source - 3]
-        pad.data[index + 1] = data[source - 2]
-        pad.data[index + 2] = data[source - 1]
-        pad.data[index + 3] = data[source]
-      }
-    }
-    this.displayContext.putImageData(pad, 0, 0)
-    this.texture.source.update()
+    this.drawnDarkness = this.darkness
+    this.exploredDirty = false
   }
 }

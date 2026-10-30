@@ -13,7 +13,7 @@ export const MAP_RIGHT = MAP_LEFT + MAP_WIDTH
 export const MAP_BOTTOM = MAP_TOP + MAP_HEIGHT
 
 /** One edge of the land, in tiles. The camp tile sits in the middle. The picture of the camp stays MAP_*. */
-export const LAND_SIDE = 288_000
+export const LAND_SIDE = 12_000
 export const LAND_LEFT = 15 - LAND_SIDE / 2
 export const LAND_TOP = 13 - LAND_SIDE / 2
 export const LAND_WIDTH = LAND_SIDE

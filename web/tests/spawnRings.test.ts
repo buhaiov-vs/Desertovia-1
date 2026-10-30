@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { SPAWN_LEVELS, spawnPoints, spotsAround } from '../src/game/spawnRings.ts'
 
-const side = 288_000
+const side = 12_000
 const ring = { camp: { x: 15.5, y: 13.5 }, land: { x: 15 - side / 2, y: 13 - side / 2, width: side, height: side } }
 const cases = JSON.parse(readFileSync(new URL('../e2e/fixtures/spawn-rings.json', import.meta.url), 'utf8')) as Array<{ seed: number; points: string[] }>
 

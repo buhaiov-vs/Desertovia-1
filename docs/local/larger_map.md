@@ -1,6 +1,6 @@
 # Larger map
 
-The map is one land, about **288,000 by 288,000** tiles. The camp is in the middle. Each edge is one real day from the camp, **144,000** tiles. A corner is about **34 hours**. There is no smaller land in front of this one. A citizen can build on seen ground anywhere on it, within 16 tiles of a burning fire.
+The map is one land, **12,000 by 12,000** tiles. The camp is in the middle. Each edge is one real hour from the camp, **6,000** tiles. A corner is about **1 hour 25 minutes**. There is no smaller land in front of this one. A citizen can build on seen ground anywhere on it, within 16 tiles of a burning fire.
 
 Today's live land is still 120 by 90. Fog there is stored as the 32 by 32 chunks someone has seen. A missing chunk is fog. The live land, the version, and the server are unchanged. This document does not build the large land yet.
 
@@ -24,14 +24,14 @@ Today the campfire sits in the middle of the rectangle. The left and right edges
 | Top or bottom edge | 45 | 28 seconds | 27 seconds | 1 minute 30 seconds |
 | A corner | 75 | 46 seconds | 45 seconds | 2 minutes 30 seconds |
 
-On this map the camp stays in the middle. Each edge is **144,000** tiles away. A corner is about **203,650** tiles.
+On this map the camp stays in the middle. Each edge is **6,000** tiles away. A corner is about **8,485** tiles.
 
 | From | Tiles | On screen (26 px/s) | Server, healthy (0.6 s/tile) | Added to a work cycle (2 s/tile) |
 |---|---:|---:|---:|---:|
-| Any edge | 144,000 | 24 hours 37 minutes | 24 hours | 80 hours |
-| A corner | 203,650 | 34 hours 49 minutes | 34 hours | 113 hours |
+| Any edge | 6,000 | 1 hour 2 minutes | 1 hour | 3 hours 20 minutes |
+| A corner | 8,485 | 1 hour 27 minutes | 1 hour 25 minutes | 4 hours 43 minutes |
 
-A wide screen shows about **34 tiles** across, so one edge is about **4,200 screens** from the camp.
+A wide screen shows about **34 tiles** across, so one edge is about **175 screens** from the camp.
 
 A ten-minute walk is still one session. A half-hour work trip is not a normal job. Far activities are places you travel to, then work inside. The camp, a ruin, and a hunting ground each stay small. The distance between them is what grows.
 
@@ -138,44 +138,44 @@ Pushing the frontier is those watched steps. If the walker stays at the edge, th
 
 ## How far out each foe starts
 
-On the square of about 288,000 tiles, the camp is in the middle and each edge is one real day away (144,000 tiles). A corner is about 34 hours. The order comes from the sprite descriptions, easiest first, including the archive sheets in `docs/local/pixel-sprite-archives.md`. A figure called weak or small, with no weapon, comes before a larger one. A tooth, a claw, a club, a blade, a spell, or armor comes later. Two weapons come after one. The crowned swordsman is near the end. The lich, seated on a throne with green flames and with no walk of his own, is last. Color variants of the same body share one floor. The fight numbers in the catalogs are not this order.
+On the square of 12,000 tiles, the camp is in the middle and each edge is one real hour away (6,000 tiles). A corner is about 1 hour 25 minutes. The order comes from the sprite descriptions, easiest first, including the archive sheets in `docs/local/pixel-sprite-archives.md`. A figure called weak or small, with no weapon, comes before a larger one. A tooth, a claw, a club, a blade, a spell, or armor comes later. Two weapons come after one. The crowned swordsman is near the end. The lich, seated on a throne with green flames and with no walk of his own, is last. Color variants of the same body share one floor. The fight numbers in the catalogs are not this order.
 
 Missing enemy pictures are ignored for now. The lich does not walk. His throne picture stays.
 
 | Order | Foe | What the sprite says | Not closer than | Walk, healthy |
 |---|---|---|---:|---:|
-| 1 | Plain slime | Round blue, green, or red jelly, and the teal, dark-blue, and island green blobs. Eyes, no weapon | 1,000 | 10 minutes |
-| 2 | Grave rat | "Fast, weak", a pack, body about 10 pixels | 7,800 | 1 hour 18 minutes |
-| 3 | Imp | "Small", about 9 pixels tall, stubby horns, no weapon | 14,600 | 2 hours 26 minutes |
-| 4 | Small goblin | Small green goblin, no weapon drawn | 21,400 | 3 hours 34 minutes |
-| 5 | Wolf | Low grey animal, 9 pixels tall, yellow eyes, no weapon | 28,200 | 4 hours 42 minutes |
-| 6 | Boar | Short tusks on a low heavy body | 35,000 | 5 hours 50 minutes |
-| 7 | Goblin with a club | Green goblin, wooden club | 41,800 | 6 hours 58 minutes |
-| 8 | Hooded orc | Green orc in a brown hood, a club | 48,600 | 8 hours 6 minutes |
-| 9 | Scarecrow | Straw hat, stick arms | 55,400 | 9 hours 14 minutes |
-| 10 | Ghoul | Hunched, about 11 pixels, long claws | 62,200 | 10 hours 22 minutes |
-| 11 | Goblin with a sword | Green goblin, a sword | 69,000 | 11 hours 30 minutes |
-| 12 | Banner goblin | Green goblin carrying a red-and-white banner | 75,800 | 12 hours 38 minutes |
-| 13 | Wraith | Floating, hooded, dark empty eyes, no weapon | 82,600 | 13 hours 46 minutes |
-| 14 | Poison plant | Dark purple bulb, leafy crown, poison puff and poison cloud | 89,400 | 14 hours 54 minutes |
-| 15 | Flaming slime | Dark cracked blob with yellow flames | 96,200 | 16 hours 2 minutes |
-| 16 | Orc with one axe | Smaller orc, leather and cloth, one axe | 103,000 | 17 hours 10 minutes |
-| 17 | Bear | Widest animal, pale claws, 11 pixels tall | 109,800 | 18 hours 18 minutes |
-| 18 | Orc warrior | Large orc, topknot, one axe | 116,600 | 19 hours 26 minutes |
-| 19 | Vampire | Pale, a cape, a spell flash, no wings | 123,400 | 20 hours 34 minutes |
-| 20 | Orc berserk | Large, tusks, bare chest, a cleaver in each hand | 130,200 | 21 hours 42 minutes |
-| 21 | Orc shaman | Large, grey tunic, wooden staff, two spell casts | 137,000 | 22 hours 50 minutes |
-| 22 | Winged vampire | Pale, white hair, red bat wings, red cape, a spell flash | 143,800 | 23 hours 58 minutes |
-| 23 | Orc with two swords | Blue-grey skin, a gold sword in each hand | 150,600 | 25 hours 6 minutes |
-| 24 | Zombie | Standing green corpse, drawn twice as tall, 26 pixels, no weapon | 157,400 | 26 hours 14 minutes |
-| 25 | Fire spirit | Yellow-orange flame with a face, a shot, a charge, and an explosion | 164,200 | 27 hours 22 minutes |
-| 26 | Skeleton | The game's bone figure, 30 pixels tall, and the archive skeleton with a short blade | 171,000 | 28 hours 30 minutes |
-| 27 | Armored orc | Tall black hair, red and gold armor, two swords | 177,800 | 29 hours 38 minutes |
-| 28 | Fortress knight | Nine knights: sword and shield, crossbow, staff, spear, or halberd | 184,600 | 30 hours 46 minutes |
-| 29 | Barrow king | "The boss", rusty gold crown, notched sword, a 16 by 24 frame | 191,400 | 31 hours 54 minutes |
-| 30 | Lich | Seated on a spiked throne, blue robe, green eyes, green flames. No walk cycle | 198,200 | 33 hours 2 minutes |
+| 1 | Plain slime | Round blue, green, or red jelly, and the teal, dark-blue, and island green blobs. Eyes, no weapon | 42 | 25 seconds |
+| 2 | Grave rat | "Fast, weak", a pack, body about 10 pixels | 325 | 3 minutes 15 seconds |
+| 3 | Imp | "Small", about 9 pixels tall, stubby horns, no weapon | 608 | 6 minutes 5 seconds |
+| 4 | Small goblin | Small green goblin, no weapon drawn | 891 | 8 minutes 55 seconds |
+| 5 | Wolf | Low grey animal, 9 pixels tall, yellow eyes, no weapon | 1,174 | 11 minutes 44 seconds |
+| 6 | Boar | Short tusks on a low heavy body | 1,457 | 14 minutes 34 seconds |
+| 7 | Goblin with a club | Green goblin, wooden club | 1,740 | 17 minutes 24 seconds |
+| 8 | Hooded orc | Green orc in a brown hood, a club | 2,023 | 20 minutes 14 seconds |
+| 9 | Scarecrow | Straw hat, stick arms | 2,306 | 23 minutes 4 seconds |
+| 10 | Ghoul | Hunched, about 11 pixels, long claws | 2,589 | 25 minutes 53 seconds |
+| 11 | Goblin with a sword | Green goblin, a sword | 2,872 | 28 minutes 43 seconds |
+| 12 | Banner goblin | Green goblin carrying a red-and-white banner | 3,155 | 31 minutes 33 seconds |
+| 13 | Wraith | Floating, hooded, dark empty eyes, no weapon | 3,438 | 34 minutes 23 seconds |
+| 14 | Poison plant | Dark purple bulb, leafy crown, poison puff and poison cloud | 3,721 | 37 minutes 13 seconds |
+| 15 | Flaming slime | Dark cracked blob with yellow flames | 4,004 | 40 minutes 2 seconds |
+| 16 | Orc with one axe | Smaller orc, leather and cloth, one axe | 4,287 | 42 minutes 52 seconds |
+| 17 | Bear | Widest animal, pale claws, 11 pixels tall | 4,570 | 45 minutes 42 seconds |
+| 18 | Orc warrior | Large orc, topknot, one axe | 4,853 | 48 minutes 32 seconds |
+| 19 | Vampire | Pale, a cape, a spell flash, no wings | 5,136 | 51 minutes 22 seconds |
+| 20 | Orc berserk | Large, tusks, bare chest, a cleaver in each hand | 5,419 | 54 minutes 11 seconds |
+| 21 | Orc shaman | Large, grey tunic, wooden staff, two spell casts | 5,702 | 57 minutes 1 second |
+| 22 | Winged vampire | Pale, white hair, red bat wings, red cape, a spell flash | 5,985 | 59 minutes 51 seconds |
+| 23 | Orc with two swords | Blue-grey skin, a gold sword in each hand | 6,268 | 1 hour 2 minutes |
+| 24 | Zombie | Standing green corpse, drawn twice as tall, 26 pixels, no weapon | 6,551 | 1 hour 5 minutes |
+| 25 | Fire spirit | Yellow-orange flame with a face, a shot, a charge, and an explosion | 6,834 | 1 hour 8 minutes |
+| 26 | Skeleton | The game's bone figure, 30 pixels tall, and the archive skeleton with a short blade | 7,117 | 1 hour 11 minutes |
+| 27 | Armored orc | Tall black hair, red and gold armor, two swords | 7,400 | 1 hour 14 minutes |
+| 28 | Fortress knight | Nine knights: sword and shield, crossbow, staff, spear, or halberd | 7,683 | 1 hour 17 minutes |
+| 29 | Barrow king | "The boss", rusty gold crown, notched sword, a 16 by 24 frame | 7,966 | 1 hour 20 minutes |
+| 30 | Lich | Seated on a spiked throne, blue robe, green eyes, green flames. No walk cycle | 8,249 | 1 hour 22 minutes |
 
-The first floor is 10 minutes out, 1,000 tiles. Later floors stay 6,800 tiles apart, which is 1 hour 8 minutes. Inside those 1,000 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that foe. The straight edge, at 24 hours, is the winged vampire's floor. Everyone after him stands past that edge, toward the corners. The lich's floor is short of the corner, and the throne band runs from there to the corner.
+The first floor is 25 seconds out, 42 tiles. Later floors stay 283 tiles apart, which is about 2 minutes 50 seconds. Inside those 42 tiles there is no wild den. A den of a foe is never placed closer than that foe's floor. From one floor to the next, the den is that foe. The straight edge, at 1 hour, is the winged vampire's floor. Everyone after him stands past that edge, toward the corners. The lich's floor is short of the corner, and the throne band runs from there to the corner.
 
 Each level is a ring of spawn points around the camp. The seed places **eight** points of that foe on the ring, one every eighth of the circle. A point's line is the straight line from that point to the camp. A point is kept when it lies inside the land and past that foe's floor. Levels out to the winged vampire have all eight points. Past the straight edge, the four points toward the middle of each edge fall outside the land. The four points toward the corners stay, through the lich.
 
@@ -209,7 +209,7 @@ The other wild goods are farther than the berries, and the richer ones are past 
 |---|---:|---:|---|
 | Berries | 300 | 3 minutes | Inside the quiet ring. One bout is 3 minutes |
 | Reeds | 600 | 6 minutes | Still inside the quiet ring, by the water |
-| Wood | 1,000 | 10 minutes | On the first foe line |
+| Wood | 42 | 25 seconds | On the first foe line |
 | Stone | 2,000 | 20 minutes | In the slime marsh |
 | Birds | 4,000 | 40 minutes | Deeper in that marsh |
 | Rabbits, deer, ore | the band that holds them | the walk to that band | Rabbits and deer in the hunting wood, ore in the burrows and the later rock |

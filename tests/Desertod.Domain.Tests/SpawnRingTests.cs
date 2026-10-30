@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Desertod.Domain.Combat;
 using Desertod.Domain.Weather;
 using Desertod.Domain.World;
@@ -23,6 +24,27 @@ public class SpawnRingTests
             Assert.True(point.Center.DistanceTo(WorldMap.Places[WorldMap.Camp]) + 1 >= SpawnRings.Levels[point.Level - 1].Floor);
         });
         Assert.Equal(points.Select(point => point.Id), SpawnRings.Points(7).Select(point => point.Id));
+    }
+
+    public sealed class RingCase
+    {
+        public uint Seed { get; set; }
+        public string[] Points { get; set; } = [];
+    }
+
+    public static IEnumerable<object[]> RingCases()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "spawn-rings.json");
+        return JsonSerializer.Deserialize<RingCase[]>(File.ReadAllText(path), new JsonSerializerOptions(JsonSerializerDefaults.Web))!
+            .Select(sample => new object[] { sample });
+    }
+
+    [Theory]
+    [MemberData(nameof(RingCases))]
+    public void Dens_MatchTheOnesTheBrowserDraws(RingCase sample)
+    {
+        var points = SpawnRings.Points(sample.Seed).Select(point => $"{point.Id} {point.X},{point.Y}");
+        Assert.Equal(sample.Points, points);
     }
 
     [Fact]

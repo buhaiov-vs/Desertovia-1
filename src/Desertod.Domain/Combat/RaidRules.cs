@@ -127,9 +127,10 @@ public static class RaidRules
         return SendNightRaids(village, NightSenders(village, destroyedSpawns), earliest + (latest - earliest) * random.NextDouble(), warning);
     }
 
-    /// <summary>The dens that may send beasts to this village tonight.</summary>
+    /// <summary>The dens that may send beasts to this village tonight. Dens of dungeon dwellers stay quiet: a village battle refuses them.</summary>
     public static IReadOnlyList<SpawnPoint> NightSenders(Village village, IReadOnlySet<string>? destroyedSpawns = null) =>
-        SpawnRings.Senders(SpawnRings.Points(Wilderness.Seed(village.Id.ToString())), (x, y) => Exploration.IsExplored(village.Explored, x, y), destroyedSpawns);
+        SpawnRings.Senders(SpawnRings.Points(Wilderness.Seed(village.Id.ToString())), (x, y) => Exploration.IsExplored(village.Explored, x, y), destroyedSpawns)
+            .Where(RaidsVillages).ToList();
 
     /// <summary>A den whose foe may come to a village; dungeon dwellers stay underground.</summary>
     public static bool RaidsVillages(SpawnPoint point) => point.Kind is { } kind && !EnemyCatalog.Get(kind).DungeonOnly;

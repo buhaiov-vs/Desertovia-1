@@ -65,8 +65,7 @@ public sealed partial class GameService
     /// <summary>
     /// Tonight's raid right now: every den that may send at night sends its pack, striking a few seconds later.
     /// Skips the hour, the first peaceful day and the activity check. A village no den may send to yet, as every new
-    /// one, gets the lowest-level dens whose foe may raid instead, so the button always brings an attack. Dens of
-    /// dungeon dwellers are left out: a village battle refuses them.
+    /// one, gets the lowest-level dens whose foe may raid instead, so the button always brings an attack.
     /// </summary>
     public async Task<VillageStateDto> DevNightRaidAsync(string slug, Guid actor, CancellationToken ct) =>
         await WithVillageAsync(await FindVillageIdAsync(slug, ct), async db =>
@@ -75,7 +74,7 @@ public sealed partial class GameService
             if (village.Raids.Any(r => r.IsPending) || await db.RaidBattles.AnyAsync(b => b.VillageId == village.Id && b.FinishedAt == null, ct))
                 throw new GameRuleException("raid.pending", "Finish or cancel the existing raid first.");
             var now = time.GetUtcNow();
-            var senders = RaidRules.NightSenders(village).Where(RaidRules.RaidsVillages).ToList();
+            var senders = RaidRules.NightSenders(village);
             var raid = RaidRules.SendNightRaids(village, senders.Count > 0 ? senders : RaidRules.NearestRaidingDens(village), now + DevRaidWarning, DevRaidWarning)
                 ?? throw new GameRuleException("raid.noDens", "No den may send beasts to this village yet.");
             await PrepareBattleAsync(db, village, raid, now, ct);

@@ -112,5 +112,7 @@ public class SpawnRingTests
         Assert.Equal(raid.StrikesAt - RaidRules.Warning, raid.AnnouncedAt);
         Assert.Contains(village.Raids, item => item.Enemy == EnemyKind.Wolf && item.Source == RaidSource.Night);
         Assert.All(village.Raids, item => Assert.NotEmpty(item.ApproachPath));
+        // Grave rats and imps are allowed by level too, but dungeon dwellers never raid a village.
+        Assert.All(village.Raids, item => Assert.False(EnemyCatalog.Get(item.Enemy).DungeonOnly));
     }
 }

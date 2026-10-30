@@ -158,6 +158,10 @@ public static class GameEndpoints
             Microsoft.Extensions.Options.IOptions<GameOptions> options, CancellationToken ct) =>
             options.Value.DevTools ? Results.Ok(await game.DevLaunchRaidAsync(slug, user.RequireAccountId(), request, ct)) : Results.NotFound());
 
+        player.MapPost("/villages/{slug}/dev/night-raid", async (string slug, ClaimsPrincipal user, GameService game,
+            Microsoft.Extensions.Options.IOptions<GameOptions> options, CancellationToken ct) =>
+            options.Value.DevTools ? Results.Ok(await game.DevNightRaidAsync(slug, user.RequireAccountId(), ct)) : Results.NotFound());
+
         player.MapDelete("/villages/{slug}/dev/raid", async (string slug, ClaimsPrincipal user, GameService game,
             Microsoft.Extensions.Options.IOptions<GameOptions> options, CancellationToken ct) =>
             options.Value.DevTools ? Results.Ok(await game.DevCancelRaidsAsync(slug, user.RequireAccountId(), ct)) : Results.NotFound());

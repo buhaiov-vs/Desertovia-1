@@ -38,4 +38,25 @@ public sealed class DevToolsApiTests(DesertodApiFactory factory)
         }
         await OkJsonAsync(await helper.Client.PostAsJsonAsync(v.Path + "/dev/raid", new { everyMonster = false }));
     }
+
+    [Fact]
+    public async Task Night_with_attack_sends_the_dens_in_a_new_village_by_day()
+    {
+        var v = await players.FoundVillageAsync("Dev night");
+        var helper = await players.JoinAsync(v);
+        await OkJsonAsync(await helper.Client.PostAsync(v.Path + "/dev/night-raid", null));
+        await AssertRuleBrokenAsync(await helper.Client.PostAsync(v.Path + "/dev/night-raid", null), "raid.pending");
+        await using (var db = await Db())
+        {
+            var village = await db.Villages.AsNoTracking().Include(x => x.Raids).SingleAsync(x => x.Slug == v.Slug);
+            var raids = village.Raids.Where(r => r.IsPending).ToList();
+            Assert.NotEmpty(raids);
+            Assert.All(raids, r => Assert.Equal(RaidSource.Night, r.Source));
+            // Nothing is explored yet, so the lowest dens that may raid a village send: wolves; slimes have no server foe, rats and imps stay underground.
+            Assert.All(raids, r => Assert.Equal(EnemyKind.Wolf, r.Enemy));
+            Assert.All(raids, r => Assert.InRange((r.StrikesAt - factory.Clock.GetUtcNow()).TotalSeconds, 1, 5));
+            Assert.Single(await db.RaidBattles.AsNoTracking().Where(b => b.VillageId == village.Id && b.FinishedAt == null).ToListAsync());
+        }
+        await OkJsonAsync(await helper.Client.DeleteAsync(v.Path + "/dev/raid"));
+    }
 }

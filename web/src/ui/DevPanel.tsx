@@ -6,13 +6,15 @@ interface Props {
   slug: string
   night: boolean
   onToggleNight: () => void
+  /** Darkens the map; the server's own night is left alone. */
+  onNight: () => void
   mapRevealed: boolean
   onToggleMap: () => void
   onVillage: (state: VillageState) => void
 }
 
 /** Development and local deployments only: shortcuts for checking the map and raids without waiting for them. */
-export function DevPanel({ slug, night, onToggleNight, mapRevealed, onToggleMap, onVillage }: Props) {
+export function DevPanel({ slug, night, onToggleNight, onNight, mapRevealed, onToggleMap, onVillage }: Props) {
   const i18n = useI18n()
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -39,6 +41,16 @@ export function DevPanel({ slug, night, onToggleNight, mapRevealed, onToggleMap,
         <div className="dev-panel-body">
           <button onClick={onToggleNight} aria-pressed={night} title={i18n.t('hud.dayNightTitle')}>
             {night ? i18n.t('hud.day') : i18n.t('hud.night')}
+          </button>
+          <button
+            disabled={busy}
+            title={i18n.t('dev.nightRaidTitle')}
+            onClick={() => {
+              onNight()
+              void run(() => api.devNightRaid(slug))
+            }}
+          >
+            {i18n.t('dev.nightRaid')}
           </button>
           <button onClick={onToggleMap} aria-pressed={mapRevealed}>
             {mapRevealed ? i18n.t('dev.hideMap') : i18n.t('dev.revealMap')}

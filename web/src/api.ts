@@ -1631,6 +1631,7 @@ export const api = {
   /** Development only: a wave that strikes in a few seconds; `everyMonster` brings two of every enemy kind. */
   devRaid: (slug: string, everyMonster: boolean) =>
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/dev/raid`, { everyMonster }),
+  devNightRaid: (slug: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/dev/night-raid`),
   devCancelRaids: (slug: string) => request<VillageState>('DELETE', `/api/villages/${encodeURIComponent(slug)}/dev/raid`),
   takeFromStorage: (slug: string, plotId: string, resource: string, amount: number, sharpen?: number, durability?: number) =>
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/take`, { plotId, resource, amount, sharpen, durability }),

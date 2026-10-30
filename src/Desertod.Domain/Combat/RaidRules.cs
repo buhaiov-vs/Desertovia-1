@@ -115,13 +115,6 @@ public static class RaidRules
             return null;
         }
 
-        var seed = Wilderness.Seed(village.Id.ToString());
-        var senders = SpawnRings.Senders(SpawnRings.Points(seed), (x, y) => Exploration.IsExplored(village.Explored, x, y), destroyedSpawns);
-        if (senders.Count == 0)
-        {
-            return null;
-        }
-
         var start = DayCycle.PeriodStart(period);
         var warning = Warning < DayCycle.PeriodLength * EarliestStrike ? Warning : DayCycle.PeriodLength * EarliestStrike;
         var earliest = Max(start + DayCycle.PeriodLength * EarliestStrike, now + warning);
@@ -131,7 +124,35 @@ public static class RaidRules
             return null;
         }
 
-        var strikesAt = earliest + (latest - earliest) * random.NextDouble();
+        return SendNightRaids(village, NightSenders(village, destroyedSpawns), earliest + (latest - earliest) * random.NextDouble(), warning);
+    }
+
+    /// <summary>The dens that may send beasts to this village tonight.</summary>
+    public static IReadOnlyList<SpawnPoint> NightSenders(Village village, IReadOnlySet<string>? destroyedSpawns = null) =>
+        SpawnRings.Senders(SpawnRings.Points(Wilderness.Seed(village.Id.ToString())), (x, y) => Exploration.IsExplored(village.Explored, x, y), destroyedSpawns);
+
+    /// <summary>A den whose foe may come to a village; dungeon dwellers stay underground.</summary>
+    public static bool RaidsVillages(SpawnPoint point) => point.Kind is { } kind && !EnemyCatalog.Get(kind).DungeonOnly;
+
+    /// <summary>The living dens of the lowest level whose foe may raid a village, wherever they are.</summary>
+    public static IReadOnlyList<SpawnPoint> NearestRaidingDens(Village village, IReadOnlySet<string>? destroyedSpawns = null)
+    {
+        var gone = destroyedSpawns ?? new HashSet<string>();
+        var living = SpawnRings.Points(Wilderness.Seed(village.Id.ToString())).Where(p => RaidsVillages(p) && !gone.Contains(p.Id)).ToList();
+        return living.Count == 0 ? [] : living.Where(p => p.Level == living.Min(x => x.Level)).ToList();
+    }
+
+    /// <summary>
+    /// Each sender den sends its pack, all striking together. Returns the first raid, or null without senders.
+    /// Checks neither the hour nor the village; <see cref="PlanNight"/> does that.
+    /// </summary>
+    public static Raid? SendNightRaids(Village village, IReadOnlyList<SpawnPoint> senders, DateTimeOffset strikesAt, TimeSpan warning)
+    {
+        if (senders.Count == 0)
+        {
+            return null;
+        }
+
         Raid? first = null;
         var camp = WorldMap.Places[WorldMap.Camp];
         foreach (var sender in senders)

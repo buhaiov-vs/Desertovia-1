@@ -814,7 +814,11 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   const shownNight = nightOverride ?? village.weather.night
   // Switching back to what the sky shows hands the light back to the clock.
   const dayNight = catalog.devTools
-    ? { night: shownNight, onToggle: () => setNightOverride(!shownNight === village.weather.night ? null : !shownNight) }
+    ? {
+        night: shownNight,
+        onToggle: () => setNightOverride(!shownNight === village.weather.night ? null : !shownNight),
+        onNight: () => setNightOverride(village.weather.night ? null : true),
+      }
     : null
 
   return (
@@ -854,6 +858,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
           slug={slug}
           night={dayNight.night}
           onToggleNight={dayNight.onToggle}
+          onNight={dayNight.onNight}
           mapRevealed={mapRevealed}
           onToggleMap={() => setMapRevealed(!mapRevealed)}
           onVillage={setVillageState}

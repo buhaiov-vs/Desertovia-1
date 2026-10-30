@@ -1,0 +1,10 @@
+# Opens the local deployment to the home network, for testing from a phone:
+# docker compose -f docker-compose.yml -f docker-compose.local.yml -f docker-compose.lan.yml up -d --build
+# Then open http://<this computer's address>:18742 on the phone. Developer tools are on, so use trusted networks only.
+services:
+  caddy:
+    environment:
+      # Any host name: the phone asks for the computer's address, not localhost.
+      DESERTOD_DOMAIN: ":80"
+    ports: !override
+      - "18742:80"

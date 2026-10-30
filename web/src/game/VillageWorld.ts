@@ -278,6 +278,10 @@ export class VillageWorld {
   /** The authored 120 by 90, kept so a block can be baked when the camera reaches it. */
   private landLayout: MapLayout | null = null
   private readonly groundChunks = new Map<string, Sprite>()
+  /** Rectangles of the baked `groundChunks`; fog must cover exactly these, or bare ground shows at the edge of a pan. */
+  private readonly groundRects = new Map<string, LandChunkRect>()
+  /** Blocks near the camera but off screen, baked one per frame so crossing a block row does not stall the pan. */
+  private groundQueue: LandChunkRect[] = []
   /** Trees grown on far-land chunks near the camera, keyed like `groundChunks`. */
   private readonly farTrees = new Map<string, Container[]>()
   private minimap: Minimap | null = null
@@ -504,22 +508,49 @@ export class VillageWorld {
     const layout = this.landLayout
     if (!layout) return
     const land = { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT }
-    const needed = chunksNear(this.visibleArea(), land)
+    const view = this.visibleArea()
+    const needed = chunksNear(view, land)
     const keep = new Set(needed.map((chunk) => `${chunk.x},${chunk.y}`))
     for (const [key, sprite] of this.groundChunks) {
       if (keep.has(key)) continue
       sprite.destroy({ texture: true, textureSource: true })
       this.groundChunks.delete(key)
+      this.groundRects.delete(key)
       this.dropFarTrees(key)
     }
+    const onScreen = new Set(chunksNear(view, land, 0).map((chunk) => `${chunk.x},${chunk.y}`))
+    const centerX = view.x + view.width / 2
+    const centerY = view.y + view.height / 2
+    const distance = (chunk: LandChunkRect) =>
+      Math.abs(chunk.originX + chunk.width / 2 - centerX) + Math.abs(chunk.originY + chunk.height / 2 - centerY)
+    this.groundQueue = []
     for (const chunk of needed) {
       const key = `${chunk.x},${chunk.y}`
       if (this.groundChunks.has(key)) continue
-      const baked = this.bakeGroundChunk(layout, chunk)
-      this.groundChunks.set(key, baked)
-      this.groundLayer.addChildAt(baked, 0)
-      this.plantFarTrees(key, chunk)
+      if (onScreen.has(key)) this.addGroundChunk(layout, key, chunk)
+      else this.groundQueue.push(chunk)
     }
+    this.groundQueue.sort((a, b) => distance(b) - distance(a))
+    this.fog.cover([...this.groundRects.values()])
+  }
+
+  /** Bakes the nearest queued block; called once per frame. */
+  private bakeQueuedGround() {
+    const layout = this.landLayout
+    const chunk = this.groundQueue.pop()
+    if (!layout || !chunk) return
+    const key = `${chunk.x},${chunk.y}`
+    if (this.groundChunks.has(key)) return
+    this.addGroundChunk(layout, key, chunk)
+    this.fog.cover([...this.groundRects.values()])
+  }
+
+  private addGroundChunk(layout: MapLayout, key: string, chunk: LandChunkRect) {
+    const baked = this.bakeGroundChunk(layout, chunk)
+    this.groundChunks.set(key, baked)
+    this.groundRects.set(key, chunk)
+    this.groundLayer.addChildAt(baked, 0)
+    this.plantFarTrees(key, chunk)
   }
 
   private bakeGroundChunk(layout: MapLayout, chunk: LandChunkRect) {
@@ -553,6 +584,8 @@ export class VillageWorld {
   private dropGroundChunks() {
     for (const sprite of this.groundChunks.values()) sprite.destroy({ texture: true, textureSource: true })
     this.groundChunks.clear()
+    this.groundRects.clear()
+    this.groundQueue = []
     for (const key of [...this.farTrees.keys()]) this.dropFarTrees(key)
   }
 
@@ -2295,6 +2328,7 @@ export class VillageWorld {
     const measuredAt=performance.now()
     const seconds = Math.min(ticker.deltaMS / 1000, 0.1)
     this.elapsed += seconds
+    this.bakeQueuedGround()
 
     this.drawFlames()
     this.placementLayer.alpha = 0.65 + Math.sin(this.elapsed * 4) * 0.35
@@ -2477,8 +2511,7 @@ export class VillageWorld {
       this.fogUpdatedAt = this.elapsed
       this.fog.update(this.viewers(), this.nightAmount)
       const view = this.visibleArea()
-      const near = chunksNear(view, { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT })
-      this.fog.cover(near)
+      this.fog.cover([...this.groundRects.values()])
       if (this.dens.sync(view, (x, y) => this.fog.isExplored(x, y), CAMPFIRE)) this.cullDirty = true
     }
     this.wildlife.update(seconds, this.elapsed, [...this.walkers.values()], hunters, sortDepth)

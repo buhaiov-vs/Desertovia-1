@@ -1451,6 +1451,7 @@ export const ru: Dictionary = {
     'teleport.carrying': 'Сначала опустите раненого, потом читайте свиток.',
     'defense.busy': 'Сначала выйдите из боя.',
     'task.veinEmpty': 'Золотая жила выработана.',
+    'task.tooFar': 'Слишком далеко: дорога туда {walk} мин, можно не больше {limit} мин (половина работы). Подойди ближе.',
     'task.unknown': 'Неизвестное дело «{taskId}».',
     'storage.missingInput': 'На складе не хватает: {resource}.',
     'sharpen.maximum': 'Кузнец не может заточить это оружие ещё сильнее.',

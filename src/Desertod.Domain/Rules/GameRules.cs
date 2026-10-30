@@ -16,6 +16,9 @@ public static class GameRules
     /// </summary>
     public const int GatherSeconds = 180;
 
+    /// <summary>The way to a task may take at most this share of its work time; farther places are refused.</summary>
+    public const double MaxApproachShare = 0.5;
+
     /// <summary>Work time of crafting, building, research, project and camp work.</summary>
     public const int CraftSeconds = 300;
 

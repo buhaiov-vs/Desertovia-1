@@ -1440,6 +1440,7 @@ export const en = {
     'teleport.carrying': 'Put the wounded down before reading the scroll.',
     'defense.busy': 'Leave combat first.',
     'task.veinEmpty': 'The gold vein is empty.',
+    'task.tooFar': 'Too far: the way there takes {walk} min, at most {limit} min (half of the work). Come closer first.',
     'task.unknown': 'Unknown task "{taskId}".',
     'storage.missingInput': 'Not enough {resource} in storage.',
     'sharpen.maximum': 'The smith cannot make this weapon any sharper.',

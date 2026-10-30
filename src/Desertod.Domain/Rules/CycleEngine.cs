@@ -205,6 +205,8 @@ public static class CycleEngine
         if (task.RequiredBuilding is {} used && village.Structures.FirstOrDefault(s => s.Kind == used && (citizen.CyclePrivateOutput ? s.OwnerAccountId == citizen.AccountId : s.OwnerAccountId == null)) is {} worn)
             work *= worn.Damage > 75 ? 1.25 : worn.Damage > 50 ? 1.1 : 1;
         var walk = (repairYard ?? unloadYard) is { } yard ? WorldMap.Walk(WorldMap.Places[WorldMap.Camp], yard) : Walk(citizen, village, task, spot, now);
+        if ((spot ?? NaturalPlace(task)) is not null && repairYard is null && unloadYard is null)
+            RequireReachable(citizen, work, now);
         Begin(citizen, task.Id, work + walk, WorkEnergy.TaskCost(village, task, now), village, now, walk);
         if (projectKey is not null && context.Project is { } acceptedProject)
         {
@@ -1013,6 +1015,31 @@ public static class CycleEngine
         var walking = walkDuration ?? (task is null ? TimeSpan.Zero : Walk(citizen, village, task));
         citizen.CycleEndsAt = now + (citizen.CycleTired ? duration + (duration > walking ? duration - walking : TimeSpan.Zero) * 2 : duration) + walking * (1/citizen.MedicalWalk(now)-1);
         citizen.CycleSettled = false;
+    }
+
+    /// <summary>
+    /// A task whose way there takes longer than <see cref="GameRules.MaxApproachShare"/> of its work time is refused,
+    /// so the citizen spends most of the cycle working, not walking out. The way is the trip just set out on;
+    /// the walk back with the goods is not counted, it is part of the cycle anyway.
+    /// </summary>
+    private static void RequireReachable(Citizen citizen, TimeSpan work, DateTimeOffset now)
+    {
+        if (citizen.Trip is not { } trip || trip.SetOutAt != now)
+        {
+            return;
+        }
+
+        var approach = trip.ArrivesAt - now;
+        var allowed = work * GameRules.MaxApproachShare;
+        if (approach > allowed)
+        {
+            throw new GameRuleException("task.tooFar", "Too far: the way there takes longer than half of the work time.",
+                new Dictionary<string, object>
+                {
+                    ["walk"] = (int)Math.Ceiling(approach.TotalMinutes),
+                    ["limit"] = Math.Max(1, (int)Math.Floor(allowed.TotalMinutes)),
+                });
+        }
     }
 
     /// <summary>The place on the map a task is done at, unless it is done at the camp, in a building or all over the land.</summary>

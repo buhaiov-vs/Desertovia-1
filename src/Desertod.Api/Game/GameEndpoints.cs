@@ -151,6 +151,14 @@ public static class GameEndpoints
         player.MapPut("/villages/{slug}/raid-editor/presets", (string slug, RaidPresetRequest request, ClaimsPrincipal user, GameService game, CancellationToken ct) =>
             game.SaveRaidPresetAsync(slug, user.RequireAccountId(), request, ct));
 
+        player.MapPost("/villages/{slug}/dev/raid", async (string slug, DevRaidRequest request, ClaimsPrincipal user, GameService game,
+            Microsoft.Extensions.Options.IOptions<GameOptions> options, CancellationToken ct) =>
+            options.Value.DevTools ? Results.Ok(await game.DevLaunchRaidAsync(slug, user.RequireAccountId(), request, ct)) : Results.NotFound());
+
+        player.MapDelete("/villages/{slug}/dev/raid", async (string slug, ClaimsPrincipal user, GameService game,
+            Microsoft.Extensions.Options.IOptions<GameOptions> options, CancellationToken ct) =>
+            options.Value.DevTools ? Results.Ok(await game.DevCancelRaidsAsync(slug, user.RequireAccountId(), ct)) : Results.NotFound());
+
         player.MapPost("/villages/{slug}/undead", (string slug, CallUndeadRequest request, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.CallUndeadAsync(slug, user.RequireAccountId(), request, cancellationToken));
 

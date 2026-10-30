@@ -789,14 +789,18 @@ public sealed partial class GameService(
             return await BuildStateAsync(db, village, now, cancellationToken);
         }, cancellationToken);
 
-    public async Task<VillageStateDto> CancelUndeadAsync(string slug, Guid accountId, CancellationToken cancellationToken) =>
+    public Task<VillageStateDto> CancelUndeadAsync(string slug, Guid accountId, CancellationToken cancellationToken) =>
+        CancelRaidsAsync(slug, accountId, developer: false, cancellationToken);
+
+    /// <summary>The owner cancels called undead; developer tools cancel any pending raid for anyone.</summary>
+    private async Task<VillageStateDto> CancelRaidsAsync(string slug, Guid accountId, bool developer, CancellationToken cancellationToken) =>
         await WithVillageAsync(await FindVillageIdAsync(slug,cancellationToken),async db=>
         {
             var village=await LoadVillageAsync(db,slug,cancellationToken);
-            if(village.OwnerAccountId!=accountId)throw new UnauthorizedAccessException();
+            if(!developer&&village.OwnerAccountId!=accountId)throw new UnauthorizedAccessException();
             var now=time.GetUtcNow();
-            db.AuditActor=accountId; db.AuditOperation="cancel-undead";
-            var pending=village.Raids.Where(r=>r.IsPending&&r.Source==RaidSource.Undead).ToArray();
+            db.AuditActor=accountId; db.AuditOperation=developer?"dev-raid-cancel":"cancel-undead";
+            var pending=village.Raids.Where(r=>r.IsPending&&(developer||r.Source==RaidSource.Undead)).ToArray();
             var ids=pending.Select(r=>r.Id).ToArray();
             var people=await db.Citizens.Where(c=>c.VillageId==village.Id).ToListAsync(cancellationToken);
             var battles=await db.RaidBattles.Where(b=>ids.Contains(b.Id)&&b.FinishedAt==null).ToListAsync(cancellationToken);

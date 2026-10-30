@@ -764,6 +764,13 @@ export class VillageWorld {
     this.nightOverride = night
   }
 
+  /** Developer tools: lifts the fog everywhere on this screen only; the server's exploration is unchanged. */
+  setMapRevealed(revealed: boolean) {
+    this.fog.setRevealed(revealed)
+    this.fogUpdatedAt = -Infinity
+    this.cullDirty = true
+  }
+
   setCatalog(catalog: Catalog | null) {
     if (!catalog) return
     this.catalog = catalog

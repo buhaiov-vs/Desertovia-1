@@ -156,6 +156,8 @@ export class Fog {
   /** Night level every fog chunk is painted with, so neighbouring chunks never disagree. */
   private paintedDarkness = 1
   private drawnDarkness = -1
+  /** Developer tools: the whole land counts as seen and no fog is drawn. Nothing is stamped into memory. */
+  private revealed = false
 
   constructor() {
     this.canvas.width = MAP_WIDTH
@@ -218,6 +220,15 @@ export class Fog {
     this.draw()
   }
 
+  setRevealed(revealed: boolean) {
+    if (this.revealed === revealed) return
+    this.revealed = revealed
+    this.far.visible = !revealed
+    this.farPaintDirty = true
+    this.exploredDirty = true
+    this.draw()
+  }
+
   /** Updates gameplay sight and stamps soft discs into fog memory. */
   update(viewers: Viewer[], darkness: number) {
     this.darkness = darkness
@@ -250,6 +261,7 @@ export class Fog {
 
   /** Whether the tile under a point, in tiles, has been seen. */
   isExplored(x: number, y: number) {
+    if (this.revealed) return true
     const index = this.index(x, y)
     if (index >= 0 && this.explored[index] === 1) return true
     if (this.memorySees(x, y)) return true
@@ -266,6 +278,7 @@ export class Fog {
 
   /** Whether someone sees the point, in tiles, right now. */
   inSight(x: number, y: number) {
+    if (this.revealed) return true
     const index = this.index(x, y)
     if (index >= 0) return this.light[index] >= IN_SIGHT
     return this.seenNow(x, y)
@@ -276,6 +289,10 @@ export class Fog {
    * 1 on land nobody has seen. `out` has one entry per tile, row by row, and must be `width * height` long.
    */
   fillDarkness(x0: number, y0: number, width: number, height: number, out: Float32Array) {
+    if (this.revealed) {
+      out.fill(0, 0, width * height)
+      return
+    }
     const remembered = REMEMBERED_ALPHA * this.darkness
     for (let row = 0; row < height; row++) {
       for (let column = 0; column < width; column++) {
@@ -602,7 +619,8 @@ export class Fog {
     if (!this.exploredDirty && Math.abs(this.darkness - this.drawnDarkness) < 0.01) return
     const data = this.image.data
     const remembered = Math.round(REMEMBERED_ALPHA * this.darkness * 255)
-    for (let index = 0; index < this.explored.length; index++) data[index * 4 + 3] = this.explored[index] === 1 ? remembered : 255
+    for (let index = 0; index < this.explored.length; index++)
+      data[index * 4 + 3] = this.revealed ? 0 : this.explored[index] === 1 ? remembered : 255
     this.context.putImageData(this.image, 0, 0)
     this.drawnDarkness = this.darkness
     this.exploredDirty = false

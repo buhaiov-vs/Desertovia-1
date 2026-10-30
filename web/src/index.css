@@ -327,16 +327,40 @@ kbd {
 }
 
 /* Development only: on the left edge, outside the interface, and left visible when the interface is hidden. */
-.night-toggle {
+.dev-panel {
   position: absolute;
   z-index: 2;
   left: 6px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  max-width: 11rem;
+}
+
+.dev-panel button {
   padding: 0.15rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 700;
+  text-align: left;
+}
+
+.dev-panel-toggle {
   opacity: 0.75;
+}
+
+.dev-panel-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.dev-panel .error {
+  margin: 0;
+  font-size: 0.7rem;
 }
 
 .weather {
@@ -2044,7 +2068,7 @@ input[aria-invalid='true'] {
 }
 
 /* Panels, popups and dialogs are siblings of the canvas, so everything but the map and the toggles goes. */
-.game-root.ui-hidden > :not(.game-canvas, .ui-toggle, .night-toggle, .music-toggle),
+.game-root.ui-hidden > :not(.game-canvas, .ui-toggle, .dev-panel, .music-toggle),
 .game-root.ui-hidden .minimap {
   display: none;
 }

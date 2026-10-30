@@ -35,6 +35,7 @@ import { TargetPopup } from '../ui/TargetPopup'
 import { watchable, WatchPopup } from '../ui/WatchPopup'
 import { flagTitle, notify, useTitleReset } from '../notifications'
 import { BackgroundMusic } from '../ui/BackgroundMusic'
+import { DevPanel } from '../ui/DevPanel'
 import { GameCanvas, type GameCanvasHandle, type Placement } from '../game/GameCanvas'
 import { HandsCard } from '../ui/HandsCard'
 import { PRIEST_ID, TSAR_ID } from '../game/VillageWorld'
@@ -138,6 +139,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   const [pollError, setPollError] = useState<string | null>(null)
   /** Development only: the day-night toggle forces daylight or night; null follows the village sky. */
   const [nightOverride, setNightOverride] = useState<boolean | null>(null)
+  const [mapRevealed, setMapRevealed] = useState(false)
   /** Everything but the map and the popups of clicked objects is hidden. */
   const [uiHidden, setUiHidden] = useState(() => localStorage.getItem(UI_HIDDEN_KEY) === '1')
   const toggleUi = () => {
@@ -809,6 +811,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         citizens={shownCitizens}
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
+        mapRevealed={catalog.devTools && mapRevealed}
         obscured={monasteryOpen || walletOpen || chatFull || (panel !== 'none' && panel !== 'done') || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
@@ -833,14 +836,14 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
       <BackgroundMusic battles={village.battles} />
 
       {dayNight && (
-        <button
-          className="night-toggle"
-          onClick={dayNight.onToggle}
-          title={i18n.t('hud.dayNightTitle')}
-          aria-pressed={dayNight.night}
-        >
-          {dayNight.night ? i18n.t('hud.day') : i18n.t('hud.night')}
-        </button>
+        <DevPanel
+          slug={slug}
+          night={dayNight.night}
+          onToggleNight={dayNight.onToggle}
+          mapRevealed={mapRevealed}
+          onToggleMap={() => setMapRevealed(!mapRevealed)}
+          onVillage={setVillageState}
+        />
       )}
 
       {showWatched && (

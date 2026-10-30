@@ -24,6 +24,8 @@ export interface MinimapMarkers {
   buildings: Array<{ x: number; y: number; width: number; height: number; finished: boolean }>
   citizens: Array<{ x: number; y: number; kind: 'you' | 'tsar' | 'citizen' }>
   camp: { x: number; y: number }
+  /** Foe dens the village has seen. */
+  dens: Array<{ x: number; y: number }>
 }
 
 interface Rectangle {
@@ -224,6 +226,21 @@ export class Minimap {
         context.lineWidth = 1
         context.fillRect(xOf(building.x), yOf(building.y), Math.max(unit, building.width * unit), Math.max(unit, building.height * unit))
         context.strokeRect(xOf(building.x), yOf(building.y), Math.max(unit, building.width * unit), Math.max(unit, building.height * unit))
+      }
+      for (const den of markers.dens) {
+        if (!this.inside(den.x, den.y)) continue
+        const size = unit * 1.3
+        context.fillStyle = '#d0342c'
+        context.strokeStyle = '#1b1206'
+        context.lineWidth = 1
+        context.beginPath()
+        context.moveTo(xOf(den.x), yOf(den.y) - size)
+        context.lineTo(xOf(den.x) + size, yOf(den.y))
+        context.lineTo(xOf(den.x), yOf(den.y) + size)
+        context.lineTo(xOf(den.x) - size, yOf(den.y))
+        context.closePath()
+        context.fill()
+        context.stroke()
       }
       if (this.inside(markers.camp.x, markers.camp.y)) {
         context.fillStyle = '#ff7b1c'

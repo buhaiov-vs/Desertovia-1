@@ -14,6 +14,8 @@ import { Minimap, type MinimapMarkers } from './Minimap'
 import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type TripWalk, type Tsar, type VillageState, type Wilds } from '../api'
 import { WildlifeLayer } from './animals'
 import { EnemyLayer } from './enemies'
+import { DenLayer } from './dens'
+import { spawnPoints } from './spawnRings'
 import { CharacterPainter, appearanceKey } from './appearance'
 import { darknessAt } from './daylight'
 import { Fog, type Viewer } from './fog'
@@ -62,6 +64,7 @@ import {
   cropTile,
   farGroundTile,
   farHasTree,
+  farWater,
   findWay,
   footprint,
   seedFrom,
@@ -231,6 +234,7 @@ export class VillageWorld {
   private readonly objects = new Container()
   private readonly wildlife = new WildlifeLayer(this.objects)
   private readonly enemies = new EnemyLayer(this.objects)
+  private readonly dens = new DenLayer(this.objects)
   private readonly projectLayer = new Container()
   private readonly night = new Graphics()
   private readonly lights = new Graphics()
@@ -531,6 +535,7 @@ export class VillageWorld {
         batch.addChild(sprite)
       }
     }
+    this.dens.markGround(batch, chunk)
     const texture = this.app.renderer.generateTexture({
       target: batch,
       frame: new Rectangle(0, 0, chunk.width * TILE, chunk.height * TILE),
@@ -1494,6 +1499,8 @@ export class VillageWorld {
     this.rainTarget = state.weather.raining ? 1 : 0
     if (this.terrainSeed === null) {
       this.terrainSeed = seedFrom(state.id)
+      const land = { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT }
+      this.dens.setPoints(spawnPoints(this.terrainSeed, { camp: CAMPFIRE, land, water: farWater }))
       this.buildTerrain(this.terrainSeed, state.wilds)
       this.showCamp()
     }
@@ -2462,8 +2469,10 @@ export class VillageWorld {
     if (this.elapsed - this.fogUpdatedAt >= FOG_SECONDS) {
       this.fogUpdatedAt = this.elapsed
       this.fog.update(this.viewers(), this.nightAmount)
-      const near = chunksNear(this.visibleArea(), { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT })
+      const view = this.visibleArea()
+      const near = chunksNear(view, { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT })
       this.fog.cover(near)
+      if (this.dens.sync(view, (x, y) => this.fog.isExplored(x, y), CAMPFIRE)) this.cullDirty = true
     }
     this.wildlife.update(seconds, this.elapsed, [...this.walkers.values()], hunters, sortDepth)
     this.enemies.update(seconds, now, sortDepth)
@@ -2534,6 +2543,7 @@ export class VillageWorld {
         y: walker.y / TILE,
         kind: walker.id === TSAR_ID ? 'tsar' as const : walker.id === this.highlightId ? 'you' as const : 'citizen' as const,
       }))
-    return { buildings, citizens, camp: CAMPFIRE }
+    const dens = this.dens.spotted((x, y) => this.fog.isExplored(x, y)).map((den) => ({ x: den.x + 0.5, y: den.y + 0.5 }))
+    return { buildings, citizens, camp: CAMPFIRE, dens }
   }
 }

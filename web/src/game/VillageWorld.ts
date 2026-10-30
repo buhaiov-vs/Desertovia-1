@@ -11,13 +11,13 @@ import { BuildingLighting, hasPreparedBuilding, preparedBuildingBounds } from '.
 import { registerReportCanvas } from '../reports/capture'
 import { Application, CanvasSource, ColorMatrixFilter, Container, Culler, Graphics, Rectangle, Sprite, Text, Texture, type Ticker } from 'pixi.js'
 import { Minimap, type MinimapMarkers } from './Minimap'
-import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type Tsar, type VillageState, type Wilds } from '../api'
+import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDefinition, type Catalog, type CitizenSummary, type FieldBed, type Site, type Storage, type StorageDefinition, type TileArea, type TilePoint, type TripWalk, type Tsar, type VillageState, type Wilds } from '../api'
 import { WildlifeLayer } from './animals'
 import { EnemyLayer } from './enemies'
 import { CharacterPainter, appearanceKey } from './appearance'
 import { darknessAt } from './daylight'
 import { Fog, type Viewer } from './fog'
-import { tsarPositionAt, tsarWalkActive } from './tsarWalk'
+import { walkActive, walkPositionAt } from './tripWalk'
 import { chunksNear, type LandChunkRect } from './landChunk'
 import { TILE, TileSet, battle, dungeon, tileKey, town, type TileRef } from './sheets'
 import {
@@ -176,6 +176,8 @@ interface Walker {
   carrierId:string|null
   pickupAt:number
   rescueJourney:CitizenSummary['rescueJourney']
+  /** A citizen's foot trip from the server; the Tsar's lives on `village.tsar.walk`. */
+  walk: TripWalk | null
 }
 
 interface Bubble {
@@ -484,7 +486,7 @@ export class VillageWorld {
     this.objects.addChild(this.preparedBuilding('monastery-church', church.x, church.y, church.tiles[0].length, church.tiles.length))
     for (const cell of MONASTERY.cells) this.objects.addChild(this.preparedBuilding('monk-cell', cell.x, cell.y))
     this.terrain = layout.terrain
-    this.minimap?.setTerrain(layout.terrain)
+    this.minimap?.setTerrain(layout.terrain, this.terrainSeed ?? 1)
     this.wildlife.setTerrain(layout.terrain)
     this.enemies.setTerrain(layout.terrain)
     this.cullDirty = true
@@ -604,7 +606,7 @@ export class VillageWorld {
       changed = true
       this.cullDirty = true
     }
-    if (changed) this.minimap?.setTerrain(terrain)
+    if (changed) this.minimap?.setTerrain(terrain, this.terrainSeed ?? 1)
   }
 
   /** Draws the standing thickets and rockfalls; cleared ones turn to grass and let walkers through. */
@@ -633,7 +635,7 @@ export class VillageWorld {
       this.obstacles.set(key, created)
       this.cullDirty = true
     }
-    if (changed) this.minimap?.setTerrain(terrain)
+    if (changed) this.minimap?.setTerrain(terrain, this.terrainSeed ?? 1)
   }
 
   setPriestName(name: string) {
@@ -656,11 +658,9 @@ export class VillageWorld {
   private setTsar(tsar: Tsar) {
     const destination = tsar.spot ?? TSAR_HOME
     const now = Date.now()
-    // Wall-clock trip position (same as fog). Falls back to `at` / destination for older payloads.
-    const at =
-      tsar.walk && tsarWalkActive(tsar.walk, now)
-        ? tsarPositionAt(tsar.walk, now)
-        : (tsar.at ?? destination)
+    // Wall-clock trip position (same as fog), also once the trip has ended: after a background tab the
+    // snapshot's `at` is from before the tab slept. Falls back to `at` / destination for older payloads.
+    const at = tsar.walk ? walkPositionAt(tsar.walk, now) : (tsar.at ?? destination)
     const texture = this.lookTexture(TSAR_ID, tsar.appearance)
     let walker = this.walkers.get(TSAR_ID)
     if (!walker) {
@@ -698,9 +698,9 @@ export class VillageWorld {
       walker.way = []
       // Local walkTo is only for standing / short hops without a server trip. An active Walk
       // (or a live `at` short of the spot) must stay on the server clock so fog cannot run ahead.
-      const onTrip =
-        tsarWalkActive(tsar.walk, now) ||
-        (!!tsar.at && Math.hypot(tsar.at.x - destination.x, tsar.at.y - destination.y) > 0.05)
+      const onTrip = tsar.walk
+        ? walkActive(tsar.walk, now)
+        : !!tsar.at && Math.hypot(tsar.at.x - destination.x, tsar.at.y - destination.y) > 0.05
       if (!onTrip) this.walkTo(walker, destination)
     }
   }
@@ -995,6 +995,7 @@ export class VillageWorld {
       walker.treatmentCause=duel?'после дуэли':'после боя'
       walker.carrierId=citizen.rescueByCitizenId??null
       walker.rescueJourney=citizen.rescueJourney??null
+      walker.walk=citizen.walk??null
       walker.pickupAt=walker.rescueJourney&&!walker.rescueJourney.completedAt?Date.parse(walker.rescueJourney.pickupAt):0
       if(injured&&!walker.inHospital&&!walker.carrierId&&citizen.rescueRequestedAt)walker.treatmentCause='Просит помощи'
       if (injured && !walker.carrierId && !walker.inHospital && stayAt) {
@@ -1809,7 +1810,7 @@ export class VillageWorld {
       sleepsAt: null,
       way: [],
       injuredUntil: 0,
-      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,rescueJourney:null,
+      bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,rescueJourney:null,walk:null,
     }
     this.walkers.set(id, walker)
     return walker
@@ -2333,10 +2334,18 @@ export class VillageWorld {
         walker.wanderAt = 0
       }
       if (walker.sleepsAt !== null && now >= walker.sleepsAt) walker.staying = true
-      // Tsar foot trip: wall clock matches fog. The 0.1s step cap cannot catch up after alt-tab.
-      const tsarWalk = walker.id === TSAR_ID ? this.village?.tsar?.walk : null
-      if (!hurt && tsarWalkActive(tsarWalk, now) && tsarWalk) {
-        const at = tsarPositionAt(tsarWalk, now)
+      // Foot trip: wall clock matches fog. The 0.1s step cap cannot catch up after alt-tab.
+      const isTsar = walker.id === TSAR_ID
+      const walk = isTsar ? this.village?.tsar?.walk : walker.hunt ? null : walker.walk
+      if (!hurt && walk && !walkActive(walk, now) && !isTsar) {
+        // Arrived while the tab slept: stand at the end of the trip, not where the frames stopped.
+        walker.x = walk.toX * TILE
+        walker.y = walk.toY * TILE
+        walker.way = []
+        walker.walk = null
+      }
+      if (!hurt && walk && walkActive(walk, now)) {
+        const at = walkPositionAt(walk, now)
         const dx = at.x * TILE - walker.x
         if (Math.abs(dx) > 0.01) walker.sprite.scale.x = dx < 0 ? -1 : 1
         walker.x = at.x * TILE
@@ -2344,9 +2353,11 @@ export class VillageWorld {
         walker.targetX = walker.x
         walker.targetY = walker.y
         walker.way = []
-        walker.staying = true
-        walker.roaming = false
-        walker.hunt = null
+        if (isTsar) {
+          walker.staying = true
+          walker.roaming = false
+          walker.hunt = null
+        }
       } else if (walker.hunt) {
         hunters.add(walker.id)
         const secondsLeft = (walker.hunt.catchAt - now) / 1000

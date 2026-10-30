@@ -1449,12 +1449,7 @@ public sealed partial class GameService(
             .SingleAsync(cancellationToken);
         var tsarTrip = village.TsarTrip;
         var tsarAt = tsarTrip is not null ? tsarTrip.PositionAt(now) : village.TsarSpot;
-        TsarWalkDto? tsarWalk = tsarTrip is null ? null : new(
-            tsarTrip.FromX, tsarTrip.FromY, tsarTrip.ToX, tsarTrip.ToY,
-            tsarTrip.SetOutAt, tsarTrip.ArrivesAt, tsarTrip.SpeedMultiplier,
-            tsarTrip.Way is { Count: > 0 } way
-                ? way.Select(point => new TilePoint(point.X, point.Y)).ToArray()
-                : null);
+        var tsarWalk = tsarTrip?.ToWalkDto();
         var tsar = new TsarDto(owner.Character?.Name ?? owner.DisplayName, owner.Character?.Appearance, village.TsarSpot, village.TsarInjuredUntil)
             { AccountId=village.OwnerAccountId, HospitalizedAt=village.TsarHospitalizedAt, RescueByCitizenId=village.TsarRescueByCitizenId, RescueRequestedAt=village.TsarRescueRequestedAt, At=tsarAt, Walk=tsarWalk };
         var trips = await LoadTripsAsync(db, village.Id, cancellationToken);

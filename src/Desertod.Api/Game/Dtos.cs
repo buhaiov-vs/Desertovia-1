@@ -239,11 +239,11 @@ public sealed record TsarDto(string Name, Appearance? Appearance, TilePoint? Spo
     /// <summary>
     /// Active foot trip so the client can place the Tsar on the same wall clock as fog after a background tab.
     /// </summary>
-    public TsarWalkDto? Walk { get; init; }
+    public WalkDto? Walk { get; init; }
 }
 
-/// <summary>Tsar foot trip mirrors domain <c>Trip</c> fields the client needs for <c>PositionAt</c>.</summary>
-public sealed record TsarWalkDto(
+/// <summary>A foot trip: mirrors domain <c>Trip</c> fields the client needs for <c>PositionAt</c>.</summary>
+public sealed record WalkDto(
     double FromX,
     double FromY,
     double ToX,
@@ -312,6 +312,11 @@ public sealed record CitizenSummaryDto(
     public Guid? RescueByCitizenId { get; init; }
     public Guid? RescuePatientId { get; init; }
     public RescueJourney? RescueJourney { get; init; }
+    /// <summary>
+    /// Foot trip still under way. Fog opens along it on the wall clock, so the map places the walker
+    /// on the same clock instead of its own frame steps, which stop in a background tab.
+    /// </summary>
+    public WalkDto? Walk { get; init; }
     public DateTimeOffset? RescueRequestedAt { get; init; }
     public string? DefenseSector { get; init; }
     public DateTimeOffset? DefenseReadyAt { get; init; }
@@ -722,8 +727,14 @@ public static class DtoMapper
             citizen.CycleEndsAt,
             citizen.Load.Select(g => g.Kind).ToList(),
             CombatRules.IsInjured(citizen, now) ? citizen.InjuredUntil : null,
-            citizen.Weapon, citizen.Recovery) {WeaponSharpen=citizen.WeaponSharpen,HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId,RescueJourney=citizen.RescueJourney,RescueRequestedAt=citizen.RescueRequestedAt,DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt};
+            citizen.Weapon, citizen.Recovery) {WeaponSharpen=citizen.WeaponSharpen,HospitalizedAt=citizen.HospitalizedAt,RescueByCitizenId=citizen.RescueByCitizenId,RescuePatientId=citizen.RescuePatientId,RescueJourney=citizen.RescueJourney,RescueRequestedAt=citizen.RescueRequestedAt,DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,
+            Walk=citizen.Trip is { } trip && now < trip.ArrivesAt ? trip.ToWalkDto() : null};
     }
+
+    public static WalkDto ToWalkDto(this Trip trip) => new(
+        trip.FromX, trip.FromY, trip.ToX, trip.ToY,
+        trip.SetOutAt, trip.ArrivesAt, trip.SpeedMultiplier,
+        trip.Way is { Count: > 0 } way ? way.Select(point => new TilePoint(point.X, point.Y)).ToArray() : null);
 
     public static CitizenDto ToDto(this Citizen citizen, Village village, DateTimeOffset now) => new(
         citizen.Id,

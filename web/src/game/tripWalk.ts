@@ -1,7 +1,7 @@
-import type { TilePoint, TsarWalk } from '../api'
+import type { TilePoint, TripWalk } from '../api'
 
 /** Route points matching domain `Trip.Route`: from, optional turns, then to. */
-function routeOf(walk: TsarWalk): TilePoint[] {
+function routeOf(walk: TripWalk): TilePoint[] {
   const from = { x: walk.fromX, y: walk.fromY }
   const to = { x: walk.toX, y: walk.toY }
   if (!walk.way || walk.way.length === 0) return [from, to]
@@ -20,10 +20,10 @@ function pathLength(route: TilePoint[]) {
 }
 
 /**
- * Where the Tsar stands at `nowMs` — same wall clock as server `Trip.PositionAt` / fog reveal.
+ * Where a walker stands at `nowMs` — same wall clock as server `Trip.PositionAt` / fog reveal.
  * After a background tab the ticker may have slept; this still lands on the revealed corridor.
  */
-export function tsarPositionAt(walk: TsarWalk, nowMs: number): TilePoint {
+export function walkPositionAt(walk: TripWalk, nowMs: number): TilePoint {
   const route = routeOf(walk)
   const to = { x: walk.toX, y: walk.toY }
   if (route.length < 2) return to
@@ -47,7 +47,7 @@ export function tsarPositionAt(walk: TsarWalk, nowMs: number): TilePoint {
   return to
 }
 
-export function tsarWalkActive(walk: TsarWalk | null | undefined, nowMs: number) {
+export function walkActive(walk: TripWalk | null | undefined, nowMs: number) {
   if (!walk) return false
   return nowMs < Date.parse(walk.arrivesAt)
 }

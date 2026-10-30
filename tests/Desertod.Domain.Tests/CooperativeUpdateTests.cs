@@ -40,13 +40,13 @@ public class CooperativeUpdateTests
         fresh.Materials.ForEach(m=>m.Delivered=fresh.Required(m.Kind.ToString()));Assert.Equal(40,fresh.BuildLimit);
         fresh.BuildProgress=40;Assert.Equal(90,fresh.BuildLimit);
     }
-    [Fact] public void FarBankGuardAppliesToWalkingAndDirectResourceClicks()
+    [Fact] public void FarSideOfTheCampIsOpenGround()
     {
         var village=TestWorld.NewVillage();var citizen=TestWorld.NewCitizen(village);
         var point=new TilePoint(40,17);
-        Assert.Equal("bridge.closed",Assert.Throws<GameRuleException>(()=>citizen.GoTo(point,village,Now)).Code);
-        Assert.Equal("bridge.closed",Assert.Throws<GameRuleException>(()=>WorkSpots.Check(village,GameCatalog.FindTask("gather-stone")??GameCatalog.Tasks.First(t=>t.Workplace=="stones"),point,Now)).Code);
-        village.BridgeOpened=true;citizen.GoTo(point,village,Now);Assert.NotNull(citizen.Trip);
+        citizen.GoTo(point,village,Now);
+        Assert.NotNull(citizen.Trip);
+        WorkSpots.Check(village,GameCatalog.FindTask("gather-stone")??GameCatalog.Tasks.First(t=>t.Workplace=="stones"),point,Now);
     }
     [Fact] public void ExistingHomesStayStableAndCommunalHouseExpands()
     {

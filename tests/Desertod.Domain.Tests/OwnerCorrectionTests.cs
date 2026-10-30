@@ -123,11 +123,11 @@ public sealed class OwnerCorrectionTests
         var castle=Assert.Single(v.Structures,s=>s.Kind==BuildingKind.Castle);Assert.Equal("14,9",castle.PlotId);Assert.Equal(1,castle.Level);
     }
     [Fact]
-    public void Royal_bridge_destruction_closes_far_bank_until_complete_repair_without_forgetting_its_project()
+    public void Royal_bridge_destruction_stays_ruined_until_complete_repair_without_forgetting_its_project()
     {
         var v=NewVillage();v.BridgeOpened=true;
         CombatRules.Damage(v,RuinRules.RoyalBridge,100);RuinRules.Collapse(v,RuinRules.RoyalBridge,[],Now,Guid.NewGuid());
-        Assert.False(v.BridgeOpened);Assert.NotNull(v.BridgeRuinedAt);Assert.False(BankAccess.CanReach(v,new(40,12)));
+        Assert.False(v.BridgeOpened);Assert.NotNull(v.BridgeRuinedAt);Assert.True(BankAccess.CanReach(v,new(40,12)));
         CombatRules.Repair(v,5);Assert.False(v.BridgeOpened);
         for(var i=0;i<19;i++)CombatRules.Repair(v,5);
         Assert.True(v.BridgeOpened);Assert.Null(v.BridgeRuinedAt);Assert.Equal(0,v.BridgeDamage);
@@ -151,7 +151,7 @@ public sealed class OwnerCorrectionTests
         var v=NewVillage();v.BridgeOpened=true;
         CombatRules.Damage(v,RuinRules.RoyalBridge,100);RuinRules.Collapse(v,RuinRules.RoyalBridge,[],Now,Guid.NewGuid());
         CycleEngine.Start(NewCitizen(v),Task("forage"),new WorkContext{Village=v,CompletedProjects=new HashSet<string>{ProjectCatalog.TsarBridge}},Now);
-        Assert.False(v.BridgeOpened);Assert.NotNull(v.BridgeRuinedAt);Assert.False(BankAccess.CanReach(v,new(40,12)));
+        Assert.False(v.BridgeOpened);Assert.NotNull(v.BridgeRuinedAt);Assert.True(BankAccess.CanReach(v,new(40,12)));
     }
     [Fact]
     public void A_ruined_workshop_does_not_disable_another_intact_public_workshop()

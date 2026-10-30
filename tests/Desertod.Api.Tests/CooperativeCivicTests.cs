@@ -81,11 +81,11 @@ public sealed class CooperativeCivicTests(DesertodApiFactory factory)
         Assert.Equal("WoodPile", Assert.Single(rejected.GetProperty("sites").EnumerateArray()).GetProperty("kind").GetString());
     }
 
-    [Fact] public async Task Resource_and_walk_API_cannot_bypass_closed_bridge()
+    [Fact] public async Task Walk_API_reaches_the_far_side_of_the_camp()
     {
-        var village=await players.FoundVillageAsync("Bank Guard");var player=await players.JoinAsync(village);
-        await AssertRuleBrokenAsync(await player.Client.PostAsJsonAsync(village.Path+"/me/goto",new{spot=new{x=40,y=17}}),"bridge.closed");
-        await AssertRuleBrokenAsync(await player.Client.PostAsJsonAsync(village.Path+"/me/task",new{taskId="chop-wood",spot=new{x=40,y=17}}),"bridge.closed");
+        var village=await players.FoundVillageAsync("Open Ground");var player=await players.JoinAsync(village);
+        await OkJsonAsync(await player.Client.PostAsJsonAsync(village.Path+"/me/goto",new{spot=new{x=40,y=17}}));
+        await OkJsonAsync(await player.Client.PostAsJsonAsync(village.Path+"/me/task",new{taskId="chop-wood",spot=new{x=40,y=17}}));
     }
 
     [Fact] public async Task Wounded_is_delivered_once_and_recovers_faster_without_losing_items()

@@ -54,7 +54,7 @@ public sealed class AlmightyTests
         var paths=RaidTactics.Approaches(village);
         Assert.NotEmpty(paths);
         foreach(var path in paths) foreach(var point in path.Path)
-            Assert.True(point.X < Wilderness.RiverWestBank(point.Y,Wilderness.Seed(village.Id.ToString())));
+            Assert.True(WorldMap.Land.Contains(new TileArea(point.X, point.Y, 1, 1)));
         foreach(var path in paths) for(var i=1;i<path.Path.Count;i++)
             Assert.Equal(1,Math.Abs(path.Path[i].X-path.Path[i-1].X)+Math.Abs(path.Path[i].Y-path.Path[i-1].Y));
     }

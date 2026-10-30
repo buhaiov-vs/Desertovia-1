@@ -136,14 +136,11 @@ public sealed class RescueDeliveryTests
         Assert.Equal(originalEnd+(discharge-wounded),patient.CycleEndsAt);
     }
 
-    [Fact] public void Rescue_from_other_bank_requires_real_open_bridge_route()
+    [Fact] public void Rescue_from_the_far_side_does_not_need_the_bridge()
     {
         var (v, helper, patient) = Setup();patient.IdleSpot=new(40.5,17.5);patient.Spot=null;
-        Assert.Equal("bridge.closed",Assert.Throws<GameRuleException>(()=>CycleEngine.StartRescue(helper,patient,WorkContext.For(v),Now)).Code);
-        v.BridgeOpened=true;
         CycleEngine.StartRescue(helper,patient,WorkContext.For(v),Now);
-        var river=helper.RescueJourney!.Steps.Where(p=>p.X>=30&&p.X<34).ToList();
-        Assert.NotEmpty(river);
-        Assert.All(river,p=>Assert.InRange(p.Y,12,13.999));
+        Assert.NotNull(helper.RescueJourney);
+        Assert.Contains(helper.RescueJourney!.Steps,p=>p.X>34);
     }
 }

@@ -273,7 +273,7 @@ public sealed class KingdomEconomyApiTests(DesertodApiFactory factory)
         await Players.AssertRuleBrokenAsync(await b.Client.PostAsJsonAsync(v.Path+"/me/job",new{plotId="-8,10",stage,jobId=job.JobId}),"building.private");
         await using var db=await Db();var city=await db.Villages.AsNoTracking().SingleAsync(x=>x.Slug==v.Slug);var owner=await players.LoadCitizenAsync(a.Id);
         Assert.Equal(owner.AccountId,Assert.Single(city.Sites).OwnerAccountId);Assert.Equal(10,city.Stock(resource));
-        await Players.AssertRuleBrokenAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",new{requestId=Guid.NewGuid(),action="private-build",building="Hut",x=40,y=10}),"bridge.closed");
+        await Players.AssertRuleBrokenAsync(await a.Client.PostAsJsonAsync(v.Path+"/economy",new{requestId=Guid.NewGuid(),action="private-build",building="Hut",x=200000,y=10}),"spot.outsideLand");
         Assert.Single((await db.Villages.AsNoTracking().SingleAsync(x=>x.Slug==v.Slug)).Sites);
     }
 }

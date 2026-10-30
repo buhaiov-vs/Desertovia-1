@@ -61,8 +61,6 @@ export function canBuildAt(catalog: Catalog, village: VillageState, x: number, y
     canReachBank(village,{x:x+area.width/2,y:y+area.height-.5}) &&
     (x >= 0 && y >= 0 && x + area.width <= 28 && y + area.height <= 26 ||
       Array.from({length:area.width*area.height},(_,i)=>({x:x+i%area.width,y:y+Math.floor(i/area.width)})).every(p=>
-        Math.abs(p.x+.5-riverCenter(p.y,seedFrom(village.id)))>=2 &&
-        !(village.wilds?.ravine.some(r=>r.x===p.x&&p.y>=r.top&&p.y<r.top+r.height)) &&
         !(village.wilds?.obstacles.some(o=>o.x===p.x&&o.y===p.y&&!o.cleared)))) &&
     !catalog.reservedAreas.some((reserved) => overlaps(reserved, area)) &&
     !buildingFootprints(village).some((taken) => overlaps(taken, area))
@@ -744,20 +742,49 @@ export function riverCenter(y: number, seed: number) {
 
 const RIVER_WIDTH = 4
 
-/** Water outside the camp picture, on the same river the camp already draws. */
-export function farWater(x: number, y: number, seed: number) {
-  const left = Math.round(riverCenter(y, seed) - 1.5)
-  return x >= left && x < left + RIVER_WIDTH
+/** The land outside the camp picture is dry grass. The river is not drawn there. */
+export function farWater(_x: number, _y: number, _seed: number) {
+  return false
 }
 
-/** The ground picture of one tile outside the camp picture. */
+/** Stable 0…1 roll for one far tile, so ground and trees stay put between visits. */
+function farRoll(seed: number, x: number, y: number) {
+  let value = (seed ^ Math.imul(x | 0, 0x27d4eb2d) ^ Math.imul(y | 0, 0x165667b1)) >>> 0
+  value = Math.imul(value ^ (value >>> 16), 0x85ebca6b)
+  value = Math.imul(value ^ (value >>> 13), 0xc2b2ae35)
+  return ((value ^ (value >>> 16)) >>> 0) / 4294967296
+}
+
+/**
+ * Ground outside the camp picture. Same grass scatter and stone patches as the wild inside the vale,
+ * so the rim does not read as a flat border against the authored map.
+ */
 export function farGroundTile(x: number, y: number, seed: number): TileRef {
-  const left = Math.round(riverCenter(y, seed) - 1.5)
-  const offset = x - left
-  if (offset === 0) return battle(36)
-  if (offset === 1 || offset === 2) return battle(37)
-  if (offset === 3) return battle(38)
-  return town(0)
+  const forest = valueNoise(seed + 1, 9)(x, y) * 0.75 + valueNoise(seed + 2, 3)(x, y) * 0.25
+  const stone = valueNoise(seed + 3, 7)(x, y)
+  if (stone > 0.74 && forest < 0.55) return town(43)
+  const roll = farRoll(seed + 4, x, y)
+  return town(roll < 0.06 ? 1 : roll < 0.09 ? 2 : 0)
+}
+
+/**
+ * Whether a tree stands on a far-land tile. Density matches the wild forest inside the camp picture,
+ * so woods continue past the vale instead of stopping on a hard line.
+ */
+export function farHasTree(x: number, y: number, seed: number): boolean {
+  const forest = valueNoise(seed + 1, 9)(x, y) * 0.75 + valueNoise(seed + 2, 3)(x, y) * 0.25
+  const stone = valueNoise(seed + 3, 7)(x, y)
+  if (stone > 0.74 && forest < 0.55) return false
+  const roll = farRoll(seed + 5, x, y)
+  return forest > 0.56 ? roll < 0.85 : forest > 0.48 ? roll < 0.3 : roll < 0.03
+}
+
+/** What a far-land tile is, for overviews: the stone patch or tree that `farGroundTile` and `farHasTree` draw there. */
+export function farTerrain(x: number, y: number, seed: number): Terrain {
+  const forest = valueNoise(seed + 1, 9)(x, y) * 0.75 + valueNoise(seed + 2, 3)(x, y) * 0.25
+  const stone = valueNoise(seed + 3, 7)(x, y)
+  if (stone > 0.74 && forest < 0.55) return Terrain.Stone
+  return farHasTree(x, y, seed) ? Terrain.Tree : Terrain.Grass
 }
 
 /**
@@ -895,8 +922,7 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
     mark(left, y, 4, 1, Terrain.Water)
     // Reeds grow on the west bank wherever the land is low.
     if (!inCore(left, y) && detailNoise(left, y) > 0.55 && !occupied.has(index(left - 1, y))) {
-      reeds.push({ x: left - 0.6, y: y + 0.5 })
-      mark(left - 1, y, 1, 1, Terrain.Reeds)
+      mark(left - 1, y)
     }
   }
 
@@ -967,13 +993,14 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
   }
   mark(1, 16, 7, 5)
 
-  // Reeds along the river bank by the camp.
+  // The old bank rolls stay, so the meadows beyond them keep their places. The reeds themselves went with the river.
   for (let y = 14; y <= 22; y++) {
     const pierRow = Math.abs(y - PIER.y) <= 1
-    const bank = { x: RIVER_LEFT - 0.6, y: y + 0.5 + (next() - 0.5) * 0.4 }
-    if (!pierRow) reeds.push(bank)
-    if (next() < 0.6 && !pierRow) reeds.push({ x: RIVER_LEFT - 1.3, y: y + 0.3 })
-    mark(RIVER_LEFT - 2, y, 2, 1, Terrain.Reeds)
+    next()
+    if (next() < 0.6 && !pierRow) {
+      /* The bank reeds left with the river. The roll stays so the meadows keep their places. */
+    }
+    mark(RIVER_LEFT - 2, y, 2, 1)
   }
 
   // Camp clearing with the bare plot east of it, and the trail to the gate. Mirrors the server's bare ground.
@@ -1105,6 +1132,24 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
         bushes.push({ x: x + 0.5, y: y + 0.6 })
         mark(x, y, 1, 1, Terrain.Bush)
       }
+    }
+  }
+
+  // The river and the ravine were part of the picture. The ground under them is grass, and it can be walked.
+  if (wilds) {
+    for (const span of wilds.ravine) {
+      for (let row = span.top; row < span.top + span.height; row++) {
+        if (inside(span.x, row) && terrain[index(span.x, row)] === Terrain.Ravine) terrain[index(span.x, row)] = 0
+      }
+    }
+  }
+  for (let y = MAP_TOP; y < MAP_BOTTOM; y++) {
+    const left = Math.round(riverCenter(y, seed) - 1.5)
+    for (let column = 0; column < RIVER_WIDTH; column++) {
+      const x = left + column
+      if (!inside(x, y) || terrain[index(x, y)] !== Terrain.Water) continue
+      terrain[index(x, y)] = 0
+      setGround(x, y, town(0))
     }
   }
 
@@ -1275,5 +1320,7 @@ export const TASK_ICONS: Record<string, TileRef> = {
 /** Icon for a task or a construction job. Labor jobs without their own icon show a hammer. */
 export const taskIcon = (id: string) => TASK_ICONS[id] ?? HAMMER
 
-/** Matches the server shore guard; hidden/queued API actions are checked again on the server. */
-export function canReachBank(village:VillageState,point:TilePoint) { return (!village.bridgeRuinedAt&&(village.bridgeOpened || village.completedProjects.includes('tsar-bridge'))) || point.x<=riverCenter(Math.floor(point.y),seedFrom(village.id)) }
+/** The river no longer divides the land, so a spot on it is not waiting for the bridge. */
+export function canReachBank(village: VillageState, point: TilePoint) {
+  return Boolean(village) && Number.isFinite(point.x + point.y)
+}

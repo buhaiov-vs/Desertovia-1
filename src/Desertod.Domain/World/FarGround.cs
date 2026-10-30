@@ -2,7 +2,7 @@ namespace Desertod.Domain.World;
 
 /// <summary>
 /// Ground outside the camp picture. A tile is a function of the village seed and its own coordinate, so a chunk
-/// can be drawn without storing the rest of the land. The river uses the same centre as the camp.
+/// can be drawn without storing the rest of the land. That ground is dry.
 /// </summary>
 public static class FarGround
 {
@@ -13,7 +13,7 @@ public static class FarGround
 
     public static bool Water(int x, int y, uint seed)
     {
-        var left = RiverLeft(y, seed);
-        return x >= left && x < left + RiverWidth;
+        _ = (x, y, seed);
+        return false;
     }
 }

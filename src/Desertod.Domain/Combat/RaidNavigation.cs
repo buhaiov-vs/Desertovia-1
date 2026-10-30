@@ -14,7 +14,6 @@ public sealed class RaidNavigation
     private readonly bool pedestrian;
     private readonly HashSet<(int X, int Y)> solid = [];
     private readonly Dictionary<(int X, int Y), Fortification> walls;
-    private readonly uint seed;
     private readonly byte[] terrain;
     private readonly Dictionary<(int X, int Y), bool> land = [];
     private RaidUnit[] crowd = [];
@@ -53,7 +52,6 @@ public sealed class RaidNavigation
     {
         this.village = village;
         this.pedestrian = pedestrian;
-        seed = Wilderness.Seed(village.Id.ToString());
         terrain=AuthoredTerrain.For(village.Id,village.Wilds);
         walls = village.Fortifications.ToDictionary(f => (f.X, f.Y));
         foreach (var plot in village.Structures.Where(s=>s.Kind!=BuildingKind.RopeBridge).Select(s => s.PlotId).Concat(village.Storages.Select(s => s.PlotId)).Concat(village.Sites.Select(s => s.PlotId)))
@@ -66,8 +64,7 @@ public sealed class RaidNavigation
     public bool Dry(int x, int y)
     {
         if (land.TryGetValue((x,y), out var valid)) return valid;
-        // Raids use the kingdom's river bank. An enemy has no implicit swimming or closed-bridge permission.
-        valid = AuthoredTerrain.Inside(x,y) && (pedestrian || x + .5 < Wilderness.RiverWestBank(y,seed));
+        valid = AuthoredTerrain.Inside(x,y);
         if(valid)
         {
             var kind=terrain[AuthoredTerrain.Index(x,y)];

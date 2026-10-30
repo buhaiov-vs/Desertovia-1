@@ -59,7 +59,7 @@ public static class AuthoredTerrain
         for(var y=Top;y<Bottom;y++)
         {
             var left=Wilderness.RiverWestBank(y,seed);Mark(left,y,4,1,Water);
-            if(!Core(left,y)&&Noise(unchecked(seed+2),3,left,y)>.55&&!occupied.Contains(Index(left-1,y)))Mark(left-1,y,1,1,5);
+            if(!Core(left,y)&&Noise(unchecked(seed+2),3,left,y)>.55&&!occupied.Contains(Index(left-1,y)))Mark(left-1,y);
         }
         var ponds=new List<(double X,double Y,double Rx,double Ry)>();
         for(var attempt=0;attempt<40&&ponds.Count<9;attempt++)
@@ -92,7 +92,7 @@ public static class AuthoredTerrain
         foreach(var (x,y) in new[]{(9,1),(10,1),(11,1),(9,2),(10,3),(11,2),(12,2),(8,3),(12,4)})Mark(x,y,1,1,3);
         for(var y=16;y<=20;y++)for(var x=1;x<=7;x++)if(Next()<.45)Mark(x,y,1,1,4);
         Mark(1,16,7,5);
-        for(var y=14;y<=22;y++){Next();Next();Mark(28,y,2,1,5);}
+        for(var y=14;y<=22;y++){Next();Next();Mark(28,y,2,1);}
         // Fixed clearings mirror the authored map. They consume no random draws.
         Mark(12,10,7,7,6);Mark(15,8,3,4,6);Mark(0,12,12,3,6);Mark(17,12,3,4,6);
         Mark(34,5,10,9,6);Mark(38,0,7,6,6);Mark(34,12,Right-34,2,6);Mark(38,15,5,4,6);Mark(39,16,3,2,3);
@@ -139,6 +139,16 @@ public static class AuthoredTerrain
         for(var n=0;n<terrain.Length;n++)
             if(walkable[n]==0&&climbable[n]>0&&terrain[n] is not (Mountain or Ravine or Thicket or Rockfall or Cave or Lookout or Trail))
                 Raise(n%Width+Left,n/Width+Top);
+        if(wilds is not null)
+            foreach(var span in wilds.Ravine)
+                for(var row=span.Top;row<span.Top+span.Height;row++)
+                    if(Inside(span.X,row)&&terrain[Index(span.X,row)]==Ravine)terrain[Index(span.X,row)]=0;
+        for(var row=Top;row<Bottom;row++)
+        {
+            var bank=Wilderness.RiverWestBank(row,seed);
+            for(var column=bank;column<bank+4;column++)
+                if(Inside(column,row)&&terrain[Index(column,row)]==Water)terrain[Index(column,row)]=0;
+        }
         return terrain;
     }
 

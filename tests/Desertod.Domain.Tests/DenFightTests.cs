@@ -192,7 +192,7 @@ public class DenFightTests
         Assert.All(den.Protectors, p =>
         {
             Assert.Equal(p.Guard.Health, p.Health);
-            Assert.InRange(new TilePoint(p.X, p.Y).DistanceTo(den.Anchor), DenGuards.PostRadius(den.Point.Level) - 0.2, DenGuards.PostRadius(den.Point.Level) + 0.2);
+            Assert.True(new TilePoint(p.X, p.Y).DistanceTo(den.Anchor) <= DenGuards.PostRadius(den.Point.Level) + DenGuards.PatrolStride + 0.05);
         });
     }
 
@@ -302,15 +302,15 @@ public class DenFightTests
     }
 
     [Fact]
-    public void Protectors_WalkTheRing_AndAPostThatCannotWalkStays()
+    public void Protectors_MillByTheirPosts_AndAPostThatCannotWalkStays()
     {
         var den = Den(1);
         var start = den.Protectors.Select(p => new TilePoint(p.X, p.Y)).ToList();
-        Assert.All(start, spot => Assert.Equal(DenGuards.PatrolRadius, spot.DistanceTo(den.Anchor), 5));
+        Assert.All(start, spot => Assert.True(spot.DistanceTo(den.Anchor) <= DenGuards.PatrolRadius + DenGuards.PatrolStride));
         den.Tick(1, Now.AddSeconds(3), new Random(1));
         Assert.All(den.Protectors, p => Assert.Equal(DenGuardState.Home, p.State));
-        Assert.Contains(den.Protectors, p => new TilePoint(p.X, p.Y).DistanceTo(start[p.Index]) > 1);
-        Assert.All(den.Protectors, p => Assert.Equal(DenGuards.PatrolRadius, new TilePoint(p.X, p.Y).DistanceTo(den.Anchor), 5));
+        Assert.Contains(den.Protectors, p => new TilePoint(p.X, p.Y).DistanceTo(start[p.Index]) > 0.5);
+        Assert.All(den.Protectors, p => Assert.True(new TilePoint(p.X, p.Y).DistanceTo(den.Anchor) <= DenGuards.PatrolRadius + DenGuards.PatrolStride));
 
         var plant = Den(14);
         var post = new TilePoint(plant.Protectors[0].X, plant.Protectors[0].Y);
@@ -320,26 +320,25 @@ public class DenFightTests
     }
 
     [Fact]
-    public void Every_Approach_MeetsAProtector_BeforeTheSpots()
+    public void InsideTheDisk_WakesTheDen_AndRootedPostsStillCoverTheirRing()
     {
+        var den = Den(1);
+        Assert.True(den.Wakes(new TilePoint(den.Anchor.X + DenGuards.PatrolRadius - 0.5, den.Anchor.Y)));
+        Assert.False(den.Wakes(new TilePoint(den.Anchor.X + DenGuards.PatrolRadius + DenGuards.Sight + 1, den.Anchor.Y)));
+
         var center = new TilePoint(400.5, 250.5);
-        foreach (var level in new[] { 1, 14, 30 })
+        foreach (var level in new[] { 14, 30 })
         {
             var radius = DenGuards.PostRadius(level);
             var sight = DenGuards.SightOf(level);
-            Assert.True(radius > 2, "the ring stands outside the spots");
             Assert.True(radius * Math.Sin(Math.PI / SpawnRings.ProtectorsPerDen) <= sight);
-            for (var lap = 0; lap < 8; lap++)
+            for (var step = 0; step < 64; step++)
             {
-                var now = Now.AddSeconds(lap * DenGuards.PatrolSeconds / 8);
-                for (var step = 0; step < 64; step++)
-                {
-                    var angle = step * Math.PI * 2 / 64;
-                    var at = new TilePoint(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius);
-                    var nearest = Enumerable.Range(0, SpawnRings.ProtectorsPerDen)
-                        .Min(index => at.DistanceTo(DenGuards.PatrolAt(center, index, SpawnRings.ProtectorsPerDen, level, now)));
-                    Assert.True(nearest <= sight);
-                }
+                var angle = step * Math.PI * 2 / 64;
+                var at = new TilePoint(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius);
+                var nearest = Enumerable.Range(0, SpawnRings.ProtectorsPerDen)
+                    .Min(index => at.DistanceTo(DenGuards.PatrolAt(center, index, SpawnRings.ProtectorsPerDen, level, Now)));
+                Assert.True(nearest <= sight);
             }
         }
     }

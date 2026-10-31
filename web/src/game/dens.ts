@@ -311,16 +311,17 @@ export class DenLayer {
     for (const [denId, den] of this.shown) {
       const fight = this.fights.get(denId)
       const heroId = fight?.hero?.citizenId ?? null
-      den.guards.forEach((guard, index) => {
-        if (!guard?.view.visible) return
+      for (let index = 0; index < den.guards.length; index++) {
+        const guard = den.guards[index]
+        if (!guard?.view.visible) continue
         const protector = fight?.protectors.find((one) => one.index === index)
-        if (protector?.state === 'Dead') return
+        if (protector?.state === 'Dead') continue
         // A figure stands on its feet: aim at its middle. A taller level is a larger tap.
         const reach = Math.max(PICK_RADIUS * FOE_SCALE, guard.height * 0.55)
         const distance = Math.hypot(guard.x - x, guard.y - guard.height * 0.45 - y)
         if (distance <= reach && (!best || distance < best.distance))
           best = { denId, protector: index, heroId, distance }
-      })
+      }
     }
     return best ? { denId: best.denId, protector: best.protector, heroId: best.heroId } : null
   }
@@ -335,7 +336,7 @@ export class DenLayer {
         if (!guard) continue
         const protector = fight?.protectors[index]
         if (guard.wander && !protector) {
-          // At rest a roaming foe's home is where its wander is now; a den's protector is where its round is.
+          // At rest a roaming foe's home is where its wander is now; a den's protector is where its mill is.
           // It faces the way it strolls.
           const spot = guard.wander()
           if (Math.abs(spot.x - guard.homeX) > 0.01) guard.homeFacing = spot.x < guard.homeX ? -1 : 1
@@ -479,7 +480,7 @@ export class DenLayer {
     for (let index = 0; index < point.protectors; index++) {
       const figure = this.protectorFigure(picture, index, direction, height, facing)
       if (!figure) continue
-      // The same round as the server's `DenGuards.PatrolAt`: around the den, not in a row in front of it.
+      // The same walk as the server's `DenGuards.PatrolAt`: a few steps by each post, not a circle around the den.
       const round = () => {
         const spot = patrolAt(point.x + 0.5, point.y + 0.5, index, point.protectors, point.level, this.now())
         return { x: spot.x * TILE, y: spot.y * TILE }

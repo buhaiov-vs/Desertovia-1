@@ -40,18 +40,26 @@ public static class DenGuards
     public const double AggroRange = 6;
 
     /// <summary>
-    /// Protectors who can walk circle the den at this distance, in tiles. Eight of them leave a gap of
-    /// <c>PatrolRadius * sin(π/8)</c> on the way in, and that gap stays inside <see cref="Sight"/>, so the
-    /// spots around the den, two tiles out, cannot be reached without meeting one. A protector that cannot
-    /// walk stands closer, at its own reach, and still covers that middle.
+    /// How far from the den a walking protector may stray, in tiles. Their posts sit inside this disk and they
+    /// take a few steps around each post. A protector that cannot walk stands closer, at its own reach, and still
+    /// covers the middle. Stepping into the disk wakes the den even when no one is looking that way.
     /// </summary>
     public const double PatrolRadius = 7;
+
+    /// <summary>Walking protectors mill this far from their own post, in tiles.</summary>
+    public const double PatrolStride = 2.5;
+
+    /// <summary>Share of <see cref="PatrolRadius"/> where the eight posts sit, so a stride still stays in the disk.</summary>
+    public const double PatrolPostShare = 0.65;
 
     /// <summary>A protector sees a hero this close, in tiles, and calls the rest of the den.</summary>
     public const double Sight = 4;
 
-    /// <summary>One lap of the ring, in seconds.</summary>
-    public const double PatrolSeconds = 40;
+    /// <summary>Every this many seconds a walking protector sets off to a new spot by its post.</summary>
+    public const double PatrolLegSeconds = 6;
+
+    /// <summary>Strolling pace while milling the den, in tiles a second.</summary>
+    public const double PatrolSpeed = 0.65;
 
     /// <summary>A slain protector stands at the den again after this long.</summary>
     public static readonly TimeSpan Respawn = TimeSpan.FromMinutes(30);
@@ -106,25 +114,64 @@ public static class DenGuards
         _ => [new(ResourceKind.Gold, 2, 4, 1), new(ResourceKind.Remedy, 1, 1, 0.5)],
     };
 
-    /// <summary>The poison plant and the lich stay on their posts. Everyone else walks the ring.</summary>
+    /// <summary>The poison plant and the lich stay on their posts. Everyone else mills a few steps around theirs.</summary>
     public static bool StandsStill(int level) => Rooted.Contains(level);
 
-    /// <summary>Where this den's ring sits, in tiles.</summary>
+    /// <summary>Where this den's wake disk sits, in tiles. Rooted posts stand at their own reach.</summary>
     public static double PostRadius(int level) => StandsStill(level) ? Ranged.GetValueOrDefault(level, MeleeRange) : PatrolRadius;
 
     /// <summary>How far a protector of this den sees. One that cannot walk sees only as far as it can strike.</summary>
     public static double SightOf(int level) => StandsStill(level) ? Math.Min(Sight, PostRadius(level)) : Sight;
 
     /// <summary>
-    /// Where protector <paramref name="index"/> is at rest. The pack is spaced evenly around the den and, unless it
-    /// cannot walk, turns once per <see cref="PatrolSeconds"/>. The web client's <c>patrolAt</c> draws the same round.
+    /// Where protector <paramref name="index"/> is at rest. The pack keeps evenly spaced posts around the den; walking
+    /// ones take short legs to a seeded spot by their post, then wait. The web client's <c>patrolAt</c> draws the same walk.
     /// </summary>
     public static TilePoint PatrolAt(TilePoint center, int index, int count, int level, DateTimeOffset now)
     {
-        var turn = StandsStill(level) ? 0 : now.ToUnixTimeMilliseconds() / 1000.0 / PatrolSeconds * 2 * Math.PI;
-        var angle = turn + index * 2 * Math.PI / Math.Max(1, count);
-        var radius = PostRadius(level);
-        return new TilePoint(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius);
+        var posts = Math.Max(1, count);
+        var postAngle = index * 2 * Math.PI / posts;
+        if (StandsStill(level))
+        {
+            var rooted = PostRadius(level);
+            return new TilePoint(center.X + Math.Cos(postAngle) * rooted, center.Y + Math.Sin(postAngle) * rooted);
+        }
+
+        var post = new TilePoint(
+            center.X + Math.Cos(postAngle) * PatrolRadius * PatrolPostShare,
+            center.Y + Math.Sin(postAngle) * PatrolRadius * PatrolPostShare);
+        var seconds = now.ToUnixTimeMilliseconds() / 1000.0;
+        var leg = (int)Math.Floor(seconds / PatrolLegSeconds);
+        var tileX = (int)Math.Floor(center.X);
+        var tileY = (int)Math.Floor(center.Y);
+        var from = PatrolWaypoint(tileX, tileY, index, post, leg - 1);
+        var to = PatrolWaypoint(tileX, tileY, index, post, leg);
+        var length = from.DistanceTo(to);
+        var walk = Math.Min(length / PatrolSpeed, PatrolLegSeconds * 0.75);
+        var share = walk <= 0 ? 1 : Math.Min(1, (seconds - leg * PatrolLegSeconds) / walk);
+        return new TilePoint(from.X + (to.X - from.X) * share, from.Y + (to.Y - from.Y) * share);
+    }
+
+    private static TilePoint PatrolWaypoint(int tileX, int tileY, int index, TilePoint post, int leg)
+    {
+        var angle = PatrolRoll(tileX, tileY, index, 1 + 2 * leg) * 2 * Math.PI;
+        var radius = Math.Sqrt(PatrolRoll(tileX, tileY, index, 2 + 2 * leg)) * PatrolStride;
+        return new TilePoint(post.X + Math.Cos(angle) * radius, post.Y + Math.Sin(angle) * radius);
+    }
+
+    /// <summary>A number in [0, 1) fixed by the den tile, the protector and the draw. The browser computes the same bits.</summary>
+    private static double PatrolRoll(int tileX, int tileY, int index, int draw)
+    {
+        unchecked
+        {
+            var hash = ((uint)tileX * 0x27D4EB2Fu) ^ ((uint)tileY * 0x165667B1u) ^ ((uint)(index + 1) * 0x9E3779B1u) ^ ((uint)(draw + 1) * 0x85EBCA6Bu);
+            hash ^= hash >> 15;
+            hash *= 0x85EBCA6Bu;
+            hash ^= hash >> 13;
+            hash *= 0xC2B2AE35u;
+            hash ^= hash >> 16;
+            return hash / 4_294_967_296.0;
+        }
     }
 
     /// <summary>A hero here meets the den: inside the ring, or within sight of a protector on it. A roaming foe does not.</summary>

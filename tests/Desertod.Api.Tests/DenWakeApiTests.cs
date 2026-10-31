@@ -138,7 +138,7 @@ public sealed class DenWakeApiTests(DesertodApiFactory factory)
         Assert.Equal(HttpStatusCode.NoContent, attack.StatusCode);
         var walking = await players.LoadCitizenAsync(resident.Id);
         Assert.NotNull(walking.Trip);
-        Assert.InRange(walking.Trip.To.DistanceTo(den.Center), DenGuards.PostRadius(den.Level) - 0.5, DenGuards.PostRadius(den.Level) + 0.5);
+        Assert.True(walking.Trip.To.DistanceTo(den.Center) <= DenGuards.PostRadius(den.Level) + DenGuards.PatrolStride + 0.5);
         Assert.Null(runtime.Fighting(resident.Id));
 
         var away = await resident.Client.PostAsJsonAsync($"{village.Path}/me/goto", new { spot = new { x = camp.X, y = camp.Y } });

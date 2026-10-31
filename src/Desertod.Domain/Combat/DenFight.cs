@@ -82,7 +82,7 @@ public sealed record DenOutcome(
     int ArrowsSpent);
 
 /// <summary>
-/// One den with its protectors, run in memory by the server. Protectors walk a ring around the den. One who sees the
+/// One den with its protectors, run in memory by the server. Protectors mill a few steps around the den. One who sees the
 /// hero calls the rest, and they chase together, but only inside the ring plus their sight: past that they turn back
 /// and heal, so the pack cannot be led away from the den. A roaming foe still wakes within
 /// <see cref="DenGuards.AggroRange"/> of where it stands and gives up at the edge of its claim. The hero walks where

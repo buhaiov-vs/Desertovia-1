@@ -8,6 +8,8 @@ import { spotsAround, type SpawnPoint } from './spawnRings'
 
 /** Den props are drawn this much larger than the heights in `DEN_PICTURES`. */
 const PROP_SCALE = 1.35
+/** Protectors and roaming foes are drawn this much larger than their own looks. */
+const FOE_SCALE = 1.4
 /** Protectors stand this far in front of the den, in tiles. */
 const GUARD_RADIUS = 1.3
 /** A lone protector stands this far from the den, in front on the camp side, in tiles. */
@@ -273,8 +275,8 @@ export class DenLayer {
         const guard = guards[protector.index]
         if (!guard || protector.state === 'Dead') continue
         // A figure stands on its feet: aim at its middle.
-        const distance = Math.hypot(guard.x - x, guard.y - 8 - y)
-        if (distance <= PICK_RADIUS && (!best || distance < best.distance))
+        const distance = Math.hypot(guard.x - x, guard.y - 8 * FOE_SCALE - y)
+        if (distance <= PICK_RADIUS * FOE_SCALE && (!best || distance < best.distance))
           best = { denId, protector: protector.index, heroId: snapshot.hero.citizenId, distance }
       }
     }
@@ -357,7 +359,7 @@ export class DenLayer {
       const [, cellX, cellY] = point.id.split(':').map(Number)
       const figure = this.protectorFigure(picture, 0, Math.abs(cellX + cellY))
       if (!figure) return den
-      figure.scale.x = facing
+      figure.scale.x = facing * FOE_SCALE
       views.push(this.place(figure, centerX, centerY))
       const bar = new Graphics()
       bar.zIndex = Number.MAX_SAFE_INTEGER
@@ -391,7 +393,7 @@ export class DenLayer {
       const lone = facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25
       const angle = point.protectors === 1 ? lone : Math.PI * (0.15 + (0.7 * index) / (point.protectors - 1))
       const radius = point.protectors === 1 ? LONE_GUARD : GUARD_RADIUS
-      figure.scale.x = facing
+      figure.scale.x = facing * FOE_SCALE
       const homeX = centerX + Math.cos(angle) * radius * TILE
       const homeY = centerY + Math.sin(angle) * radius * 0.6 * TILE
       views.push(this.place(figure, homeX, homeY))
@@ -406,7 +408,9 @@ export class DenLayer {
 
   private protectorFigure(picture: DenPicture, index: number, direction: number) {
     const protector = picture.protector(index, direction)
-    return typeof protector === 'string' ? enemyFigure(protector) : foeFigure(protector)
+    const figure = typeof protector === 'string' ? enemyFigure(protector) : foeFigure(protector)
+    figure?.scale.set(FOE_SCALE)
+    return figure
   }
 
   private placeMark(view: Container, x: number, y: number) {

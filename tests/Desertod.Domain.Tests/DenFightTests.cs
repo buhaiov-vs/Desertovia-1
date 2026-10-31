@@ -57,20 +57,43 @@ public class DenFightTests
     }
 
     [Fact]
-    public void A_FreshCitizen_BeatsTheSlimes_WithLittleHealthLeft()
+    public void Every_Den_HasEightProtectors_EachAsStrongAsOneOfItsPack()
+    {
+        foreach (var level in SpawnRings.Levels)
+        {
+            var den = Den(level.Level);
+            Assert.Equal(SpawnRings.ProtectorsPerDen, den.Protectors.Count);
+            Assert.All(den.Protectors, p => Assert.Equal(Math.Round(DenGuards.DenHealth(level.Level) / level.Protectors), p.Guard.Health));
+        }
+    }
+
+    [Fact]
+    public void A_FreshCitizen_SlaysSomeSlimes_ButFallsAtTheDen()
     {
         var den = Den(1);
         var hero = Guid.NewGuid();
         den.Engage(Fresh(hero), Beside(den, 5), null);
-        DenHero fighter = den.Hero!;
+        Fight(den, hero, Now, 120);
+
+        var outcome = den.TakeReleased();
+        Assert.NotNull(outcome);
+        Assert.True(outcome.KnockedOut);
+        Assert.InRange(outcome.Kills, 1, SpawnRings.ProtectorsPerDen - 1);
+        Assert.True(outcome.Experience > 0);
+    }
+
+    [Fact]
+    public void The_StrongestCitizen_ClearsTheSlimeDen()
+    {
+        var den = Den(1);
+        var hero = Guid.NewGuid();
+        den.Engage(Strongest(hero), Beside(den, 5), null);
         Fight(den, hero, Now, 120);
 
         var outcome = den.TakeReleased();
         Assert.NotNull(outcome);
         Assert.False(outcome.KnockedOut);
-        Assert.Equal(3, outcome.Kills);
-        Assert.True(outcome.Experience > 0);
-        Assert.InRange(fighter.Health, 1, 20);
+        Assert.Equal(SpawnRings.ProtectorsPerDen, outcome.Kills);
         Assert.All(den.Protectors, p => Assert.Equal(DenGuardState.Dead, p.State));
     }
 
@@ -91,23 +114,15 @@ public class DenFightTests
     }
 
     [Fact]
-    public void The_StrongestCitizen_BeatsTheLich_AndAWeakerOneDoesNot()
+    public void Eight_Liches_AreTooManyForTheStrongestCitizenAlone()
     {
         var den = Den(30);
         var hero = Guid.NewGuid();
         den.Engage(Strongest(hero), Beside(den, 4), null);
-        DenHero fighter = den.Hero!;
         Fight(den, hero, Now, 600);
-        var won = den.TakeReleased()!;
-        Assert.False(won.KnockedOut);
-        Assert.Equal(1, won.Kills);
-        Assert.InRange(fighter.Health, 1, 72 * 0.6);
-
-        var other = Den(30);
-        var weaker = Guid.NewGuid();
-        other.Engage(new DenFighter(weaker, 60, 14, 0.3, null), Beside(other, 4), null);
-        Fight(other, weaker, Now, 600);
-        Assert.True(other.TakeReleased()!.KnockedOut);
+        var outcome = den.TakeReleased()!;
+        Assert.True(outcome.KnockedOut);
+        Assert.True(outcome.Kills < SpawnRings.ProtectorsPerDen);
     }
 
     [Fact]
@@ -183,7 +198,7 @@ public class DenFightTests
     {
         var den = Den(1);
         var hero = Guid.NewGuid();
-        den.Engage(Fresh(hero), Beside(den, 5), null);
+        den.Engage(Strongest(hero), Beside(den, 5), null);
         var end = Fight(den, hero, Now, 120);
         Assert.NotNull(den.TakeReleased());
         Assert.All(den.Protectors, p => Assert.Equal(DenGuardState.Dead, p.State));
@@ -192,7 +207,7 @@ public class DenFightTests
         den.Tick(0.1, end + DenGuards.Respawn - TimeSpan.FromMinutes(1), new Random(1));
         Assert.All(den.Protectors, p => Assert.Equal(DenGuardState.Dead, p.State));
         var events = den.Tick(0.1, end + DenGuards.Respawn, new Random(1));
-        Assert.Equal(3, events.Count(e => e.Kind == DenEventKind.Respawned));
+        Assert.Equal(SpawnRings.ProtectorsPerDen, events.Count(e => e.Kind == DenEventKind.Respawned));
         Assert.True(den.IsResting);
         Assert.True(den.Wakes(Beside(den, 1)));
     }

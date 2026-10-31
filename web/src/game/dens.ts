@@ -10,8 +10,20 @@ import { spotsAround, type SpawnPoint } from './spawnRings'
 const PROP_SCALE = 1.35
 /** Protectors and roaming foes are drawn this much larger than their own looks. */
 const FOE_SCALE = 1.4
-/** Protectors stand this far in front of the den, in tiles. */
+/** Protectors in one row in front of the den; more stand in a second, wider row. */
+const ROW_SIZE = 4
+/** The first row stands this far in front of the den, in tiles; each further row one tile more. */
 const GUARD_RADIUS = 1.3
+
+/** Where protector `index` of `count` stands on its row's arc, as the server's `DenGuards.Arc`. */
+function guardArc(index: number, count: number): { angle: number; radius: number } {
+  const row = Math.floor(index / ROW_SIZE)
+  const inRow = Math.min(ROW_SIZE, count - row * ROW_SIZE)
+  const share = inRow === 1 ? 0.5 : (index % ROW_SIZE) / (inRow - 1)
+  const span = row === 0 ? (count > ROW_SIZE ? 0.5 : 0.7) : 0.8
+  return { angle: Math.PI * (0.5 + (share - 0.5) * span), radius: GUARD_RADIUS + row }
+}
+
 /** A lone protector stands this far from the den, in front on the camp side, in tiles. */
 const LONE_GUARD = 1.2
 /** Radius of the trodden patch under a den, in tiles; it reaches just past the spots. */
@@ -419,10 +431,10 @@ export class DenLayer {
     for (let index = 0; index < point.protectors; index++) {
       const figure = this.protectorFigure(picture, index, direction)
       if (!figure) continue
-      // Protectors stand on an arc in front of the prop, so the prop never covers them; a lone one stands aside so it does not cover the prop.
+      // Protectors stand in rows on arcs in front of the prop, so the prop never covers them; a lone one stands aside
+      // so it does not cover the prop. The same places as the server's `DenGuards.Homes`.
       const lone = facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25
-      const angle = point.protectors === 1 ? lone : Math.PI * (0.15 + (0.7 * index) / (point.protectors - 1))
-      const radius = point.protectors === 1 ? LONE_GUARD : GUARD_RADIUS
+      const { angle, radius } = point.protectors === 1 ? { angle: lone, radius: LONE_GUARD } : guardArc(index, point.protectors)
       figure.scale.x = facing * FOE_SCALE
       const homeX = centerX + Math.cos(angle) * radius * TILE
       const homeY = centerY + Math.sin(angle) * radius * 0.6 * TILE

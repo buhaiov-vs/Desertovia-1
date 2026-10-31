@@ -3,6 +3,10 @@ using Desertod.Domain.Combat;
 namespace Desertod.Domain.World;
 
 /// <summary>One foe ring. The cave place and the renewal goods are not part of this list.</summary>
+/// <param name="Protectors">
+/// The pack this level is balanced for: one protector has this share of the level's den health and damage. A den holds
+/// <see cref="SpawnRings.ProtectorsPerDen"/> such protectors whatever this number is.
+/// </param>
 public sealed record SpawnLevel(int Level, string Name, int Floor, int Protectors, EnemyKind? Kind)
 {
     public int Claim => Protectors > 1 ? SpawnRings.PackClaim : SpawnRings.SingleClaim;
@@ -32,6 +36,9 @@ public static class SpawnRings
 {
     public const int PointsOnARing = 8;
     public const int Spots = 8;
+
+    /// <summary>Protectors standing at every den, each as strong as one of its level's pack.</summary>
+    public const int ProtectorsPerDen = 8;
     public const int PackClaim = 48;
     public const int SingleClaim = 64;
     public static readonly TimeSpan Hold = TimeSpan.FromSeconds(3);
@@ -92,7 +99,7 @@ public static class SpawnRings
             {
                 if (TryPlace(seed, level.Level, level.Floor, direction, out var x, out var y))
                 {
-                    points.Add(new SpawnPoint($"{level.Level}:{direction}", level.Level, level.Name, level.Kind, level.Protectors, level.Claim, x, y));
+                    points.Add(new SpawnPoint($"{level.Level}:{direction}", level.Level, level.Name, level.Kind, ProtectorsPerDen, level.Claim, x, y));
                 }
             }
         }

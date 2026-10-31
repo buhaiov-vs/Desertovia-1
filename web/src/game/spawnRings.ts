@@ -13,6 +13,7 @@ export interface SpawnLevel {
   name: string
   /** Not closer to the camp than this, in tiles. */
   floor: number
+  /** The pack this level is balanced for: one protector has this share of the den's strength. A den holds `PROTECTORS_PER_DEN`. */
   protectors: number
   /** The look the game already draws for this foe; null while the foe has no picture. */
   kind: EnemyKind | null
@@ -36,6 +37,8 @@ export interface SpawnPoint {
 
 export const POINTS_ON_A_RING = 8
 export const SPOTS = 8
+/** Protectors standing at every den, each as strong as one of its level's pack. */
+export const PROTECTORS_PER_DEN = 8
 export const PACK_CLAIM = 48
 export const SINGLE_CLAIM = 64
 /** A den lands up to this many tiles past its floor; the next ring starts 541 tiles out. */
@@ -113,7 +116,7 @@ export function spawnPoints(seed: number, { camp, land, water = () => false }: R
         level: ring.level,
         name: ring.name,
         kind: ring.kind,
-        protectors: ring.protectors,
+        protectors: PROTECTORS_PER_DEN,
         claim: ring.protectors > 1 ? PACK_CLAIM : SINGLE_CLAIM,
         x: tile.x,
         y: tile.y,

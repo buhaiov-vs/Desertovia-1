@@ -94,7 +94,7 @@ public sealed class DenFight
     public const double HandSeconds = 1;
     public const double BowSeconds = 1.4;
 
-    /// <summary>The citizen's normal walking pace, so walking past a den and outrunning its protectors stays possible.</summary>
+    /// <summary>The citizen's normal walking pace; protectors chase faster, so only the leash lets a hero get away.</summary>
     public const double HeroSpeed = 1 / Exploration.SecondsPerTile;
 
     /// <summary>A walker this close to a point has reached it.</summary>

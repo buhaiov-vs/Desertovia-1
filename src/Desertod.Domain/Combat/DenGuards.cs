@@ -22,9 +22,10 @@ public sealed record DenGuard(
     IReadOnlyList<DungeonLoot> Loot);
 
 /// <summary>
-/// Protector numbers of the thirty den levels. A brand-new citizen with bare hands (32 health, power 2) beats the
-/// level 1 slimes with little health left; a citizen with every stat at 10, a sword and a shield beats the level 30
-/// lich with about a third of their health. Between them the whole den's health grows 10% a level and its damage 2.8%.
+/// Protector numbers of the thirty den levels. One protector has its share of the level's pack (<see cref="SpawnLevel.Protectors"/>):
+/// alone, a brand-new citizen with bare hands beats a pack of level 1 slimes, and a citizen with every stat at 10, a sword
+/// and a shield beats the one level 30 lich. A den holds <see cref="SpawnRings.ProtectorsPerDen"/> of them, so a whole den
+/// takes several citizens. Between levels the pack's health grows 10% a level and its damage 2.8%.
 /// </summary>
 public static class DenGuards
 {
@@ -41,8 +42,9 @@ public static class DenGuards
     /// <summary>A slain protector stands at the den again after this long.</summary>
     public static readonly TimeSpan Respawn = TimeSpan.FromMinutes(30);
 
-    public const double PackSpeed = 1.5;
-    public const double SingleSpeed = 1.3;
+    /// <summary>Chasing pace, in tiles a second: faster than a walking citizen, so a hero who walks on is caught before the leash.</summary>
+    public const double PackSpeed = 2.2;
+    public const double SingleSpeed = 2.0;
 
     /// <summary>Protectors going home walk this much faster than they chase.</summary>
     public const double ReturnSpeedMultiplier = 1.5;
@@ -90,9 +92,13 @@ public static class DenGuards
         _ => [new(ResourceKind.Gold, 2, 4, 1), new(ResourceKind.Remedy, 1, 1, 0.5)],
     };
 
+    /// <summary>Protectors in one row in front of the den; more stand in a second, wider row.</summary>
+    public const int RowSize = 4;
+
     /// <summary>
-    /// Where each protector stands at rest, in tiles: on an arc in front of the den, or aside for a lone one, on the
-    /// camp side. A roaming foe stands on its own tile. The web client's <c>DenLayer</c> draws them at the same places.
+    /// Where each protector stands at rest, in tiles: in rows of <see cref="RowSize"/> on arcs in front of the den,
+    /// the outer row wider and staggered, or aside for a lone one, on the camp side. A roaming foe stands on its own
+    /// tile. The web client's <c>DenLayer</c> draws them at the same places.
     /// </summary>
     public static IReadOnlyList<TilePoint> Homes(SpawnPoint point, TilePoint camp)
     {
@@ -107,13 +113,21 @@ public static class DenGuards
         var homes = new TilePoint[count];
         for (var index = 0; index < count; index++)
         {
-            var angle = count == 1
-                ? facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25
-                : Math.PI * (0.15 + 0.7 * index / (count - 1));
-            var radius = count == 1 ? 1.2 : 1.3;
+            var (angle, radius) = count == 1
+                ? (facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25, 1.2)
+                : Arc(index, count);
             homes[index] = new TilePoint(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius * 0.6);
         }
 
         return homes;
+    }
+
+    private static (double Angle, double Radius) Arc(int index, int count)
+    {
+        var row = index / RowSize;
+        var inRow = Math.Min(RowSize, count - row * RowSize);
+        var share = inRow == 1 ? 0.5 : (double)(index % RowSize) / (inRow - 1);
+        var span = row == 0 ? (count > RowSize ? 0.5 : 0.7) : 0.8;
+        return (Math.PI * (0.5 + (share - 0.5) * span), 1.3 + row);
     }
 }

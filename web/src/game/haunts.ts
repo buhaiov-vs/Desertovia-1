@@ -1,4 +1,4 @@
-import { SPAWN_LEVELS, type RingLand, type SpawnPoint } from './spawnRings'
+import { SPAWN_LEVELS, type RingLand, type SpawnPoint } from './spawnRings.ts'
 
 /**
  * Lone foes haunting the land between the den rings, as the server's `Haunts` places them. The land is cut into
@@ -65,5 +65,5 @@ function roll(seed: number, cellX: number, cellY: number, draw: number) {
   hash ^= hash >>> 13
   hash = Math.imul(hash, 0xc2b2ae35) >>> 0
   hash ^= hash >>> 16
-  return hash / 4_294_967_296
+  return (hash >>> 0) / 4_294_967_296
 }

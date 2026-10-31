@@ -6,10 +6,14 @@ import type { LandChunkRect, TileRect } from './landChunk'
 import { TILE } from './sheets'
 import { spotsAround, type SpawnPoint } from './spawnRings'
 
+/** Den props are drawn this much larger than the heights in `DEN_PICTURES`. */
+const PROP_SCALE = 1.35
 /** Protectors stand this far in front of the den, in tiles. */
-const GUARD_RADIUS = 1.1
+const GUARD_RADIUS = 1.3
 /** A lone protector stands this far from the den, in front on the camp side, in tiles. */
-const LONE_GUARD = 1
+const LONE_GUARD = 1.2
+/** Radius of the trodden patch under a den, in tiles; it reaches just past the spots. */
+const PATCH_RADIUS = 2.7
 /** Dens this far past the view keep their figures, so panning does not pop them in at the edge. */
 const MARGIN_TILES = 32
 /** A spot can sit across a chunk edge; it is drawn into every chunk it reaches. */
@@ -98,7 +102,21 @@ export class DenLayer {
     const right = chunk.originX + chunk.width + SPOT_REACH
     const bottom = chunk.originY + chunk.height + SPOT_REACH
     let marks: Graphics | null = null
+    const reach = PATCH_RADIUS + 1
     for (const point of this.points) {
+      if (point.x + reach < chunk.originX || point.x - reach > chunk.originX + chunk.width) continue
+      if (point.y + reach < chunk.originY || point.y - reach > chunk.originY + chunk.height) continue
+      // The chunk texture clips the patch at its frame, so every chunk it reaches draws all of it.
+      marks ??= new Graphics()
+      const centerX = (point.x + 0.5 - chunk.originX) * TILE
+      const centerY = (point.y + 0.5 - chunk.originY) * TILE
+      marks
+        .circle(centerX, centerY, PATCH_RADIUS * TILE)
+        .fill({ color: 0x3a2414, alpha: 0.38 })
+        .circle(centerX, centerY, PATCH_RADIUS * TILE)
+        .stroke({ color: 0x9e2a1e, alpha: 0.75, width: 2 })
+        .circle(centerX, centerY, PATCH_RADIUS * TILE * 0.55)
+        .fill({ color: 0x2a170c, alpha: 0.3 })
       if (point.x + 3 < left || point.x - 3 > right || point.y + 3 < top || point.y - 3 > bottom) continue
       for (const spot of spotsAround(point)) {
         if (spot.x < left || spot.x > right || spot.y < top || spot.y > bottom) continue
@@ -145,7 +163,7 @@ export class DenLayer {
     const centerX = (point.x + 0.5) * TILE
     const centerY = (point.y + 0.5) * TILE
     const views: Container[] = []
-    const prop = foeFigure({ idle: `den-${point.level}` as FoeAnimation, height: picture.prop })
+    const prop = foeFigure({ idle: `den-${point.level}` as FoeAnimation, height: Math.round(picture.prop * PROP_SCALE) })
     if (prop) views.push(this.place(prop, centerX, centerY))
 
     const direction = Number(point.id.split(':')[1])

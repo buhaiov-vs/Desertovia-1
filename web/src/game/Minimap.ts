@@ -229,16 +229,25 @@ export class Minimap {
       }
       for (const den of markers.dens) {
         if (!this.inside(den.x, den.y)) continue
-        const size = unit * 1.3
-        context.fillStyle = '#d0342c'
-        context.strokeStyle = '#1b1206'
-        context.lineWidth = 1
+        const x = xOf(den.x)
+        const y = yOf(den.y)
+        const size = unit * 2.6
+        context.fillStyle = 'rgba(255, 60, 40, 0.28)'
         context.beginPath()
-        context.moveTo(xOf(den.x), yOf(den.y) - size)
-        context.lineTo(xOf(den.x) + size, yOf(den.y))
-        context.lineTo(xOf(den.x), yOf(den.y) + size)
-        context.lineTo(xOf(den.x) - size, yOf(den.y))
+        context.arc(x, y, size * 1.7, 0, Math.PI * 2)
+        context.fill()
+        context.beginPath()
+        context.moveTo(x, y - size)
+        context.lineTo(x + size, y)
+        context.lineTo(x, y + size)
+        context.lineTo(x - size, y)
         context.closePath()
+        context.strokeStyle = '#fff4e0'
+        context.lineWidth = 4
+        context.stroke()
+        context.fillStyle = '#e0261c'
+        context.strokeStyle = '#1b1206'
+        context.lineWidth = 2
         context.fill()
         context.stroke()
       }

@@ -37,6 +37,7 @@ public sealed partial class GameService(
     VillageStateChanges changes,
     CitizenPresence presence,
     IHospitalBridge hospitalBridge,
+    DenRuntime dens,
     ILogger<GameService> logger,
     IConfiguration configuration)
 {
@@ -1089,6 +1090,11 @@ public sealed partial class GameService(
     public async Task<CitizenDto> GoToAsync(string slug, Guid accountId, GoToRequest request, CancellationToken cancellationToken)
     {
         var key = await RequireCitizenAsync(slug, accountId, cancellationToken);
+        if (await GoToInDenFightAsync(key.Id, request.Spot, cancellationToken) is { } fighting)
+        {
+            return fighting;
+        }
+
         return await WithVillageAsync(key.VillageId, async db =>
         {
             await SyncHospitalAsync(db, key.VillageId, cancellationToken);
@@ -1498,6 +1504,7 @@ public sealed partial class GameService(
                 ? residents.FirstOrDefault(c=>c.AccountId==id)?.Name??ownerNames.GetValueOrDefault(id):null}).ToArray(),
             Battles = (await db.RaidBattles.AsNoTracking().Where(b=>b.VillageId==village.Id && (b.FinishedAt==null || b.FinishedAt>=now.AddSeconds(-15))).OrderBy(b=>b.StartsAt).ToListAsync(cancellationToken)).Select(b=>b.ToBattleDto()).ToArray(),
             Fortifications = village.Fortifications,
+            Dens = dens.Snapshots(village.Id),
             FortificationUpgrade=FortificationUpgrades.Quote(village),
             KingdomArea = KingdomRules.Area(village), CastleLevel = KingdomRules.Level(village),
             NextKingdomArea=KingdomRules.Level(village)<3?KingdomRules.AreaForLevel(Math.Max(1,KingdomRules.Level(village))+1):null,

@@ -89,6 +89,7 @@ public sealed record VillageEventsDto(
 {
     public IReadOnlyList<RaidBattleDto> Battles { get; init; } = [];
     public IReadOnlyList<Fortification>? Fortifications { get; init; }
+    public IReadOnlyList<DenSnapshotDto> Dens { get; init; } = [];
 }
 
 /// <summary>
@@ -160,6 +161,18 @@ public sealed class VillageNotifier(IHubContext<VillageHub> hub, VillageStateCha
         return Queue(slug, events=>{events.Battles[snapshot.Id]=snapshot;events.Fortifications=fortifications;});
     }
 
+    /// <summary>The latest state of a den per batch; the events of skipped snapshots are carried into the latest.</summary>
+    public Task DenUpdated(string slug, DenSnapshotDto snapshot) =>
+        Queue(slug, events =>
+        {
+            if (events.Dens.TryGetValue(snapshot.DenId, out var earlier) && earlier.Events.Count > 0)
+            {
+                snapshot = snapshot with { Events = [.. earlier.Events, .. snapshot.Events] };
+            }
+
+            events.Dens[snapshot.DenId] = snapshot;
+        });
+
     public Task RaidFought(string slug, RaidReport report) => Queue(slug, events => events.Raids.Add(report));
 
     public Task DungeonEnded(string slug, DungeonDto run) => Queue(slug, events => events.Dungeons.Add(run));
@@ -183,7 +196,7 @@ public sealed class VillageNotifier(IHubContext<VillageHub> hub, VillageStateCha
                     entry.Value.Dungeons,
                     [.. entry.Value.Left],
                     [.. entry.Value.Away],
-                    [.. entry.Value.Back]) { Battles = [..entry.Value.Battles.Values], Fortifications = entry.Value.Fortifications }))
+                    [.. entry.Value.Back]) { Battles = [..entry.Value.Battles.Values], Fortifications = entry.Value.Fortifications, Dens = [..entry.Value.Dens.Values] }))
                 .ToList();
             pending.Clear();
             return taken;
@@ -217,6 +230,7 @@ public sealed class VillageNotifier(IHubContext<VillageHub> hub, VillageStateCha
         public List<RaidReport> Raids { get; } = [];
         public Dictionary<Guid,RaidBattleDto> Battles { get; } = [];
         public IReadOnlyList<Fortification>? Fortifications { get; set; }
+        public Dictionary<string, DenSnapshotDto> Dens { get; } = [];
         public List<DungeonDto> Dungeons { get; } = [];
         public HashSet<Guid> Left { get; } = [];
         public HashSet<Guid> Away { get; } = [];

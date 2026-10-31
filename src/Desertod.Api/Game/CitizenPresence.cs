@@ -90,6 +90,15 @@ public sealed class CitizenPresence(TimeProvider time)
         }
     }
 
+    public IReadOnlyList<Guid> PresentCitizens()
+    {
+        lock (gate)
+        {
+            var now = time.GetUtcNow();
+            return citizens.Where(entry => IsPresent(entry.Value, now)).Select(entry => entry.Key).ToList();
+        }
+    }
+
     /// <summary>Citizens who went away since the last call, each reported once until they come back.</summary>
     public IReadOnlyList<(string Slug, Guid CitizenId)> TakeDeparted()
     {

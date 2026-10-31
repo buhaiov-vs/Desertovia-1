@@ -220,6 +220,9 @@ public sealed record VillageStateDto(
     public DateTimeOffset? BridgeRuinedAt { get; init; }
     public IReadOnlyList<Fortification> Fortifications { get; init; } = [];
     public IReadOnlyList<RaidBattleDto> Battles { get; init; } = [];
+
+    /// <summary>Dens that are not at rest: protectors awake, walking home or slain.</summary>
+    public IReadOnlyList<DenSnapshotDto> Dens { get; init; } = [];
 }
 public sealed record RelocationDto(string PlotId,int Residents,int Available);
 public sealed record HousingDto(string PlotId, int Beds, int Occupied, int Level, int Number = 0, Guid? OwnerAccountId = null, string? OwnerName = null, DateTimeOffset? BuiltAt = null);

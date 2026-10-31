@@ -79,11 +79,13 @@ builder.Services.AddSingleton<ChaplainChatWorker>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<ChaplainChatWorker>());
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<DungeonRuntime>();
+builder.Services.AddSingleton<DenRuntime>();
 builder.Services.AddHostedService<CycleSettlementWorker>();
 builder.Services.AddHostedService<RetiredGuardWorker>();
 builder.Services.AddHostedService<RaidWorker>();
 builder.Services.AddHostedService<PresenceWorker>();
 builder.Services.AddHostedService<DungeonWorker>();
+builder.Services.AddHostedService<DenWorker>();
 builder.Services.AddHostedService<VillageStatePublisher>();
 
 var app = builder.Build();

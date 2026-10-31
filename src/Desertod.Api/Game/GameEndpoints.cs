@@ -193,6 +193,12 @@ public static class GameEndpoints
         player.MapPost("/villages/{slug}/me/goto", (string slug, GoToRequest request, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.GoToAsync(slug, user.RequireAccountId(), request, cancellationToken));
 
+        player.MapPost("/villages/{slug}/dens/{denId}/attack", async (string slug, string denId, DenAttackRequest request, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
+        {
+            await game.AttackDenAsync(slug, user.RequireAccountId(), denId, request, cancellationToken);
+            return Results.NoContent();
+        });
+
         player.MapPost("/villages/{slug}/me/job", (string slug, StartJobRequest request, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.StartJobAsync(slug, user.RequireAccountId(), request, cancellationToken));
 

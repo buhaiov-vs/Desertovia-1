@@ -1,9 +1,11 @@
 import type { EnemyKind } from '../api'
 
 /**
- * The thirty foe rings around the camp, as the server's `SpawnRings` places them. Eight points sit on each ring.
- * A point past the land is left out, so past the straight edge only the four corner points remain.
- * A point on water slides along its ring to the nearest dry tile that is still at least that foe's floor away.
+ * The thirty foe rings around the camp, as the server's `SpawnRings` places them, eight points each.
+ * A point lands at a seeded random place in a wide band: from its floor up to `SPREAD` tiles further out,
+ * and up to `SWAY` either side of its direction. When no such place is dry land, it falls back to the ring itself:
+ * a point past the land is left out, so past the straight edge only the four corner points remain,
+ * and a point on water slides along its ring to the nearest dry tile that is still at least that foe's floor away.
  */
 
 export interface SpawnLevel {
@@ -34,6 +36,12 @@ export const POINTS_ON_A_RING = 8
 export const SPOTS = 8
 export const PACK_CLAIM = 48
 export const SINGLE_CLAIM = 64
+/** A den lands up to this many tiles past its floor; the next ring starts 541 tiles out. */
+export const SPREAD = 400
+/** A den turns up to this far either side of its direction, in radians (18 degrees). */
+export const SWAY = Math.PI / 10
+/** Random places tried before the den falls back to its own ring. */
+const SCATTER_TRIES = 6
 
 const level = (level: number, name: string, floor: number, protectors: number, kind: EnemyKind | null): SpawnLevel => ({
   level,
@@ -96,7 +104,7 @@ export function spawnPoints(seed: number, { camp, land, water = () => false }: R
   const points: SpawnPoint[] = []
   for (const ring of SPAWN_LEVELS) {
     for (let direction = 0; direction < POINTS_ON_A_RING; direction++) {
-      const tile = place(seed, ring.floor, direction, camp, land, water)
+      const tile = place(seed, ring.level, ring.floor, direction, camp, land, water)
       if (!tile) continue
       points.push({
         id: `${ring.level}:${direction}`,
@@ -123,6 +131,7 @@ export function spotsAround(point: SpawnPoint): Array<{ x: number; y: number }> 
 
 function place(
   seed: number,
+  level: number,
   floor: number,
   direction: number,
   camp: { x: number; y: number },
@@ -131,6 +140,12 @@ function place(
 ) {
   const onLand = (x: number, y: number) => x >= land.x && y >= land.y && x + 1 <= land.x + land.width && y + 1 <= land.y + land.height
   const angle = (direction * Math.PI) / 4
+  for (let attempt = 0; attempt < SCATTER_TRIES; attempt++) {
+    const sway = (roll(seed, level, direction, attempt * 2) * 2 - 1) * SWAY
+    const radius = floor + roll(seed, level, direction, attempt * 2 + 1) * SPREAD
+    const tile = near(camp, angle + sway, radius, floor)
+    if (tile && onLand(tile.x, tile.y) && !water(tile.x, tile.y, seed)) return tile
+  }
   const first = onRing(camp, angle, floor)
   if (!first || !onLand(first.x, first.y)) return null
   if (!water(first.x, first.y, seed)) return first
@@ -145,7 +160,22 @@ function place(
 }
 
 function onRing(camp: { x: number; y: number }, angle: number, floor: number) {
-  const x = Math.floor(camp.x + Math.cos(angle) * floor)
-  const y = Math.floor(camp.y + Math.sin(angle) * floor)
+  return near(camp, angle, floor, floor)
+}
+
+function near(camp: { x: number; y: number }, angle: number, radius: number, floor: number) {
+  const x = Math.floor(camp.x + Math.cos(angle) * radius)
+  const y = Math.floor(camp.y + Math.sin(angle) * radius)
   return Math.hypot(x + 0.5 - camp.x, y + 0.5 - camp.y) + 1 >= floor ? { x, y } : null
+}
+
+/** A number in [0, 1) fixed by the seed, the den and the draw: the same bits as the server's `Roll`. */
+function roll(seed: number, level: number, direction: number, draw: number) {
+  let hash = (seed ^ Math.imul(level, 0x9e3779b1) ^ Math.imul(direction + 1, 0x85ebca77) ^ Math.imul(draw + 1, 0xc2b2ae3d)) >>> 0
+  hash ^= hash >>> 16
+  hash = Math.imul(hash, 0x85ebca6b) >>> 0
+  hash ^= hash >>> 13
+  hash = Math.imul(hash, 0xc2b2ae35) >>> 0
+  hash ^= hash >>> 16
+  return (hash >>> 0) / 4_294_967_296
 }

@@ -21,8 +21,10 @@ public sealed record SpawnPoint(string Id, int Level, string Name, EnemyKind? Ki
 public sealed record SpotPresence(int Spot, Guid CitizenId, DateTimeOffset Since);
 
 /// <summary>
-/// The thirty foe rings around the camp. Eight points sit on each ring. A point past the land is left out,
-/// so past the straight edge only the four corner points remain. A point in the river slides along the ring
+/// The thirty foe rings around the camp, eight points each. A point lands at a seeded random place in a wide band:
+/// from its floor up to <see cref="Spread"/> tiles further out, and up to <see cref="Sway"/> either side of its direction.
+/// When no such place is dry land, it falls back to the ring itself: a point past the land is left out,
+/// so past the straight edge only the four corner points remain, and a point in the river slides along the ring
 /// to the nearest dry tile that is still at least that foe's floor away.
 /// </summary>
 public static class SpawnRings
@@ -32,6 +34,15 @@ public static class SpawnRings
     public const int PackClaim = 48;
     public const int SingleClaim = 64;
     public static readonly TimeSpan Hold = TimeSpan.FromSeconds(3);
+
+    /// <summary>A den lands up to this many tiles past its floor; the next ring starts 541 tiles out.</summary>
+    public const int Spread = 400;
+
+    /// <summary>A den turns up to this far either side of its direction, in radians (18 degrees).</summary>
+    public const double Sway = Math.PI / 10;
+
+    /// <summary>Random places tried before the den falls back to its own ring.</summary>
+    private const int ScatterTries = 6;
 
     /// <summary>The cave has no chosen tile. It is not the cave in the home vale.</summary>
     public static TilePoint? CavePlace => null;
@@ -78,7 +89,7 @@ public static class SpawnRings
         {
             for (var direction = 0; direction < PointsOnARing; direction++)
             {
-                if (TryPlace(seed, level.Floor, direction, out var x, out var y))
+                if (TryPlace(seed, level.Level, level.Floor, direction, out var x, out var y))
                 {
                     points.Add(new SpawnPoint($"{level.Level}:{direction}", level.Level, level.Name, level.Kind, level.Protectors, level.Claim, x, y));
                 }
@@ -188,10 +199,20 @@ public static class SpawnRings
     private static SpawnLevel Level(int level, string name, int floor, int protectors, EnemyKind? kind) =>
         new(level, name, floor, protectors, kind);
 
-    private static bool TryPlace(uint seed, int floor, int direction, out int x, out int y)
+    private static bool TryPlace(uint seed, int level, int floor, int direction, out int x, out int y)
     {
         var camp = WorldMap.Places[WorldMap.Camp];
         var angle = direction * Math.PI / 4;
+        for (var attempt = 0; attempt < ScatterTries; attempt++)
+        {
+            var sway = (Roll(seed, level, direction, attempt * 2) * 2 - 1) * Sway;
+            var radius = floor + Roll(seed, level, direction, attempt * 2 + 1) * Spread;
+            if (Near(camp, angle + sway, radius, floor, out x, out y) && WorldMap.Land.Contains(new TileArea(x, y, 1, 1)) && !FarGround.Water(x, y, seed))
+            {
+                return true;
+            }
+        }
+
         if (!OnRing(camp, angle, floor, out x, out y) || !WorldMap.Land.Contains(new TileArea(x, y, 1, 1)))
         {
             x = 0;
@@ -227,10 +248,28 @@ public static class SpawnRings
         return false;
     }
 
-    private static bool OnRing(TilePoint camp, double angle, int floor, out int x, out int y)
+    private static bool OnRing(TilePoint camp, double angle, int floor, out int x, out int y) =>
+        Near(camp, angle, floor, floor, out x, out y);
+
+    private static bool Near(TilePoint camp, double angle, double radius, int floor, out int x, out int y)
     {
-        x = (int)Math.Floor(camp.X + Math.Cos(angle) * floor);
-        y = (int)Math.Floor(camp.Y + Math.Sin(angle) * floor);
+        x = (int)Math.Floor(camp.X + Math.Cos(angle) * radius);
+        y = (int)Math.Floor(camp.Y + Math.Sin(angle) * radius);
         return new TilePoint(x + 0.5, y + 0.5).DistanceTo(camp) + 1 >= floor;
+    }
+
+    /// <summary>A number in [0, 1) fixed by the seed, the den and the draw. The browser computes the same bits.</summary>
+    private static double Roll(uint seed, int level, int direction, int draw)
+    {
+        unchecked
+        {
+            var hash = seed ^ ((uint)level * 0x9E3779B1u) ^ ((uint)(direction + 1) * 0x85EBCA77u) ^ ((uint)(draw + 1) * 0xC2B2AE3Du);
+            hash ^= hash >> 16;
+            hash *= 0x85EBCA6Bu;
+            hash ^= hash >> 13;
+            hash *= 0xC2B2AE35u;
+            hash ^= hash >> 16;
+            return hash / 4_294_967_296.0;
+        }
     }
 }

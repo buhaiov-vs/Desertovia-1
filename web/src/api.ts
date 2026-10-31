@@ -1677,6 +1677,8 @@ export const api = {
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/dev/raid`, { everyMonster }),
   devNightRaid: (slug: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/dev/night-raid`),
   devCancelRaids: (slug: string) => request<VillageState>('DELETE', `/api/villages/${encodeURIComponent(slug)}/dev/raid`),
+  /** Development only: fallen heroes stand up at full health and rejoin the current fight. */
+  devResurrect: (slug: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/dev/resurrect`),
   takeFromStorage: (slug: string, plotId: string, resource: string, amount: number, sharpen?: number, durability?: number) =>
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/take`, { plotId, resource, amount, sharpen, durability }),
   goTo: (slug: string, spot: TilePoint) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/goto`, { spot }),

@@ -69,6 +69,9 @@ export function DevPanel({ slug, night, onToggleNight, onNight, mapRevealed, onT
           <button disabled={busy} onClick={() => run(() => api.devCancelRaids(slug))}>
             {i18n.t('dev.cancelRaids')}
           </button>
+          <button disabled={busy} title={i18n.t('dev.resurrectTitle')} onClick={() => run(() => api.devResurrect(slug))}>
+            {i18n.t('dev.resurrect')}
+          </button>
           {error && <p className="error">{error}</p>}
         </div>
       )}

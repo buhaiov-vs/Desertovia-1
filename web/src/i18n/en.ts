@@ -63,6 +63,8 @@ export const en = {
     'dev.nightRaidTitle': 'Darkens the map and sends tonight\'s raid from the dens now',
     'dev.everyMonster': 'Spawn every monster',
     'dev.cancelRaids': 'Cancel raids',
+    'dev.resurrect': 'Resurrect heroes',
+    'dev.resurrectTitle': 'Stands up every hero who fell, and puts them back in the current fight',
     'hud.join': 'Settle here',
     'hud.results': 'Results',
     'hud.build': 'Build',

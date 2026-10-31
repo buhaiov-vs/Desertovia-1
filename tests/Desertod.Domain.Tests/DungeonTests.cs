@@ -432,6 +432,32 @@ public class DungeonTests
     }
 
     [Fact]
+    public void AFallenHero_StandsUpInTheFight_AndOneWhoLeftStaysOut()
+    {
+        var fallen = Fighter(health: 40);
+        var standing = Fighter(health: 80);
+        var simulation = new DungeonSimulation(Corridor("........"), [fallen, standing]);
+        var down = simulation.Hero(fallen.Id)!;
+        down.Health = 0;
+        down.State = HeroState.Fleeing;
+        down.Killer = EnemyKind.Ghoul;
+        simulation.Hero(standing.Id)!.Health = 55;
+
+        var raised = simulation.ResurrectFallen();
+
+        Assert.Equal([fallen.Id], raised);
+        Assert.Equal(HeroState.Fighting, down.State);
+        Assert.Equal(40, down.Health);
+        Assert.Null(down.Killer);
+        Assert.Equal(55, simulation.Hero(standing.Id)!.Health);
+
+        down.State = HeroState.Left;
+        down.Health = 0;
+        Assert.Empty(simulation.ResurrectFallen());
+        Assert.Equal(HeroState.Left, down.State);
+    }
+
+    [Fact]
     public void ADeadHero_IsNotCarriedOntoTheNextFloor()
     {
         var woods = DungeonCatalog.Parse("woods", "Woods", ["TTTTTTTTTT", "Er.......T", "TTTTTTTTTT"], TimeSpan.FromMinutes(15));

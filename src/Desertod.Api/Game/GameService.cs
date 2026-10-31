@@ -38,6 +38,7 @@ public sealed partial class GameService(
     CitizenPresence presence,
     IHospitalBridge hospitalBridge,
     DenRuntime dens,
+    DungeonRuntime dungeons,
     ILogger<GameService> logger,
     IConfiguration configuration)
 {

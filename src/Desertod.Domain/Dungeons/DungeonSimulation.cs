@@ -210,6 +210,44 @@ public sealed class DungeonSimulation
         hero.HealTarget = null;
     }
 
+    /// <summary>
+    /// Developer tools: a hero who fell stands up at full health and fights on.
+    /// Someone who already left the map, or was taken to the hospital, stays out. A finished run stays finished.
+    /// </summary>
+    public IReadOnlyList<Guid> ResurrectFallen()
+    {
+        if (IsOver)
+        {
+            return [];
+        }
+
+        var raised = new List<Guid>();
+        foreach (var hero in heroes)
+        {
+            if (hero.ExternallyWithdrawn || hero.State == HeroState.Left)
+            {
+                continue;
+            }
+
+            if (hero.State == HeroState.Fighting && hero.Health > 0)
+            {
+                continue;
+            }
+
+            hero.Health = hero.Fighter.Health;
+            hero.State = HeroState.Fighting;
+            hero.Killer = null;
+            hero.TargetFoe = null;
+            hero.HealTarget = null;
+            hero.Destination = null;
+            hero.Path.Clear();
+            hero.Cooldown = 0;
+            raised.Add(hero.Id);
+        }
+
+        return raised;
+    }
+
     /// <summary>Advances the fight; returns what happened, for the clients to show.</summary>
     public IReadOnlyList<DungeonEvent> Tick(double seconds, Random random)
     {

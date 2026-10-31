@@ -186,6 +186,19 @@ public sealed class DenFight
         return true;
     }
 
+    /// <summary>Developer tools: a hero who has fallen and is still in the fight stands up at full health.</summary>
+    public bool Resurrect()
+    {
+        if (Hero is not { } hero || (hero.Health > 0 && !hero.KnockedOut))
+        {
+            return false;
+        }
+
+        hero.Health = hero.Fighter.Health;
+        hero.KnockedOut = false;
+        return true;
+    }
+
     /// <summary>The citizen was taken away (to the hospital): they leave the fight where they stand, unhurt.</summary>
     public void Withdraw(Guid citizenId)
     {

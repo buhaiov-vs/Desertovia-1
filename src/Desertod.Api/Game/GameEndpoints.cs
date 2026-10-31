@@ -166,6 +166,10 @@ public static class GameEndpoints
             Microsoft.Extensions.Options.IOptions<GameOptions> options, CancellationToken ct) =>
             options.Value.DevTools ? Results.Ok(await game.DevCancelRaidsAsync(slug, user.RequireAccountId(), ct)) : Results.NotFound());
 
+        player.MapPost("/villages/{slug}/dev/resurrect", async (string slug, ClaimsPrincipal user, GameService game,
+            Microsoft.Extensions.Options.IOptions<GameOptions> options, CancellationToken ct) =>
+            options.Value.DevTools ? Results.Ok(await game.DevResurrectHeroesAsync(slug, user.RequireAccountId(), ct)) : Results.NotFound());
+
         player.MapPost("/villages/{slug}/undead", (string slug, CallUndeadRequest request, ClaimsPrincipal user, GameService game, CancellationToken cancellationToken) =>
             game.CallUndeadAsync(slug, user.RequireAccountId(), request, cancellationToken));
 

@@ -64,6 +64,8 @@ export const ru: Dictionary = {
     'dev.nightRaidTitle': 'Затемняет карту и сразу присылает ночной набег из логов',
     'dev.everyMonster': 'Все монстры',
     'dev.cancelRaids': 'Отменить набеги',
+    'dev.resurrect': 'Воскресить героев',
+    'dev.resurrectTitle': 'Поднимает каждого павшего героя и возвращает его в текущий бой',
     'hud.join': 'Поселиться',
     'hud.results': 'Итоги',
     'hud.build': 'Строить',

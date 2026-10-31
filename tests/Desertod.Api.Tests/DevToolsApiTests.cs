@@ -59,4 +59,81 @@ public sealed class DevToolsApiTests(DesertodApiFactory factory)
         }
         await OkJsonAsync(await helper.Client.DeleteAsync(v.Path + "/dev/raid"));
     }
+
+    [Fact]
+    public async Task Resurrect_stands_fallen_heroes_up_and_leaves_exhaustion()
+    {
+        var v = await players.FoundVillageAsync("Dev resurrect");
+        var fallen = await players.JoinAsync(v, "Fallen");
+        var tired = await players.JoinAsync(v, "Tired");
+        var cycleEnds = factory.Clock.GetUtcNow().AddMinutes(40);
+        await players.ArrangeCitizenAsync(fallen.Id, (c, now) =>
+        {
+            c.InjuredUntil = now.AddHours(2);
+            c.WoundedAt = now;
+            c.HospitalizedAt = now;
+            c.RescueRewardEligible = true;
+            c.RecoveryPausedAt = now.AddMinutes(-10);
+            c.CycleSettled = false;
+            c.CycleStartedAt = now.AddMinutes(-20);
+            c.CycleEndsAt = cycleEnds;
+        });
+        var exhaustedUntil = factory.Clock.GetUtcNow().AddHours(1);
+        await players.ArrangeCitizenAsync(tired.Id, (c, now) => c.ExhaustedUntil = exhaustedUntil);
+        await players.ArrangeVillageAsync(v.Slug, (village, now) =>
+        {
+            village.TsarInjuredUntil = now.AddMinutes(30);
+            village.TsarWoundedAt = now;
+            village.TsarHospitalizedAt = now;
+            village.TsarRescueRewardEligible = true;
+        });
+        await OkJsonAsync(await fallen.Client.PostAsJsonAsync(v.Path + "/dev/raid", new { everyMonster = false }));
+        Guid battleId;
+        await using (var db = await Db())
+        {
+            var villageId = (await db.Villages.AsNoTracking().SingleAsync(x => x.Slug == v.Slug)).Id;
+            var battle = await db.RaidBattles.SingleAsync(b => b.VillageId == villageId && b.FinishedAt == null);
+            battleId = battle.Id;
+            battle.Fighters.Add(new RaidFighter
+            {
+                CitizenId = fallen.Id, Health = 0, MaximumHealth = 48, Wounded = true, Active = false,
+            });
+            battle.Fighters.Add(new RaidFighter
+            {
+                CitizenId = tired.Id, Health = 20, MaximumHealth = 40, Wounded = false, Active = true,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await OkJsonAsync(await fallen.Client.PostAsync(v.Path + "/dev/resurrect", null));
+
+        var savedFallen = await players.LoadCitizenAsync(fallen.Id);
+        Assert.Null(savedFallen.InjuredUntil);
+        Assert.Null(savedFallen.WoundedAt);
+        Assert.Null(savedFallen.HospitalizedAt);
+        Assert.False(savedFallen.RescueRewardEligible);
+        Assert.Null(savedFallen.RecoveryPausedAt);
+        Assert.True(savedFallen.CycleEndsAt >= cycleEnds.AddMinutes(10));
+        var savedTired = await players.LoadCitizenAsync(tired.Id);
+        Assert.NotNull(savedTired.ExhaustedUntil);
+        Assert.True(Math.Abs((savedTired.ExhaustedUntil.Value - exhaustedUntil).TotalMilliseconds) < 1);
+        Assert.Null(savedTired.InjuredUntil);
+        await using (var db = await Db())
+        {
+            var village = await db.Villages.AsNoTracking().SingleAsync(x => x.Slug == v.Slug);
+            Assert.Null(village.TsarInjuredUntil);
+            Assert.Null(village.TsarWoundedAt);
+            Assert.Null(village.TsarHospitalizedAt);
+            Assert.False(village.TsarRescueRewardEligible);
+            var battle = await db.RaidBattles.AsNoTracking().SingleAsync(b => b.Id == battleId);
+            var down = Assert.Single(battle.Fighters, f => f.CitizenId == fallen.Id);
+            Assert.Equal(48, down.Health);
+            Assert.False(down.Wounded);
+            Assert.True(down.Active);
+            var fine = Assert.Single(battle.Fighters, f => f.CitizenId == tired.Id);
+            Assert.Equal(20, fine.Health);
+            Assert.True(fine.Active);
+            Assert.False(fine.Wounded);
+        }
+    }
 }

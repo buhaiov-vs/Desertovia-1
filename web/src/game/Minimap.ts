@@ -24,7 +24,7 @@ export interface MinimapMarkers {
   buildings: Array<{ x: number; y: number; width: number; height: number; finished: boolean }>
   citizens: Array<{ x: number; y: number; kind: 'you' | 'tsar' | 'citizen' }>
   camp: { x: number; y: number }
-  /** Foe dens. `level` is drawn when the minimap shows the whole land. */
+  /** Foe dens. `level` is drawn when the minimap marks every den. */
   dens: Array<{ x: number; y: number; level?: number }>
 }
 
@@ -60,8 +60,8 @@ export class Minimap {
   /** Fog of war for the camp picture, one pixel per tile. */
   private fog: HTMLCanvasElement | null = null
   private fillDarkness: DarknessFill | null = null
-  /** The whole land, so every den is on the picture. Clicks still move the camera. */
-  private overview = false
+  /** Every den is marked, the ones past the picture on its edge. */
+  private allDens = false
 
   constructor(host: HTMLElement, onPick: (tileX: number, tileY: number) => void) {
     this.root.className = 'minimap'
@@ -121,12 +121,10 @@ export class Minimap {
     this.draw()
   }
 
-  /** Developer view of every den: the picture becomes the whole land until this is turned off. */
-  setOverview(on: boolean) {
-    if (this.overview === on) return
-    this.overview = on
-    this.builtFrame = ''
-    this.frame = this.frameFor(this.view)
+  /** Developer view of every den: the picture keeps its scale, dens past it sit on its edge with their level. */
+  setAllDens(on: boolean) {
+    if (this.allDens === on) return
+    this.allDens = on
     this.draw()
   }
 
@@ -145,7 +143,6 @@ export class Minimap {
 
   /** The camp picture while the screen is inside it; otherwise the same-sized window around the camera. */
   private frameFor(view: Rectangle): Rectangle {
-    if (this.overview) return { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT }
     const covers =
       view.x >= MAP_LEFT &&
       view.y >= MAP_TOP &&
@@ -176,10 +173,6 @@ export class Minimap {
     const context = this.base.getContext('2d')
     if (!context || !terrain) return
     const frame = this.frame
-    if (frame.width > this.base.width || frame.height > this.base.height) {
-      this.paintSampled(frame)
-      return
-    }
     if (this.isVale(frame)) {
       const image = context.createImageData(MAP_WIDTH, MAP_HEIGHT)
       terrain.forEach((kind, index) => {
@@ -206,29 +199,6 @@ export class Minimap {
     this.paintLocalFog()
   }
 
-  /** One pixel of the minimap stands for many tiles, so the whole land fits the camp-sized canvas. */
-  private paintSampled(frame: Rectangle) {
-    const terrain = this.terrain
-    const context = this.base.getContext('2d')
-    if (!context || !terrain) return
-    const width = this.base.width
-    const height = this.base.height
-    const image = context.createImageData(width, height)
-    for (let row = 0; row < height; row++) {
-      const tileY = Math.floor(frame.y + ((row + 0.5) * frame.height) / height)
-      for (let column = 0; column < width; column++) {
-        const tileX = Math.floor(frame.x + ((column + 0.5) * frame.width) / width)
-        const kind =
-          tileX >= MAP_LEFT && tileX < MAP_LEFT + MAP_WIDTH && tileY >= MAP_TOP && tileY < MAP_TOP + MAP_HEIGHT
-            ? (terrain[(tileY - MAP_TOP) * MAP_WIDTH + (tileX - MAP_LEFT)] as Terrain)
-            : farTerrain(tileX, tileY, this.seed)
-        const [red, green, blue] = TERRAIN_COLORS[kind] ?? TERRAIN_COLORS[Terrain.Grass]
-        image.data.set([red, green, blue, 255], (row * width + column) * 4)
-      }
-    }
-    context.putImageData(image, 0, 0)
-  }
-
   private paintLocalFog() {
     const fill = this.fillDarkness
     const context = this.localFog.getContext('2d')
@@ -253,8 +223,8 @@ export class Minimap {
     const yOf = (tile: number) => (tile - frame.y) * unit
     context.clearRect(0, 0, this.overlay.width, this.overlay.height)
     context.imageSmoothingEnabled = true
-    if (!this.overview && this.isVale(frame) && this.fog) context.drawImage(this.fog, 0, 0, this.overlay.width, this.overlay.height)
-    else if (!this.overview && !this.isVale(frame)) context.drawImage(this.localFog, 0, 0, this.overlay.width, this.overlay.height)
+    if (this.isVale(frame) && this.fog) context.drawImage(this.fog, 0, 0, this.overlay.width, this.overlay.height)
+    else if (!this.isVale(frame)) context.drawImage(this.localFog, 0, 0, this.overlay.width, this.overlay.height)
 
     const markers = this.markers
     if (markers) {
@@ -266,7 +236,7 @@ export class Minimap {
         context.fillRect(xOf(building.x), yOf(building.y), Math.max(unit, building.width * unit), Math.max(unit, building.height * unit))
         context.strokeRect(xOf(building.x), yOf(building.y), Math.max(unit, building.width * unit), Math.max(unit, building.height * unit))
       }
-      if (this.overview) this.drawOverviewDens(context, markers.dens, xOf, yOf)
+      if (this.allDens) this.drawAllDens(context, markers.dens, unit)
       else for (const den of markers.dens) {
         if (!this.inside(den.x, den.y)) continue
         const x = xOf(den.x)
@@ -322,51 +292,42 @@ export class Minimap {
     context.strokeStyle = '#ffffff'
     context.lineWidth = 2
     context.strokeRect(xOf(this.view.x), yOf(this.view.y), this.view.width * unit, this.view.height * unit)
-    if (this.overview) {
-      const centerX = xOf(this.view.x + this.view.width / 2)
-      const centerY = yOf(this.view.y + this.view.height / 2)
-      context.strokeStyle = '#ffffff'
-      context.lineWidth = 2
-      context.beginPath()
-      context.moveTo(centerX - 7, centerY)
-      context.lineTo(centerX + 7, centerY)
-      context.moveTo(centerX, centerY - 7)
-      context.lineTo(centerX, centerY + 7)
-      context.stroke()
-    }
   }
 
-  /** Dens on the whole-land picture. A level is drawn when it would not cover another. */
-  private drawOverviewDens(
-    context: CanvasRenderingContext2D,
-    dens: MinimapMarkers['dens'],
-    xOf: (tile: number) => number,
-    yOf: (tile: number) => number,
-  ) {
+  /**
+   * Every den as a dot at the usual scale. A den past the picture sits on its edge, in its direction from the middle,
+   * with a dimmer dot. Nearer dens go first, and a level is drawn when it would not cover one already drawn.
+   */
+  private drawAllDens(context: CanvasRenderingContext2D, dens: MinimapMarkers['dens'], unit: number) {
     const frame = this.frame
-    const midX = xOf(frame.x + frame.width / 2)
-    const midY = yOf(frame.y + frame.height / 2)
+    const midX = frame.width / 2
+    const midY = frame.height / 2
     const labelled: Array<{ x: number; y: number }> = []
     const dots = dens
-      .filter((den) => this.inside(den.x, den.y))
-      .map((den) => ({ den, x: xOf(den.x), y: yOf(den.y) }))
-      .sort((a, b) => (b.den.level ?? 0) - (a.den.level ?? 0))
+      .map((den) => {
+        const inside = this.inside(den.x, den.y)
+        const spot = inside ? { x: den.x, y: den.y } : this.edgePoint(den.x, den.y)
+        return { den, inside, x: (spot.x - frame.x) * unit, y: (spot.y - frame.y) * unit, far: Math.hypot(den.x - frame.x - midX, den.y - frame.y - midY) }
+      })
+      .sort((a, b) => a.far - b.far)
     context.font = 'bold 10px sans-serif'
     context.textAlign = 'center'
     context.textBaseline = 'middle'
     for (const dot of dots) {
       context.beginPath()
-      context.arc(dot.x, dot.y, 4, 0, Math.PI * 2)
-      context.fillStyle = '#e0261c'
+      context.arc(dot.x, dot.y, dot.inside ? unit * 1.6 : unit * 1.2, 0, Math.PI * 2)
+      context.fillStyle = dot.inside ? '#e0261c' : 'rgba(224, 38, 28, 0.75)'
       context.fill()
       context.lineWidth = 1
       context.strokeStyle = '#fff4e0'
       context.stroke()
       if (dot.den.level == null) continue
-      const dx = dot.x - midX
-      const dy = dot.y - midY
+      const dx = dot.x - midX * unit
+      const dy = dot.y - midY * unit
       const reach = Math.hypot(dx, dy) || 1
-      const label = { x: dot.x + (dx / reach) * 10, y: dot.y + (dy / reach) * 10 }
+      // Inside, the level stands outward from the middle; on the edge it stands inward, so it stays on the picture.
+      const step = dot.inside ? 10 : -10
+      const label = { x: dot.x + (dx / reach) * step, y: dot.y + (dy / reach) * step }
       if (labelled.some((other) => Math.hypot(other.x - label.x, other.y - label.y) < 11)) continue
       labelled.push(label)
       context.lineWidth = 3
@@ -387,16 +348,24 @@ export class Minimap {
     return area.x < frame.x + frame.width && area.x + area.width > frame.x && area.y < frame.y + frame.height && area.y + area.height > frame.y
   }
 
-  /** A dot on the near edge when a place is outside the pictured tiles. */
-  private markOutside(context: CanvasRenderingContext2D, tileX: number, tileY: number, color: string) {
+  /** Where the line from the middle of the picture to a place outside it crosses the edge, in tiles. */
+  private edgePoint(tileX: number, tileY: number) {
     const frame = this.frame
-    if (this.inside(tileX, tileY)) return
     const dx = tileX - (frame.x + frame.width / 2)
     const dy = tileY - (frame.y + frame.height / 2)
     const scale = Math.max(Math.abs(dx) / (frame.width / 2), Math.abs(dy) / (frame.height / 2), 0.001)
     const inset = 3
-    const edgeX = Math.max(frame.x + inset, Math.min(frame.x + frame.width - inset, frame.x + frame.width / 2 + dx / scale))
-    const edgeY = Math.max(frame.y + inset, Math.min(frame.y + frame.height - inset, frame.y + frame.height / 2 + dy / scale))
+    return {
+      x: Math.max(frame.x + inset, Math.min(frame.x + frame.width - inset, frame.x + frame.width / 2 + dx / scale)),
+      y: Math.max(frame.y + inset, Math.min(frame.y + frame.height - inset, frame.y + frame.height / 2 + dy / scale)),
+    }
+  }
+
+  /** A dot on the near edge when a place is outside the pictured tiles. */
+  private markOutside(context: CanvasRenderingContext2D, tileX: number, tileY: number, color: string) {
+    const frame = this.frame
+    if (this.inside(tileX, tileY)) return
+    const { x: edgeX, y: edgeY } = this.edgePoint(tileX, tileY)
     const unit = this.overlay.width / frame.width
     context.fillStyle = color
     context.strokeStyle = '#1b1206'

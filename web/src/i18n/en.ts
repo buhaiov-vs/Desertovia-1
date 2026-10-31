@@ -57,7 +57,7 @@ export const en = {
     'dev.hideMap': 'Hide map',
     'dev.showDens': 'Show dens',
     'dev.hideDens': 'Hide dens',
-    'dev.densTitle': 'Marks every spawn point on the map and on a minimap of the whole land',
+    'dev.densTitle': 'Marks every spawn point on the map and on the minimap; ones past the minimap sit on its edge',
     'dev.wave': 'Start wave',
     'dev.nightRaid': 'Night with attack',
     'dev.nightRaidTitle': 'Darkens the map and sends tonight\'s raid from the dens now',

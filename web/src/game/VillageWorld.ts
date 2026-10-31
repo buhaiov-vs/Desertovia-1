@@ -828,13 +828,13 @@ export class VillageWorld {
   }
 
   /**
-   * Developer tools: rings and level numbers on every den in view, above the fog, and every den on a minimap of the
-   * whole land. A click on that minimap moves the camera there.
+   * Developer tools: rings and level numbers on every den in view, above the fog, and every den as a dot on the
+   * minimap at its usual scale; a den past the minimap sits on its edge.
    */
   setDensHighlighted(on: boolean) {
     this.densHighlighted = on
     this.dens.setHighlighted(on)
-    this.minimap?.setOverview(on)
+    this.minimap?.setAllDens(on)
     this.fogUpdatedAt = Number.NEGATIVE_INFINITY
     this.minimapUpdatedAt = Number.NEGATIVE_INFINITY
     this.cullDirty = true

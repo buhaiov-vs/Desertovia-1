@@ -26,6 +26,8 @@ export interface MinimapMarkers {
   camp: { x: number; y: number }
   /** Foe dens. `level` is drawn when the minimap marks every den. */
   dens: Array<{ x: number; y: number; level?: number }>
+  /** Lone foes standing on seen ground, in tiles. */
+  standing: Array<{ x: number; y: number }>
   /** The signed-in walker, in tiles. */
   self: { x: number; y: number } | null
   /** Village land. The line under the map measures the straight distance to its edge. */
@@ -159,6 +161,11 @@ export class Minimap {
     this.view = view
     if (!this.dragging) this.frame = this.frameFor(view)
     this.draw()
+  }
+
+  /** The tiles this picture shows now. */
+  picture(): Rectangle {
+    return { ...this.frame }
   }
 
   setMarkers(markers: MinimapMarkers) {
@@ -304,6 +311,16 @@ export class Minimap {
         context.strokeStyle = '#1b1206'
         context.lineWidth = 2
         context.fill()
+        context.stroke()
+      }
+      for (const foe of markers.standing) {
+        if (!this.inside(foe.x, foe.y)) continue
+        context.beginPath()
+        context.arc(xOf(foe.x), yOf(foe.y), Math.max(unit * 1.15, 2.5), 0, Math.PI * 2)
+        context.fillStyle = '#ff4d3a'
+        context.fill()
+        context.lineWidth = 1
+        context.strokeStyle = '#1b1206'
         context.stroke()
       }
       if (this.inside(markers.camp.x, markers.camp.y)) {

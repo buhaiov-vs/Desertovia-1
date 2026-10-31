@@ -166,6 +166,12 @@ export class DenLayer {
     return this.points.filter((point) => explored(point.x, point.y))
   }
 
+  /** Lone foes standing in `rect`. Fog hides the ones the village has not seen, unless the developer marks are on. */
+  standing(rect: TileRect, explored: (x: number, y: number) => boolean): SpawnPoint[] {
+    const foes = this.haunts?.(rect) ?? []
+    return this.highlighted ? foes : foes.filter((foe) => explored(foe.x, foe.y))
+  }
+
   /** Draws the spots of every den that reaches this chunk into `batch`, whose (0, 0) is the chunk origin. */
   markGround(batch: Container, chunk: LandChunkRect) {
     const left = chunk.originX - SPOT_REACH

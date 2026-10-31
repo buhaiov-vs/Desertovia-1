@@ -2661,12 +2661,17 @@ export class VillageWorld {
       }))
     const dens = (this.densHighlighted ? this.dens.all() : this.dens.spotted((x, y) => this.fog.isExplored(x, y)))
       .map((den) => ({ x: den.x + 0.5, y: den.y + 0.5, level: den.level }))
+    const picture = this.minimap?.picture()
+    const standing = picture
+      ? this.dens.standing(picture, (x, y) => this.fog.isExplored(x, y)).map((foe) => ({ x: foe.x + 0.5, y: foe.y + 0.5 }))
+      : []
     const self = this.highlightId ? this.walkers.get(this.highlightId) : undefined
     return {
       buildings,
       citizens,
       camp: CAMPFIRE,
       dens,
+      standing,
       self: self ? { x: self.x / TILE, y: self.y / TILE } : null,
       kingdom: this.village?.kingdomArea ?? this.catalog?.buildArea ?? null,
     }

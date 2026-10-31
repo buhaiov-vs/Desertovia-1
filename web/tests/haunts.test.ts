@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { CELL, DEN_CLEARANCE, LEG_SECONDS, WANDER_RADIUS, hauntAt, hauntsIn, wanderAt } from '../src/game/haunts.ts'
+import { CELL, DEN_CLEARANCE, LEG_SECONDS, VALE_CLEARANCE, WANDER_RADIUS, fromVale, hauntAt, hauntsIn, wanderAt } from '../src/game/haunts.ts'
 import { SPAWN_LEVELS, spawnPoints } from '../src/game/spawnRings.ts'
 
 const side = 24_000
@@ -29,7 +29,7 @@ test('nine in ten foes are of their band, the rest one level off', () => {
       const foe = hauntAt(7, cellX, cellY, ring, dens)
       if (!foe) continue
       const distance = Math.hypot(foe.x + 0.5 - ring.camp.x, foe.y + 0.5 - ring.camp.y)
-      const band = SPAWN_LEVELS.filter((level) => level.floor <= distance).length
+      const band = Math.max(1, SPAWN_LEVELS.filter((level) => level.floor <= distance).length)
       assert.ok(Math.abs(foe.level - band) <= 1, foe.id)
       if (foe.level === band) own++
       else off++
@@ -57,12 +57,14 @@ test('a foe wanders near its tile and keeps moving, without jumps', () => {
   assert.ok(travelled > 20, `travelled ${travelled}`)
 })
 
-test('no foe closer to the camp than the first ring, one per square', () => {
+test('level 1 foes roam around the vale inside the first ring, clear of it, one per square', () => {
   const dens = spawnPoints(1, ring)
   const near = hauntsIn(1, { x: -700, y: -700, width: 1400, height: 1400 }, ring, dens)
-  assert.ok(near.length > 0)
+  const inner = near.filter((foe) => Math.hypot(foe.x + 0.5 - ring.camp.x, foe.y + 0.5 - ring.camp.y) < SPAWN_LEVELS[0].floor)
+  assert.ok(inner.length > 100, `${inner.length} foes inside the first ring`)
+  assert.ok(inner.every((foe) => foe.level <= 2))
   for (const foe of near) {
-    assert.ok(Math.hypot(foe.x + 0.5 - ring.camp.x, foe.y + 0.5 - ring.camp.y) >= SPAWN_LEVELS[0].floor, foe.id)
+    assert.ok(fromVale(foe.x + 0.5, foe.y + 0.5) >= VALE_CLEARANCE, foe.id)
     const [, x, y] = foe.id.split(':').map(Number)
     assert.equal(Math.floor(foe.x / CELL), x)
     assert.equal(Math.floor(foe.y / CELL), y)

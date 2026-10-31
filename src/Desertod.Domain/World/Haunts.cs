@@ -1,8 +1,11 @@
+using Desertod.Domain.Combat;
+
 namespace Desertod.Domain.World;
 
 /// <summary>
-/// Lone foes haunting the land between the den rings. The land is cut into squares of <see cref="Cell"/> tiles; each
-/// square holds one foe at a seeded random tile. Its band is the highest ring whose floor that tile reaches; the foe
+/// Lone foes haunting the land around the village and between the den rings. The land is cut into squares of
+/// <see cref="Cell"/> tiles; each square holds one foe at a seeded random tile. Its band is the highest ring whose floor
+/// that tile reaches, and the first band inside the first ring, so level 1 foes roam right outside the vale; the foe
 /// is of the band's level, or one level below or above it by <see cref="Neighbour"/> each. Nothing is stored: the same
 /// seed always places the same foes, and the browser's <c>haunts.ts</c> places them on the same tiles.
 /// A foe wanders around its tile (<see cref="PositionAt"/>) and fights as a den with one protector of its level,
@@ -55,7 +58,16 @@ public static class Haunts
         return new TilePoint(home.X + Math.Cos(angle) * radius, home.Y + Math.Sin(angle) * radius);
     }
 
-    /// <summary>The foe of one square; null when its tile is closer to the camp than the first ring, off the land, on water or near a den.</summary>
+    /// <summary>
+    /// No foe stands this close to the vale, in tiles: its wander plus the reach that wakes it, so it never walks into
+    /// the village nor wakes for a citizen inside it.
+    /// </summary>
+    public const double ValeClearance = WanderRadius + DenGuards.AggroRange;
+
+    /// <summary>
+    /// The foe of one square; null when its tile is off the land, on water, near a den or near the vale. Between the vale
+    /// and the first ring the foes are of the first band, so level 1 foes roam around the village.
+    /// </summary>
     public static SpawnPoint? At(uint seed, int cellX, int cellY, IReadOnlyList<SpawnPoint> dens)
     {
         var x = cellX * Cell + (int)Math.Floor(Roll(seed, cellX, cellY, 0) * Cell);
@@ -68,13 +80,13 @@ public static class Haunts
         var center = new TilePoint(x + 0.5, y + 0.5);
         var distance = center.DistanceTo(WorldMap.Places[WorldMap.Camp]);
         var levels = SpawnRings.Levels;
-        var band = 0;
+        var band = 1;
         while (band < levels.Count && levels[band].Floor <= distance)
         {
             band++;
         }
 
-        if (band == 0 || dens.Any(den => den.Center.DistanceTo(center) < DenClearance))
+        if (FromVale(center) < ValeClearance || dens.Any(den => den.Center.DistanceTo(center) < DenClearance))
         {
             return null;
         }
@@ -102,6 +114,15 @@ public static class Haunts
         }
 
         return found;
+    }
+
+    /// <summary>Distance from <paramref name="point"/> to the nearest tile of the vale, in tiles; 0 inside it.</summary>
+    public static double FromVale(TilePoint point)
+    {
+        var vale = WorldMap.Vale;
+        var dx = Math.Max(Math.Max(vale.X - point.X, 0), point.X - (vale.X + vale.Width));
+        var dy = Math.Max(Math.Max(vale.Y - point.Y, 0), point.Y - (vale.Y + vale.Height));
+        return Math.Sqrt(dx * dx + dy * dy);
     }
 
     /// <summary>A number in [0, 1) fixed by the seed, the square and the draw. The browser computes the same bits.</summary>

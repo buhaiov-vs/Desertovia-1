@@ -58,7 +58,7 @@ public class HauntTests
     }
 
     [Fact]
-    public void NineInTenFoes_AreOfTheirBand_AndNoneStandsNearTheCampOrADen()
+    public void NineInTenFoes_AreOfTheirBand_AndNoneStandsNearTheValeOrADen()
     {
         var dens = SpawnRings.Points(7);
         var camp = WorldMap.Places[WorldMap.Camp];
@@ -73,9 +73,9 @@ public class HauntTests
                 }
 
                 var distance = foe.Center.DistanceTo(camp);
-                var band = SpawnRings.Levels.Count(level => level.Floor <= distance);
+                var band = Math.Max(1, SpawnRings.Levels.Count(level => level.Floor <= distance));
                 Assert.InRange(foe.Level, band - 1, band + 1);
-                Assert.True(distance >= SpawnRings.Levels[0].Floor);
+                Assert.True(Haunts.FromVale(foe.Center) >= Haunts.ValeClearance);
                 Assert.All(dens, den => Assert.True(den.Center.DistanceTo(foe.Center) >= Haunts.DenClearance));
                 Assert.True(foe.Roams);
                 if (foe.Level == band) own++;
@@ -84,6 +84,33 @@ public class HauntTests
         }
 
         Assert.InRange((double)off / (own + off), 0.07, 0.13);
+    }
+
+    [Fact]
+    public void LevelOneFoes_RoamAroundTheVale_InsideTheFirstRing_ButNeverWanderIntoIt()
+    {
+        var dens = SpawnRings.Points(1);
+        var camp = WorldMap.Places[WorldMap.Camp];
+        var inner = new List<SpawnPoint>();
+        for (var cellY = -15; cellY <= 15; cellY++)
+        {
+            for (var cellX = -15; cellX <= 15; cellX++)
+            {
+                if (Haunts.At(1, cellX, cellY, dens) is { } foe && foe.Center.DistanceTo(camp) < SpawnRings.Levels[0].Floor)
+                {
+                    inner.Add(foe);
+                }
+            }
+        }
+
+        Assert.True(inner.Count > 100, $"{inner.Count} foes inside the first ring");
+        Assert.All(inner, foe => Assert.InRange(foe.Level, 1, 2));
+        Assert.True(inner.Count(foe => foe.Level == 1) > inner.Count * 0.9);
+        Assert.Contains(inner, foe => Haunts.FromVale(foe.Center) < 40);
+        var start = DateTimeOffset.UnixEpoch.AddDays(20_000);
+        Assert.All(inner, foe => Assert.All(Enumerable.Range(0, 240), step =>
+            Assert.True(Haunts.FromVale(Haunts.PositionAt(1, foe, start.AddSeconds(step * 5))) > DenGuards.AggroRange)));
+        Assert.All(dens, den => Assert.True(den.Center.DistanceTo(camp) >= SpawnRings.Levels[0].Floor));
     }
 
     [Fact]

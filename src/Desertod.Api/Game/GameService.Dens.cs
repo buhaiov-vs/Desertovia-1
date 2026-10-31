@@ -14,9 +14,6 @@ public sealed record DenEngagement(DenFighter Fighter, TilePoint Position, TileP
 /// <summary>Den fights run in memory (<see cref="DenRuntime"/>); the citizen is written when they come in and when they come out.</summary>
 public sealed partial class GameService
 {
-    /// <summary>Closer to the camp than this, in tiles, no den can be in reach.</summary>
-    private static readonly double DenFreeRadius = SpawnRings.Levels[0].Floor - DenGuards.AggroRange - 2;
-
     public async Task<IReadOnlyList<DenWaker>> FindDenWakersAsync(IReadOnlyCollection<Guid> citizenIds, CancellationToken cancellationToken)
     {
         if (citizenIds.Count == 0)
@@ -26,13 +23,13 @@ public sealed partial class GameService
 
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = time.GetUtcNow();
-        var camp = WorldMap.Places[WorldMap.Camp];
         var candidates = (await db.Citizens.AsNoTracking()
                 .Where(c => citizenIds.Contains(c.Id) && c.DungeonRunId == null && c.RescuePatientId == null)
                 .ToListAsync(cancellationToken))
             .Where(c => DenRules.CanEngage(c, now))
             .Select(c => (Citizen: c, Position: DenRules.Position(c, now)))
-            .Where(c => c.Position.DistanceTo(camp) >= DenFreeRadius)
+            // Foes keep clear of the vale, so no one inside it can be in reach.
+            .Where(c => Haunts.FromVale(c.Position) > 0)
             .ToList();
         if (candidates.Count == 0)
         {

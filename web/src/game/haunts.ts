@@ -1,9 +1,10 @@
 import { SPAWN_LEVELS, type RingLand, type SpawnPoint } from './spawnRings.ts'
 
 /**
- * Lone foes haunting the land between the den rings, as the server's `Haunts` places them. The land is cut into
- * squares of `CELL` tiles; each square holds one foe at a seeded random tile. Its band is the highest ring whose floor
- * that tile reaches; the foe is of the band's level, or one level below or above it by `NEIGHBOUR` each.
+ * Lone foes haunting the land around the village and between the den rings, as the server's `Haunts` places them.
+ * The land is cut into squares of `CELL` tiles; each square holds one foe at a seeded random tile. Its band is the
+ * highest ring whose floor that tile reaches, and the first band inside the first ring; the foe is of the band's
+ * level, or one level below or above it by `NEIGHBOUR` each.
  * A foe wanders around its tile (`wanderAt`) and fights as a den with one protector of its level, starting where it walked.
  */
 
@@ -52,7 +53,22 @@ interface Rect {
   height: number
 }
 
-/** The foe of one square; null when its tile is closer to the camp than the first ring, off the land, on water or near a den. */
+/** The camp picture, in tiles: the server's `WorldMap.Vale`. */
+const VALE = { x: -44, y: -32, width: 120, height: 90 }
+/** No foe stands this close to the vale, in tiles: its wander plus the reach that wakes it (`DenGuards.AggroRange`). */
+export const VALE_CLEARANCE = WANDER_RADIUS + 6
+
+/** Distance from a point to the nearest tile of the vale, in tiles; 0 inside it. */
+export function fromVale(x: number, y: number): number {
+  const dx = Math.max(Math.max(VALE.x - x, 0), x - (VALE.x + VALE.width))
+  const dy = Math.max(Math.max(VALE.y - y, 0), y - (VALE.y + VALE.height))
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+/**
+ * The foe of one square; null when its tile is off the land, on water, near a den or near the vale. Between the vale
+ * and the first ring the foes are of the first band, so level 1 foes roam around the village.
+ */
 export function hauntAt(seed: number, cellX: number, cellY: number, { camp, land, water = () => false }: RingLand, dens: readonly SpawnPoint[]): SpawnPoint | null {
   const x = cellX * CELL + Math.floor(roll(seed, cellX, cellY, 0) * CELL)
   const y = cellY * CELL + Math.floor(roll(seed, cellX, cellY, 1) * CELL)
@@ -60,9 +76,9 @@ export function hauntAt(seed: number, cellX: number, cellY: number, { camp, land
   const centerX = x + 0.5
   const centerY = y + 0.5
   const distance = Math.sqrt((centerX - camp.x) * (centerX - camp.x) + (centerY - camp.y) * (centerY - camp.y))
-  let band = 0
+  let band = 1
   while (band < SPAWN_LEVELS.length && SPAWN_LEVELS[band].floor <= distance) band++
-  if (band === 0) return null
+  if (fromVale(centerX, centerY) < VALE_CLEARANCE) return null
   for (const den of dens) {
     const dx = den.x + 0.5 - centerX
     const dy = den.y + 0.5 - centerY

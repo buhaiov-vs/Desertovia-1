@@ -1499,6 +1499,8 @@ export const en = {
     'repair.nothing': 'Every building is whole. Nothing to repair.',
     'dungeon.unknown': 'There is no such dungeon.',
     'dungeon.busy': 'You are away in the dungeon.',
+    'den.notFighting': 'You are not fighting at this den.',
+    'spot.unreachable': 'You cannot walk there.',
     'dungeon.injured': 'You are wounded until {readyAt}. A remedy heals it at once.',
     'dungeon.classUnavailable': 'This class needs gear in storage or a craft you do not have.',
     'dungeon.notGathering': 'Nobody is gathering for a dungeon now.',

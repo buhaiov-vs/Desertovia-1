@@ -261,6 +261,30 @@ One slime load is the 10-minute walk out, 30 minutes while the pack of 3 refills
 
 Warfare does not start until both piles are in. Vigor drinks do not start until the flame is in, and brewing has already consumed its own sap. A child technology still waits on its parent in the catalog. The pile does not replace that. The pile can be gathered before the parent is finished. A carrier can take each slime load home, so the fighter does not walk back between loads. The 270 jelly is then about 14 hours at the point, after the first 10-minute walk. The lich stays one fight and one walk of 68 hours. A second fighter cannot work a second point at the same time, because the player has one attack.
 
+## Den fights, as built
+
+The protectors now fight on the server. This section is what the code does; the numbers above are still the design.
+
+A present citizen with no task who walks within 6 tiles of a den wakes all of its living protectors. The citizen stops there. The protectors chase and strike. They give up when the citizen is more than half the claim from the den: 24 tiles for a pack, 32 for a single foe. Then they walk home at 1.5 times their speed and heal fully once home. A citizen walks 1.67 tiles a second; packs walk 1.5 and single foes 1.3, so walking away always works. The poison plant (14) and the lich (30) do not walk; the wraith, the plant, the orc shaman, the fire spirit and the lich strike from 3 to 5 tiles.
+
+The citizen strikes with their usual fight power, `CombatRules.Power`, once a second, or every 1.4 seconds with a bow and arrows from 5 tiles. Health is the raid health, 32 + 4 × Endurance. Armor takes its share off every blow. Without a picked protector the citizen strikes the nearest one in reach. A tap on a protector picks it; "come here" walks the citizen inside the fight.
+
+A slain protector gives experience to Guarding and Strength (Dexterity with a bow) and maybe loot, which stays in the citizen's hands. It comes back 30 minutes later. A citizen who falls is wounded where they lie for 20 + 2 × (level − 1) minutes, and can be carried to the hospital as after a raid. A citizen who walked into the den on the way somewhere goes on once the fight ends.
+
+Each level's whole den grows 10% in health and 2.8% in damage over the one before. A pack shares both among its protectors. A single foe strikes every 2 seconds, a pack member every 1.4.
+
+| Level | Den health | Den damage a second |
+|---:|---:|---:|
+| 1 | 54 | 1.05 |
+| 5 | 79 | 1.17 |
+| 10 | 127 | 1.35 |
+| 20 | 330 | 1.77 |
+| 30 | 856 | 2.34 |
+
+A brand-new citizen with bare hands (32 health, 2 damage) beats the slimes of level 1 with about 13 health left, and the wolves of level 5 with almost nothing left. They fall at the boars of level 6. A citizen with every stat at 10, a sharp sword and a shield beats the lich with about a third of their health left; one with 60 health, 14 damage and leather armor falls there.
+
+Slain protectors are kept in memory only. A server restart brings every protector back, and a fight under way at a restart is lost: the citizen stands where they stopped, unhurt, with nothing gained. Only a citizen whose player is present wakes a den, and a citizen at work does not. The Tsar does not wake dens.
+
 ## The shape of the land
 
 The ring stays the rule for who lives there. A foe is never closer than its floor, and the ground changes at the next floor. The river, the coast, and the ridges do not move a floor. They are the reason one direction is not the same walk as another.

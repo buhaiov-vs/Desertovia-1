@@ -1,5 +1,5 @@
 import { Container, Graphics } from 'pixi.js'
-import type { EnemyKind } from '../api'
+import type { DenSnapshot, EnemyKind } from '../api'
 import { enemyFigure } from './enemies'
 import { foeFigure, type FoeAnimation, type FoeLook } from './foeSprites'
 import type { LandChunkRect, TileRect } from './landChunk'
@@ -67,9 +67,52 @@ const DEN_PICTURES: readonly DenPicture[] = [
   { prop: 44, protector: look('lich', 40) },
 ]
 
+/** How fast a drawn protector closes the gap to the server position, per second. */
+const FOLLOW = 10
+/** A protector flashes red this long after a blow, in seconds. */
+const FLASH_SECONDS = 0.18
+/** A striking protector lunges this long, in seconds. */
+const LUNGE_SECONDS = 0.24
+/** A tap this close to a protector picks it, in world pixels. */
+const PICK_RADIUS = 14
+const HIT_TINT = 0xff6a5a
+
+/** A thin health bar centred on (x, y); null clears it. */
+function drawBar(bar: Graphics, share: number | null, x: number, y: number) {
+  bar.clear()
+  if (share === null) return
+  const width = 16
+  bar
+    .rect(Math.round(x - width / 2) - 1, Math.round(y) - 1, width + 2, 4)
+    .fill({ color: 0x1a0f08, alpha: 0.85 })
+    .rect(Math.round(x - width / 2), Math.round(y), Math.max(0, Math.round(width * Math.min(1, share))), 2)
+    .fill({ color: share > 0.5 ? 0x6fcf4a : share > 0.25 ? 0xe0b83a : 0xd8432f })
+}
+
+interface Guard {
+  view: Container
+  bar: Graphics
+  homeX: number
+  homeY: number
+  x: number
+  y: number
+  facing: number
+  homeFacing: number
+  flash: number
+  lunge: number
+}
+
 interface Den {
   point: SpawnPoint
   views: Container[]
+  guards: Guard[]
+}
+
+/** A citizen fighting at a den, drawn at the server position. */
+interface Fighter {
+  x: number
+  y: number
+  bar: Graphics
 }
 
 /**
@@ -80,6 +123,10 @@ export class DenLayer {
   private points: SpawnPoint[] = []
   private readonly shown = new Map<string, Den>()
   private readonly layer: Container
+  private fights = new Map<string, DenSnapshot>()
+  /** Snapshots whose events were played, so a re-render does not flash again. */
+  private readonly played = new WeakSet<DenSnapshot>()
+  private readonly fighters = new Map<string, Fighter>()
 
   constructor(layer: Container) {
     this.layer = layer
@@ -146,7 +193,7 @@ export class DenLayer {
       if (!explored(point.x, point.y)) continue
       keep.add(point.id)
       if (this.shown.has(point.id)) continue
-      this.shown.set(point.id, { point, views: this.figures(point, camp) })
+      this.shown.set(point.id, this.figures(point, camp))
       changed = true
     }
     for (const id of [...this.shown.keys()]) {
@@ -157,12 +204,122 @@ export class DenLayer {
     return changed
   }
 
-  private figures(point: SpawnPoint, camp: { x: number; y: number }): Container[] {
+  /** The den fights the server runs now; a den missing from the list is at rest. */
+  setFights(snapshots: readonly DenSnapshot[]) {
+    this.fights = new Map(snapshots.map((snapshot) => [snapshot.denId, snapshot]))
+    for (const snapshot of snapshots) {
+      if (this.played.has(snapshot)) continue
+      this.played.add(snapshot)
+      const guards = this.shown.get(snapshot.denId)?.guards
+      if (!guards) continue
+      for (const event of snapshot.events) {
+        const guard = guards[event.protector]
+        if (!guard) continue
+        if (event.kind === 'Hit') guard.flash = FLASH_SECONDS
+        else if (event.kind === 'Struck') guard.lunge = LUNGE_SECONDS
+      }
+    }
+    const heroes = new Set(snapshots.flatMap((snapshot) => (snapshot.hero ? [snapshot.hero.citizenId] : [])))
+    for (const [id, fighter] of this.fighters) {
+      if (heroes.has(id)) continue
+      fighter.bar.destroy()
+      this.fighters.delete(id)
+    }
+  }
+
+  /** Where a citizen fighting at a den stands now, in world pixels; null when they are not fighting. */
+  fighterAt(citizenId: string): { x: number; y: number } | null {
+    return this.fighters.get(citizenId) ?? null
+  }
+
+  /** The protector under a tap, of a den that is fighting someone. */
+  pick(x: number, y: number): { denId: string; protector: number; heroId: string } | null {
+    let best: { denId: string; protector: number; heroId: string; distance: number } | null = null
+    for (const [denId, snapshot] of this.fights) {
+      const guards = this.shown.get(denId)?.guards
+      if (!snapshot.hero || !guards) continue
+      for (const protector of snapshot.protectors) {
+        const guard = guards[protector.index]
+        if (!guard || protector.state === 'Dead') continue
+        // A figure stands on its feet: aim at its middle.
+        const distance = Math.hypot(guard.x - x, guard.y - 8 - y)
+        if (distance <= PICK_RADIUS && (!best || distance < best.distance))
+          best = { denId, protector: protector.index, heroId: snapshot.hero.citizenId, distance }
+      }
+    }
+    return best ? { denId: best.denId, protector: best.protector, heroId: best.heroId } : null
+  }
+
+  /** Moves protectors and fighting citizens towards the server positions; dens at rest walk home. */
+  update(seconds: number, sortDepth: boolean) {
+    const follow = Math.min(1, seconds * FOLLOW)
+    for (const [id, den] of this.shown) {
+      const fight = this.fights.get(id)
+      for (let index = 0; index < den.guards.length; index++) {
+        const guard = den.guards[index]
+        if (!guard) continue
+        const protector = fight?.protectors[index]
+        if (!protector && guard.flash === 0 && guard.lunge === 0 && guard.x === guard.homeX && guard.y === guard.homeY) continue
+        guard.view.visible = protector?.state !== 'Dead'
+        if (protector?.state === 'Dead') {
+          guard.x = guard.homeX
+          guard.y = guard.homeY
+          guard.bar.clear()
+          continue
+        }
+        const targetX = protector ? protector.x * TILE : guard.homeX
+        const targetY = protector ? protector.y * TILE : guard.homeY
+        const dx = targetX - guard.x
+        guard.x += dx * follow
+        guard.y += (targetY - guard.y) * follow
+        if (Math.abs(dx) > 0.5) guard.facing = dx < 0 ? -1 : 1
+        if (!protector && Math.hypot(targetX - guard.x, targetY - guard.y) < 0.3) {
+          guard.x = targetX
+          guard.y = targetY
+          guard.facing = guard.homeFacing
+        }
+        guard.flash = Math.max(0, guard.flash - seconds)
+        guard.lunge = Math.max(0, guard.lunge - seconds)
+        const lunge = guard.lunge > 0 ? Math.sin((1 - guard.lunge / LUNGE_SECONDS) * Math.PI) * 3 : 0
+        guard.view.scale.x = Math.abs(guard.view.scale.x) * guard.facing
+        guard.view.position.set(guard.x + lunge * guard.facing, guard.y)
+        this.tint(guard.view, guard.flash > 0 ? HIT_TINT : 0xffffff)
+        if (sortDepth) guard.view.zIndex = guard.y
+        const hurt = protector && protector.health < protector.maximumHealth
+        drawBar(guard.bar, hurt ? protector.health / protector.maximumHealth : null, guard.x, guard.y - guard.view.height - 3)
+      }
+    }
+    for (const fight of this.fights.values()) {
+      const hero = fight.hero
+      if (!hero) continue
+      let fighter = this.fighters.get(hero.citizenId)
+      if (!fighter) {
+        const bar = new Graphics()
+        bar.zIndex = Number.MAX_SAFE_INTEGER
+        this.layer.addChild(bar)
+        fighter = { x: hero.x * TILE, y: hero.y * TILE, bar }
+        this.fighters.set(hero.citizenId, fighter)
+      }
+      fighter.x += (hero.x * TILE - fighter.x) * follow
+      fighter.y += (hero.y * TILE - fighter.y) * follow
+      drawBar(fighter.bar, hero.health / hero.maximumHealth, fighter.x, fighter.y - 30)
+    }
+  }
+
+  private tint(view: Container, color: number) {
+    for (const child of view.children) {
+      if ('tint' in child) (child as Container & { tint: number }).tint = color
+    }
+    if ('tint' in view) (view as Container & { tint: number }).tint = color
+  }
+
+  private figures(point: SpawnPoint, camp: { x: number; y: number }): Den {
     const picture = DEN_PICTURES[point.level - 1]
-    if (!picture) return []
+    const den: Den = { point, views: [], guards: [] }
+    if (!picture) return den
     const centerX = (point.x + 0.5) * TILE
     const centerY = (point.y + 0.5) * TILE
-    const views: Container[] = []
+    const views = den.views
     const prop = foeFigure({ idle: `den-${point.level}` as FoeAnimation, height: Math.round(picture.prop * PROP_SCALE) })
     if (prop) views.push(this.place(prop, centerX, centerY))
 
@@ -177,9 +334,16 @@ export class DenLayer {
       const angle = point.protectors === 1 ? lone : Math.PI * (0.15 + (0.7 * index) / (point.protectors - 1))
       const radius = point.protectors === 1 ? LONE_GUARD : GUARD_RADIUS
       figure.scale.x = facing
-      views.push(this.place(figure, centerX + Math.cos(angle) * radius * TILE, centerY + Math.sin(angle) * radius * 0.6 * TILE))
+      const homeX = centerX + Math.cos(angle) * radius * TILE
+      const homeY = centerY + Math.sin(angle) * radius * 0.6 * TILE
+      views.push(this.place(figure, homeX, homeY))
+      const bar = new Graphics()
+      bar.zIndex = Number.MAX_SAFE_INTEGER
+      this.layer.addChild(bar)
+      views.push(bar)
+      den.guards[index] = { view: figure, bar, homeX, homeY, x: homeX, y: homeY, facing, homeFacing: facing, flash: 0, lunge: 0 }
     }
-    return views
+    return den
   }
 
   private place(view: Container, x: number, y: number) {

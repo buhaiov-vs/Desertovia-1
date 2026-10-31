@@ -105,7 +105,7 @@ public static class DenGuards
             var angle = count == 1
                 ? facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25
                 : Math.PI * (0.15 + 0.7 * index / (count - 1));
-            var radius = count == 1 ? 1.0 : 1.1;
+            var radius = count == 1 ? 1.2 : 1.3;
             homes[index] = new TilePoint(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius * 0.6);
         }
 

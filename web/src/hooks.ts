@@ -1,6 +1,6 @@
 import { combatDiagnostics } from './game/combatDiagnostics'
 import { DungeonOrders, type DungeonOrder } from './game/dungeonOrders'
-import { adoptVillageState, mergeBattles, type Village } from './api'
+import { adoptVillageState, mergeBattles, mergeDens, type Village } from './api'
 import { appPath } from './paths'
 import { onAppResume } from './telegram'
 import { HubConnectionBuilder, HubConnectionState, LogLevel, type HubConnection } from '@microsoft/signalr'
@@ -130,6 +130,10 @@ export function useLiveVillage(slug: string, resident: boolean, handlers: LiveVi
         ...previous,battles:mergeBattles(previous.battles,events.battles),
         fortifications:events.fortifications??previous.fortifications,
       }:previous)
+      if (events.dens?.length) {
+        const changed = events.dens
+        setState((previous) => previous ? { ...previous, dens: mergeDens(previous.dens, changed) } : previous)
+      }
       for (const report of events.cycles) {
         push({ kind: 'cycle', report })
         callbacks.current.onCycleCompleted?.(report)

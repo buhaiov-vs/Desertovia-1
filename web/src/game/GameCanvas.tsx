@@ -37,6 +37,8 @@ interface Props {
   /** Called with the id of the citizen clicked on the map; null turns clicking off. */
   selectedEnemyId?:string|null
   onEnemyPick?:((battleId:string,unitId:string)=>void)|null
+  /** Tap on a protector of a den that is fighting; returns true when the tap is used. */
+  onDenPick?: ((denId: string, protector: number, heroId: string) => boolean) | null
   onCitizenPick?: ((citizenId: string) => void) | null
   /** Called with what a citizen could work at where the map was clicked (null for nothing) and the clicked tile point; `walk` skips opening buildings. Null turns clicking off. */
   onWorldPick?: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk?: boolean) => void) | null
@@ -59,6 +61,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     minimap = true,
     selectedEnemyId = null,
     onEnemyPick = null,
+    onDenPick = null,
     onCitizenPick = null,
     onWorldPick = null,
     worldPickable = null,
@@ -110,6 +113,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setPlacement(placement?.onPick ?? null, placement?.kind, placement?.private), [world, placement])
   useEffect(()=>world?.setEnemySelection(selectedEnemyId),[world,selectedEnemyId])
   useEffect(()=>world?.setEnemyPick(onEnemyPick),[world,onEnemyPick])
+  useEffect(() => world?.setDenPick(onDenPick), [world, onDenPick])
   useEffect(() => world?.setCitizenPick(onCitizenPick), [world, onCitizenPick])
   useEffect(() => world?.setWorldPick(onWorldPick), [world, onWorldPick])
   useEffect(() => world?.setWorldPickable(worldPickable), [world, worldPickable])

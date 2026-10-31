@@ -759,6 +759,15 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
     setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current});setPicked(null)
     void api.battleOrder(slug,battleId,unitId,'intercept').catch(e=>{setNotice(i18n.error(e));window.setTimeout(()=>setNotice(null),5000)})
   },[monasteryOpen,slug,i18n])
+  const pickDen = useCallback((denId: string, protector: number, heroId: string) => {
+    if (!ownId || heroId !== ownId) return false
+    setPicked(null)
+    void api.denAttack(slug, denId, protector).catch((exception) => {
+      setNotice(i18n.error(exception))
+      window.setTimeout(() => setNotice(null), 5000)
+    })
+    return true
+  }, [ownId, slug, i18n])
   // Only the isolated E2E build exposes deterministic selection setup. Vite removes
   // this listener from production; tests still exercise the real popup/chat composition.
   useEffect(() => {
@@ -835,6 +844,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         placement={placement}
         selectedEnemyId={enemyPick?.unitId??null}
         onEnemyPick={pickEnemy}
+        onDenPick={pickDen}
         onCitizenPick={pickCitizen}
         onWorldPick={pickWorld}
         worldPickable={worldPickable}

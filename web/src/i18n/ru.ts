@@ -1510,6 +1510,8 @@ export const ru: Dictionary = {
     'repair.nothing': 'Все постройки целы. Чинить нечего.',
     'dungeon.unknown': 'Такого подземелья нет.',
     'dungeon.busy': 'Вы в подземелье.',
+    'den.notFighting': 'Вы не сражаетесь у этого логова.',
+    'spot.unreachable': 'Туда не пройти.',
     'dungeon.injured': 'Вы ранены до {readyAt}. Снадобье излечит сразу.',
     'dungeon.classUnavailable': 'Для этого нужно снаряжение на складе или умение, которого у вас нет.',
     'dungeon.notGathering': 'Сейчас никто не собирается в подземелье.',

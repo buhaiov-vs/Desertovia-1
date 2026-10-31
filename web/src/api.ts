@@ -424,6 +424,16 @@ export function mergeBattles(previous:readonly RaidBattle[] = [], incoming:reado
   return [...all.values()].sort((a,b)=>Date.parse(a.startsAt)-Date.parse(b.startsAt)).slice(-16);
 }
 
+/** The latest snapshot of each den; a den at rest leaves the list. */
+export function mergeDens(previous: readonly DenSnapshot[] = [], incoming: readonly DenSnapshot[] = []): DenSnapshot[] {
+  const all = new Map(previous.map((den) => [den.denId, den]))
+  for (const next of incoming) {
+    if (next.resting) all.delete(next.denId)
+    else all.set(next.denId, next)
+  }
+  return [...all.values()]
+}
+
 /**
  * A full village snapshot lists every battle the server still publishes.
  * Keep newer revisions, including a battle newer than the snapshot itself; prune older unpublished fights.
@@ -1020,6 +1030,8 @@ export interface VillageState {
   defeatedAt?:string|null
   relocations?:{plotId:string;residents:number;available:number}[]
   battles?: RaidBattle[]
+  /** Dens that are not at rest: protectors awake, walking home or slain. */
+  dens?: DenSnapshot[]
   fortificationUpgrade?:FortificationQuote|null
   fortifications?: Fortification[]
   kingdomArea?: TileArea
@@ -1381,8 +1393,40 @@ export interface CycleReport {
 }
 
 /** Events of one village since the last `villageEvents` message, in order; only the latest summary per citizen. */
+export type DenGuardState = 'Home' | 'Chasing' | 'Returning' | 'Dead'
+
+export interface DenProtector {
+  index: number
+  x: number
+  y: number
+  health: number
+  maximumHealth: number
+  state: DenGuardState
+  /** When a slain protector stands at the den again. */
+  returnsAt: string | null
+}
+
+export interface DenEvent {
+  /** Hit: the citizen struck a protector; Struck: a protector struck the citizen. */
+  kind: 'Hit' | 'Struck' | 'Slain' | 'KnockedOut' | 'Respawned'
+  protector: number
+  amount: number
+  ranged: boolean
+}
+
+/** A den fight, as the server runs it. */
+export interface DenSnapshot {
+  denId: string
+  protectors: DenProtector[]
+  hero: { citizenId: string; x: number; y: number; health: number; maximumHealth: number; target: number | null } | null
+  events: DenEvent[]
+  /** The den is at rest again: protectors at home with full health. */
+  resting: boolean
+}
+
 export interface VillageEvents {
   battles?: RaidBattle[]
+  dens?: DenSnapshot[]
   fortificationUpgrade?:FortificationQuote|null
   fortifications?: Fortification[] | null
   cycles: CycleReport[]
@@ -1636,6 +1680,8 @@ export const api = {
   takeFromStorage: (slug: string, plotId: string, resource: string, amount: number, sharpen?: number, durability?: number) =>
     request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/take`, { plotId, resource, amount, sharpen, durability }),
   goTo: (slug: string, spot: TilePoint) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/goto`, { spot }),
+  denAttack: (slug: string, denId: string, protector: number) =>
+    request<void>('POST', `/api/villages/${encodeURIComponent(slug)}/dens/${encodeURIComponent(denId)}/attack`, { protector }),
   research: (slug: string) => request<Citizen>('POST', `/api/villages/${encodeURIComponent(slug)}/me/research`),
   forecast: (slug: string, rain: boolean) =>
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/me/forecast`, { rain }),

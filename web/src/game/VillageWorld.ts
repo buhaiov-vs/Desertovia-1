@@ -334,6 +334,9 @@ export class VillageWorld {
   private onEnemyPick:((battleId:string,unitId:string)=>void)|null=null
   setEnemySelection(id:string|null){this.enemies.select(id)}
   setEnemyPick(onPick:((battleId:string,unitId:string)=>void)|null){this.onEnemyPick=onPick}
+  /** Tap on a den protector; returns true when it was the player's fight and the tap is used. */
+  private onDenPick:((denId:string,protector:number,heroId:string)=>boolean)|null=null
+  setDenPick(onPick:((denId:string,protector:number,heroId:string)=>boolean)|null){this.onDenPick=onPick}
   private onCitizenPick: ((citizenId: string) => void) | null = null
   private onWorldPick: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk?: boolean) => void) | null = null
   private worldPickable: ((target: WorldTarget) => boolean) | null = null
@@ -1593,6 +1596,7 @@ export class VillageWorld {
     }
     for(const id of this.fighterSamples.keys())if(!presentFighters.has(id))this.fighterSamples.delete(id)
     this.enemies.setBattles(state.battles??[])
+    this.dens.setFights(state.dens ?? [])
     if(sameWorld){
       this.wildlife.setHerds(state.wildlife)
       this.enemies.setRaids(state.raids)
@@ -2270,6 +2274,8 @@ export class VillageWorld {
       if (!this.onPick) {
         const screen = local(event)
         const worldPoint=this.world.toLocal(screen)
+        const den=this.dens.pick(worldPoint.x,worldPoint.y)
+        if(den&&this.onDenPick?.(den.denId,den.protector,den.heroId))return
         const enemy=this.enemies.pick(worldPoint.x,worldPoint.y)
         if(enemy&&this.onEnemyPick){this.onEnemyPick(enemy.battleId,enemy.unitId);return}
         const citizenId = this.onCitizenPick ? this.citizenAt(screen) : null
@@ -2388,6 +2394,7 @@ export class VillageWorld {
       for(const fighter of battle.fighters)if((fighter.active||fighter.mode==='withdrawn')&&fighter.health>0)
         combatants.set(fighter.isTsar?TSAR_ID:fighter.citizenId,fighter)
     }
+    this.dens.update(seconds, sortDepth)
     for (const walker of this.walkers.values()) {
       let speed = WALK_SPEED
       walker.icon.visible = true
@@ -2497,6 +2504,15 @@ export class VillageWorld {
         walker.x=x*TILE;walker.y=y*TILE;walker.targetX=walker.x;walker.targetY=walker.y;walker.way=[]
         walker.staying=true;walker.roaming=false
       }
+      const denFighter=hurt||combatant?null:this.dens.fighterAt(walker.id)
+      let denStep=0
+      if(denFighter){
+        const dx=denFighter.x-walker.x
+        denStep=Math.hypot(dx,denFighter.y-walker.y)
+        if(Math.abs(dx)>.3)walker.sprite.scale.x=dx<0?-1:1
+        walker.x=denFighter.x;walker.y=denFighter.y;walker.targetX=walker.x;walker.targetY=walker.y;walker.way=[]
+        walker.staying=true;walker.roaming=false;walker.hunt=null
+      }
       const end = walker.way.at(-1)
       if (end && (end.x !== walker.targetX || end.y !== walker.targetY)) walker.way = []
       let goal = walker.way[0] ?? { x: walker.targetX, y: walker.targetY }
@@ -2508,7 +2524,7 @@ export class VillageWorld {
       const dy = goal.y - walker.y
       const distance = Math.hypot(dx, dy)
       const sample=this.fighterSamples.get(walker.id)
-      const moving = combatant&&sample?fighterIsMoving(sample,performance.now()):distance>0.5
+      const moving = combatant&&sample?fighterIsMoving(sample,performance.now()):denFighter?denStep>.05:distance>0.5
       if (moving&&!combatant) {
         const step = Math.min(distance, speed * seconds)
         walker.x += (dx / distance) * step

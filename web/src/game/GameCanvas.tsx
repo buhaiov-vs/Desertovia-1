@@ -45,6 +45,8 @@ interface Props {
   mapRevealed?: boolean
   /** Development only: rings and level numbers on every den, and all of them on the minimap. */
   densHighlighted?: boolean
+  /** Server time minus this browser's clock, in milliseconds. */
+  serverOffsetMs?: number
   obscured?: boolean
   catalog: Catalog | null
   placement?: Placement | null
@@ -71,6 +73,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     nightOverride = null,
     mapRevealed = false,
     densHighlighted = false,
+    serverOffsetMs = 0,
     obscured = false,
     catalog,
     placement = null,
@@ -120,6 +123,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setNightOverride(nightOverride), [world, nightOverride])
   useEffect(() => world?.setMapRevealed(mapRevealed), [world, mapRevealed])
   useEffect(() => world?.setDensHighlighted(densHighlighted), [world, densHighlighted])
+  useEffect(() => world?.setServerOffset(serverOffsetMs), [world, serverOffsetMs])
   useEffect(() => world?.setObscured(obscured), [world, obscured])
   useEffect(() => world?.setPriestName(priestName), [world, priestName])
   useEffect(() => world?.setTitles(tsarTitle, governorTitle), [world, tsarTitle, governorTitle])

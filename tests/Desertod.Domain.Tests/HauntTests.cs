@@ -33,6 +33,30 @@ public class HauntTests
         Assert.Equal(sample.Foes, foes);
     }
 
+    public sealed record WalkSpot(double Seconds, double X, double Y);
+
+    public sealed record WalkCase(uint Seed, int CellX, int CellY, WalkSpot[] Walks);
+
+    public static IEnumerable<object[]> WalkCases()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "haunt-walks.json");
+        return JsonSerializer.Deserialize<WalkCase[]>(File.ReadAllText(path), new JsonSerializerOptions(JsonSerializerDefaults.Web))!
+            .Select(sample => new object[] { sample });
+    }
+
+    [Theory]
+    [MemberData(nameof(WalkCases))]
+    public void Wander_MatchesTheOneTheBrowserDraws(WalkCase sample)
+    {
+        var foe = Haunts.At(sample.Seed, sample.CellX, sample.CellY, SpawnRings.Points(sample.Seed))!;
+        foreach (var spot in sample.Walks)
+        {
+            var here = Haunts.PositionAt(sample.Seed, foe, DateTimeOffset.UnixEpoch.AddMilliseconds(spot.Seconds * 1000));
+            Assert.Equal(spot.X, here.X, 6);
+            Assert.Equal(spot.Y, here.Y, 6);
+        }
+    }
+
     [Fact]
     public void NineInTenFoes_AreOfTheirBand_AndNoneStandsNearTheCampOrADen()
     {

@@ -15,7 +15,7 @@ import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDe
 import { WildlifeLayer } from './animals'
 import { EnemyLayer } from './enemies'
 import { DenLayer } from './dens'
-import { hauntsIn } from './haunts'
+import { hauntsIn, wanderAt } from './haunts'
 import { spawnPoints } from './spawnRings'
 import { CharacterPainter, appearanceKey } from './appearance'
 import { darknessAt } from './daylight'
@@ -837,6 +837,11 @@ export class VillageWorld {
    * Developer tools: rings and level numbers on every den in view, above the fog, and every den as a dot on the
    * minimap at its usual scale; a den past the minimap sits on its edge.
    */
+  /** Server time minus this browser's clock, in milliseconds, so roaming foes walk where the server has them. */
+  setServerOffset(offsetMs: number) {
+    this.dens.setClock(() => Date.now() + offsetMs)
+  }
+
   setDensHighlighted(on: boolean) {
     this.densHighlighted = on
     this.dens.setHighlighted(on)
@@ -1602,7 +1607,7 @@ export class VillageWorld {
       const ring = { camp: CAMPFIRE, land, water: farWater }
       const seed = this.terrainSeed
       const dens = spawnPoints(seed, ring)
-      this.dens.setPoints(dens, (rect) => hauntsIn(seed, rect, ring, dens))
+      this.dens.setPoints(dens, (rect) => hauntsIn(seed, rect, ring, dens), (foe, unixMs) => wanderAt(seed, foe, unixMs))
       this.buildTerrain(this.terrainSeed, state.wilds)
       this.showCamp()
     }

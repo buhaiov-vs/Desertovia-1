@@ -102,6 +102,8 @@ interface Guard {
   homeFacing: number
   flash: number
   lunge: number
+  /** A roaming foe at rest walks this path, in world pixels, instead of standing at home. */
+  wander?: () => { x: number; y: number }
 }
 
 interface Den {
@@ -137,6 +139,10 @@ export class DenLayer {
   private readonly fighters = new Map<string, Fighter>()
   /** The roaming foes in a part of the land, in tiles; they are figured like dens of one protector. */
   private haunts: ((rect: TileRect) => SpawnPoint[]) | null = null
+  /** Where a roaming foe wanders at a server time, in tiles. */
+  private wander: ((foe: SpawnPoint, unixMs: number) => { x: number; y: number }) | null = null
+  /** Server time now, in Unix milliseconds, so the wander matches the one the server checks. */
+  private now: () => number = () => Date.now()
 
   constructor(layer: Container, marks: Container) {
     this.layer = layer
@@ -157,10 +163,19 @@ export class DenLayer {
     }
   }
 
-  setPoints(points: SpawnPoint[], haunts: ((rect: TileRect) => SpawnPoint[]) | null = null) {
+  setPoints(
+    points: SpawnPoint[],
+    haunts: ((rect: TileRect) => SpawnPoint[]) | null = null,
+    wander: ((foe: SpawnPoint, unixMs: number) => { x: number; y: number }) | null = null,
+  ) {
     for (const id of [...this.shown.keys()]) this.drop(id)
     this.points = points
     this.haunts = haunts
+    this.wander = wander
+  }
+
+  setClock(now: () => number) {
+    this.now = now
   }
 
   /** Dens the village has seen. */
@@ -283,7 +298,7 @@ export class DenLayer {
     return best ? { denId: best.denId, protector: best.protector, heroId: best.heroId } : null
   }
 
-  /** Moves protectors and fighting citizens towards the server positions; dens at rest walk home. */
+  /** Moves protectors and fighting citizens towards the server positions; dens at rest walk home, roaming foes wander. */
   update(seconds: number, sortDepth: boolean) {
     const follow = Math.min(1, seconds * FOLLOW)
     for (const [id, den] of this.shown) {
@@ -292,6 +307,13 @@ export class DenLayer {
         const guard = den.guards[index]
         if (!guard) continue
         const protector = fight?.protectors[index]
+        if (guard.wander && !protector) {
+          // At rest a roaming foe's home is where its wander is now; it faces the way it strolls.
+          const spot = guard.wander()
+          if (Math.abs(spot.x - guard.homeX) > 0.01) guard.homeFacing = spot.x < guard.homeX ? -1 : 1
+          guard.homeX = spot.x
+          guard.homeY = spot.y
+        }
         if (!protector && guard.flash === 0 && guard.lunge === 0 && guard.x === guard.homeX && guard.y === guard.homeY) continue
         guard.view.visible = protector?.state !== 'Dead'
         if (protector?.state === 'Dead') {
@@ -355,17 +377,25 @@ export class DenLayer {
     const views = den.views
     const facing = camp.x * TILE < centerX ? -1 : 1
     if (point.roams) {
-      // A roaming foe: no den, one figure on its own tile, as the server's `DenGuards.Homes` puts it.
+      // A roaming foe: no den, one figure walking the same wander the server checks.
       const [, cellX, cellY] = point.id.split(':').map(Number)
       const figure = this.protectorFigure(picture, 0, Math.abs(cellX + cellY))
       if (!figure) return den
+      const walk = this.wander
+      const wander = walk
+        ? () => {
+            const spot = walk(point, this.now())
+            return { x: spot.x * TILE, y: spot.y * TILE }
+          }
+        : undefined
+      const start = wander?.() ?? { x: centerX, y: centerY }
       figure.scale.x = facing * FOE_SCALE
-      views.push(this.place(figure, centerX, centerY))
+      views.push(this.place(figure, start.x, start.y))
       const bar = new Graphics()
       bar.zIndex = Number.MAX_SAFE_INTEGER
       this.layer.addChild(bar)
       views.push(bar)
-      den.guards[0] = { view: figure, bar, homeX: centerX, homeY: centerY, x: centerX, y: centerY, facing, homeFacing: facing, flash: 0, lunge: 0 }
+      den.guards[0] = { view: figure, bar, homeX: start.x, homeY: start.y, x: start.x, y: start.y, facing, homeFacing: facing, flash: 0, lunge: 0, wander }
       return den
     }
     const ring = new Graphics()

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { CELL, DEN_CLEARANCE, hauntAt, hauntsIn } from '../src/game/haunts.ts'
+import { CELL, DEN_CLEARANCE, LEG_SECONDS, WANDER_RADIUS, hauntAt, hauntsIn, wanderAt } from '../src/game/haunts.ts'
 import { SPAWN_LEVELS, spawnPoints } from '../src/game/spawnRings.ts'
 
 const side = 24_000
@@ -38,6 +38,23 @@ test('nine in ten foes are of their band, the rest one level off', () => {
   }
   const share = off / (own + off)
   assert.ok(share > 0.07 && share < 0.13, `off-level share ${share}`)
+})
+
+test('a foe wanders near its tile and keeps moving, without jumps', () => {
+  const dens = spawnPoints(1, ring)
+  const foe = hauntsIn(1, { x: -700, y: -700, width: 1400, height: 1400 }, ring, dens)[0]
+  const start = 1_728_000_000_000
+  let last = wanderAt(1, foe, start)
+  let travelled = 0
+  for (let step = 1; step <= 600; step++) {
+    const here = wanderAt(1, foe, start + step * 1000)
+    assert.ok(Math.hypot(here.x - foe.x - 0.5, here.y - foe.y - 0.5) <= WANDER_RADIUS + 1e-9)
+    const moved = Math.hypot(here.x - last.x, here.y - last.y)
+    assert.ok(moved <= (2 * WANDER_RADIUS) / (LEG_SECONDS * 0.75) + 1e-9)
+    travelled += moved
+    last = here
+  }
+  assert.ok(travelled > 20, `travelled ${travelled}`)
 })
 
 test('no foe closer to the camp than the first ring, one per square', () => {

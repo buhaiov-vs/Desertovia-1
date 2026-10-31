@@ -841,6 +841,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         nightOverride={catalog.devTools ? nightOverride : null}
         mapRevealed={catalog.devTools && mapRevealed}
         densHighlighted={catalog.devTools && densHighlighted}
+        serverOffsetMs={serverOffset}
         obscured={monasteryOpen || walletOpen || chatFull || (panel !== 'none' && panel !== 'done') || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}

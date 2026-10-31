@@ -1895,11 +1895,20 @@ input[aria-invalid='true'] {
   pointer-events: auto;
 }
 
-.minimap {
+.minimap-frame {
   position: absolute;
   right: 12px;
   top: max(10px, env(safe-area-inset-top));
   width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.minimap {
+  position: relative;
+  width: 100%;
   aspect-ratio: 120 / 90;
   border: 2px solid var(--gold);
   border-radius: 6px;
@@ -1907,6 +1916,26 @@ input[aria-invalid='true'] {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
   cursor: crosshair;
   touch-action: none;
+  pointer-events: auto;
+}
+
+/* One line under the map: in the village, or how many tiles away its edge is. */
+.minimap-distance {
+  height: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: rgba(27, 18, 6, 0.82);
+  color: var(--parchment);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: auto;
 }
 
 .minimap canvas {
@@ -1956,10 +1985,17 @@ input[aria-invalid='true'] {
     --minimap-top: calc(var(--hud-top-bottom, 122px) + 6px);
   }
 
-  .minimap {
+  .minimap-frame {
     right: 8px;
     top: var(--minimap-top);
     width: 112px;
+  }
+
+  .minimap-distance {
+    height: 28px;
+    font-size: 9px;
+    line-height: 12px;
+    white-space: normal;
   }
 
   /* The minimap sits on the right under the top bar; the quest tracker and guide keep clear of it. */
@@ -1972,7 +2008,8 @@ input[aria-invalid='true'] {
 .ui-toggle {
   position: absolute;
   z-index: 40;
-  top: calc(max(10px, env(safe-area-inset-top)) + 186px);
+  /* The map is 180px, then a 2px gap and the 18px distance line. */
+  top: calc(max(10px, env(safe-area-inset-top)) + 206px);
   right: 12px;
   display: flex;
   align-items: center;
@@ -2022,7 +2059,7 @@ input[aria-invalid='true'] {
 .music-toggle {
   position: absolute;
   z-index: 40;
-  top: calc(max(10px, env(safe-area-inset-top)) + 228px);
+  top: calc(max(10px, env(safe-area-inset-top)) + 248px);
   right: 12px;
   display: flex;
   align-items: center;
@@ -2055,21 +2092,21 @@ input[aria-invalid='true'] {
 }
 
 @media (max-width: 720px) {
-  /* Under the minimap, in the column the guide keeps clear. */
+  /* Under the minimap and its two-line distance, in the column the guide keeps clear. */
   .ui-toggle {
-    top: calc(var(--minimap-top) + 90px);
+    top: calc(var(--minimap-top) + 120px);
     right: 8px;
   }
 
   .music-toggle {
-    top: calc(var(--minimap-top) + 132px);
+    top: calc(var(--minimap-top) + 162px);
     right: 8px;
   }
 }
 
 /* Panels, popups and dialogs are siblings of the canvas, so everything but the map and the toggles goes. */
 .game-root.ui-hidden > :not(.game-canvas, .ui-toggle, .dev-panel, .music-toggle),
-.game-root.ui-hidden .minimap {
+.game-root.ui-hidden .minimap-frame {
   display: none;
 }
 

@@ -1,8 +1,21 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { Catalog, CitizenSummary, TileArea, TilePoint, VillageState } from '../api'
 import { useI18n } from '../i18n'
+import type { UiKey } from '../i18n/en'
 import { VillageWorld } from './VillageWorld'
 import type { WalkBlock, WorldTarget } from './worldMap'
+
+/** English uses one or many. Russian also uses the few form (2–4, except 12–14). */
+function tileUnitKey(count: number, language: string): UiKey {
+  const mod10 = count % 10
+  const mod100 = count % 100
+  if (language === 'ru') {
+    if (mod10 === 1 && mod100 !== 11) return 'hud.tileOne'
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'hud.tileFew'
+    return 'hud.tileMany'
+  }
+  return count === 1 ? 'hud.tileOne' : 'hud.tileMany'
+}
 
 export interface GameCanvasHandle {
   say(ownerId: string, text: string, seconds?: number): void
@@ -74,7 +87,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
 ) {
   const hostRef = useRef<HTMLDivElement>(null)
   const [world, setWorld] = useState<VillageWorld | null>(null)
-  const { t, building, storage } = useI18n()
+  const { t, language, amount, building, storage } = useI18n()
   const priestName = t('priest.name')
   const tsarTitle = t('hud.tsar')
   const governorTitle = t('hud.governor')
@@ -110,6 +123,13 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setObscured(obscured), [world, obscured])
   useEffect(() => world?.setPriestName(priestName), [world, priestName])
   useEffect(() => world?.setTitles(tsarTitle, governorTitle), [world, tsarTitle, governorTitle])
+  useEffect(() => {
+    world?.setDistanceText((tiles) => {
+      const count = Math.round(tiles)
+      if (count < 1) return t('hud.inVillage')
+      return t('hud.villageDistance', { distance: amount(count), unit: t(tileUnitKey(count, language)) })
+    })
+  }, [world, t, language, amount])
   useEffect(
     () => world?.setBuildingNames((kind, isStorage) => (isStorage ? storage(kind) : building(kind).name)),
     [world, building, storage],

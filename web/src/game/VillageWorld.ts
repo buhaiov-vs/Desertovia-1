@@ -712,6 +712,11 @@ export class VillageWorld {
     if (priest) priest.label.text = name
   }
 
+  /** The line under the minimap. `tiles` is 0 while the signed-in walker stands inside the village. */
+  setDistanceText(text: (tiles: number) => string) {
+    this.minimap?.setDistanceText(text)
+  }
+
   /** Shown under the names of the Tsar and of the Governors, in the player's language. */
   setTitles(tsarTitle: string, governorTitle: string) {
     this.tsarTitle = tsarTitle
@@ -2656,6 +2661,14 @@ export class VillageWorld {
       }))
     const dens = (this.densHighlighted ? this.dens.all() : this.dens.spotted((x, y) => this.fog.isExplored(x, y)))
       .map((den) => ({ x: den.x + 0.5, y: den.y + 0.5, level: den.level }))
-    return { buildings, citizens, camp: CAMPFIRE, dens }
+    const self = this.highlightId ? this.walkers.get(this.highlightId) : undefined
+    return {
+      buildings,
+      citizens,
+      camp: CAMPFIRE,
+      dens,
+      self: self ? { x: self.x / TILE, y: self.y / TILE } : null,
+      kingdom: this.village?.kingdomArea ?? this.catalog?.buildArea ?? null,
+    }
   }
 }

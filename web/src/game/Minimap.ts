@@ -26,6 +26,17 @@ export interface MinimapMarkers {
   camp: { x: number; y: number }
   /** Foe dens. `level` is drawn when the minimap marks every den. */
   dens: Array<{ x: number; y: number; level?: number }>
+  /** The signed-in walker, in tiles. */
+  self: { x: number; y: number } | null
+  /** Village land. The line under the map measures the straight distance to its edge. */
+  kingdom: { x: number; y: number; width: number; height: number } | null
+}
+
+/** Tiles from a point to the nearest spot of a rectangle; 0 when the point is inside. */
+function tilesFromArea(x: number, y: number, area: { x: number; y: number; width: number; height: number }) {
+  const dx = x < area.x ? area.x - x : x > area.x + area.width ? x - (area.x + area.width) : 0
+  const dy = y < area.y ? area.y - y : y > area.y + area.height ? y - (area.y + area.height) : 0
+  return Math.hypot(dx, dy)
 }
 
 interface Rectangle {
@@ -45,7 +56,9 @@ const VALE: Rectangle = { x: MAP_LEFT, y: MAP_TOP, width: MAP_WIDTH, height: MAP
  * so the player, the fog and the white view stay visible. A click or drag moves the camera there.
  */
 export class Minimap {
+  private readonly stack = document.createElement('div')
   private readonly root = document.createElement('div')
+  private readonly caption = document.createElement('div')
   private readonly base = document.createElement('canvas')
   private readonly overlay = document.createElement('canvas')
   private readonly localFog = document.createElement('canvas')
@@ -62,9 +75,15 @@ export class Minimap {
   private fillDarkness: DarknessFill | null = null
   /** Every den is marked, the ones past the picture on its edge. */
   private allDens = false
+  /** Turns a distance in tiles into the line under the map. Zero means the walker is inside the village. */
+  private distanceText: ((tiles: number) => string) | null = null
+  private shownDistance = ''
 
   constructor(host: HTMLElement, onPick: (tileX: number, tileY: number) => void) {
+    this.stack.className = 'minimap-frame'
     this.root.className = 'minimap'
+    this.caption.className = 'minimap-distance'
+    this.caption.hidden = true
     this.base.width = MAP_WIDTH
     this.base.height = MAP_HEIGHT
     this.overlay.width = MAP_WIDTH * 4
@@ -72,7 +91,8 @@ export class Minimap {
     this.localFog.width = MAP_WIDTH
     this.localFog.height = MAP_HEIGHT
     this.root.append(this.base, this.overlay)
-    host.appendChild(this.root)
+    this.stack.append(this.root, this.caption)
+    host.appendChild(this.stack)
 
     const pick = (event: PointerEvent) => {
       const bounds = this.root.getBoundingClientRect()
@@ -102,7 +122,14 @@ export class Minimap {
   }
 
   destroy() {
-    this.root.remove()
+    this.stack.remove()
+  }
+
+  /** The line under the map. `tiles` is 0 while the walker stands inside the village. */
+  setDistanceText(text: (tiles: number) => string) {
+    this.distanceText = text
+    this.shownDistance = ''
+    this.paintDistance()
   }
 
   /** `seed` picks the far land past the camp picture, the same one the world draws. */
@@ -139,6 +166,24 @@ export class Minimap {
     // Sight moves with the walkers, so a followed window refreshes its fog with them.
     if (!this.isVale(this.frame)) this.builtFrame = ''
     this.draw()
+    this.paintDistance()
+  }
+
+  private paintDistance() {
+    const self = this.markers?.self
+    const kingdom = this.markers?.kingdom
+    const text = this.distanceText
+    if (!self || !kingdom || !text) {
+      this.caption.hidden = true
+      this.shownDistance = ''
+      return
+    }
+    const line = text(tilesFromArea(self.x, self.y, kingdom))
+    if (line === this.shownDistance) return
+    this.shownDistance = line
+    this.caption.textContent = line
+    this.caption.title = line
+    this.caption.hidden = false
   }
 
   /** The camp picture while the screen is inside it; otherwise the same-sized window around the camera. */

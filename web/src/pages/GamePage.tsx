@@ -837,7 +837,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         ref={canvas}
         village={live.state}
         citizens={shownCitizens}
-        highlightId={citizen?.id ?? null}
+        highlightId={citizen?.id ?? (tsar ? TSAR_ID : null)}
         nightOverride={catalog.devTools ? nightOverride : null}
         mapRevealed={catalog.devTools && mapRevealed}
         densHighlighted={catalog.devTools && densHighlighted}

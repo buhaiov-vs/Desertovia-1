@@ -2,10 +2,12 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { api, type Catalog, type Citizen, type RaidBattle, type RaidUnit, type VillageState } from '../api'
 import { useI18n } from '../i18n'
 
-export function BattleControls({ village, battle, unit, citizen, tsar=false, accountId, onClose, selectionToken=0, issuedOrder }: {
+export function BattleControls({ village, battle, unit, citizen, tsar=false, accountId, onClose, selectionToken=0, issuedOrder, autoAttack=true }: {
   village: VillageState; battle: RaidBattle; unit: RaidUnit; citizen: Citizen | null | undefined;
   catalog: Catalog; tsar?:boolean; accountId?:string; onDefend?:()=>void; onClose: () => void
   selectionToken?:number; issuedOrder?:RefObject<string>
+  /** When false, the card only shows details until the player presses Attack. */
+  autoAttack?:boolean
 }) {
   const i18n=useI18n(), ru=i18n.language==='ru'
   const [busy,setBusy]=useState(false),[error,setError]=useState('')
@@ -24,10 +26,11 @@ export function BattleControls({ village, battle, unit, citizen, tsar=false, acc
     try{await api.battleOrder(village.slug,battle.id,unit.id,'intercept')}catch(e){setError(i18n.error(e))}finally{setBusy(false)}
   },[village.slug,battle.id,unit.id,i18n])
   useEffect(()=>{
+    if(!autoAttack)return
     const key=battle.id+':'+unit.id+':'+selectionToken
     if(!canOrder||attempted.current===key)return
     attempted.current=key;void order()
-  },[canOrder,battle.id,unit.id,selectionToken,attempted,order])
+  },[autoAttack,canOrder,battle.id,unit.id,selectionToken,attempted,order])
   return <aside className="battle-controls" aria-label={ru?'Выбранный противник':'Selected enemy'}>
     <header><strong>{unit.enemy?i18n.enemy(unit.enemy):raid?i18n.enemy(raid.enemy):ru?'Противник':'Enemy'} · {ru?({weak:'Слабый',regular:'Обычный',strong:'Сильный',boss:'Босс'}[unit.variant]):unit.variant}</strong><button type="button" className="close" aria-label={i18n.t('close')} onClick={e=>{e.stopPropagation();onClose()}}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg></button></header>
     <p className="small">{phases[unit.state]??unit.state} · ♥ {Math.ceil(unit.health)}/{Math.ceil(unit.maximumHealth)}</p>
@@ -35,8 +38,9 @@ export function BattleControls({ village, battle, unit, citizen, tsar=false, acc
     {fighter&&<p className="small">{ru?'Моё здоровье':'My health'}: {Math.ceil(fighter.health)}/{fighter.maximumHealth} · {ru?'Урон':'Damage'} {Math.round(fighter.damageDealt)}{fighter.arrows?` · ➶ ${fighter.arrows}`:''}</p>}
     {recovering&&<p role="status">{ru?'Царь на лечении до':'The Tsar is recovering until'} {new Date(village.tsar.injuredUntil!).toLocaleTimeString(i18n.language,{hour:'2-digit',minute:'2-digit'})}</p>}
     {!canOrder&&fighter&&fighter.health<=0&&<p>{ru?'Вы ранены. Дождитесь восстановления.':'You are wounded. Wait for recovery.'}</p>}
-    {canOrder&&!error&&<p className="small" role="status">{busy?(ru?'Выбираю цель…':'Selecting target…'):(ru?'Цель выбрана. Подойду и буду бить автоматически.':'Target selected. I will approach and attack automatically.')}</p>}
+    {canOrder&&autoAttack&&!error&&<p className="small" role="status">{busy?(ru?'Выбираю цель…':'Selecting target…'):(ru?'Цель выбрана. Подойду и буду бить автоматически.':'Target selected. I will approach and attack automatically.')}</p>}
     {error&&<p className="error small" role="status">{error}</p>}
-    {canOrder&&error&&<button disabled={busy} onClick={()=>void order()}>{ru?'Повторить атаку':'Retry attack'}</button>}
+    {canOrder&&!autoAttack&&<button disabled={busy} onClick={()=>void order()}>{busy?(ru?'Иду…':'Going…'):(ru?'Атаковать':'Attack')}</button>}
+    {canOrder&&autoAttack&&error&&<button disabled={busy} onClick={()=>void order()}>{ru?'Повторить атаку':'Retry attack'}</button>}
   </aside>
 }

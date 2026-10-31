@@ -31,8 +31,11 @@ import {
 } from '../api'
 import type { JobChoice } from '../ui/SitesPanel'
 import { inForestArea, tileBuiltOver, type WorldTarget } from '../game/worldMap'
+import { BattleControls } from '../ui/BattleControls'
+import { DenPopup } from '../ui/DenPopup'
 import { TargetPopup } from '../ui/TargetPopup'
 import { watchable, WatchPopup } from '../ui/WatchPopup'
+import type { SpawnPoint } from '../game/spawnRings'
 import { flagTitle, notify, useTitleReset } from '../notifications'
 import { BackgroundMusic } from '../ui/BackgroundMusic'
 import { DevPanel } from '../ui/DevPanel'
@@ -116,8 +119,9 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   const [subtitleFor, setSubtitleFor] = useState<string | null>(null)
   /** Place on the map the player clicked to send their citizen there. */
   const [picked, setPicked] = useState<{ target: WorldTarget; screen: { x: number; y: number } } | null>(null)
-  const [enemyPick,setEnemyPick]=useState<{battleId:string;unitId:string;selectionToken:number}|null>(null)
+  const [enemyPick,setEnemyPick]=useState<{battleId:string;unitId:string;selectionToken:number;inspect:boolean}|null>(null)
   const enemySelection=useRef(0)
+  const [denInspect, setDenInspect] = useState<{ denId: string; protector: number; point: SpawnPoint } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
   const [patientFor,setPatientFor]=useState<string|null>(null)
@@ -715,6 +719,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
     if (tsar) {
       return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk = false) => {
         setEnemyPick(null)
+        setDenInspect(null)
         if (!walk) {
           if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
           if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
@@ -736,6 +741,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
     if (!canWork || !ownId) return null
     return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk = false) => {
       setEnemyPick(null)
+      setDenInspect(null)
       if (!walk) {
         if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
         if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
@@ -757,18 +763,40 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   }, [tsar, canWork, working, ownId, slug, applyCitizen, setVillageState, i18n, me.id])
   const pickEnemy=useCallback((battleId:string,unitId:string)=>{
     if(monasteryOpen)return
-    setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current});setPicked(null)
+    setDenInspect(null)
+    setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current,inspect:false});setPicked(null)
     void api.battleOrder(slug,battleId,unitId,'intercept').catch(e=>{setNotice(i18n.error(e));window.setTimeout(()=>setNotice(null),5000)})
   },[monasteryOpen,slug,i18n])
-  const pickDen = useCallback((denId: string, protector: number, heroId: string) => {
-    if (!ownId || heroId !== ownId) return false
+  const inspectEnemy=useCallback((battleId:string,unitId:string)=>{
+    if(monasteryOpen)return
+    setDenInspect(null)
+    setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current,inspect:true});setPicked(null)
+  },[monasteryOpen])
+  const pickDen = useCallback((denId: string, protector: number, heroId: string | null) => {
+    setDenInspect(null)
+    setEnemyPick(null)
     setPicked(null)
+    if (!ownId) {
+      setNotice(i18n.error(new ApiError(409, '', 'den.unavailable')))
+      window.setTimeout(() => setNotice(null), 5000)
+      return true
+    }
+    if (heroId !== null && heroId !== ownId) {
+      setNotice(i18n.error(new ApiError(409, '', 'den.busy')))
+      window.setTimeout(() => setNotice(null), 5000)
+      return true
+    }
     void api.denAttack(slug, denId, protector).catch((exception) => {
       setNotice(i18n.error(exception))
       window.setTimeout(() => setNotice(null), 5000)
     })
     return true
   }, [ownId, slug, i18n])
+  const inspectDen = useCallback((denId: string, protector: number, point: SpawnPoint) => {
+    setEnemyPick(null)
+    setPicked(null)
+    setDenInspect({ denId, protector, point })
+  }, [])
   // Only the isolated E2E build exposes deterministic selection setup. Vite removes
   // this listener from production; tests still exercise the real popup/chat composition.
   useEffect(() => {
@@ -838,6 +866,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         village={live.state}
         citizens={shownCitizens}
         highlightId={citizen?.id ?? (tsar ? TSAR_ID : null)}
+        viewerIsTsar={tsar}
         nightOverride={catalog.devTools ? nightOverride : null}
         mapRevealed={catalog.devTools && mapRevealed}
         densHighlighted={catalog.devTools && densHighlighted}
@@ -847,7 +876,9 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         placement={placement}
         selectedEnemyId={enemyPick?.unitId??null}
         onEnemyPick={pickEnemy}
+        onEnemyInspect={inspectEnemy}
         onDenPick={pickDen}
+        onDenInspect={inspectDen}
         onCitizenPick={pickCitizen}
         onWorldPick={pickWorld}
         worldPickable={worldPickable}
@@ -974,7 +1005,39 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
           )}
         </div>
         <ChatPanel
-          actions={!walletOpen&&!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&(()=>{
+          actions={!walletOpen&&!chatFull&&panel==='none'&&!hospitalOpen&&!chaplainOpen&&!patientFor&&!pollSetup&&!pollShown&&!showPicked&&!showWatched&&(()=>{
+            if(denInspect){
+              const fight=village.dens?.find(d=>d.denId===denInspect.denId)??null
+              const heroId=fight?.hero?.citizenId??null
+              const busyReason=!ownId?i18n.error(new ApiError(409,'','den.unavailable')):heroId&&heroId!==ownId?i18n.error(new ApiError(409,'','den.busy')):null
+              return <DenPopup
+                slug={slug}
+                point={denInspect.point}
+                protector={denInspect.protector}
+                fight={fight}
+                canAttack={!!ownId&&(!heroId||heroId===ownId)}
+                busyReason={busyReason}
+                onAttacked={()=>setDenInspect(null)}
+                onClose={()=>setDenInspect(null)}
+              />
+            }
+            if(enemyPick?.inspect&&catalog){
+              const battle=village.battles?.find(b=>b.id===enemyPick.battleId)
+              const unit=battle?.units.find(u=>u.id===enemyPick.unitId)
+              if(!battle||!unit)return null
+              return <BattleControls
+                village={village}
+                battle={battle}
+                unit={unit}
+                citizen={citizen}
+                catalog={catalog}
+                tsar={tsar}
+                accountId={me.id}
+                selectionToken={enemyPick.selectionToken}
+                autoAttack={false}
+                onClose={()=>setEnemyPick(null)}
+              />
+            }
             const battle=village.battles?.find(b=>!b.finishedAt&&b.phase!=='Warning'&&b.fighters.some(f=>tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id))
             const fighter=battle?.fighters.find(f=>tsar?f.isTsar&&f.accountId===me.id:!f.isTsar&&f.citizenId===citizen?.id)
             const remedies=(village.resources.find(r=>r.kind==='Remedy')?.amount??0)+(tsar?0:(citizen?.load.find(g=>g.resource==='Remedy')?.amount??0)+(citizen?.personalGoods?.find(g=>g.kind==='Remedy')?.amount??0))
@@ -983,7 +1046,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
           key={slug}
           mentionCandidates={citizens.filter(c=>!live.away.has(c.id)).map(c=>({id:c.id,name:c.name}))}
           incoming={live.chatArrivals}
-          interrupted={walletOpen || showPicked || showWatched || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
+          interrupted={walletOpen || showPicked || showWatched || !!enemyPick?.inspect || !!denInspect || panel !== 'none' || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || pollShown || subtitleFor !== null || inviteFor !== null}
           onModeChange={mode => setChatFull(mode === 'full')}
           feed={live.feed}
           messages={live.chat}

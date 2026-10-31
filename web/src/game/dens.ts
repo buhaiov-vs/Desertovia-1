@@ -81,8 +81,12 @@ const FOLLOW = 10
 const FLASH_SECONDS = 0.18
 /** A striking protector lunges this long, in seconds. */
 const LUNGE_SECONDS = 0.24
-/** A tap this close to a protector picks it, in world pixels. */
+/** A tap this close to a protector picks it, in world pixels, before zoom. */
 const PICK_RADIUS = 14
+/** A tap this close to the den prop also picks the nearest protector, in world pixels. */
+const DEN_CENTER_REACH = 2.6 * TILE
+/** A tap must cover at least this many screen pixels, so a zoomed-out den stays clickable. */
+const MIN_PICK_SCREEN = 36
 const HIT_TINT = 0xff6a5a
 
 /** A thin health bar centred on (x, y); null clears it. `width` follows a taller foe. */
@@ -305,9 +309,18 @@ export class DenLayer {
     return null
   }
 
-  /** The protector or roaming foe under a tap. `heroId` is set when somebody is already fighting there. */
-  pick(x: number, y: number): { denId: string; protector: number; heroId: string | null } | null {
-    let best: { denId: string; protector: number; heroId: string | null; distance: number } | null = null
+  /**
+   * The protector or roaming foe under a tap. `heroId` is set when somebody is already fighting there.
+   * `scale` is the world zoom: a zoomed-out view keeps a minimum screen-sized target so dens stay clickable.
+   * A tap on the den prop itself picks the nearest living protector of that den.
+   */
+  pick(
+    x: number,
+    y: number,
+    scale = 1,
+  ): { denId: string; protector: number; heroId: string | null; point: SpawnPoint } | null {
+    const minReach = MIN_PICK_SCREEN / Math.max(0.05, scale)
+    let best: { denId: string; protector: number; heroId: string | null; point: SpawnPoint; distance: number } | null = null
     for (const [denId, den] of this.shown) {
       const fight = this.fights.get(denId)
       const heroId = fight?.hero?.citizenId ?? null
@@ -317,13 +330,39 @@ export class DenLayer {
         const protector = fight?.protectors.find((one) => one.index === index)
         if (protector?.state === 'Dead') continue
         // A figure stands on its feet: aim at its middle. A taller level is a larger tap.
-        const reach = Math.max(PICK_RADIUS * FOE_SCALE, guard.height * 0.55)
+        const reach = Math.max(PICK_RADIUS * FOE_SCALE, guard.height * 0.55, minReach)
         const distance = Math.hypot(guard.x - x, guard.y - guard.height * 0.45 - y)
         if (distance <= reach && (!best || distance < best.distance))
-          best = { denId, protector: index, heroId, distance }
+          best = { denId, protector: index, heroId, point: den.point, distance }
       }
     }
-    return best ? { denId: best.denId, protector: best.protector, heroId: best.heroId } : null
+    if (best) return { denId: best.denId, protector: best.protector, heroId: best.heroId, point: best.point }
+
+    let centerHit: { denId: string; protector: number; heroId: string | null; point: SpawnPoint; distance: number } | null = null
+    const centerReach = Math.max(DEN_CENTER_REACH, minReach)
+    for (const [denId, den] of this.shown) {
+      if (den.point.roams) continue
+      const centerX = (den.point.x + 0.5) * TILE
+      const centerY = (den.point.y + 0.5) * TILE
+      const toCenter = Math.hypot(centerX - x, centerY - y)
+      if (toCenter > centerReach) continue
+      const fight = this.fights.get(denId)
+      const heroId = fight?.hero?.citizenId ?? null
+      let nearest: { index: number; distance: number } | null = null
+      for (let index = 0; index < den.guards.length; index++) {
+        const guard = den.guards[index]
+        if (!guard?.view.visible) continue
+        const protector = fight?.protectors.find((one) => one.index === index)
+        if (protector?.state === 'Dead') continue
+        const distance = Math.hypot(guard.x - x, guard.y - guard.height * 0.45 - y)
+        if (!nearest || distance < nearest.distance) nearest = { index, distance }
+      }
+      if (nearest && (!centerHit || toCenter < centerHit.distance))
+        centerHit = { denId, protector: nearest.index, heroId, point: den.point, distance: toCenter }
+    }
+    return centerHit
+      ? { denId: centerHit.denId, protector: centerHit.protector, heroId: centerHit.heroId, point: centerHit.point }
+      : null
   }
 
   /** Moves protectors and fighting citizens towards the server positions; dens at rest walk home, roaming foes wander. */

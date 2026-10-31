@@ -16,12 +16,14 @@ import { WildlifeLayer } from './animals'
 import { EnemyLayer } from './enemies'
 import { DenLayer } from './dens'
 import { hauntsIn, wanderAt } from './haunts'
-import { spawnPoints } from './spawnRings'
+import { spawnPoints, type SpawnPoint } from './spawnRings'
 import { CharacterPainter, appearanceKey } from './appearance'
 import { darknessAt } from './daylight'
 import { Fog, type Viewer } from './fog'
 import { walkActive, walkPositionAt } from './tripWalk'
 import { chunksNear, type LandChunkRect } from './landChunk'
+import { farKind } from './farWilds'
+import { wildGoodAt, wildPatches, type WildPlace } from './wildGoods'
 import { TILE, TileSet, battle, dungeon, tileKey, town, type TileRef } from './sheets'
 import {
   BUILDING_TILES,
@@ -65,6 +67,8 @@ import {
   cropTile,
   farGroundTile,
   farHasTree,
+  farPeak,
+  farTerrain,
   farWater,
   findWay,
   footprint,
@@ -168,6 +172,8 @@ interface Walker {
   seed: number
   /** Hunting: chases an animal and reaches it at `catchAt` (wall clock, milliseconds), then carries it home. */
   hunt: { prey: AnimalKind; catchAt: number } | null
+  /** Tile the current chase path aims at, so a blocked chase is not searched again every frame. */
+  huntAim: { x: number; y: number } | null
   /** Idle: dozes off at this time (wall clock, milliseconds) and stays where it stands; null while busy. */
   sleepsAt: number | null
   /** Turns around water towards a spot the player sent the walker to, in world pixels; the last one is the target. */
@@ -186,6 +192,8 @@ interface Walker {
   walk: TripWalk | null
   /** Last scroll of teleport seen (wall clock, milliseconds); a newer one jumps the walker to its idle spot. */
   teleportedAt: number
+  /** Screen-space health, shown above this figure while the signed-in player is hurt. */
+  bar: Graphics
 }
 
 interface Bubble {
@@ -263,6 +271,8 @@ export class VillageWorld {
    */
   private cullDirty = true
   private highlightId: string | null = null
+  /** The signed-in player is the Tsar, so the Tsar figure is theirs as well as any citizen of theirs. */
+  private viewerIsTsar = false
   private tsarTitle = ''
   private governorTitle = ''
   private nightAmount = 0
@@ -288,6 +298,10 @@ export class VillageWorld {
   private terrainSeed: number | null = null
   /** The authored 120 by 90, kept so a block can be baked when the camera reaches it. */
   private landLayout: MapLayout | null = null
+  /** Mine mouths. Far chunks leave these tiles as rock and do not grow a tree over them. */
+  private mineTiles: Array<{ x: number; y: number; kind: 'cave' | 'coal-mine' | 'iron-mine' | 'moonstone-mine' }> = []
+  /** Gold veins beside foe dens. */
+  private goldTiles: Array<{ x: number; y: number }> = []
   private readonly groundChunks = new Map<string, Sprite>()
   /** Rectangles of the baked `groundChunks`; fog must cover exactly these, or bare ground shows at the edge of a pan. */
   private readonly groundRects = new Map<string, LandChunkRect>()
@@ -295,6 +309,10 @@ export class VillageWorld {
   private groundQueue: LandChunkRect[] = []
   /** Trees grown on far-land chunks near the camera, keyed like `groundChunks`. */
   private readonly farTrees = new Map<string, Container[]>()
+  private readonly farWild = new Map<string, Container>()
+  private readonly farWildChunks = new Map<string, string[]>()
+  private readonly wildGoodChunks = new Map<string, string[]>()
+  private readonly wildGoods = new Map<string, Container>()
   /**
    * Trees of blocks that scrolled away, hidden and sorted to the end of `objects`, then cut off in one range.
    * Removing them one by one searches the whole `objects` list each time, and a block row holds thousands.
@@ -341,9 +359,15 @@ export class VillageWorld {
   private onEnemyPick:((battleId:string,unitId:string)=>void)|null=null
   setEnemySelection(id:string|null){this.enemies.select(id)}
   setEnemyPick(onPick:((battleId:string,unitId:string)=>void)|null){this.onEnemyPick=onPick}
-  /** Tap on a den protector; returns true when it was the player's fight and the tap is used. */
-  private onDenPick:((denId:string,protector:number,heroId:string)=>boolean)|null=null
-  setDenPick(onPick:((denId:string,protector:number,heroId:string)=>boolean)|null){this.onDenPick=onPick}
+  /** Right click or long press on a raid foe: open its card without ordering an attack. */
+  private onEnemyInspect:((battleId:string,unitId:string)=>void)|null=null
+  setEnemyInspect(onInspect:((battleId:string,unitId:string)=>void)|null){this.onEnemyInspect=onInspect}
+  /** Tap on a den protector; returns true when the tap is used (attack sent or refused with a notice). */
+  private onDenPick:((denId:string,protector:number,heroId:string|null)=>boolean)|null=null
+  setDenPick(onPick:((denId:string,protector:number,heroId:string|null)=>boolean)|null){this.onDenPick=onPick}
+  /** Right click or long press on a den foe: open its card. */
+  private onDenInspect:((denId:string,protector:number,point:SpawnPoint)=>void)|null=null
+  setDenInspect(onInspect:((denId:string,protector:number,point:SpawnPoint)=>void)|null){this.onDenInspect=onInspect}
   private onCitizenPick: ((citizenId: string) => void) | null = null
   private onWorldPick: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk?: boolean) => void) | null = null
   private worldPickable: ((target: WorldTarget) => boolean) | null = null
@@ -373,6 +397,7 @@ export class VillageWorld {
     this.objects.sortableChildren = true
     this.foes.sortableChildren = true
     this.people.sortableChildren = true
+    this.screen.sortableChildren = true
     this.denMarks.sortableChildren = true
     this.projectLayer.sortableChildren = true
     this.objects.addChild(this.campfireView(), this.projectLayer)
@@ -446,6 +471,15 @@ export class VillageWorld {
 
   /** The land is generated from the village id, so it is built once the village is known. */
   private buildTerrain(seed: number, wilds: Wilds | null) {
+    this.mineTiles = wilds
+      ? [
+          { x: wilds.caveX, y: wilds.caveY, kind: 'cave' },
+          { x: wilds.coalX, y: wilds.coalY, kind: 'coal-mine' },
+          { x: wilds.ironX, y: wilds.ironY, kind: 'iron-mine' },
+          { x: wilds.moonX, y: wilds.moonY, kind: 'moonstone-mine' },
+        ]
+      : []
+    this.goldTiles = (wilds?.gold ?? []).map((vein) => ({ x: vein.x, y: vein.y }))
     const layout = buildLayout(seed, wilds)
     this.landLayout = layout
     this.dropGroundChunks()
@@ -507,7 +541,8 @@ export class VillageWorld {
     for (const placed of layout.decor) addScenery(this.scattered(this.decorView(placed), placed.x, placed.y), placed.x, placed.y)
     for (const mountain of layout.mountains) addScenery(this.peakView(mountain.peak, mountain.x, mountain.y), mountain.x, mountain.y)
     if (wilds) {
-      addScenery(this.caveView(wilds.caveX, wilds.caveY), wilds.caveX, wilds.caveY)
+      for (const mine of this.mineTiles) addScenery(this.mineView(mine.x, mine.y, mine.kind), mine.x, mine.y)
+      for (const vein of this.goldTiles) addScenery(this.mineView(vein.x, vein.y, 'vein'), vein.x, vein.y)
       addScenery(this.lookoutView(wilds.lookoutX, wilds.lookoutY), wilds.lookoutX, wilds.lookoutY)
     }
     for (const bush of layout.bushes) addScenery(this.scattered(this.bushView(bush.x, bush.y), bush.x, bush.y), bush.x, bush.y)
@@ -539,6 +574,8 @@ export class VillageWorld {
       this.groundChunks.delete(key)
       this.groundRects.delete(key)
       this.dropFarTrees(key)
+      this.dropFarWilds(key)
+      this.dropWildGoods(key)
     }
     const onScreen = new Set(chunksNear(view, land, 0).map((chunk) => `${chunk.x},${chunk.y}`))
     const centerX = view.x + view.width / 2
@@ -573,21 +610,33 @@ export class VillageWorld {
     this.groundRects.set(key, chunk)
     this.groundLayer.addChildAt(baked, 0)
     this.plantFarTrees(key, chunk)
+    this.plantFarWilds(key, chunk)
+    this.plantWildGoods(key, chunk)
   }
 
   private bakeGroundChunk(layout: MapLayout, chunk: LandChunkRect) {
     const batch = new Container()
+    const rock = new Graphics()
+    const seed = this.terrainSeed ?? 1
     for (let row = 0; row < chunk.height; row++) {
       const tileY = chunk.originY + row
       const groundRow = layout.ground[tileY - MAP_TOP]
       for (let column = 0; column < chunk.width; column++) {
         const tileX = chunk.originX + column
         const authored = groundRow?.[tileX - MAP_LEFT]
-        const sprite = new Sprite(this.tiles.get(authored ?? farGroundTile(tileX, tileY, this.terrainSeed ?? 1)))
+        const mine = this.mineAt(tileX, tileY) || this.goldAt(tileX, tileY)
+        const sprite = new Sprite(this.tiles.get(mine ? town(43) : (authored ?? farGroundTile(tileX, tileY, seed))))
         sprite.position.set(column * TILE, row * TILE)
         batch.addChild(sprite)
+        if (mine || authored !== undefined) continue
+        const kind = farKind(tileX, tileY, seed)
+        if (kind !== 'mountain' && kind !== 'rockfall') continue
+        // The peak sprite is a small cap. The rock under it is what shows the ridge you cannot walk.
+        rock.rect(column * TILE - 1, row * TILE - 1, TILE + 2, TILE + 2).fill({ color: 0x8d857b })
+        rock.rect(column * TILE + 3, row * TILE + 4, 4, 3).fill({ color: 0x6e675f })
       }
     }
+    batch.addChild(rock)
     this.dens.markGround(batch, chunk)
     const texture = this.app.renderer.generateTexture({
       target: batch,
@@ -609,6 +658,8 @@ export class VillageWorld {
     this.groundRects.clear()
     this.groundQueue = []
     for (const key of [...this.farTrees.keys()]) this.dropFarTrees(key)
+    for (const key of [...this.farWildChunks.keys()]) this.dropFarWilds(key)
+    for (const key of [...this.wildGoodChunks.keys()]) this.dropWildGoods(key)
   }
 
   /** Grows the same wild forest past the camp picture so the vale rim does not stop mid-tree. */
@@ -620,6 +671,7 @@ export class VillageWorld {
       for (let column = 0; column < chunk.width; column++) {
         const tileX = chunk.originX + column
         if (tileX >= MAP_LEFT && tileX < MAP_LEFT + MAP_WIDTH && tileY >= MAP_TOP && tileY < MAP_TOP + MAP_HEIGHT) continue
+        if (this.mineAt(tileX, tileY) || this.goldAt(tileX, tileY)) continue
         if (!farHasTree(tileX, tileY, seed)) continue
         const view = this.scattered(this.decorView(treeAt(tileX, tileY)), tileX, tileY)
         view.cullable = true
@@ -642,6 +694,98 @@ export class VillageWorld {
       this.retiredTrees.push(view)
     }
     this.farTrees.delete(key)
+  }
+
+  /** Peaks, thicket hedges and rockfall gates past the camp picture. Cleared tiles stay open. */
+  private plantFarWilds(key: string, chunk: LandChunkRect) {
+    const seed = this.terrainSeed ?? 1
+    const tiles: string[] = []
+    for (let row = 0; row < chunk.height; row++) {
+      const tileY = chunk.originY + row
+      for (let column = 0; column < chunk.width; column++) {
+        const tileX = chunk.originX + column
+        if (tileX >= MAP_LEFT && tileX < MAP_LEFT + MAP_WIDTH && tileY >= MAP_TOP && tileY < MAP_TOP + MAP_HEIGHT) continue
+        if (this.mineAt(tileX, tileY) || this.goldAt(tileX, tileY)) continue
+        const tileKey = `${tileX},${tileY}`
+        if (this.farWild.has(tileKey) || this.farCleared(tileX, tileY)) continue
+        const kind = farKind(tileX, tileY, seed)
+        const view =
+          kind === 'thicket' ? this.thicketView(tileX, tileY)
+          : kind === 'rockfall' ? this.rockfallView(tileX, tileY)
+          : kind === 'mountain' ? this.farPeakView(tileX, tileY, seed)
+          : null
+        if (!view) continue
+        view.cullable = true
+        this.objects.addChild(view)
+        this.farWild.set(tileKey, view)
+        tiles.push(tileKey)
+      }
+    }
+    if (tiles.length > 0) {
+      this.farWildChunks.set(key, tiles)
+      this.cullDirty = true
+    }
+  }
+
+  private farPeakView(x: number, y: number, seed: number) {
+    const peak = farPeak(x, y, seed)
+    return peak ? this.peakView(peak, x, y) : null
+  }
+
+  private farCleared(x: number, y: number) {
+    return this.village?.wilds?.obstacles.some((obstacle) => obstacle.x === x && obstacle.y === y && obstacle.cleared) ?? false
+  }
+
+  private dropFarWilds(key: string) {
+    const tiles = this.farWildChunks.get(key)
+    if (!tiles) return
+    for (const tile of tiles) this.dropFarWildTile(tile)
+    this.farWildChunks.delete(key)
+  }
+
+  private dropFarWildTile(tileKey: string) {
+    const view = this.farWild.get(tileKey)
+    if (!view) return
+    view.destroy({ children: true })
+    this.farWild.delete(tileKey)
+  }
+
+  /** A coloured 2×2 patch in the arc between dens. Drawn once, from the chunk that holds its first tile. */
+  private plantWildGoods(key: string, chunk: LandChunkRect) {
+    const seed = this.terrainSeed ?? 1
+    const tiles: string[] = []
+    for (const patch of wildPatches(seed)) {
+      const origin = `${patch.x},${patch.y}`
+      if (this.wildGoods.has(origin)) continue
+      const inside =
+        patch.x >= chunk.originX &&
+        patch.y >= chunk.originY &&
+        patch.x < chunk.originX + chunk.width &&
+        patch.y < chunk.originY + chunk.height
+      if (!inside) continue
+      if (this.mineAt(patch.x, patch.y) || this.goldAt(patch.x, patch.y)) continue
+      const view = this.goodView(patch.x, patch.y, patch.kind)
+      view.cullable = true
+      this.objects.addChild(view)
+      this.wildGoods.set(origin, view)
+      tiles.push(origin)
+    }
+    if (tiles.length > 0) {
+      this.wildGoodChunks.set(key, tiles)
+      this.cullDirty = true
+    }
+  }
+
+  private dropWildGoods(key: string) {
+    const tiles = this.wildGoodChunks.get(key)
+    if (!tiles) return
+    for (const origin of tiles) {
+      const view = this.wildGoods.get(origin)
+      if (!view) continue
+      view.destroy({ children: true })
+      this.wildGoods.delete(origin)
+    }
+    this.wildGoodChunks.delete(key)
   }
 
   private destroyRetiredTrees() {
@@ -691,6 +835,12 @@ export class VillageWorld {
     let changed = false
     for (const obstacle of wilds.obstacles) {
       const key = `${obstacle.x},${obstacle.y}`
+      const outside =
+        obstacle.x < MAP_LEFT || obstacle.y < MAP_TOP || obstacle.x >= MAP_LEFT + MAP_WIDTH || obstacle.y >= MAP_TOP + MAP_HEIGHT
+      if (outside) {
+        if (obstacle.cleared) this.dropFarWildTile(key)
+        continue
+      }
       const kind = obstacle.kind === 'Thicket' ? Terrain.Thicket : Terrain.Rockfall
       const tile = (obstacle.y - MAP_TOP) * MAP_WIDTH + (obstacle.x - MAP_LEFT)
       const view = this.obstacles.get(key)
@@ -711,6 +861,7 @@ export class VillageWorld {
       this.cullDirty = true
     }
     if (changed) this.minimap?.setTerrain(terrain, this.terrainSeed ?? 1)
+    this.minimap?.setCleared(wilds.obstacles.filter((obstacle) => obstacle.cleared).map((obstacle) => `${obstacle.x},${obstacle.y}`))
   }
 
   setPriestName(name: string) {
@@ -791,7 +942,12 @@ export class VillageWorld {
 
   private way(walker: Walker, spot: TilePoint) {
     const crossings = this.village ? bridgeCrossings(this.village) : []
-    return findWay(this.terrain!, { x: walker.x / TILE, y: walker.y / TILE }, spot, this.bridgeDone(), crossings, this.terrainSeed ?? 1)
+    const opened = new Set(
+      (this.village?.wilds?.obstacles ?? []).filter((obstacle) => obstacle.cleared).map((obstacle) => `${obstacle.x},${obstacle.y}`),
+    )
+    for (const mine of this.mineTiles) opened.add(`${mine.x},${mine.y}`)
+    for (const vein of this.goldTiles) opened.add(`${vein.x},${vein.y}`)
+    return findWay(this.terrain!, { x: walker.x / TILE, y: walker.y / TILE }, spot, this.bridgeDone(), crossings, this.terrainSeed ?? 1, opened)
   }
 
   /** Sends a walker to a spot, in tiles, around water. An unreachable destination leaves the walker on their current dry ground. */
@@ -998,10 +1154,26 @@ export class VillageWorld {
     if (Math.hypot(worldX / TILE - CAMPFIRE.x, worldY / TILE - CAMPFIRE.y) < CAMPFIRE_REACH) {
       return { kind: 'campfire', area: tile(Math.floor(CAMPFIRE.x), Math.floor(CAMPFIRE.y)) }
     }
-    if (inside(VEIN_OUTCROP)) return { kind: 'vein', spot: { x: x + 0.5, y: y + 0.5 }, area: VEIN_OUTCROP }
+    if (this.goldAt(x, y)) return { kind: 'vein', spot: { x: x + 0.5, y: y + 0.5 }, area: tile(x, y) }
 
     const natureAt = (tileX: number, tileY: number) => {
-      if (tileX < MAP_LEFT || tileY < MAP_TOP || tileX >= MAP_LEFT + MAP_WIDTH || tileY >= MAP_TOP + MAP_HEIGHT) return undefined
+      const mine = this.mineAt(tileX, tileY)
+      if (mine) return mine
+      const good = wildGoodAt(tileX, tileY, this.terrainSeed ?? 1)
+      if (good) return good
+      if (tileX < MAP_LEFT || tileY < MAP_TOP || tileX >= MAP_LEFT + MAP_WIDTH || tileY >= MAP_TOP + MAP_HEIGHT) {
+        const seed = this.terrainSeed ?? 1
+        if (this.farCleared(tileX, tileY)) return undefined
+        const kind = farKind(tileX, tileY, seed)
+        if (kind === 'water') return 'water' as const
+        if (kind === 'thicket') return 'thicket' as const
+        if (kind === 'rockfall') return 'rockfall' as const
+        if (kind === 'mountain') return undefined
+        const ground = farTerrain(tileX, tileY, seed)
+        if (ground === Terrain.Tree) return 'tree' as const
+        if (ground === Terrain.Stone) return 'stone' as const
+        return undefined
+      }
       return NATURE[terrain[(tileY - MAP_TOP) * MAP_WIDTH + (tileX - MAP_LEFT)]]
     }
     const kind = natureAt(x, y)
@@ -1039,9 +1211,25 @@ export class VillageWorld {
     this.placementLayer.visible = true
   }
 
+  /** The signed-in player. Their health bar is drawn above that figure, and only while they are hurt. */
+  setViewer(isTsar: boolean) {
+    this.viewerIsTsar = isTsar
+    this.bindViewer()
+  }
+
+  private bindViewer() {
+    this.dens.setViewer(this.highlightId)
+    this.enemies.setViewer(this.highlightId, this.viewerIsTsar)
+  }
+
+  private isSelf(id: string) {
+    return id === this.highlightId || (this.viewerIsTsar && id === TSAR_ID)
+  }
+
   setCitizens(citizens: CitizenSummary[], highlightId: string | null) {
     this.citizens = citizens
     this.highlightId = highlightId
+    this.bindViewer()
     const admitted=citizens.filter(c=>(c.recovery?.until&&Date.parse(c.recovery.until)>Date.now())||c.hospitalizedAt&&c.injuredUntil&&Date.parse(c.injuredUntil)>Date.now())
     const visiblePatients=[...admitted].sort((a,b)=>a.id.localeCompare(b.id)).slice(0,4)
     const ownPatient=admitted.find(c=>c.id===highlightId)
@@ -1184,6 +1372,7 @@ export class VillageWorld {
         walker.icon.destroy({ children: true })
         walker.label.destroy()
         walker.subtitle.destroy()
+        walker.bar.destroy()
         this.walkers.delete(id)
       }
     }
@@ -1775,19 +1964,21 @@ export class VillageWorld {
       if(palisadeActive)add(this.tileSprite(town(83),PALISADE.yard.x-1,PALISADE.yard.y-1))
     }
 
-    // Gold vein: nuggets in the outcrop thin out as it is dug; an empty vein is bare grey rock.
-    const nuggets = Math.ceil((state.goldVeinRemaining / VEIN_OUTCROP.size) * VEIN_NUGGETS.length)
-    VEIN_NUGGETS.forEach(([dx, dy], index) => {
-      const nugget = this.tileSprite(RESOURCE_ICONS.Gold, VEIN_OUTCROP.x + dx, VEIN_OUTCROP.y + dy)
-      nugget.scale.set(0.6)
-      if (index >= nuggets) {
-        const rock = new ColorMatrixFilter()
-        rock.desaturate()
-        nugget.filters = [rock]
-        nugget.tint = 0xc4c8cf
-      }
-      add(nugget)
-    })
+    // Gold veins: nuggets on each mouth thin out as that vein is dug.
+    for (const vein of state.wilds?.gold ?? []) {
+      const nuggets = Math.ceil((vein.remaining / VEIN_OUTCROP.size) * VEIN_NUGGETS.length)
+      VEIN_NUGGETS.forEach(([dx, dy], index) => {
+        const nugget = this.tileSprite(RESOURCE_ICONS.Gold, vein.x + dx * 0.35, vein.y + dy * 0.35)
+        nugget.scale.set(0.45)
+        if (index >= nuggets) {
+          const rock = new ColorMatrixFilter()
+          rock.desaturate()
+          nugget.filters = [rock]
+          nugget.tint = 0xc4c8cf
+        }
+        add(nugget)
+      })
+    }
 
     // Other projects: finished buildings, or rising walls on their site.
     for (const [id, site] of Object.entries(PROJECT_SITES)) {
@@ -1903,10 +2094,13 @@ export class VillageWorld {
     })
     subtitle.anchor.set(0.5, 1)
     subtitle.visible = false
+    const bar = new Graphics()
+    bar.visible = false
+    bar.zIndex = 200000
     sprite.zIndex = y + 0.5
     icon.zIndex = 100000
     this.people.addChild(sprite, icon)
-    this.screen.addChild(label, subtitle)
+    this.screen.addChild(label, subtitle, bar)
     const bed=new Graphics().rect(-11,-5,23,9).fill(0x543b24).rect(-9,-4,5,7).fill(0xeee2c8).rect(-3,-4,13,7).fill(0x476c64)
     bed.visible=false;this.people.addChild(bed)
     const seed = hash(id)
@@ -1928,10 +2122,12 @@ export class VillageWorld {
       phase: pseudo(seed, 9) * Math.PI * 2,
       seed,
       hunt: null,
+      huntAim: null,
       sleepsAt: null,
       way: [],
       injuredUntil: 0,
       bed,wardVisible:true,inHospital:false,treatmentCause:'',normalSubtitle:'',carrierId:null,pickupAt:0,rescueJourney:null,walk:null,teleportedAt:0,
+      bar,
     }
     this.walkers.set(id, walker)
     return walker
@@ -1998,21 +2194,58 @@ export class VillageWorld {
     return g
   }
 
-  /** A dark mouth in the south face of a ridge. */
-  private caveView(x: number, y: number): Graphics {
+  /** A mound of one wild good, two tiles wide, coloured so the rings read apart. */
+  private goodView(x: number, y: number, kind: WildPlace): Graphics {
+    const look = {
+      herbs: { ground: 0x2a4a28, mound: 0x3d7a3a, speck: 0x8fbf62 },
+      flint: { ground: 0x3a4150, mound: 0x6a7388, speck: 0xc5ccd8 },
+      clay: { ground: 0x6a3424, mound: 0xb15a3c, speck: 0xd4896a },
+      salt: { ground: 0xb7b2a4, mound: 0xe8e4d8, speck: 0xffffff },
+      resin: { ground: 0x6a3a10, mound: 0xd4892a, speck: 0xffd080 },
+      copper: { ground: 0x1e4a34, mound: 0x3d8a62, speck: 0x9ad4b0 },
+    }[kind]
+    const g = new Graphics().rect(0, 0, TILE * 2, TILE * 2).fill({ color: look.ground })
+    for (const [bx, by, radius] of [[8, 10, 5], [22, 12, 6], [14, 22, 5], [24, 22, 4]]) {
+      g.circle(bx, by, radius).fill({ color: look.mound })
+    }
+    for (const [bx, by] of [[10, 8], [20, 18], [26, 8]]) g.circle(bx, by, 1.6).fill({ color: look.speck })
+    g.position.set(x * TILE, y * TILE)
+    g.zIndex = (y + 2) * TILE
+    return g
+  }
+
+  /** A dark mouth in coloured rock. Each resource has its own rock, lip and specks. */
+  private mineView(x: number, y: number, kind: 'cave' | 'coal-mine' | 'iron-mine' | 'moonstone-mine' | 'vein'): Graphics {
+    const look = {
+      cave: { rock: 0x8d857b, mouth: 0x1c1712, lip: 0x5e5248, speck: 0xb0a89c },
+      'coal-mine': { rock: 0x2a2a2e, mouth: 0x070708, lip: 0x101014, speck: 0x0c0c0e },
+      'iron-mine': { rock: 0x7a4630, mouth: 0x2c1810, lip: 0x5c3424, speck: 0xe07030 },
+      'moonstone-mine': { rock: 0x5c5878, mouth: 0x1a1630, lip: 0x3c3860, speck: 0xe4e0ff },
+      vein: { rock: 0xc4a24a, mouth: 0x3a2a10, lip: 0x8a6a20, speck: 0xffe080 },
+    }[kind]
     const g = new Graphics()
       .rect(-0.5, -0.5, TILE + 1, TILE + 1)
-      .fill({ color: 0x8d857b })
+      .fill({ color: look.rock })
       .moveTo(1, TILE)
       .lineTo(1, 7)
       .quadraticCurveTo(TILE / 2, -3, TILE - 1, 7)
       .lineTo(TILE - 1, TILE)
-      .fill({ color: 0x1c1712 })
+      .fill({ color: look.mouth })
       .rect(1, TILE - 2, TILE - 2, 2)
-      .fill({ color: 0x5e5248 })
+      .fill({ color: look.lip })
+    const specks = kind === 'moonstone-mine' ? [[4, 12], [11, 13]] : [[3, 12], [8, 14], [12, 11]]
+    for (const [bx, by] of specks) g.circle(bx, by, kind === 'coal-mine' ? 2.2 : 1.6).fill({ color: look.speck })
     g.position.set(x * TILE, y * TILE)
     g.zIndex = (y + 1) * TILE - 1
     return g
+  }
+
+  private mineAt(x: number, y: number) {
+    return this.mineTiles.find((mine) => mine.x === x && mine.y === y)?.kind
+  }
+
+  private goldAt(x: number, y: number) {
+    return this.goldTiles.some((vein) => vein.x === x && vein.y === y)
   }
 
   /** The bare top of the lookout peak with a cairn of stones on it. */
@@ -2246,6 +2479,22 @@ export class VillageWorld {
       const point = this.world.toLocal(screen)
       this.onWorldPick?.(null, screen, { x: point.x / TILE, y: point.y / TILE }, true)
     }
+    /** Right click or long press: foe card when over one, otherwise a walk order. */
+    const inspectOrWalk = (screen: { x: number; y: number }) => {
+      if (this.onPick) return
+      const worldPoint = this.world.toLocal(screen)
+      const den = this.dens.pick(worldPoint.x, worldPoint.y, this.scale)
+      if (den) {
+        this.onDenInspect?.(den.denId, den.protector, den.point)
+        return
+      }
+      const enemy = this.enemies.pick(worldPoint.x, worldPoint.y, false)
+      if (enemy) {
+        this.onEnemyInspect?.(enemy.battleId, enemy.unitId)
+        return
+      }
+      walkTo(screen)
+    }
     let longPress = 0
 
     canvas.addEventListener('pointerdown', (event) => {
@@ -2262,13 +2511,13 @@ export class VillageWorld {
       const press = { x: event.clientX, y: event.clientY, panX: this.panX, panY: this.panY, moved: false, button: event.button }
       this.dragging = press
       if (event.pointerType === 'mouse') return
-      // Touch has no right click: holding a finger still walks there instead.
+      // Touch has no right click: holding a finger still opens a foe card, or walks there.
       const screen = local(event)
       longPress = window.setTimeout(() => {
         if (this.dragging !== press || press.moved || pointers.size !== 1) return
         press.moved = true
         navigator.vibrate?.(30)
-        walkTo(screen)
+        inspectOrWalk(screen)
       }, LONG_PRESS_MS)
     })
     canvas.addEventListener('pointermove', (event) => {
@@ -2300,9 +2549,9 @@ export class VillageWorld {
     canvas.addEventListener('pointerup', (event) => {
       if (!this.dragging || this.dragging.moved) return
       const button = this.dragging.button
-      // Right mouse walks; it must not open buildings, citizens, or enemies.
+      // Right mouse opens a foe card, or walks; it must not open buildings or citizens.
       if (button === 2 || event.button === 2) {
-        walkTo(local(event))
+        inspectOrWalk(local(event))
         return
       }
       // Only the primary button (and touch/pen) may pick or place. Middle click does nothing.
@@ -2310,10 +2559,10 @@ export class VillageWorld {
       if (!this.onPick) {
         const screen = local(event)
         const worldPoint=this.world.toLocal(screen)
-        const den=this.dens.pick(worldPoint.x,worldPoint.y)
-        if(den&&this.onDenPick?.(den.denId,den.protector,den.heroId))return
+        const den=this.dens.pick(worldPoint.x,worldPoint.y,this.scale)
+        if(den){this.onDenPick?.(den.denId,den.protector,den.heroId);return}
         const enemy=this.enemies.pick(worldPoint.x,worldPoint.y)
-        if(enemy&&this.onEnemyPick){this.onEnemyPick(enemy.battleId,enemy.unitId);return}
+        if(enemy){this.onEnemyPick?.(enemy.battleId,enemy.unitId);return}
         const citizenId = this.onCitizenPick ? this.citizenAt(screen) : null
         if (citizenId) {
           this.onCitizenPick?.(citizenId)
@@ -2330,16 +2579,22 @@ export class VillageWorld {
     })
     canvas.addEventListener('pointermove', (event) => {
       if (this.onPick || event.pointerType === 'touch' || this.dragging?.moved) return
-      if (!this.onCitizenPick && !this.onWorldPick) return
       const screen = local(event)
       const point = this.world.toLocal(screen)
+      const den = this.dens.pick(point.x, point.y, this.scale)
+      const foe =
+        (den !== null && (den.heroId === null || this.isSelf(den.heroId))) || this.enemies.pick(point.x, point.y, false) !== null
+      if (!this.onCitizenPick && !this.onWorldPick) {
+        canvas.style.cursor = foe ? 'crosshair' : ''
+        return
+      }
       const targetPickable = () => {
         const target = this.targetAt(point.x, point.y)
         return target !== null && (this.worldPickable?.(target) ?? true)
       }
       const pickable =
         (this.onCitizenPick !== null && this.citizenAt(screen) !== null) || (this.onWorldPick !== null && targetPickable())
-      canvas.style.cursor = pickable ? 'pointer' : ''
+      canvas.style.cursor = foe ? 'crosshair' : pickable ? 'pointer' : ''
     })
     canvas.addEventListener('pointermove', (event) => {
       if (!this.onPick || pointers.size > 1 || event.pointerType === 'touch') return
@@ -2398,6 +2653,33 @@ export class VillageWorld {
       this.rain.moveTo(x, y).lineTo(x - 3, y + 14)
     }
     this.rain.stroke({ color: 0xc8d8f0, alpha: 0.55 * this.rainAmount, width: 1 })
+  }
+
+  /** A short bar in screen space, just above the signed-in player's name, while their health is short. */
+  private placeOwnHealth(walker: Walker, combatant: { health: number; maximumHealth: number } | null) {
+    const self = this.isSelf(walker.id)
+    const den = self && !combatant ? this.dens.heroVitals(walker.id) : null
+    const health = combatant?.health ?? den?.health ?? 0
+    const maximum = combatant?.maximumHealth ?? den?.maximumHealth ?? 0
+    const show = self && walker.sprite.visible && maximum > 0 && health < maximum
+    if (!show) {
+      if (walker.bar.visible) walker.bar.clear()
+      walker.bar.visible = false
+      return
+    }
+    const nameHeight = walker.label.visible ? Math.max(12, walker.label.height) : 0
+    const width = 28
+    const height = 4
+    const left = Math.round(walker.label.x - width / 2)
+    const top = Math.round(walker.label.y - nameHeight - 2 - height)
+    const share = Math.max(0, Math.min(1, health / maximum))
+    walker.bar.visible = true
+    walker.bar
+      .clear()
+      .rect(left, top, width, height)
+      .fill({ color: 0x1a0f08, alpha: 0.9 })
+      .rect(left + 1, top + 1, Math.max(0, Math.round((width - 2) * share)), height - 2)
+      .fill({ color: share > 0.5 ? 0x6fcf4a : share > 0.25 ? 0xe0b83a : 0xd8432f })
   }
 
   private update(ticker: Ticker) {
@@ -2492,14 +2774,26 @@ export class VillageWorld {
         walker.icon.visible = !chase.caught
         if (chase.caught) {
           const home = this.storageYardFor('Food') ?? WORKPLACES.camp
-          walker.targetX = (home.x + (pseudo(walker.seed, 7) - 0.5) * home.spread * 2) * TILE
-          walker.targetY = (home.y + (pseudo(walker.seed, 8) - 0.5) * 0.6) * TILE
+          this.walkTo(walker, {
+            x: home.x + (pseudo(walker.seed, 7) - 0.5) * home.spread * 2,
+            y: home.y + (pseudo(walker.seed, 8) - 0.5) * 0.6,
+          })
         } else {
           const gap = Math.hypot(chase.x - walker.x, chase.y - walker.y)
           // Right behind the prey: wait for it to bolt again, and pounce only when the chase is about to end.
           const pounce = secondsLeft <= HUNTER_POUNCE_SECONDS
-          walker.targetX = gap < HUNTER_HOLD_DISTANCE && !pounce ? walker.x : chase.x
-          walker.targetY = gap < HUNTER_HOLD_DISTANCE && !pounce ? walker.y : chase.y
+          if (gap < HUNTER_HOLD_DISTANCE && !pounce) {
+            walker.targetX = walker.x
+            walker.targetY = walker.y
+            walker.way = []
+            walker.huntAim = null
+          } else {
+            const aim = { x: Math.floor(chase.x / TILE) + 0.5, y: Math.floor(chase.y / TILE) + 0.5 }
+            if (walker.huntAim?.x !== aim.x || walker.huntAim?.y !== aim.y) {
+              walker.huntAim = aim
+              this.walkTo(walker, aim)
+            }
+          }
           speed = Math.max(RUN_SPEED, gap / Math.max(secondsLeft, seconds))
         }
       } else if (walker.roaming && this.elapsed >= walker.wanderAt) {
@@ -2592,6 +2886,7 @@ export class VillageWorld {
       walker.label.position.set(Math.round(labelX), Math.round(head.y - subtitleHeight - (hurt ? 5 : 0)))
       walker.label.alpha = walker.id === this.highlightId || walker.id === PRIEST_ID || walker.id === TSAR_ID ? 1 : 0.9
       walker.subtitle.alpha = walker.label.alpha
+      this.placeOwnHealth(walker, combatant ?? null)
     }
     if(this.wardCaption&&this.wardCaptionAt){const at=this.world.toGlobal(this.wardCaptionAt);this.wardCaption.position.set(Math.round(at.x),Math.round(at.y))}
     if (this.elapsed - this.fogUpdatedAt >= FOG_SECONDS) {

@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import type { Catalog, CitizenSummary, TileArea, TilePoint, VillageState } from '../api'
 import { useI18n } from '../i18n'
 import type { UiKey } from '../i18n/en'
+import type { SpawnPoint } from './spawnRings'
 import { VillageWorld } from './VillageWorld'
 import type { WalkBlock, WorldTarget } from './worldMap'
 
@@ -39,6 +40,8 @@ interface Props {
   village: VillageState
   citizens: CitizenSummary[]
   highlightId: string | null
+  /** The signed-in player is the Tsar, so a hurt Tsar shows their own health bar. */
+  viewerIsTsar?: boolean
   /** Development only: forces daylight (false) or night (true); null follows the village sky. */
   nightOverride?: boolean | null
   /** Development only: no fog anywhere on this screen. */
@@ -54,8 +57,12 @@ interface Props {
   /** Called with the id of the citizen clicked on the map; null turns clicking off. */
   selectedEnemyId?:string|null
   onEnemyPick?:((battleId:string,unitId:string)=>void)|null
-  /** Tap on a protector of a den that is fighting; returns true when the tap is used. */
-  onDenPick?: ((denId: string, protector: number, heroId: string) => boolean) | null
+  /** Right click or long press on a raid foe: open its card without ordering an attack. */
+  onEnemyInspect?: ((battleId: string, unitId: string) => void) | null
+  /** Tap on a standing protector, a roaming foe, or one in the player's fight. Returns true when the tap is used. */
+  onDenPick?: ((denId: string, protector: number, heroId: string | null) => boolean) | null
+  /** Right click or long press on a den foe: open its card. */
+  onDenInspect?: ((denId: string, protector: number, point: SpawnPoint) => void) | null
   onCitizenPick?: ((citizenId: string) => void) | null
   /** Called with what a citizen could work at where the map was clicked (null for nothing) and the clicked tile point; `walk` skips opening buildings. Null turns clicking off. */
   onWorldPick?: ((target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk?: boolean) => void) | null
@@ -70,6 +77,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     village,
     citizens,
     highlightId,
+    viewerIsTsar = false,
     nightOverride = null,
     mapRevealed = false,
     densHighlighted = false,
@@ -80,7 +88,9 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     minimap = true,
     selectedEnemyId = null,
     onEnemyPick = null,
+    onEnemyInspect = null,
     onDenPick = null,
+    onDenInspect = null,
     onCitizenPick = null,
     onWorldPick = null,
     worldPickable = null,
@@ -120,6 +130,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setCatalog(catalog), [world, catalog])
   useEffect(() => world?.setVillage(village), [world, village])
   useEffect(() => world?.setCitizens(citizens, highlightId), [world, citizens, highlightId])
+  useEffect(() => world?.setViewer(viewerIsTsar), [world, viewerIsTsar])
   useEffect(() => world?.setNightOverride(nightOverride), [world, nightOverride])
   useEffect(() => world?.setMapRevealed(mapRevealed), [world, mapRevealed])
   useEffect(() => world?.setDensHighlighted(densHighlighted), [world, densHighlighted])
@@ -141,7 +152,9 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setPlacement(placement?.onPick ?? null, placement?.kind, placement?.private), [world, placement])
   useEffect(()=>world?.setEnemySelection(selectedEnemyId),[world,selectedEnemyId])
   useEffect(()=>world?.setEnemyPick(onEnemyPick),[world,onEnemyPick])
+  useEffect(() => world?.setEnemyInspect(onEnemyInspect), [world, onEnemyInspect])
   useEffect(() => world?.setDenPick(onDenPick), [world, onDenPick])
+  useEffect(() => world?.setDenInspect(onDenInspect), [world, onDenInspect])
   useEffect(() => world?.setCitizenPick(onCitizenPick), [world, onCitizenPick])
   useEffect(() => world?.setWorldPick(onWorldPick), [world, onWorldPick])
   useEffect(() => world?.setWorldPickable(worldPickable), [world, worldPickable])

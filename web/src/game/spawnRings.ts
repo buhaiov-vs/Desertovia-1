@@ -30,6 +30,8 @@ export interface SpawnPoint {
   /** The den tile. */
   x: number
   y: number
+  /** A lone foe of `haunts.ts`, not a den: it has no den, and it stands on its own tile. */
+  roams?: boolean
 }
 
 export const POINTS_ON_A_RING = 8

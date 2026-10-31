@@ -120,6 +120,7 @@ interface Fighter {
 /**
  * The foe rings on the land. The eight spots around each den are baked into the ground chunk under them.
  * A den the village has seen, near the camera, shows the prop of its area and its protectors in front of it.
+ * The roaming foes between the rings are shown the same way, as dens of one protector with no prop.
  */
 export class DenLayer {
   private points: SpawnPoint[] = []
@@ -132,6 +133,8 @@ export class DenLayer {
   /** Snapshots whose events were played, so a re-render does not flash again. */
   private readonly played = new WeakSet<DenSnapshot>()
   private readonly fighters = new Map<string, Fighter>()
+  /** The roaming foes in a part of the land, in tiles; they are figured like dens of one protector. */
+  private haunts: ((rect: TileRect) => SpawnPoint[]) | null = null
 
   constructor(layer: Container, marks: Container) {
     this.layer = layer
@@ -152,9 +155,10 @@ export class DenLayer {
     }
   }
 
-  setPoints(points: SpawnPoint[]) {
+  setPoints(points: SpawnPoint[], haunts: ((rect: TileRect) => SpawnPoint[]) | null = null) {
     for (const id of [...this.shown.keys()]) this.drop(id)
     this.points = points
+    this.haunts = haunts
   }
 
   /** Dens the village has seen. */
@@ -208,7 +212,8 @@ export class DenLayer {
     const bottom = view.y + view.height + MARGIN_TILES
     let changed = false
     const keep = new Set<string>()
-    for (const point of this.points) {
+    const roaming = this.haunts?.({ x: left, y: top, width: right - left, height: bottom - top }) ?? []
+    for (const point of [...this.points, ...roaming]) {
       if (point.x < left || point.x > right || point.y < top || point.y > bottom) continue
       if (!this.highlighted && !explored(point.x, point.y)) continue
       keep.add(point.id)
@@ -340,6 +345,21 @@ export class DenLayer {
     const centerX = (point.x + 0.5) * TILE
     const centerY = (point.y + 0.5) * TILE
     const views = den.views
+    const facing = camp.x * TILE < centerX ? -1 : 1
+    if (point.roams) {
+      // A roaming foe: no den, one figure on its own tile, as the server's `DenGuards.Homes` puts it.
+      const [, cellX, cellY] = point.id.split(':').map(Number)
+      const figure = this.protectorFigure(picture, 0, Math.abs(cellX + cellY))
+      if (!figure) return den
+      figure.scale.x = facing
+      views.push(this.place(figure, centerX, centerY))
+      const bar = new Graphics()
+      bar.zIndex = Number.MAX_SAFE_INTEGER
+      this.layer.addChild(bar)
+      views.push(bar)
+      den.guards[0] = { view: figure, bar, homeX: centerX, homeY: centerY, x: centerX, y: centerY, facing, homeFacing: facing, flash: 0, lunge: 0 }
+      return den
+    }
     const ring = new Graphics()
       .circle(0, 0, 3 * TILE)
       .stroke({ color: 0xffe14a, width: 3, alpha: 0.95 })
@@ -358,10 +378,8 @@ export class DenLayer {
     if (prop) views.push(this.place(prop, centerX, centerY))
 
     const direction = Number(point.id.split(':')[1])
-    const facing = camp.x * TILE < centerX ? -1 : 1
     for (let index = 0; index < point.protectors; index++) {
-      const protector = picture.protector(index, direction)
-      const figure = typeof protector === 'string' ? enemyFigure(protector) : foeFigure(protector)
+      const figure = this.protectorFigure(picture, index, direction)
       if (!figure) continue
       // Protectors stand on an arc in front of the prop, so the prop never covers them; a lone one stands aside so it does not cover the prop.
       const lone = facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25
@@ -378,6 +396,11 @@ export class DenLayer {
       den.guards[index] = { view: figure, bar, homeX, homeY, x: homeX, y: homeY, facing, homeFacing: facing, flash: 0, lunge: 0 }
     }
     return den
+  }
+
+  private protectorFigure(picture: DenPicture, index: number, direction: number) {
+    const protector = picture.protector(index, direction)
+    return typeof protector === 'string' ? enemyFigure(protector) : foeFigure(protector)
   }
 
   private placeMark(view: Container, x: number, y: number) {

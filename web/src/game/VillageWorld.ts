@@ -15,6 +15,7 @@ import { isRipe, plotPosition, type AnimalKind, type Appearance, type BuildingDe
 import { WildlifeLayer } from './animals'
 import { EnemyLayer } from './enemies'
 import { DenLayer } from './dens'
+import { hauntsIn } from './haunts'
 import { spawnPoints } from './spawnRings'
 import { CharacterPainter, appearanceKey } from './appearance'
 import { darknessAt } from './daylight'
@@ -1593,7 +1594,10 @@ export class VillageWorld {
     if (this.terrainSeed === null) {
       this.terrainSeed = seedFrom(state.id)
       const land = { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT }
-      this.dens.setPoints(spawnPoints(this.terrainSeed, { camp: CAMPFIRE, land, water: farWater }))
+      const ring = { camp: CAMPFIRE, land, water: farWater }
+      const seed = this.terrainSeed
+      const dens = spawnPoints(seed, ring)
+      this.dens.setPoints(dens, (rect) => hauntsIn(seed, rect, ring, dens))
       this.buildTerrain(this.terrainSeed, state.wilds)
       this.showCamp()
     }

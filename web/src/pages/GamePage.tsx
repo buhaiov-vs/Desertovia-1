@@ -140,6 +140,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   /** Development only: the day-night toggle forces daylight or night; null follows the village sky. */
   const [nightOverride, setNightOverride] = useState<boolean | null>(null)
   const [mapRevealed, setMapRevealed] = useState(false)
+  const [densHighlighted, setDensHighlighted] = useState(false)
   /** Everything but the map and the popups of clicked objects is hidden. */
   const [uiHidden, setUiHidden] = useState(() => localStorage.getItem(UI_HIDDEN_KEY) === '1')
   const toggleUi = () => {
@@ -839,6 +840,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         highlightId={citizen?.id ?? null}
         nightOverride={catalog.devTools ? nightOverride : null}
         mapRevealed={catalog.devTools && mapRevealed}
+        densHighlighted={catalog.devTools && densHighlighted}
         obscured={monasteryOpen || walletOpen || chatFull || (panel !== 'none' && panel !== 'done') || hospitalOpen || patientFor!==null || chaplainOpen || pollSetup || subtitleFor !== null}
         catalog={catalog}
         placement={placement}
@@ -871,6 +873,8 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
           onNight={dayNight.onNight}
           mapRevealed={mapRevealed}
           onToggleMap={() => setMapRevealed(!mapRevealed)}
+          densHighlighted={densHighlighted}
+          onToggleDens={() => setDensHighlighted(!densHighlighted)}
           onVillage={setVillageState}
         />
       )}

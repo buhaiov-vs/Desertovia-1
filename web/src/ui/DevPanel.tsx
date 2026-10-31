@@ -10,11 +10,13 @@ interface Props {
   onNight: () => void
   mapRevealed: boolean
   onToggleMap: () => void
+  densHighlighted: boolean
+  onToggleDens: () => void
   onVillage: (state: VillageState) => void
 }
 
 /** Development and local deployments only: shortcuts for checking the map and raids without waiting for them. */
-export function DevPanel({ slug, night, onToggleNight, onNight, mapRevealed, onToggleMap, onVillage }: Props) {
+export function DevPanel({ slug, night, onToggleNight, onNight, mapRevealed, onToggleMap, densHighlighted, onToggleDens, onVillage }: Props) {
   const i18n = useI18n()
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -54,6 +56,9 @@ export function DevPanel({ slug, night, onToggleNight, onNight, mapRevealed, onT
           </button>
           <button onClick={onToggleMap} aria-pressed={mapRevealed}>
             {mapRevealed ? i18n.t('dev.hideMap') : i18n.t('dev.revealMap')}
+          </button>
+          <button onClick={onToggleDens} aria-pressed={densHighlighted} title={i18n.t('dev.densTitle')}>
+            {densHighlighted ? i18n.t('dev.hideDens') : i18n.t('dev.showDens')}
           </button>
           <button disabled={busy} onClick={() => run(() => api.devRaid(slug, false))}>
             {i18n.t('dev.wave')}

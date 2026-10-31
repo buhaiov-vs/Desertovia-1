@@ -30,6 +30,8 @@ interface Props {
   nightOverride?: boolean | null
   /** Development only: no fog anywhere on this screen. */
   mapRevealed?: boolean
+  /** Development only: rings and level numbers on every den, and all of them on the minimap. */
+  densHighlighted?: boolean
   obscured?: boolean
   catalog: Catalog | null
   placement?: Placement | null
@@ -55,6 +57,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     highlightId,
     nightOverride = null,
     mapRevealed = false,
+    densHighlighted = false,
     obscured = false,
     catalog,
     placement = null,
@@ -103,6 +106,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setCitizens(citizens, highlightId), [world, citizens, highlightId])
   useEffect(() => world?.setNightOverride(nightOverride), [world, nightOverride])
   useEffect(() => world?.setMapRevealed(mapRevealed), [world, mapRevealed])
+  useEffect(() => world?.setDensHighlighted(densHighlighted), [world, densHighlighted])
   useEffect(() => world?.setObscured(obscured), [world, obscured])
   useEffect(() => world?.setPriestName(priestName), [world, priestName])
   useEffect(() => world?.setTitles(tsarTitle, governorTitle), [world, tsarTitle, governorTitle])

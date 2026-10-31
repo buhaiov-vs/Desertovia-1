@@ -238,7 +238,9 @@ export class VillageWorld {
   private readonly objects = new Container()
   private readonly wildlife = new WildlifeLayer(this.objects)
   private readonly enemies = new EnemyLayer(this.objects)
-  private readonly dens = new DenLayer(this.objects)
+  private readonly denMarks = new Container()
+  private readonly dens = new DenLayer(this.objects, this.denMarks)
+  private densHighlighted = false
   private readonly projectLayer = new Container()
   private readonly night = new Graphics()
   private readonly lights = new Graphics()
@@ -364,6 +366,7 @@ export class VillageWorld {
     this.painter = painter
 
     this.objects.sortableChildren = true
+    this.denMarks.sortableChildren = true
     this.projectLayer.sortableChildren = true
     this.objects.addChild(this.campfireView(), this.projectLayer)
 
@@ -379,7 +382,7 @@ export class VillageWorld {
     this.placementLayer.visible = false
     this.selection.visible = false
     // Fog is only the chunk layer (`fog.far`). The old camp-picture sprite made a straight rectangle at the vale rim.
-    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.far)
+    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.far, this.denMarks)
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
@@ -822,6 +825,19 @@ export class VillageWorld {
 
   setNightOverride(night: boolean | null) {
     this.nightOverride = night
+  }
+
+  /**
+   * Developer tools: rings and level numbers on every den in view, above the fog, and every den on a minimap of the
+   * whole land. A click on that minimap moves the camera there.
+   */
+  setDensHighlighted(on: boolean) {
+    this.densHighlighted = on
+    this.dens.setHighlighted(on)
+    this.minimap?.setOverview(on)
+    this.fogUpdatedAt = Number.NEGATIVE_INFINITY
+    this.minimapUpdatedAt = Number.NEGATIVE_INFINITY
+    this.cullDirty = true
   }
 
   /** Developer tools: lifts the fog everywhere on this screen only; the server's exploration is unchanged. */
@@ -2634,7 +2650,8 @@ export class VillageWorld {
         y: walker.y / TILE,
         kind: walker.id === TSAR_ID ? 'tsar' as const : walker.id === this.highlightId ? 'you' as const : 'citizen' as const,
       }))
-    const dens = this.dens.spotted((x, y) => this.fog.isExplored(x, y)).map((den) => ({ x: den.x + 0.5, y: den.y + 0.5 }))
+    const dens = (this.densHighlighted ? this.dens.all() : this.dens.spotted((x, y) => this.fog.isExplored(x, y)))
+      .map((den) => ({ x: den.x + 0.5, y: den.y + 0.5, level: den.level }))
     return { buildings, citizens, camp: CAMPFIRE, dens }
   }
 }

@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js'
+import { Container, Graphics, Text } from 'pixi.js'
 import type { DenSnapshot, EnemyKind } from '../api'
 import { enemyFigure } from './enemies'
 import { foeFigure, type FoeAnimation, type FoeLook } from './foeSprites'
@@ -106,6 +106,8 @@ interface Den {
   point: SpawnPoint
   views: Container[]
   guards: Guard[]
+  mark: Container | null
+  label: Container | null
 }
 
 /** A citizen fighting at a den, drawn at the server position. */
@@ -123,13 +125,31 @@ export class DenLayer {
   private points: SpawnPoint[] = []
   private readonly shown = new Map<string, Den>()
   private readonly layer: Container
+  /** Rings and level numbers, drawn above the fog so a highlighted den stays visible. */
+  private readonly marks: Container
+  private highlighted = false
   private fights = new Map<string, DenSnapshot>()
   /** Snapshots whose events were played, so a re-render does not flash again. */
   private readonly played = new WeakSet<DenSnapshot>()
   private readonly fighters = new Map<string, Fighter>()
 
-  constructor(layer: Container) {
+  constructor(layer: Container, marks: Container) {
     this.layer = layer
+    this.marks = marks
+  }
+
+  /** Every den, explored or not. */
+  all(): readonly SpawnPoint[] {
+    return this.points
+  }
+
+  /** Developer view: a ring and the level on every den in sight, whether or not the fog is open. */
+  setHighlighted(on: boolean) {
+    this.highlighted = on
+    for (const den of this.shown.values()) {
+      if (den.mark) den.mark.visible = on
+      if (den.label) den.label.visible = on
+    }
   }
 
   setPoints(points: SpawnPoint[]) {
@@ -190,7 +210,7 @@ export class DenLayer {
     const keep = new Set<string>()
     for (const point of this.points) {
       if (point.x < left || point.x > right || point.y < top || point.y > bottom) continue
-      if (!explored(point.x, point.y)) continue
+      if (!this.highlighted && !explored(point.x, point.y)) continue
       keep.add(point.id)
       if (this.shown.has(point.id)) continue
       this.shown.set(point.id, this.figures(point, camp))
@@ -315,11 +335,25 @@ export class DenLayer {
 
   private figures(point: SpawnPoint, camp: { x: number; y: number }): Den {
     const picture = DEN_PICTURES[point.level - 1]
-    const den: Den = { point, views: [], guards: [] }
+    const den: Den = { point, views: [], guards: [], mark: null, label: null }
     if (!picture) return den
     const centerX = (point.x + 0.5) * TILE
     const centerY = (point.y + 0.5) * TILE
     const views = den.views
+    const ring = new Graphics()
+      .circle(0, 0, 3 * TILE)
+      .stroke({ color: 0xffe14a, width: 3, alpha: 0.95 })
+      .circle(0, 0, 1.4 * TILE)
+      .stroke({ color: 0xff3b30, width: 2 })
+    den.mark = this.placeMark(ring, centerX, centerY)
+    views.push(den.mark)
+    const caption = new Text({
+      text: String(point.level),
+      style: { fontFamily: 'sans-serif', fontSize: 15, fontWeight: '700', fill: 0xfff4e0, stroke: { color: 0x1b1206, width: 4 } },
+    })
+    caption.anchor.set(0.5, 1)
+    den.label = this.placeMark(caption, centerX, centerY - 3 * TILE - 2)
+    views.push(den.label)
     const prop = foeFigure({ idle: `den-${point.level}` as FoeAnimation, height: Math.round(picture.prop * PROP_SCALE) })
     if (prop) views.push(this.place(prop, centerX, centerY))
 
@@ -344,6 +378,14 @@ export class DenLayer {
       den.guards[index] = { view: figure, bar, homeX, homeY, x: homeX, y: homeY, facing, homeFacing: facing, flash: 0, lunge: 0 }
     }
     return den
+  }
+
+  private placeMark(view: Container, x: number, y: number) {
+    view.position.set(Math.round(x), Math.round(y))
+    view.visible = this.highlighted
+    view.zIndex = y
+    this.marks.addChild(view)
+    return view
   }
 
   private place(view: Container, x: number, y: number) {

@@ -24,8 +24,8 @@ export interface MinimapMarkers {
   buildings: Array<{ x: number; y: number; width: number; height: number; finished: boolean }>
   citizens: Array<{ x: number; y: number; kind: 'you' | 'tsar' | 'citizen' }>
   camp: { x: number; y: number }
-  /** Foe dens the village has seen. */
-  dens: Array<{ x: number; y: number }>
+  /** Foe dens. `level` is drawn when the minimap shows the whole land. */
+  dens: Array<{ x: number; y: number; level?: number }>
 }
 
 interface Rectangle {
@@ -60,6 +60,8 @@ export class Minimap {
   /** Fog of war for the camp picture, one pixel per tile. */
   private fog: HTMLCanvasElement | null = null
   private fillDarkness: DarknessFill | null = null
+  /** The whole land, so every den is on the picture. Clicks still move the camera. */
+  private overview = false
 
   constructor(host: HTMLElement, onPick: (tileX: number, tileY: number) => void) {
     this.root.className = 'minimap'
@@ -119,6 +121,15 @@ export class Minimap {
     this.draw()
   }
 
+  /** Developer view of every den: the picture becomes the whole land until this is turned off. */
+  setOverview(on: boolean) {
+    if (this.overview === on) return
+    this.overview = on
+    this.builtFrame = ''
+    this.frame = this.frameFor(this.view)
+    this.draw()
+  }
+
   setView(view: Rectangle) {
     this.view = view
     if (!this.dragging) this.frame = this.frameFor(view)
@@ -134,6 +145,7 @@ export class Minimap {
 
   /** The camp picture while the screen is inside it; otherwise the same-sized window around the camera. */
   private frameFor(view: Rectangle): Rectangle {
+    if (this.overview) return { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT }
     const covers =
       view.x >= MAP_LEFT &&
       view.y >= MAP_TOP &&
@@ -164,6 +176,10 @@ export class Minimap {
     const context = this.base.getContext('2d')
     if (!context || !terrain) return
     const frame = this.frame
+    if (frame.width > this.base.width || frame.height > this.base.height) {
+      this.paintSampled(frame)
+      return
+    }
     if (this.isVale(frame)) {
       const image = context.createImageData(MAP_WIDTH, MAP_HEIGHT)
       terrain.forEach((kind, index) => {
@@ -190,6 +206,29 @@ export class Minimap {
     this.paintLocalFog()
   }
 
+  /** One pixel of the minimap stands for many tiles, so the whole land fits the camp-sized canvas. */
+  private paintSampled(frame: Rectangle) {
+    const terrain = this.terrain
+    const context = this.base.getContext('2d')
+    if (!context || !terrain) return
+    const width = this.base.width
+    const height = this.base.height
+    const image = context.createImageData(width, height)
+    for (let row = 0; row < height; row++) {
+      const tileY = Math.floor(frame.y + ((row + 0.5) * frame.height) / height)
+      for (let column = 0; column < width; column++) {
+        const tileX = Math.floor(frame.x + ((column + 0.5) * frame.width) / width)
+        const kind =
+          tileX >= MAP_LEFT && tileX < MAP_LEFT + MAP_WIDTH && tileY >= MAP_TOP && tileY < MAP_TOP + MAP_HEIGHT
+            ? (terrain[(tileY - MAP_TOP) * MAP_WIDTH + (tileX - MAP_LEFT)] as Terrain)
+            : farTerrain(tileX, tileY, this.seed)
+        const [red, green, blue] = TERRAIN_COLORS[kind] ?? TERRAIN_COLORS[Terrain.Grass]
+        image.data.set([red, green, blue, 255], (row * width + column) * 4)
+      }
+    }
+    context.putImageData(image, 0, 0)
+  }
+
   private paintLocalFog() {
     const fill = this.fillDarkness
     const context = this.localFog.getContext('2d')
@@ -214,8 +253,8 @@ export class Minimap {
     const yOf = (tile: number) => (tile - frame.y) * unit
     context.clearRect(0, 0, this.overlay.width, this.overlay.height)
     context.imageSmoothingEnabled = true
-    if (this.isVale(frame) && this.fog) context.drawImage(this.fog, 0, 0, this.overlay.width, this.overlay.height)
-    else if (!this.isVale(frame)) context.drawImage(this.localFog, 0, 0, this.overlay.width, this.overlay.height)
+    if (!this.overview && this.isVale(frame) && this.fog) context.drawImage(this.fog, 0, 0, this.overlay.width, this.overlay.height)
+    else if (!this.overview && !this.isVale(frame)) context.drawImage(this.localFog, 0, 0, this.overlay.width, this.overlay.height)
 
     const markers = this.markers
     if (markers) {
@@ -227,7 +266,8 @@ export class Minimap {
         context.fillRect(xOf(building.x), yOf(building.y), Math.max(unit, building.width * unit), Math.max(unit, building.height * unit))
         context.strokeRect(xOf(building.x), yOf(building.y), Math.max(unit, building.width * unit), Math.max(unit, building.height * unit))
       }
-      for (const den of markers.dens) {
+      if (this.overview) this.drawOverviewDens(context, markers.dens, xOf, yOf)
+      else for (const den of markers.dens) {
         if (!this.inside(den.x, den.y)) continue
         const x = xOf(den.x)
         const y = yOf(den.y)
@@ -282,6 +322,59 @@ export class Minimap {
     context.strokeStyle = '#ffffff'
     context.lineWidth = 2
     context.strokeRect(xOf(this.view.x), yOf(this.view.y), this.view.width * unit, this.view.height * unit)
+    if (this.overview) {
+      const centerX = xOf(this.view.x + this.view.width / 2)
+      const centerY = yOf(this.view.y + this.view.height / 2)
+      context.strokeStyle = '#ffffff'
+      context.lineWidth = 2
+      context.beginPath()
+      context.moveTo(centerX - 7, centerY)
+      context.lineTo(centerX + 7, centerY)
+      context.moveTo(centerX, centerY - 7)
+      context.lineTo(centerX, centerY + 7)
+      context.stroke()
+    }
+  }
+
+  /** Dens on the whole-land picture. A level is drawn when it would not cover another. */
+  private drawOverviewDens(
+    context: CanvasRenderingContext2D,
+    dens: MinimapMarkers['dens'],
+    xOf: (tile: number) => number,
+    yOf: (tile: number) => number,
+  ) {
+    const frame = this.frame
+    const midX = xOf(frame.x + frame.width / 2)
+    const midY = yOf(frame.y + frame.height / 2)
+    const labelled: Array<{ x: number; y: number }> = []
+    const dots = dens
+      .filter((den) => this.inside(den.x, den.y))
+      .map((den) => ({ den, x: xOf(den.x), y: yOf(den.y) }))
+      .sort((a, b) => (b.den.level ?? 0) - (a.den.level ?? 0))
+    context.font = 'bold 10px sans-serif'
+    context.textAlign = 'center'
+    context.textBaseline = 'middle'
+    for (const dot of dots) {
+      context.beginPath()
+      context.arc(dot.x, dot.y, 4, 0, Math.PI * 2)
+      context.fillStyle = '#e0261c'
+      context.fill()
+      context.lineWidth = 1
+      context.strokeStyle = '#fff4e0'
+      context.stroke()
+      if (dot.den.level == null) continue
+      const dx = dot.x - midX
+      const dy = dot.y - midY
+      const reach = Math.hypot(dx, dy) || 1
+      const label = { x: dot.x + (dx / reach) * 10, y: dot.y + (dy / reach) * 10 }
+      if (labelled.some((other) => Math.hypot(other.x - label.x, other.y - label.y) < 11)) continue
+      labelled.push(label)
+      context.lineWidth = 3
+      context.strokeStyle = '#1b1206'
+      context.strokeText(String(dot.den.level), label.x, label.y)
+      context.fillStyle = '#fff4e0'
+      context.fillText(String(dot.den.level), label.x, label.y)
+    }
   }
 
   private inside(tileX: number, tileY: number) {

@@ -28,7 +28,7 @@ public sealed partial class GameService
         var now = time.GetUtcNow();
         var camp = WorldMap.Places[WorldMap.Camp];
         var candidates = (await db.Citizens.AsNoTracking()
-                .Where(c => citizenIds.Contains(c.Id) && c.CurrentTaskId == null && c.DungeonRunId == null && c.RescuePatientId == null)
+                .Where(c => citizenIds.Contains(c.Id) && c.DungeonRunId == null && c.RescuePatientId == null)
                 .ToListAsync(cancellationToken))
             .Where(c => DenRules.CanEngage(c, now))
             .Select(c => (Citizen: c, Position: DenRules.Position(c, now)))

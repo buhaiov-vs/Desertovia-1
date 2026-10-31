@@ -11,9 +11,12 @@ namespace Desertod.Domain.Combat;
 /// <summary>A citizen at a den: how they come into the fight and what they take out of it.</summary>
 public static class DenRules
 {
-    /// <summary>A citizen who may be woken by a den: up, unhurt, idle and not off to a dungeon.</summary>
+    /// <summary>
+    /// A citizen who may be woken by a den: up, unhurt, not off to a dungeon and not in the middle of a work cycle.
+    /// A finished cycle keeps its task until it is renewed; that citizen walks free, so a den wakes for them too.
+    /// </summary>
     public static bool CanEngage(Citizen citizen, DateTimeOffset now) =>
-        RaidSimulation.CanFight(citizen, now) && citizen.CurrentTaskId is null && citizen.RescuePatientId is null;
+        RaidSimulation.CanFight(citizen, now) && citizen.WorkState(now) != WorkState.Working && citizen.RescuePatientId is null;
 
     /// <summary>Where the citizen stands now.</summary>
     public static TilePoint Position(Citizen citizen, DateTimeOffset now) =>

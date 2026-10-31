@@ -237,10 +237,14 @@ export class VillageWorld {
   private readonly lookTextures = new Map<string, Texture>()
   private readonly world = new Container()
   private readonly objects = new Container()
+  /** Raid enemies, den protectors and roaming foes, in front of trees, buildings and props. */
+  private readonly foes = new Container()
+  /** Citizens, in front of everything on the land, foes included. */
+  private readonly people = new Container()
   private readonly wildlife = new WildlifeLayer(this.objects)
-  private readonly enemies = new EnemyLayer(this.objects)
+  private readonly enemies = new EnemyLayer(this.foes)
   private readonly denMarks = new Container()
-  private readonly dens = new DenLayer(this.objects, this.denMarks)
+  private readonly dens = new DenLayer(this.foes, this.denMarks)
   private densHighlighted = false
   private readonly projectLayer = new Container()
   private readonly night = new Graphics()
@@ -367,6 +371,8 @@ export class VillageWorld {
     this.painter = painter
 
     this.objects.sortableChildren = true
+    this.foes.sortableChildren = true
+    this.people.sortableChildren = true
     this.denMarks.sortableChildren = true
     this.projectLayer.sortableChildren = true
     this.objects.addChild(this.campfireView(), this.projectLayer)
@@ -383,7 +389,7 @@ export class VillageWorld {
     this.placementLayer.visible = false
     this.selection.visible = false
     // Fog is only the chunk layer (`fog.far`). The old camp-picture sprite made a straight rectangle at the vale rim.
-    this.world.addChild(this.groundLayer, this.objects, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.far, this.denMarks)
+    this.world.addChild(this.groundLayer, this.objects, this.foes, this.people, this.kingdomBorder, this.placementLayer, this.selection, this.night, this.lights, this.buildingLights, this.fog.far, this.denMarks)
     app.stage.addChild(this.world, this.rain, this.screen)
     this.wildlife.setSight((worldX, worldY) => this.fog.inSight(worldX / TILE, worldY / TILE))
 
@@ -1899,10 +1905,10 @@ export class VillageWorld {
     subtitle.visible = false
     sprite.zIndex = y + 0.5
     icon.zIndex = 100000
-    this.objects.addChild(sprite, icon)
+    this.people.addChild(sprite, icon)
     this.screen.addChild(label, subtitle)
     const bed=new Graphics().rect(-11,-5,23,9).fill(0x543b24).rect(-9,-4,5,7).fill(0xeee2c8).rect(-3,-4,13,7).fill(0x476c64)
-    bed.visible=false;this.objects.addChild(bed)
+    bed.visible=false;this.people.addChild(bed)
     const seed = hash(id)
     const walker: Walker = {
       id,

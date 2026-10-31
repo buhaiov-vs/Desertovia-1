@@ -3,7 +3,8 @@ using Desertod.Domain.Combat;
 namespace Desertod.Api.Game;
 
 /// <summary>
-/// Runs the den fights. Twice a second it looks for present citizens walking into a den's reach and stops them for
+/// Runs the den fights, and the fights with the roaming foes of <see cref="Domain.World.Haunts"/>, which are dens of
+/// one protector. Twice a second it looks for present citizens walking into a den's reach and stops them for
 /// the fight; ten times a second it ticks the dens that are awake, sends their state to the village, and writes the
 /// citizens who came out of a fight to the database.
 /// </summary>
@@ -89,8 +90,7 @@ public sealed class DenWorker(
                 continue;
             }
 
-            var point = runtime.Points(waker.VillageId)
-                .Where(p => p.Center.DistanceTo(waker.Position) <= DenGuards.AggroRange)
+            var point = runtime.Near(waker.VillageId, waker.Position, DenGuards.AggroRange)
                 .MinBy(p => p.Center.DistanceTo(waker.Position));
             if (point is null)
             {

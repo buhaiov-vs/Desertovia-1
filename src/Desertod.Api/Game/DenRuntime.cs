@@ -65,6 +65,14 @@ public sealed class DenRuntime
     public IReadOnlyList<SpawnPoint> Points(Guid villageId) =>
         points.GetOrAdd(villageId, id => SpawnRings.Points(Wilderness.Seed(id.ToString())));
 
+    /// <summary>Dens and roaming foes whose tile is within <paramref name="radius"/> of <paramref name="position"/>.</summary>
+    public IEnumerable<SpawnPoint> Near(Guid villageId, TilePoint position, double radius)
+    {
+        var dens = Points(villageId);
+        return dens.Where(p => p.Center.DistanceTo(position) <= radius)
+            .Concat(Haunts.Near(Wilderness.Seed(villageId.ToString()), position, radius, dens));
+    }
+
     public LiveDen Open(Guid villageId, string slug, SpawnPoint point)
     {
         var seed = Wilderness.Seed(villageId.ToString());

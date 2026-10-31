@@ -12,7 +12,8 @@ public sealed record SpawnLevel(int Level, string Name, int Floor, int Protector
 }
 
 /// <summary>One den on a ring. <see cref="Id"/> is the level and the direction, so a destroyed den can be named again.</summary>
-public sealed record SpawnPoint(string Id, int Level, string Name, EnemyKind? Kind, int Protectors, int Claim, int X, int Y)
+/// <param name="Roams">A lone foe of <see cref="Haunts"/>, not a den: it has no den, and it stands on its own tile.</param>
+public sealed record SpawnPoint(string Id, int Level, string Name, EnemyKind? Kind, int Protectors, int Claim, int X, int Y, bool Roams = false)
 {
     public TilePoint Center => new(X + 0.5, Y + 0.5);
 }

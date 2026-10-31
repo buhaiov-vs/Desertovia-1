@@ -92,10 +92,15 @@ public static class DenGuards
 
     /// <summary>
     /// Where each protector stands at rest, in tiles: on an arc in front of the den, or aside for a lone one, on the
-    /// camp side. The web client's <c>DenLayer</c> draws them at the same places.
+    /// camp side. A roaming foe stands on its own tile. The web client's <c>DenLayer</c> draws them at the same places.
     /// </summary>
     public static IReadOnlyList<TilePoint> Homes(SpawnPoint point, TilePoint camp)
     {
+        if (point.Roams)
+        {
+            return [point.Center];
+        }
+
         var count = point.Protectors;
         var center = point.Center;
         var facing = camp.X < center.X ? -1 : 1;

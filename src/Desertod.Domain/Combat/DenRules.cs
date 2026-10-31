@@ -77,13 +77,18 @@ public static class DenRules
         }
 
         citizen.Trip = null;
-        citizen.IdleSpot = outcome.Position;
         if (outcome.KnockedOut)
         {
+            // A wound remembers the previous spot. Put the body back on the tile where they fell, and do not
+            // start the walk they had been on — that walk is often the way back to the village.
             CombatRules.Injure(citizen, TimeSpan.FromMinutes(outcome.InjuryMinutes), now, rewardEligible: true);
+            citizen.Trip = null;
+            citizen.IdleSpot = outcome.Position;
             citizen.Spot = outcome.Position;
             return;
         }
+
+        citizen.IdleSpot = outcome.Position;
 
         if (outcome.Destination is { } destination && WorldMap.Land.Contains(destination.ToTile()))
         {

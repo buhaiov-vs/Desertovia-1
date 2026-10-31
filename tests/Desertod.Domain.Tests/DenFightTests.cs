@@ -1,3 +1,4 @@
+using Desertod.Domain;
 using Desertod.Domain.Combat;
 using Desertod.Domain.World;
 
@@ -95,6 +96,28 @@ public class DenFightTests
         Assert.False(outcome.KnockedOut);
         Assert.Equal(SpawnRings.ProtectorsPerDen, outcome.Kills);
         Assert.All(den.Protectors, p => Assert.Equal(DenGuardState.Dead, p.State));
+    }
+
+    [Fact]
+    public void A_FallenCitizen_LiesWhereTheyFell_AndDoesNotWalkHome()
+    {
+        var village = TestWorld.NewVillage();
+        var citizen = TestWorld.NewCitizen(village);
+        var home = WorldMap.Places[WorldMap.Camp];
+        var fallen = new TilePoint(home.X + 40, home.Y + 12);
+        citizen.Spot = home;
+        citizen.IdleSpot = home;
+        citizen.SetOut(home, village, Now);
+        var outcome = new DenOutcome(citizen.Id, fallen, home, true, 30, 1, 4, [], 0);
+
+        DenRules.Settle(citizen, village, outcome, Now);
+
+        Assert.Equal(fallen, citizen.IdleSpot);
+        Assert.Equal(fallen, citizen.Spot);
+        Assert.Null(citizen.Trip);
+        Assert.True(CombatRules.IsInjured(citizen, Now));
+        Assert.Equal("citizen.injured", Assert.Throws<GameRuleException>(() => citizen.GoTo(home, village, Now)).Code);
+        Assert.Equal(fallen, citizen.IdleSpot);
     }
 
     [Fact]

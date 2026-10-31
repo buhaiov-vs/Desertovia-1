@@ -36,8 +36,22 @@ public static class DenGuards
     public const double FirstDenDamage = 1.05;
     public const double DamageGrowth = 1.028;
 
-    /// <summary>A hero this close to the den, in tiles, wakes all of its protectors.</summary>
+    /// <summary>A roaming foe this close, in tiles, wakes. A den calls its pack from <see cref="Sight"/>.</summary>
     public const double AggroRange = 6;
+
+    /// <summary>
+    /// Protectors who can walk circle the den at this distance, in tiles. Eight of them leave a gap of
+    /// <c>PatrolRadius * sin(π/8)</c> on the way in, and that gap stays inside <see cref="Sight"/>, so the
+    /// spots around the den, two tiles out, cannot be reached without meeting one. A protector that cannot
+    /// walk stands closer, at its own reach, and still covers that middle.
+    /// </summary>
+    public const double PatrolRadius = 7;
+
+    /// <summary>A protector sees a hero this close, in tiles, and calls the rest of the den.</summary>
+    public const double Sight = 4;
+
+    /// <summary>One lap of the ring, in seconds.</summary>
+    public const double PatrolSeconds = 40;
 
     /// <summary>A slain protector stands at the den again after this long.</summary>
     public static readonly TimeSpan Respawn = TimeSpan.FromMinutes(30);
@@ -92,42 +106,51 @@ public static class DenGuards
         _ => [new(ResourceKind.Gold, 2, 4, 1), new(ResourceKind.Remedy, 1, 1, 0.5)],
     };
 
-    /// <summary>Protectors in one row in front of the den; more stand in a second, wider row.</summary>
-    public const int RowSize = 4;
+    /// <summary>The poison plant and the lich stay on their posts. Everyone else walks the ring.</summary>
+    public static bool StandsStill(int level) => Rooted.Contains(level);
+
+    /// <summary>Where this den's ring sits, in tiles.</summary>
+    public static double PostRadius(int level) => StandsStill(level) ? Ranged.GetValueOrDefault(level, MeleeRange) : PatrolRadius;
+
+    /// <summary>How far a protector of this den sees. One that cannot walk sees only as far as it can strike.</summary>
+    public static double SightOf(int level) => StandsStill(level) ? Math.Min(Sight, PostRadius(level)) : Sight;
 
     /// <summary>
-    /// Where each protector stands at rest, in tiles: in rows of <see cref="RowSize"/> on arcs in front of the den,
-    /// the outer row wider and staggered, or aside for a lone one, on the camp side. A roaming foe stands on its own
-    /// tile. The web client's <c>DenLayer</c> draws them at the same places.
+    /// Where protector <paramref name="index"/> is at rest. The pack is spaced evenly around the den and, unless it
+    /// cannot walk, turns once per <see cref="PatrolSeconds"/>. The web client's <c>patrolAt</c> draws the same round.
     /// </summary>
-    public static IReadOnlyList<TilePoint> Homes(SpawnPoint point, TilePoint camp)
+    public static TilePoint PatrolAt(TilePoint center, int index, int count, int level, DateTimeOffset now)
+    {
+        var turn = StandsStill(level) ? 0 : now.ToUnixTimeMilliseconds() / 1000.0 / PatrolSeconds * 2 * Math.PI;
+        var angle = turn + index * 2 * Math.PI / Math.Max(1, count);
+        var radius = PostRadius(level);
+        return new TilePoint(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius);
+    }
+
+    /// <summary>A hero here meets the den: inside the ring, or within sight of a protector on it. A roaming foe does not.</summary>
+    public static bool Alerts(SpawnPoint point, TilePoint position, DateTimeOffset now)
     {
         if (point.Roams)
         {
-            return [point.Center];
+            return false;
         }
 
-        var count = point.Protectors;
         var center = point.Center;
-        var facing = camp.X < center.X ? -1 : 1;
-        var homes = new TilePoint[count];
+        if (position.DistanceTo(center) <= PostRadius(point.Level))
+        {
+            return true;
+        }
+
+        var count = Math.Max(1, point.Protectors);
+        var sight = SightOf(point.Level);
         for (var index = 0; index < count; index++)
         {
-            var (angle, radius) = count == 1
-                ? (facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25, 1.2)
-                : Arc(index, count);
-            homes[index] = new TilePoint(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius * 0.6);
+            if (position.DistanceTo(PatrolAt(center, index, count, point.Level, now)) <= sight)
+            {
+                return true;
+            }
         }
 
-        return homes;
-    }
-
-    private static (double Angle, double Radius) Arc(int index, int count)
-    {
-        var row = index / RowSize;
-        var inRow = Math.Min(RowSize, count - row * RowSize);
-        var share = inRow == 1 ? 0.5 : (double)(index % RowSize) / (inRow - 1);
-        var span = row == 0 ? (count > RowSize ? 0.5 : 0.7) : 0.8;
-        return (Math.PI * (0.5 + (share - 0.5) * span), 1.3 + row);
+        return false;
     }
 }

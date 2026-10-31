@@ -120,7 +120,7 @@ public class HauntTests
         var foe = Enumerable.Range(10, 40).Select(cell => Haunts.At(1, cell, 0, dens)).First(foe => foe is not null)!;
         var now = DateTimeOffset.UnixEpoch.AddDays(20_000).AddSeconds(7);
         var where = Haunts.PositionAt(1, foe, now);
-        var fight = new DenFight(foe, WorldMap.Places[WorldMap.Camp], (_, _) => true, where);
+        var fight = new DenFight(foe, (_, _) => true, where);
 
         var protector = Assert.Single(fight.Protectors);
         Assert.Equal(where, protector.Home);

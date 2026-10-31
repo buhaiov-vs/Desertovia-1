@@ -10,7 +10,7 @@ public class DenFightTests
     private static readonly TilePoint Camp = WorldMap.Places[WorldMap.Camp];
 
     private static DenFight Den(int level) =>
-        new(SpawnRings.Points(1).First(point => point.Level == level), Camp, (_, _) => true);
+        new(SpawnRings.Points(1).First(point => point.Level == level), (_, _) => true, now: Now);
 
     /// <summary>A fresh citizen: every stat at 0, bare hands, 32 health.</summary>
     private static DenFighter Fresh(Guid id) => new(id, 32, 2, 0, null);
@@ -39,8 +39,8 @@ public class DenFightTests
     public void Protectors_WakeForAHeroNearTheDen_AndStrike()
     {
         var den = Den(1);
-        Assert.False(den.Wakes(Beside(den, DenGuards.AggroRange + 1)));
-        Assert.True(den.Wakes(Beside(den, DenGuards.AggroRange - 1)));
+        Assert.False(den.Wakes(Beside(den, den.Leash + 2)));
+        Assert.True(den.Wakes(Beside(den, 1)));
 
         var hero = Guid.NewGuid();
         Assert.True(den.Engage(Fresh(hero), Beside(den, 5), null));
@@ -192,28 +192,76 @@ public class DenFightTests
         Assert.All(den.Protectors, p =>
         {
             Assert.Equal(p.Guard.Health, p.Health);
-            Assert.True(new TilePoint(p.X, p.Y).DistanceTo(p.Home) < 0.1);
+            Assert.InRange(new TilePoint(p.X, p.Y).DistanceTo(den.Anchor), DenGuards.PostRadius(den.Point.Level) - 0.2, DenGuards.PostRadius(den.Point.Level) + 0.2);
         });
     }
 
     [Fact]
-    public void A_HeroWalkingPast_KeepsTheirWay_AndOutrunsThePack()
+    public void A_HeroWalkingPast_KeepsTheirWay_AndThePackStaysByTheDen()
     {
         var den = Den(2);
         var hero = Guid.NewGuid();
         var destination = Beside(den, -(den.Leash + 10));
-        den.Engage(new DenFighter(hero, 48, 4, 0, null), Beside(den, 5), destination);
+        den.Engage(new DenFighter(hero, 80, 4, 0, null), Beside(den, 1), destination);
         var at = Now;
-        for (var step = 0; step < 600 && den.Hero is not null; step++)
+        var strayed = false;
+        for (var step = 0; step < 800 && den.Hero is not null; step++)
         {
             at = at.AddSeconds(0.1);
             den.Tick(0.1, at, new Random(step));
+            if (den.Protectors.Any(p => p.IsAlive && new TilePoint(p.X, p.Y).DistanceTo(den.Anchor) > den.Leash + 0.05))
+            {
+                strayed = true;
+            }
         }
 
         var outcome = den.TakeReleased();
         Assert.NotNull(outcome);
+        Assert.False(strayed);
         Assert.False(outcome.KnockedOut);
         Assert.Equal(destination, outcome.Destination);
+        Assert.True(outcome.Position.DistanceTo(den.Point.Center) > den.Leash);
+        Assert.All(den.Protectors, p => Assert.Equal(p.Guard.Health, p.Health));
+    }
+
+    [Fact]
+    public void A_HeroWhoRuns_DealsNoDamage_EvenInReach()
+    {
+        var den = Den(1);
+        var hero = Guid.NewGuid();
+        var home = den.Protectors[0].Home;
+        den.Engage(Strongest(hero), home, new TilePoint(home.X + 30, home.Y));
+        var at = Now;
+        for (var step = 0; step < 20; step++)
+        {
+            at = at.AddSeconds(0.1);
+            var events = den.Tick(0.1, at, new Random(step));
+            Assert.DoesNotContain(events, e => e.Kind == DenEventKind.Hit);
+        }
+
+        Assert.Null(den.Hero!.Target);
+        Assert.All(den.Protectors, p => Assert.Equal(p.Guard.Health, p.Health));
+        Assert.Contains(den.Protectors, p => p.State == DenGuardState.Chasing);
+    }
+
+    [Fact]
+    public void A_ChosenProtector_IsTheOnlyOneStruck()
+    {
+        var den = Den(1);
+        var hero = Guid.NewGuid();
+        den.Engage(Strongest(hero), den.Protectors[3].Home, null);
+        Assert.True(den.Attack(hero, 3));
+        var at = Now;
+        var hit = false;
+        for (var step = 0; step < 20 && !hit; step++)
+        {
+            at = at.AddSeconds(0.1);
+            hit = den.Tick(0.1, at, new Random(step)).Any(e => e.Kind == DenEventKind.Hit && e.Protector == 3);
+        }
+
+        Assert.True(hit);
+        Assert.True(den.Protectors[3].Health < den.Protectors[3].Guard.Health);
+        Assert.All(den.Protectors.Where(p => p.Index != 3), p => Assert.Equal(p.Guard.Health, p.Health));
     }
 
     [Fact]
@@ -251,5 +299,90 @@ public class DenFightTests
 
             previous = guard;
         }
+    }
+
+    [Fact]
+    public void Protectors_WalkTheRing_AndAPostThatCannotWalkStays()
+    {
+        var den = Den(1);
+        var start = den.Protectors.Select(p => new TilePoint(p.X, p.Y)).ToList();
+        Assert.All(start, spot => Assert.Equal(DenGuards.PatrolRadius, spot.DistanceTo(den.Anchor), 5));
+        den.Tick(1, Now.AddSeconds(3), new Random(1));
+        Assert.All(den.Protectors, p => Assert.Equal(DenGuardState.Home, p.State));
+        Assert.Contains(den.Protectors, p => new TilePoint(p.X, p.Y).DistanceTo(start[p.Index]) > 1);
+        Assert.All(den.Protectors, p => Assert.Equal(DenGuards.PatrolRadius, new TilePoint(p.X, p.Y).DistanceTo(den.Anchor), 5));
+
+        var plant = Den(14);
+        var post = new TilePoint(plant.Protectors[0].X, plant.Protectors[0].Y);
+        plant.Tick(5, Now.AddSeconds(20), new Random(1));
+        Assert.Equal(post, new TilePoint(plant.Protectors[0].X, plant.Protectors[0].Y));
+        Assert.Equal(DenGuards.PostRadius(14), post.DistanceTo(plant.Anchor), 5);
+    }
+
+    [Fact]
+    public void Every_Approach_MeetsAProtector_BeforeTheSpots()
+    {
+        var center = new TilePoint(400.5, 250.5);
+        foreach (var level in new[] { 1, 14, 30 })
+        {
+            var radius = DenGuards.PostRadius(level);
+            var sight = DenGuards.SightOf(level);
+            Assert.True(radius > 2, "the ring stands outside the spots");
+            Assert.True(radius * Math.Sin(Math.PI / SpawnRings.ProtectorsPerDen) <= sight);
+            for (var lap = 0; lap < 8; lap++)
+            {
+                var now = Now.AddSeconds(lap * DenGuards.PatrolSeconds / 8);
+                for (var step = 0; step < 64; step++)
+                {
+                    var angle = step * Math.PI * 2 / 64;
+                    var at = new TilePoint(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius);
+                    var nearest = Enumerable.Range(0, SpawnRings.ProtectorsPerDen)
+                        .Min(index => at.DistanceTo(DenGuards.PatrolAt(center, index, SpawnRings.ProtectorsPerDen, level, now)));
+                    Assert.True(nearest <= sight);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void One_Protector_SeeingTheHero_CallsThePack_AndThePackDoesNotLeave()
+    {
+        var den = Den(1);
+        var guard = den.Protectors[0];
+        var dx = guard.X - den.Anchor.X;
+        var dy = guard.Y - den.Anchor.Y;
+        var length = Math.Sqrt(dx * dx + dy * dy);
+        var heroAt = new TilePoint(
+            den.Anchor.X + dx / length * (length + DenGuards.Sight - 0.4),
+            den.Anchor.Y + dy / length * (length + DenGuards.Sight - 0.4));
+        Assert.True(heroAt.DistanceTo(new TilePoint(guard.X, guard.Y)) < DenGuards.Sight);
+        Assert.All(
+            den.Protectors.Where(p => p.Index != 0),
+            other => Assert.True(heroAt.DistanceTo(new TilePoint(other.X, other.Y)) > DenGuards.Sight));
+        Assert.True(heroAt.DistanceTo(den.Anchor) > DenGuards.PatrolRadius);
+
+        var hero = Guid.NewGuid();
+        Assert.True(den.Engage(Fresh(hero), heroAt, null));
+        den.Tick(0.1, Now, new Random(1));
+        Assert.All(den.Protectors, p => Assert.Equal(DenGuardState.Chasing, p.State));
+
+        var away = new TilePoint(
+            den.Anchor.X + dx / length * (den.Leash + 40),
+            den.Anchor.Y + dy / length * (den.Leash + 40));
+        Assert.True(den.MoveTo(hero, away));
+        var at = Now;
+        for (var step = 0; step < 800 && den.Hero is not null; step++)
+        {
+            at = at.AddSeconds(0.1);
+            den.Tick(0.1, at, new Random(step));
+            Assert.All(
+                den.Protectors.Where(p => p.IsAlive),
+                p => Assert.True(new TilePoint(p.X, p.Y).DistanceTo(den.Anchor) <= den.Leash + 0.05));
+        }
+
+        var outcome = den.TakeReleased();
+        Assert.NotNull(outcome);
+        Assert.False(outcome.KnockedOut);
+        Assert.True(outcome.Position.DistanceTo(den.Anchor) > den.Leash);
     }
 }

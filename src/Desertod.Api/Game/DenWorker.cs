@@ -91,8 +91,10 @@ public sealed class DenWorker(
             }
 
             var now = time.GetUtcNow();
-            var (point, _) = runtime.Near(waker.VillageId, waker.Position, DenGuards.AggroRange, now)
-                .MinBy(near => near.Where.DistanceTo(waker.Position));
+            var point = runtime.Near(waker.VillageId, waker.Position, now)
+                .OrderBy(near => near.Where.DistanceTo(waker.Position))
+                .Select(near => near.Point)
+                .FirstOrDefault();
             if (point is null)
             {
                 continue;
@@ -118,6 +120,10 @@ public sealed class DenWorker(
                         if (live.Fight.Engage(engagement.Fighter, engagement.Position, engagement.Destination))
                         {
                             live.HeroAccountId = waker.AccountId;
+                            if (runtime.TakeAttack(waker.CitizenId, point.Id) is { } protector)
+                            {
+                                live.Fight.Attack(waker.CitizenId, protector);
+                            }
                         }
                     }
                 }

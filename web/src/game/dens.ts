@@ -1,31 +1,25 @@
 import { Container, Graphics, Text } from 'pixi.js'
 import type { DenSnapshot, EnemyKind } from '../api'
-import { enemyFigure } from './enemies'
+import { enemyFigure, enemyHeight } from './enemies'
 import { foeFigure, type FoeAnimation, type FoeLook } from './foeSprites'
 import type { LandChunkRect, TileRect } from './landChunk'
 import { TILE } from './sheets'
+import { patrolAt } from './denPatrol'
 import { spotsAround, type SpawnPoint } from './spawnRings'
 
 /** Den props are drawn this much larger than the heights in `DEN_PICTURES`. */
 const PROP_SCALE = 1.35
-/** Protectors and roaming foes are drawn this much larger than their own looks. */
+/** Protectors and roaming foes of level 1 are drawn this much larger than their own looks. */
 const FOE_SCALE = 1.4
-/** Protectors in one row in front of the den; more stand in a second, wider row. */
-const ROW_SIZE = 4
-/** The first row stands this far in front of the den, in tiles; each further row one tile more. */
-const GUARD_RADIUS = 1.3
+/** Level 1 stands this tall, in world pixels: a slime at `FOE_SCALE`. */
+const LEVEL_ONE_HEIGHT = 10 * FOE_SCALE
+/** Each later level stands this many world pixels taller than the one before. */
+const LEVEL_STEP = 4
 
-/** Where protector `index` of `count` stands on its row's arc, as the server's `DenGuards.Arc`. */
-function guardArc(index: number, count: number): { angle: number; radius: number } {
-  const row = Math.floor(index / ROW_SIZE)
-  const inRow = Math.min(ROW_SIZE, count - row * ROW_SIZE)
-  const share = inRow === 1 ? 0.5 : (index % ROW_SIZE) / (inRow - 1)
-  const span = row === 0 ? (count > ROW_SIZE ? 0.5 : 0.7) : 0.8
-  return { angle: Math.PI * (0.5 + (share - 0.5) * span), radius: GUARD_RADIUS + row }
+/** Drawn height of a foe of `level`, in world pixels. Level 1 keeps today's size. */
+function levelHeight(level: number) {
+  return LEVEL_ONE_HEIGHT + Math.max(0, level - 1) * LEVEL_STEP
 }
-
-/** A lone protector stands this far from the den, in front on the camp side, in tiles. */
-const LONE_GUARD = 1.2
 /** Radius of the trodden patch under a den, in tiles; it reaches just past the spots. */
 const PATCH_RADIUS = 2.7
 /** Dens this far past the view keep their figures, so panning does not pop them in at the edge. */
@@ -91,11 +85,10 @@ const LUNGE_SECONDS = 0.24
 const PICK_RADIUS = 14
 const HIT_TINT = 0xff6a5a
 
-/** A thin health bar centred on (x, y); null clears it. */
-function drawBar(bar: Graphics, share: number | null, x: number, y: number) {
+/** A thin health bar centred on (x, y); null clears it. `width` follows a taller foe. */
+function drawBar(bar: Graphics, share: number | null, x: number, y: number, width = 16) {
   bar.clear()
   if (share === null) return
-  const width = 16
   bar
     .rect(Math.round(x - width / 2) - 1, Math.round(y) - 1, width + 2, 4)
     .fill({ color: 0x1a0f08, alpha: 0.85 })
@@ -114,8 +107,12 @@ interface Guard {
   homeFacing: number
   flash: number
   lunge: number
-  /** A roaming foe at rest walks this path, in world pixels, instead of standing at home. */
+  /** A roaming foe at rest walks this path, in world pixels, instead of standing at home. A den's protector walks its ring the same way. */
   wander?: () => { x: number; y: number }
+  /** The path is a steady round, so the figure sits on it instead of chasing a moving point. */
+  orbit?: boolean
+  /** Drawn height in world pixels. The bar, the tap and the lunge follow it. */
+  height: number
 }
 
 interface Den {
@@ -135,7 +132,7 @@ interface Fighter {
 
 /**
  * The foe rings on the land. The eight spots around each den are baked into the ground chunk under them.
- * A den the village has seen, near the camera, shows the prop of its area and its protectors in front of it.
+ * A den the village has seen, near the camera, shows the prop of its area and its protectors walking around it.
  * The roaming foes between the rings are shown the same way, as dens of one protector with no prop.
  */
 export class DenLayer {
@@ -149,6 +146,8 @@ export class DenLayer {
   /** Snapshots whose events were played, so a re-render does not flash again. */
   private readonly played = new WeakSet<DenSnapshot>()
   private readonly fighters = new Map<string, Fighter>()
+  /** The signed-in citizen: their bar is drawn on their figure, above the name. */
+  private viewerId: string | null = null
   /** The roaming foes in a part of the land, in tiles; they are figured like dens of one protector. */
   private haunts: ((rect: TileRect) => SpawnPoint[]) | null = null
   /** Where a roaming foe wanders at a server time, in tiles. */
@@ -287,25 +286,41 @@ export class DenLayer {
     }
   }
 
+  /** The signed-in citizen. Their health is drawn on the figure, so this layer leaves that bar clear. */
+  setViewer(citizenId: string | null) {
+    this.viewerId = citizenId
+  }
+
   /** Where a citizen fighting at a den stands now, in world pixels; null when they are not fighting. */
   fighterAt(citizenId: string): { x: number; y: number } | null {
     return this.fighters.get(citizenId) ?? null
   }
 
-  /** The protector under a tap, of a den that is fighting someone. */
-  pick(x: number, y: number): { denId: string; protector: number; heroId: string } | null {
-    let best: { denId: string; protector: number; heroId: string; distance: number } | null = null
-    for (const [denId, snapshot] of this.fights) {
-      const guards = this.shown.get(denId)?.guards
-      if (!snapshot.hero || !guards) continue
-      for (const protector of snapshot.protectors) {
-        const guard = guards[protector.index]
-        if (!guard || protector.state === 'Dead') continue
-        // A figure stands on its feet: aim at its middle.
-        const distance = Math.hypot(guard.x - x, guard.y - 8 * FOE_SCALE - y)
-        if (distance <= PICK_RADIUS * FOE_SCALE && (!best || distance < best.distance))
-          best = { denId, protector: protector.index, heroId: snapshot.hero.citizenId, distance }
-      }
+  /** Health of the citizen fighting a den; null when they are not in one. */
+  heroVitals(citizenId: string): { health: number; maximumHealth: number } | null {
+    for (const fight of this.fights.values()) {
+      const hero = fight.hero
+      if (hero?.citizenId === citizenId) return { health: hero.health, maximumHealth: hero.maximumHealth }
+    }
+    return null
+  }
+
+  /** The protector or roaming foe under a tap. `heroId` is set when somebody is already fighting there. */
+  pick(x: number, y: number): { denId: string; protector: number; heroId: string | null } | null {
+    let best: { denId: string; protector: number; heroId: string | null; distance: number } | null = null
+    for (const [denId, den] of this.shown) {
+      const fight = this.fights.get(denId)
+      const heroId = fight?.hero?.citizenId ?? null
+      den.guards.forEach((guard, index) => {
+        if (!guard?.view.visible) return
+        const protector = fight?.protectors.find((one) => one.index === index)
+        if (protector?.state === 'Dead') return
+        // A figure stands on its feet: aim at its middle. A taller level is a larger tap.
+        const reach = Math.max(PICK_RADIUS * FOE_SCALE, guard.height * 0.55)
+        const distance = Math.hypot(guard.x - x, guard.y - guard.height * 0.45 - y)
+        if (distance <= reach && (!best || distance < best.distance))
+          best = { denId, protector: index, heroId, distance }
+      })
     }
     return best ? { denId: best.denId, protector: best.protector, heroId: best.heroId } : null
   }
@@ -320,11 +335,22 @@ export class DenLayer {
         if (!guard) continue
         const protector = fight?.protectors[index]
         if (guard.wander && !protector) {
-          // At rest a roaming foe's home is where its wander is now; it faces the way it strolls.
+          // At rest a roaming foe's home is where its wander is now; a den's protector is where its round is.
+          // It faces the way it strolls.
           const spot = guard.wander()
           if (Math.abs(spot.x - guard.homeX) > 0.01) guard.homeFacing = spot.x < guard.homeX ? -1 : 1
           guard.homeX = spot.x
           guard.homeY = spot.y
+          if (guard.orbit) {
+            guard.view.visible = true
+            guard.x = spot.x
+            guard.y = spot.y
+            guard.facing = guard.homeFacing
+            guard.view.scale.x = Math.abs(guard.view.scale.x) * guard.facing
+            guard.view.position.set(guard.x, guard.y)
+            if (sortDepth) guard.view.zIndex = guard.y
+            guard.bar.clear()
+          }
         }
         if (!protector && guard.flash === 0 && guard.lunge === 0 && guard.x === guard.homeX && guard.y === guard.homeY) continue
         guard.view.visible = protector?.state !== 'Dead'
@@ -347,13 +373,20 @@ export class DenLayer {
         }
         guard.flash = Math.max(0, guard.flash - seconds)
         guard.lunge = Math.max(0, guard.lunge - seconds)
-        const lunge = guard.lunge > 0 ? Math.sin((1 - guard.lunge / LUNGE_SECONDS) * Math.PI) * 3 : 0
+        const lunge =
+          guard.lunge > 0 ? Math.sin((1 - guard.lunge / LUNGE_SECONDS) * Math.PI) * 3 * (guard.height / LEVEL_ONE_HEIGHT) : 0
         guard.view.scale.x = Math.abs(guard.view.scale.x) * guard.facing
         guard.view.position.set(guard.x + lunge * guard.facing, guard.y)
         this.tint(guard.view, guard.flash > 0 ? HIT_TINT : 0xffffff)
         if (sortDepth) guard.view.zIndex = guard.y
         const hurt = protector && protector.health < protector.maximumHealth
-        drawBar(guard.bar, hurt ? protector.health / protector.maximumHealth : null, guard.x, guard.y - guard.view.height - 3)
+        drawBar(
+          guard.bar,
+          hurt ? protector.health / protector.maximumHealth : null,
+          guard.x,
+          guard.y - guard.height - 3,
+          Math.max(16, Math.round(guard.height * 0.5)),
+        )
       }
     }
     for (const fight of this.fights.values()) {
@@ -369,7 +402,8 @@ export class DenLayer {
       }
       fighter.x += (hero.x * TILE - fighter.x) * follow
       fighter.y += (hero.y * TILE - fighter.y) * follow
-      drawBar(fighter.bar, hero.health / hero.maximumHealth, fighter.x, fighter.y - 30)
+      const mine = hero.citizenId === this.viewerId
+      drawBar(fighter.bar, mine ? null : hero.health / hero.maximumHealth, fighter.x, fighter.y - 30)
     }
   }
 
@@ -391,7 +425,8 @@ export class DenLayer {
     if (point.roams) {
       // A roaming foe: no den, one figure walking the same wander the server checks.
       const [, cellX, cellY] = point.id.split(':').map(Number)
-      const figure = this.protectorFigure(picture, 0, Math.abs(cellX + cellY))
+      const height = levelHeight(point.level)
+      const figure = this.protectorFigure(picture, 0, Math.abs(cellX + cellY), height, facing)
       if (!figure) return den
       const walk = this.wander
       const wander = walk
@@ -401,13 +436,25 @@ export class DenLayer {
           }
         : undefined
       const start = wander?.() ?? { x: centerX, y: centerY }
-      figure.scale.x = facing * FOE_SCALE
       views.push(this.place(figure, start.x, start.y))
       const bar = new Graphics()
       bar.zIndex = Number.MAX_SAFE_INTEGER
       this.layer.addChild(bar)
       views.push(bar)
-      den.guards[0] = { view: figure, bar, homeX: start.x, homeY: start.y, x: start.x, y: start.y, facing, homeFacing: facing, flash: 0, lunge: 0, wander }
+      den.guards[0] = {
+        view: figure,
+        bar,
+        homeX: start.x,
+        homeY: start.y,
+        x: start.x,
+        y: start.y,
+        facing,
+        homeFacing: facing,
+        flash: 0,
+        lunge: 0,
+        wander,
+        height,
+      }
       return den
     }
     const ring = new Graphics()
@@ -428,30 +475,49 @@ export class DenLayer {
     if (prop) views.push(this.place(prop, centerX, centerY))
 
     const direction = Number(point.id.split(':')[1])
+    const height = levelHeight(point.level)
     for (let index = 0; index < point.protectors; index++) {
-      const figure = this.protectorFigure(picture, index, direction)
+      const figure = this.protectorFigure(picture, index, direction, height, facing)
       if (!figure) continue
-      // Protectors stand in rows on arcs in front of the prop, so the prop never covers them; a lone one stands aside
-      // so it does not cover the prop. The same places as the server's `DenGuards.Homes`.
-      const lone = facing < 0 ? Math.PI * 0.75 : Math.PI * 0.25
-      const { angle, radius } = point.protectors === 1 ? { angle: lone, radius: LONE_GUARD } : guardArc(index, point.protectors)
-      figure.scale.x = facing * FOE_SCALE
-      const homeX = centerX + Math.cos(angle) * radius * TILE
-      const homeY = centerY + Math.sin(angle) * radius * 0.6 * TILE
-      views.push(this.place(figure, homeX, homeY))
+      // The same round as the server's `DenGuards.PatrolAt`: around the den, not in a row in front of it.
+      const round = () => {
+        const spot = patrolAt(point.x + 0.5, point.y + 0.5, index, point.protectors, point.level, this.now())
+        return { x: spot.x * TILE, y: spot.y * TILE }
+      }
+      const start = round()
+      views.push(this.place(figure, start.x, start.y))
       const bar = new Graphics()
       bar.zIndex = Number.MAX_SAFE_INTEGER
       this.layer.addChild(bar)
       views.push(bar)
-      den.guards[index] = { view: figure, bar, homeX, homeY, x: homeX, y: homeY, facing, homeFacing: facing, flash: 0, lunge: 0 }
+      den.guards[index] = {
+        view: figure,
+        bar,
+        homeX: start.x,
+        homeY: start.y,
+        x: start.x,
+        y: start.y,
+        facing,
+        homeFacing: facing,
+        flash: 0,
+        lunge: 0,
+        wander: round,
+        orbit: true,
+        height,
+      }
     }
     return den
   }
 
-  private protectorFigure(picture: DenPicture, index: number, direction: number) {
+  private protectorFigure(picture: DenPicture, index: number, direction: number, height: number, facing: number) {
     const protector = picture.protector(index, direction)
     const figure = typeof protector === 'string' ? enemyFigure(protector) : foeFigure(protector)
-    figure?.scale.set(FOE_SCALE)
+    if (!figure) return null
+    const child = figure.children[0]
+    const measured = child && 'height' in child && typeof child.height === 'number' ? child.height : figure.height
+    const natural = typeof protector === 'string' ? enemyHeight(protector) : 'height' in protector ? protector.height : measured
+    const scale = natural > 1 ? height / natural : FOE_SCALE
+    figure.scale.set(facing * scale, scale)
     return figure
   }
 

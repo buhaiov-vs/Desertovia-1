@@ -104,7 +104,11 @@ public sealed partial class GameService
             return true;
         }, cancellationToken);
 
-    /// <summary>The player picks a protector of the den their citizen fights at.</summary>
+    /// <summary>
+    /// Left click on a protector or a roaming foe. In a fight already, that foe is the one struck.
+    /// Standing still at its den, the citizen steps in and strikes it. Farther off, the citizen walks there
+    /// and strikes when the fight opens. A plain walk cancels this, and deals no damage.
+    /// </summary>
     public async Task AttackDenAsync(string slug, Guid accountId, string denId, DenAttackRequest request, CancellationToken cancellationToken)
     {
         var key = await RequireCitizenAsync(slug, accountId, cancellationToken);
@@ -113,19 +117,144 @@ public sealed partial class GameService
             throw new GameRuleException("hospital.unavailable", "Wait until recovery.");
         }
 
-        var live = dens.Find(key.VillageId, denId);
-        var picked = false;
-        if (live is not null)
+        var now = time.GetUtcNow();
+        var point = dens.Locate(key.VillageId, denId)
+            ?? throw new GameRuleException("den.unknown", "There is no such foe.");
+        var count = point.Roams ? 1 : point.Protectors;
+        if (request.Protector < 0 || request.Protector >= count)
         {
+            throw new GameRuleException("den.unknown", "There is no such foe.");
+        }
+
+        if (dens.Find(key.VillageId, denId) is { } live)
+        {
+            bool mine, struck;
             lock (live.Gate)
             {
-                picked = live.Fight.Attack(key.Id, request.Protector);
+                mine = live.Fight.Fights(key.Id);
+                struck = mine && live.Fight.Attack(key.Id, request.Protector);
+            }
+
+            if (mine)
+            {
+                dens.ClearAttack(key.Id);
+                if (!struck)
+                {
+                    throw new GameRuleException("den.down", "That foe is already down.");
+                }
+
+                return;
+            }
+
+            lock (live.Gate)
+            {
+                if (live.Fight.Hero is not null)
+                {
+                    throw new GameRuleException("den.busy", "Someone is already fighting there.");
+                }
             }
         }
 
-        if (!picked)
+        var spot = dens.Stand(key.VillageId, point, request.Protector, now);
+        if (dens.Fighting(key.Id) is { } elsewhere)
         {
-            throw new GameRuleException("den.notFighting", "You are not fighting at this den.");
+            bool moved;
+            lock (elsewhere.Gate)
+            {
+                moved = elsewhere.Fight.MoveTo(key.Id, spot);
+            }
+
+            if (!moved)
+            {
+                throw new GameRuleException("spot.unreachable", "You cannot walk there.");
+            }
+
+            dens.OrderAttack(key.Id, point.Id, request.Protector);
+            return;
+        }
+
+        TilePoint position;
+        await using (var db = await contextFactory.CreateDbContextAsync(cancellationToken))
+        {
+            var citizen = await db.Citizens.AsNoTracking().SingleAsync(c => c.Id == key.Id, cancellationToken);
+            if (!DenRules.CanEngage(citizen, now))
+            {
+                throw new GameRuleException("den.unavailable", "You cannot fight right now.");
+            }
+
+            position = DenRules.Position(citizen, now);
+        }
+
+        var anchor = point.Roams ? spot : point.Center;
+        if (InReach(point, position, anchor, now))
+        {
+            if (!await EngageAttackAsync(key.VillageId, slug, accountId, key.Id, point, request.Protector, cancellationToken))
+            {
+                dens.OrderAttack(key.Id, point.Id, request.Protector);
+            }
+
+            return;
+        }
+
+        await GoToAsync(slug, accountId, new GoToRequest(spot), cancellationToken);
+        dens.OrderAttack(key.Id, point.Id, request.Protector);
+    }
+
+    /// <summary>The citizen is already in reach: open the fight and strike. False when another open is in progress.</summary>
+    private async Task<bool> EngageAttackAsync(
+        Guid villageId, string slug, Guid accountId, Guid citizenId, SpawnPoint point, int protector, CancellationToken cancellationToken)
+    {
+        var now = time.GetUtcNow();
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var citizen = await db.Citizens.AsNoTracking().SingleOrDefaultAsync(c => c.Id == citizenId && c.VillageId == villageId, cancellationToken);
+        if (citizen is null || !DenRules.CanEngage(citizen, now))
+        {
+            return false;
+        }
+
+        var position = DenRules.Position(citizen, now);
+        var anchor = point.Roams ? dens.Stand(villageId, point, 0, now) : point.Center;
+        if (!InReach(point, position, anchor, now))
+        {
+            return false;
+        }
+
+        var live = dens.Open(villageId, slug, point, now);
+        lock (live.Gate)
+        {
+            if (live.Opening || live.Fight.Hero is not null || !live.Fight.Wakes(position))
+            {
+                return false;
+            }
+
+            live.Opening = true;
+        }
+
+        try
+        {
+            if (await EngageDenAsync(new DenWaker(villageId, slug, citizenId, accountId, position), point.Id, cancellationToken) is not { } engagement)
+            {
+                return false;
+            }
+
+            lock (live.Gate)
+            {
+                if (!live.Fight.Engage(engagement.Fighter, engagement.Position, engagement.Destination))
+                {
+                    return false;
+                }
+
+                live.HeroAccountId = accountId;
+                dens.ClearAttack(citizenId);
+                return live.Fight.Attack(citizenId, protector);
+            }
+        }
+        finally
+        {
+            lock (live.Gate)
+            {
+                live.Opening = false;
+            }
         }
     }
 
@@ -150,4 +279,10 @@ public sealed partial class GameService
         var village = await db.Villages.AsNoTracking().SingleAsync(v => v.Id == citizen.VillageId, cancellationToken);
         return citizen.ToDto(village, time.GetUtcNow());
     }
+
+    /// <summary>Close enough that the den, or the roaming foe, notices the citizen.</summary>
+    private static bool InReach(SpawnPoint point, TilePoint position, TilePoint anchor, DateTimeOffset now) =>
+        point.Roams
+            ? position.DistanceTo(anchor) <= DenGuards.AggroRange
+            : DenGuards.Alerts(point, position, now);
 }

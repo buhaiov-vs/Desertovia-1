@@ -59,19 +59,20 @@ public sealed class DenRuntime
 {
     private readonly ConcurrentDictionary<(Guid VillageId, string DenId), LiveDen> dens = new();
     private readonly ConcurrentDictionary<Guid, IReadOnlyList<SpawnPoint>> points = new();
+    private readonly ConcurrentDictionary<Guid, (string DenId, int Protector)> attacks = new();
 
     public IEnumerable<LiveDen> Dens => dens.Values;
 
     public IReadOnlyList<SpawnPoint> Points(Guid villageId) =>
         points.GetOrAdd(villageId, id => SpawnRings.Points(Wilderness.Seed(id.ToString())));
 
-    /// <summary>Dens, and roaming foes where they wander at <paramref name="now"/>, within <paramref name="radius"/> of <paramref name="position"/>.</summary>
-    public IEnumerable<(SpawnPoint Point, TilePoint Where)> Near(Guid villageId, TilePoint position, double radius, DateTimeOffset now)
+    /// <summary>Dens whose ring meets <paramref name="position"/>, and roaming foes within their own reach, at <paramref name="now"/>.</summary>
+    public IEnumerable<(SpawnPoint Point, TilePoint Where)> Near(Guid villageId, TilePoint position, DateTimeOffset now)
     {
         var dens = Points(villageId);
         var seed = Wilderness.Seed(villageId.ToString());
-        return dens.Where(p => p.Center.DistanceTo(position) <= radius).Select(p => (p, p.Center))
-            .Concat(Haunts.Near(seed, position, radius, dens, now).Select(p => (p, Haunts.PositionAt(seed, p, now))));
+        return dens.Where(p => DenGuards.Alerts(p, position, now)).Select(p => (p, p.Center))
+            .Concat(Haunts.Near(seed, position, DenGuards.AggroRange, dens, now).Select(p => (p, Haunts.PositionAt(seed, p, now))));
     }
 
     /// <summary>The fight of a den or a roaming foe; a new roaming foe's fight opens where it wanders at <paramref name="now"/>.</summary>
@@ -81,9 +82,52 @@ public sealed class DenRuntime
         return dens.GetOrAdd((villageId, point.Id), _ =>
             new LiveDen(villageId, slug, new DenFight(
                 point,
-                WorldMap.Places[WorldMap.Camp],
                 (x, y) => !FarGround.Water(x, y, seed),
-                point.Roams ? Haunts.PositionAt(seed, point, now) : null)));
+                point.Roams ? Haunts.PositionAt(seed, point, now) : null,
+                now)));
+    }
+
+    /// <summary>A den by its id, or a roaming foe <c>h:cellX:cellY</c>.</summary>
+    public SpawnPoint? Locate(Guid villageId, string denId)
+    {
+        var dens = Points(villageId);
+        var den = dens.FirstOrDefault(point => point.Id == denId);
+        if (den is not null)
+        {
+            return den;
+        }
+
+        var parts = denId.Split(':');
+        if (parts.Length == 3 && parts[0] == "h" && int.TryParse(parts[1], out var cellX) && int.TryParse(parts[2], out var cellY))
+        {
+            return Haunts.At(Wilderness.Seed(villageId.ToString()), cellX, cellY, dens);
+        }
+
+        return null;
+    }
+
+    /// <summary>Where protector <paramref name="protector"/> stands now: on its round of the den, or where a roaming foe wanders.</summary>
+    public TilePoint Stand(Guid villageId, SpawnPoint point, int protector, DateTimeOffset now) =>
+        point.Roams
+            ? Haunts.PositionAt(Wilderness.Seed(villageId.ToString()), point, now)
+            : DenGuards.PatrolAt(point.Center, protector, point.Protectors, point.Level, now);
+
+    /// <summary>The citizen means to strike this protector once the fight opens.</summary>
+    public void OrderAttack(Guid citizenId, string denId, int protector) => attacks[citizenId] = (denId, protector);
+
+    /// <summary>A walk that is not an attack. The citizen will not strike when a den wakes.</summary>
+    public void ClearAttack(Guid citizenId) => attacks.TryRemove(citizenId, out _);
+
+    /// <summary>The protector ordered at this den, once. An order for another den stays.</summary>
+    public int? TakeAttack(Guid citizenId, string denId)
+    {
+        if (!attacks.TryGetValue(citizenId, out var order) || order.DenId != denId)
+        {
+            return null;
+        }
+
+        attacks.TryRemove(new KeyValuePair<Guid, (string DenId, int Protector)>(citizenId, order));
+        return order.Protector;
     }
 
     public LiveDen? Find(Guid villageId, string denId) => dens.GetValueOrDefault((villageId, denId));

@@ -65,19 +65,25 @@ public sealed class DenRuntime
     public IReadOnlyList<SpawnPoint> Points(Guid villageId) =>
         points.GetOrAdd(villageId, id => SpawnRings.Points(Wilderness.Seed(id.ToString())));
 
-    /// <summary>Dens and roaming foes whose tile is within <paramref name="radius"/> of <paramref name="position"/>.</summary>
-    public IEnumerable<SpawnPoint> Near(Guid villageId, TilePoint position, double radius)
+    /// <summary>Dens, and roaming foes where they wander at <paramref name="now"/>, within <paramref name="radius"/> of <paramref name="position"/>.</summary>
+    public IEnumerable<(SpawnPoint Point, TilePoint Where)> Near(Guid villageId, TilePoint position, double radius, DateTimeOffset now)
     {
         var dens = Points(villageId);
-        return dens.Where(p => p.Center.DistanceTo(position) <= radius)
-            .Concat(Haunts.Near(Wilderness.Seed(villageId.ToString()), position, radius, dens));
+        var seed = Wilderness.Seed(villageId.ToString());
+        return dens.Where(p => p.Center.DistanceTo(position) <= radius).Select(p => (p, p.Center))
+            .Concat(Haunts.Near(seed, position, radius, dens, now).Select(p => (p, Haunts.PositionAt(seed, p, now))));
     }
 
-    public LiveDen Open(Guid villageId, string slug, SpawnPoint point)
+    /// <summary>The fight of a den or a roaming foe; a new roaming foe's fight opens where it wanders at <paramref name="now"/>.</summary>
+    public LiveDen Open(Guid villageId, string slug, SpawnPoint point, DateTimeOffset now)
     {
         var seed = Wilderness.Seed(villageId.ToString());
         return dens.GetOrAdd((villageId, point.Id), _ =>
-            new LiveDen(villageId, slug, new DenFight(point, WorldMap.Places[WorldMap.Camp], (x, y) => !FarGround.Water(x, y, seed))));
+            new LiveDen(villageId, slug, new DenFight(
+                point,
+                WorldMap.Places[WorldMap.Camp],
+                (x, y) => !FarGround.Water(x, y, seed),
+                point.Roams ? Haunts.PositionAt(seed, point, now) : null)));
     }
 
     public LiveDen? Find(Guid villageId, string denId) => dens.GetValueOrDefault((villageId, denId));

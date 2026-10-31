@@ -67,14 +67,38 @@ public class HauntTests
     {
         var dens = SpawnRings.Points(1);
         var foe = Enumerable.Range(10, 40).Select(cell => Haunts.At(1, cell, 0, dens)).First(foe => foe is not null)!;
-        var fight = new DenFight(foe, WorldMap.Places[WorldMap.Camp], (_, _) => true);
+        var now = DateTimeOffset.UnixEpoch.AddDays(20_000).AddSeconds(7);
+        var where = Haunts.PositionAt(1, foe, now);
+        var fight = new DenFight(foe, WorldMap.Places[WorldMap.Camp], (_, _) => true, where);
 
         var protector = Assert.Single(fight.Protectors);
-        Assert.Equal(foe.Center, protector.Home);
+        Assert.Equal(where, protector.Home);
+        Assert.Equal(where, fight.Anchor);
         Assert.Equal(DenGuards.For(SpawnRings.Levels[foe.Level - 1]).Health, protector.Health);
         Assert.Equal(Haunts.Claim / 2.0, fight.Leash);
-        Assert.True(fight.Wakes(new TilePoint(foe.Center.X + DenGuards.AggroRange - 0.5, foe.Center.Y)));
-        Assert.False(fight.Wakes(new TilePoint(foe.Center.X + DenGuards.AggroRange + 0.5, foe.Center.Y)));
-        Assert.Contains(Haunts.Near(1, foe.Center, DenGuards.AggroRange, dens), near => near.Id == foe.Id);
+        Assert.True(fight.Wakes(new TilePoint(where.X + DenGuards.AggroRange - 0.5, where.Y)));
+        Assert.False(fight.Wakes(new TilePoint(where.X + DenGuards.AggroRange + 0.5, where.Y)));
+        Assert.Contains(Haunts.Near(1, where, DenGuards.AggroRange, dens, now), near => near.Id == foe.Id);
+    }
+
+    [Fact]
+    public void AFoe_WandersNearItsTile_WithoutJumping()
+    {
+        var dens = SpawnRings.Points(1);
+        var foe = Enumerable.Range(10, 40).Select(cell => Haunts.At(1, cell, 0, dens)).First(foe => foe is not null)!;
+        var start = DateTimeOffset.UnixEpoch.AddDays(20_000);
+        var seen = new HashSet<(int, int)>();
+        var last = Haunts.PositionAt(1, foe, start);
+        for (var step = 1; step <= 600; step++)
+        {
+            var here = Haunts.PositionAt(1, foe, start.AddSeconds(step));
+            Assert.True(here.DistanceTo(foe.Center) <= Haunts.WanderRadius + 1e-9);
+            // A leg is at most two radii long and is walked within three quarters of the leg.
+            Assert.True(here.DistanceTo(last) <= 2 * Haunts.WanderRadius / (Haunts.LegSeconds * 0.75) + 1e-9);
+            seen.Add(((int)Math.Floor(here.X), (int)Math.Floor(here.Y)));
+            last = here;
+        }
+
+        Assert.True(seen.Count > 10);
     }
 }

@@ -90,14 +90,15 @@ public sealed class DenWorker(
                 continue;
             }
 
-            var point = runtime.Near(waker.VillageId, waker.Position, DenGuards.AggroRange)
-                .MinBy(p => p.Center.DistanceTo(waker.Position));
+            var now = time.GetUtcNow();
+            var (point, _) = runtime.Near(waker.VillageId, waker.Position, DenGuards.AggroRange, now)
+                .MinBy(near => near.Where.DistanceTo(waker.Position));
             if (point is null)
             {
                 continue;
             }
 
-            var live = runtime.Open(waker.VillageId, waker.Slug, point);
+            var live = runtime.Open(waker.VillageId, waker.Slug, point, now);
             lock (live.Gate)
             {
                 if (live.Opening || !live.Fight.Wakes(waker.Position))

@@ -107,17 +107,23 @@ public sealed class DenFight
     private readonly Func<int, int, bool> walkable;
     private DenOutcome? released;
 
-    public DenFight(SpawnPoint point, TilePoint camp, Func<int, int, bool> walkable)
+    /// <param name="start">Where a roaming foe stands when the fight opens; it goes back there afterwards.</param>
+    public DenFight(SpawnPoint point, TilePoint camp, Func<int, int, bool> walkable, TilePoint? start = null)
     {
         Point = point;
         this.walkable = walkable;
         var guard = DenGuards.For(SpawnRings.Levels[point.Level - 1]);
-        protectors = DenGuards.Homes(point, camp)
+        var homes = point.Roams && start is { } spot ? [spot] : DenGuards.Homes(point, camp);
+        protectors = homes
             .Select((home, index) => new DenProtector { Index = index, Guard = guard, Home = home, X = home.X, Y = home.Y, Health = guard.Health })
             .ToList();
+        Anchor = point.Roams ? protectors[0].Home : point.Center;
     }
 
     public SpawnPoint Point { get; }
+
+    /// <summary>The middle of the fight: the den, or where a roaming foe stood when it opened.</summary>
+    public TilePoint Anchor { get; }
     public IReadOnlyList<DenProtector> Protectors => protectors;
     public DenHero? Hero { get; private set; }
 
@@ -129,7 +135,7 @@ public sealed class DenFight
 
     /// <summary>A hero at <paramref name="position"/> would wake this den.</summary>
     public bool Wakes(TilePoint position) =>
-        Hero is null && protectors.Any(p => p.IsAlive) && position.DistanceTo(Point.Center) <= DenGuards.AggroRange;
+        Hero is null && protectors.Any(p => p.IsAlive) && position.DistanceTo(Anchor) <= DenGuards.AggroRange;
 
     /// <summary>The hero steps into the den's reach, walking on to <paramref name="destination"/> unless the player says otherwise.</summary>
     public bool Engage(DenFighter fighter, TilePoint position, TilePoint? destination)
@@ -220,7 +226,7 @@ public sealed class DenFight
             ActHero(hero, seconds, now, random, events);
         }
 
-        if (Hero is { } awake && new TilePoint(awake.X, awake.Y).DistanceTo(Point.Center) <= DenGuards.AggroRange)
+        if (Hero is { } awake && new TilePoint(awake.X, awake.Y).DistanceTo(Anchor) <= DenGuards.AggroRange)
         {
             foreach (var protector in protectors.Where(p => p.State == DenGuardState.Home))
             {
@@ -237,7 +243,7 @@ public sealed class DenFight
         Spread();
 
         if (Hero is { } leaving && protectors.All(p => p.State != DenGuardState.Chasing)
-            && (protectors.All(p => !p.IsAlive) || new TilePoint(leaving.X, leaving.Y).DistanceTo(Point.Center) > DenGuards.AggroRange))
+            && (protectors.All(p => !p.IsAlive) || new TilePoint(leaving.X, leaving.Y).DistanceTo(Anchor) > DenGuards.AggroRange))
         {
             Release(false, 0);
         }
@@ -336,7 +342,7 @@ public sealed class DenFight
         var guard = protector.Guard;
         if (protector.State == DenGuardState.Chasing)
         {
-            if (Hero is not { } hero || new TilePoint(hero.X, hero.Y).DistanceTo(Point.Center) > Leash)
+            if (Hero is not { } hero || new TilePoint(hero.X, hero.Y).DistanceTo(Anchor) > Leash)
             {
                 protector.State = DenGuardState.Returning;
             }

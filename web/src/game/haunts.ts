@@ -7,8 +7,8 @@ import { SPAWN_LEVELS, type RingLand, type SpawnPoint } from './spawnRings.ts'
  * A foe wanders around its tile (`wanderAt`) and fights as a den with one protector of its level, starting where it walked.
  */
 
-/** Side of the square that holds one foe, in tiles. */
-export const CELL = 64
+/** Side of the square that holds one foe, in tiles: about two foes for every 64 × 64. */
+export const CELL = 45
 /** Share of foes one level below the band, and again one level above it. */
 export const NEIGHBOUR = 0.05
 /** No foe stands this close to a den, in tiles, so it never joins a den fight. */

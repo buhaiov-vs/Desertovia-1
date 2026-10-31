@@ -10,8 +10,8 @@ namespace Desertod.Domain.World;
 /// </summary>
 public static class Haunts
 {
-    /// <summary>Side of the square that holds one foe, in tiles.</summary>
-    public const int Cell = 64;
+    /// <summary>Side of the square that holds one foe, in tiles: about two foes for every 64 × 64.</summary>
+    public const int Cell = 45;
 
     /// <summary>Share of foes one level below the band, and again one level above it.</summary>
     public const double Neighbour = 0.05;

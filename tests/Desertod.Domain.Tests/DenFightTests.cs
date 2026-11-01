@@ -1,5 +1,6 @@
 using Desertod.Domain;
 using Desertod.Domain.Combat;
+using Desertod.Domain.Rules;
 using Desertod.Domain.World;
 
 namespace Desertod.Domain.Tests;
@@ -13,10 +14,10 @@ public class DenFightTests
         new(SpawnRings.Points(1).First(point => point.Level == level), (_, _) => true, now: Now);
 
     /// <summary>A fresh citizen: every stat at 0, bare hands, 32 health.</summary>
-    private static DenFighter Fresh(Guid id) => new(id, 32, 2, 0, null);
+    private static DenFighter Fresh(Guid id) => new(id, 32, 32, 2, 0, null);
 
     /// <summary>Every stat at 10, guarding at 10, a sword with full sharpening and a shield.</summary>
-    private static DenFighter Strongest(Guid id) => new(id, 72, 24, 0.4, null);
+    private static DenFighter Strongest(Guid id) => new(id, 72, 72, 24, 0.4, null);
 
     private static TilePoint Beside(DenFight den, double distance) => new(den.Point.Center.X + distance, den.Point.Center.Y);
 
@@ -108,7 +109,7 @@ public class DenFightTests
         citizen.Spot = home;
         citizen.IdleSpot = home;
         citizen.SetOut(home, village, Now);
-        var outcome = new DenOutcome(citizen.Id, fallen, home, true, 30, 1, 4, [], 0);
+        var outcome = new DenOutcome(citizen.Id, fallen, home, true, 30, 1, 4, [], 0, 0);
 
         DenRules.Settle(citizen, village, outcome, Now);
 
@@ -116,8 +117,35 @@ public class DenFightTests
         Assert.Equal(fallen, citizen.Spot);
         Assert.Null(citizen.Trip);
         Assert.True(CombatRules.IsInjured(citizen, Now));
+        Assert.Equal(0, citizen.StoredCombatHealth);
         Assert.Equal("citizen.injured", Assert.Throws<GameRuleException>(() => citizen.GoTo(home, village, Now)).Code);
         Assert.Equal(fallen, citizen.IdleSpot);
+    }
+
+    [Fact]
+    public void CombatHealth_RegeneratesToFullInThirtyMinutes_AndEngageUsesIt()
+    {
+        var village = TestWorld.NewVillage();
+        var citizen = TestWorld.NewCitizen(village);
+        var maximum = citizen.MaximumCombatHealth;
+        Assert.Equal(maximum, citizen.CurrentCombatHealth(Now));
+
+        DenRules.Settle(
+            citizen,
+            village,
+            new DenOutcome(citizen.Id, WorldMap.Places[WorldMap.Camp], null, false, 0, 0, 0, [], 0, maximum / 2),
+            Now);
+
+        Assert.Equal(maximum / 2, citizen.CurrentCombatHealth(Now));
+        // Missing half of the pool fills in 15 minutes at the 30-minute full rate.
+        Assert.Equal(maximum * 0.75, citizen.CurrentCombatHealth(Now.AddMinutes(7.5)), 6);
+        Assert.Equal(maximum, citizen.CurrentCombatHealth(Now.AddMinutes(15)), 6);
+        Assert.Equal(maximum, citizen.CurrentCombatHealth(Now.AddMinutes(GameRules.CombatHealthFullRegenerationMinutes)), 6);
+
+        citizen.SetCombatHealth(0, Now);
+        var fighter = DenRules.Fighter(citizen, Now.AddMinutes(15));
+        Assert.Equal(maximum, fighter.MaximumHealth);
+        Assert.Equal(maximum / 2, fighter.Health, 6);
     }
 
     [Fact]
@@ -202,7 +230,7 @@ public class DenFightTests
         var den = Den(2);
         var hero = Guid.NewGuid();
         var destination = Beside(den, -(den.Leash + 10));
-        den.Engage(new DenFighter(hero, 80, 4, 0, null), Beside(den, 1), destination);
+        den.Engage(new DenFighter(hero, 80, 80, 4, 0, null), Beside(den, 1), destination);
         var at = Now;
         var strayed = false;
         for (var step = 0; step < 800 && den.Hero is not null; step++)

@@ -615,6 +615,8 @@ export interface Rules {
   energyPerEndurance: number
   /** Hours to refill energy from 0 at full rest speed. */
   energyFullRegenerationHours: number
+  /** Real minutes to refill combat HP from 0 after a den fight. */
+  combatHealthFullRegenerationMinutes: number
   energyCostPerCycle: number
   /** Yield of a task done with no energy left; it gives no experience. */
   tiredYieldMultiplier: number
@@ -1308,6 +1310,11 @@ export interface Citizen {
   renown: number
   energy: number
   maximumEnergy: number
+  /** Combat HP now (regenerating after dens); the HUD and map bar use this outside a raid. */
+  health?: number
+  maximumHealth?: number
+  /** Server clock when `health` was computed, so the client can keep regenerating. */
+  healthUpdatedAt?: string
   streak: number
   taskId: string | null
   siteId: string | null

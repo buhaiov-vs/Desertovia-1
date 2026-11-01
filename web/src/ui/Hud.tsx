@@ -1,8 +1,10 @@
 import { currentEnergy } from '../energy'
+import { currentCombatHealth } from '../combatHealth'
 import { useEnergy } from './useEnergy'
 import type { CSSProperties, ReactNode } from 'react'
 import { isInjured, type Catalog, type Citizen, type CitizenSummary, type Structure, type VillageState } from '../api'
 import { useI18n } from '../i18n'
+import { useServerNow } from '../hooks'
 import { TABS, TAB_ICONS, tabsFor, type MenuTab } from './menuTabs'
 import { NextAction } from './NextAction'
 import { ProjectBanner } from './ProjectPanel'
@@ -34,7 +36,16 @@ export function TopBar({
   const i18n = useI18n()
   const { t } = i18n
   const energy = useEnergy(citizen)
+  const serverNow = citizen?.serverNow
+  const offset = serverNow ? Date.parse(serverNow) - Date.now() : 0
+  const now = useServerNow(Number.isFinite(offset) ? offset : 0)
   const fighter=village.battles?.filter(b=>!b.finishedAt&&b.phase!=='Warning').flatMap(b=>b.fighters).find(f=>f.isTsar?f.accountId===accountId:f.citizenId===citizen?.id)
+  const denHero=village.dens?.map(d=>d.hero).find(h=>h&&h.citizenId===citizen?.id)??null
+  const minutes=catalog.rules.combatHealthFullRegenerationMinutes??30
+  const regenerating=citizen&&citizen.maximumHealth!=null&&citizen.health!=null
+    ?{health:currentCombatHealth(citizen as Citizen&{health:number;maximumHealth:number},now,minutes),maximumHealth:citizen.maximumHealth}
+    :null
+  const vitals=fighter??denHero??(regenerating&&regenerating.maximumHealth>0?regenerating:null)
   const ru=i18n.language==='ru'
   return (
     <div className="hud-top">
@@ -56,7 +67,7 @@ export function TopBar({
           <span className="morale-icon" aria-hidden>☺</span><Hint text={t('hint.morale',{value:Math.round(village.morale*100),minimum:i18n.amount(catalog.rules.moraleMinimum*100),maximum:i18n.amount(catalog.rules.moraleMaximum*100)})}>{Math.round(village.morale*100)}</Hint>
         </span>
         {(citizen||accountId)&&<div className="resource-chip personal-vitals" aria-label={ru?'Мои здоровье и силы':'My health and stamina'}>
-          <Hint className="vital-line" label={ru?'Показать HP':'Show HP'} text={fighter?`HP: ${Math.ceil(fighter.health)}/${Math.ceil(fighter.maximumHealth)}`:ru?'Боевые HP доступны после вступления в бой.':'Combat HP are available after joining a battle.'}><span aria-hidden>♥</span>{fighter?<progress className="hp" value={fighter.health} max={fighter.maximumHealth} aria-label={ru?'Моё здоровье':'My health'}/>:<span className="vital-empty" aria-hidden/>}</Hint>
+          <Hint className="vital-line" label={ru?'Показать HP':'Show HP'} text={vitals?`HP: ${Math.ceil(vitals.health)}/${Math.ceil(vitals.maximumHealth)}`:ru?'Боевые HP появятся после первого боя у логова.':'Combat HP appear after your first den fight.'}><span aria-hidden>♥</span>{vitals?<progress className="hp" value={vitals.health} max={vitals.maximumHealth} aria-label={ru?'Моё здоровье':'My health'}/>:<span className="vital-empty" aria-hidden/>}</Hint>
           {citizen&&<Hint className="vital-line" label={ru?'Показать силы':'Show stamina'} text={`${ru?'Силы':'Stamina'}: ${Math.floor(energy)}/${Math.floor(citizen.maximumEnergy)}`}><span aria-hidden>⚡</span><progress className="stamina" value={energy} max={citizen.maximumEnergy} aria-label={ru?'Мои силы':'My stamina'}/></Hint>}
         </div>}
         <WeatherChip village={village} catalog={catalog} citizen={citizen} citizens={citizens} onForecast={onForecast} />

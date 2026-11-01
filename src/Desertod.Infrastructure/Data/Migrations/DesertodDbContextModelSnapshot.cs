@@ -629,6 +629,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                     b.Property<int>("Arrows")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset>("CombatHealthUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -786,6 +789,9 @@ namespace Desertod.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
+
+                    b.Property<double>("StoredCombatHealth")
+                        .HasColumnType("double precision");
 
                     b.Property<double>("StoredEnergy")
                         .HasColumnType("double precision");
@@ -3429,9 +3435,21 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<int>("CaveY");
 
+                            b1.Property<int>("CoalX");
+
+                            b1.Property<int>("CoalY");
+
+                            b1.Property<int>("IronX");
+
+                            b1.Property<int>("IronY");
+
                             b1.Property<int>("LookoutX");
 
                             b1.Property<int>("LookoutY");
+
+                            b1.Property<int>("MoonX");
+
+                            b1.Property<int>("MoonY");
 
                             b1.HasKey("VillageId");
 
@@ -3443,6 +3461,29 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("VillageId");
+
+                            b1.OwnsMany("Desertod.Domain.World.GoldDeposit", "Gold", b2 =>
+                                {
+                                    b2.Property<Guid>("WildsVillageId");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAdd();
+
+                                    b2.Property<int>("Level");
+
+                                    b2.Property<int>("Mined");
+
+                                    b2.Property<int>("X");
+
+                                    b2.Property<int>("Y");
+
+                                    b2.HasKey("WildsVillageId", "__synthesizedOrdinal");
+
+                                    b2.ToTable("Villages");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WildsVillageId");
+                                });
 
                             b1.OwnsMany("Desertod.Domain.World.MountainPass", "Passes", b2 =>
                                 {
@@ -3511,6 +3552,8 @@ namespace Desertod.Infrastructure.Data.Migrations
                                     b2.WithOwner()
                                         .HasForeignKey("WildsVillageId");
                                 });
+
+                            b1.Navigation("Gold");
 
                             b1.Navigation("Obstacles");
 

@@ -120,7 +120,7 @@ public sealed class DenWakeApiTests(DesertodApiFactory factory)
         {
             Assert.Null(live.Fight.Hero!.Target);
             Assert.All(live.Fight.Protectors, p => Assert.Equal(p.Guard.Health, p.Health));
-            Assert.True(live.Fight.Hero.Health < live.Fight.Hero.Fighter.Health);
+            Assert.True(live.Fight.Hero.Health < live.Fight.Hero.Fighter.MaximumHealth);
         }
     }
 

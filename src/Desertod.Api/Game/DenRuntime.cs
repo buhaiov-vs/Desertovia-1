@@ -43,7 +43,7 @@ public sealed class LiveDen(Guid villageId, string slug, DenFight fight)
         Id,
         Fight.Protectors.Select(p => new DenProtectorDto(p.Index, Math.Round(p.X, 2), Math.Round(p.Y, 2), Math.Round(p.Health, 1), p.Guard.Health, p.State, p.ReturnsAt)).ToList(),
         Fight.Hero is { } hero
-            ? new DenHeroDto(hero.CitizenId, Math.Round(hero.X, 2), Math.Round(hero.Y, 2), Math.Round(hero.Health, 1), hero.Fighter.Health, hero.Target)
+            ? new DenHeroDto(hero.CitizenId, Math.Round(hero.X, 2), Math.Round(hero.Y, 2), Math.Round(hero.Health, 1), hero.Fighter.MaximumHealth, hero.Target)
             : null,
         events)
     {

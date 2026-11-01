@@ -24,13 +24,15 @@ public static class DenRules
             ? trip.PositionAt(now)
             : citizen.IdleSpot ?? citizen.Trip?.To ?? WorldMap.Places[WorldMap.Camp];
 
-    /// <summary>Same health as in a village raid; the blow and the armor as the citizen carries them.</summary>
-    public static DenFighter Fighter(Citizen citizen)
+    /// <summary>Same health pool as in a village raid; HP may still be regenerating from the last den fight.</summary>
+    public static DenFighter Fighter(Citizen citizen, DateTimeOffset now)
     {
         var weapon = CombatRules.UsableWeapon(citizen);
+        var maximum = citizen.MaximumCombatHealth;
         return new DenFighter(
             citizen.Id,
-            32 + citizen.Stats.Endurance * 4,
+            citizen.CurrentCombatHealth(now),
+            maximum,
             CombatRules.Power(citizen),
             DungeonRules.Protection(citizen),
             weapon?.Kind == ResourceKind.Bow ? citizen.Arrows : null);
@@ -76,6 +78,7 @@ public static class DenRules
             citizen.SpendArrows(outcome.ArrowsSpent);
         }
 
+        citizen.SetCombatHealth(outcome.Health, now);
         citizen.Trip = null;
         if (outcome.KnockedOut)
         {

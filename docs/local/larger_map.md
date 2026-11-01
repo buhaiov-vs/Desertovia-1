@@ -269,6 +269,8 @@ A present citizen with no task who walks within 6 tiles of a den wakes all of it
 
 The citizen strikes with their usual fight power, `CombatRules.Power`, once a second, or every 1.4 seconds with a bow and arrows from 5 tiles. Health is the raid health, 32 + 4 × Endurance. Armor takes its share off every blow. Without a picked protector the citizen strikes the nearest one in reach. A tap on a protector picks it; "come here" walks the citizen inside the fight.
 
+HP left when the fight ends is kept on the citizen. It fills back to full over **30 real minutes** out of combat (linear). The next den starts from that regenerating pool, not from a free full bar. The map bar and the HUD heart stay visible until HP is full. A knock-out stores 0 HP and the usual wound timer.
+
 A slain protector gives experience to Guarding and Strength (Dexterity with a bow) and maybe loot, which stays in the citizen's hands. It comes back 30 minutes later. A citizen who falls is wounded where they lie for 20 + 2 × (level − 1) minutes, and can be carried to the hospital as after a raid. A citizen who walked into the den on the way somewhere goes on once the fight ends.
 
 Each level's whole den grows 10% in health and 2.8% in damage over the one before. A pack shares both among its protectors. A single foe strikes every 2 seconds, a pack member every 1.4.

@@ -121,8 +121,10 @@ public sealed partial class GameService
                 {
                     if(citizen!.Weapon is null)CombatRules.Arm(citizen,village);
                     var p=nav.NearestFree(citizen!.Trip?.PositionAt(now)??citizen.Spot??citizen.IdleSpot??WorldMap.Places[WorldMap.Camp]);
-                    fighter=new(){CitizenId=citizen.Id,X=p.X,Y=p.Y,Health=32+citizen.Stats.Endurance*4,
-                        MaximumHealth=32+citizen.Stats.Endurance*4,Guard=false,Active=true,NextAttackAt=now.AddSeconds(1)};
+                    fighter=new(){CitizenId=citizen.Id,X=p.X,Y=p.Y,
+                        Health=GameRules.CombatHealthBase+citizen.Stats.Endurance*GameRules.CombatHealthPerEndurance,
+                        MaximumHealth=GameRules.CombatHealthBase+citizen.Stats.Endurance*GameRules.CombatHealthPerEndurance,
+                        Guard=false,Active=true,NextAttackAt=now.AddSeconds(1)};
                     battle.Fighters.Add(fighter);
                 }
             }

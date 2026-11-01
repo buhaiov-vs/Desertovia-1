@@ -18,7 +18,9 @@ public enum DenGuardState
 /// <param name="Damage">One blow: the citizen's fight power.</param>
 /// <param name="Protection">Share of each blow the armor stops.</param>
 /// <param name="Arrows">Shots left; null when the citizen holds no bow.</param>
-public sealed record DenFighter(Guid CitizenId, double Health, double Damage, double Protection, int? Arrows);
+/// <param name="Health">HP the hero brings into this fight (may be short while regenerating).</param>
+/// <param name="MaximumHealth">Full pool for this citizen; the bar and resurrect use this.</param>
+public sealed record DenFighter(Guid CitizenId, double Health, double MaximumHealth, double Damage, double Protection, int? Arrows);
 
 public enum DenEventKind
 {
@@ -70,6 +72,7 @@ public sealed class DenHero
 
 /// <summary>What a citizen takes home from a den fight.</summary>
 /// <param name="Destination">Where the citizen was walking and did not reach; they go on there.</param>
+/// <param name="Health">HP left when the fight ended; zero when knocked out.</param>
 public sealed record DenOutcome(
     Guid CitizenId,
     TilePoint Position,
@@ -79,7 +82,8 @@ public sealed record DenOutcome(
     int Kills,
     int Experience,
     IReadOnlyList<ResourceAmount> Loot,
-    int ArrowsSpent);
+    int ArrowsSpent,
+    double Health);
 
 /// <summary>
 /// One den with its protectors, run in memory by the server. Protectors mill a few steps around the den. One who sees the
@@ -205,7 +209,7 @@ public sealed class DenFight
             return false;
         }
 
-        hero.Health = hero.Fighter.Health;
+        hero.Health = hero.Fighter.MaximumHealth;
         hero.KnockedOut = false;
         return true;
     }
@@ -470,7 +474,8 @@ public sealed class DenFight
             hero.Kills,
             hero.Experience,
             hero.Loot.Select(l => new ResourceAmount(l.Key, l.Value)).ToList(),
-            hero.ArrowsSpent);
+            hero.ArrowsSpent,
+            knockedOut ? 0 : hero.Health);
         Hero = null;
         foreach (var protector in protectors.Where(p => p.State == DenGuardState.Chasing))
         {

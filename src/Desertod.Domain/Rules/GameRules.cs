@@ -78,6 +78,13 @@ public static class GameRules
     public const double EnergyFullRegenerationHours = 12;
     public const double EnergyCostPerCycle = 1;
 
+    /// <summary>Real minutes for combat HP to refill from empty to full while out of a den fight.</summary>
+    public const double CombatHealthFullRegenerationMinutes = 30;
+
+    /// <summary>Raid and den hero health before Endurance.</summary>
+    public const double CombatHealthBase = 32;
+    public const double CombatHealthPerEndurance = 4;
+
     /// <summary>Playtest: everyone has full energy in this window, then regeneration resumes from the stored snapshot.</summary>
     public static readonly DateTimeOffset FreeEnergyFrom = new(2026, 10, 14, 0, 0, 0, TimeSpan.FromHours(-4));
     public static readonly DateTimeOffset FreeEnergyUntil = FreeEnergyFrom.AddDays(1);

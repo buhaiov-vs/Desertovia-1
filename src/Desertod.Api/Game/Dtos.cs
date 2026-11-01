@@ -426,6 +426,14 @@ public sealed record CitizenDto(
     public DateTimeOffset? MarriedSince { get; init; }
     public DateTimeOffset? ExhaustedUntil { get; init; }
     public int ExhaustedCycles { get; init; }
+
+    /// <summary>Combat HP now (regenerating after dens); the HUD and map bar use this when not in a raid.</summary>
+    public double Health { get; init; }
+
+    public double MaximumHealth { get; init; }
+
+    /// <summary>Server clock when <see cref="Health"/> was computed, so the client can keep regenerating.</summary>
+    public DateTimeOffset HealthUpdatedAt { get; init; }
 }
 
 public sealed record RulesDto(
@@ -449,6 +457,7 @@ public sealed record RulesDto(
     double EnergyBase,
     double EnergyPerEndurance,
     double EnergyFullRegenerationHours,
+    double CombatHealthFullRegenerationMinutes,
     double EnergyCostPerCycle,
     double TiredYieldMultiplier,
     double HungryExperienceMultiplier,
@@ -802,7 +811,8 @@ public static class DtoMapper
             .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value),
             DefenseSector=citizen.DefenseSector,DefenseReadyAt=citizen.DefenseReadyAt,
             HomePlotId=citizen.HomePlotId, SpouseAccountId=citizen.SpouseAccountId, SpouseName=citizen.SpouseName,
-            MarriedSince=citizen.MarriedSince, ExhaustedUntil=citizen.ExhaustedUntil, ExhaustedCycles=Energy.TiredCycles(citizen, now) };
+            MarriedSince=citizen.MarriedSince, ExhaustedUntil=citizen.ExhaustedUntil, ExhaustedCycles=Energy.TiredCycles(citizen, now),
+            Health=citizen.CurrentCombatHealth(now), MaximumHealth=citizen.MaximumCombatHealth, HealthUpdatedAt=now };
 
     public static CatalogDto Catalog(GameOptions options) => new(
         GameCatalog.Roles,
@@ -837,6 +847,7 @@ public static class DtoMapper
             GameRules.EnergyBase,
             GameRules.EnergyPerEndurance,
             GameRules.EnergyFullRegenerationHours,
+            GameRules.CombatHealthFullRegenerationMinutes,
             GameRules.EnergyCostPerCycle,
             GameRules.TiredYieldMultiplier,
             GameRules.HungryExperienceMultiplier,

@@ -39,6 +39,8 @@ public static class CharacterCreation
             CreatedAt = now,
             StoredEnergy = Energy.Maximum(stats.Endurance),
             EnergyUpdatedAt = now,
+            StoredCombatHealth = GameRules.CombatHealthBase + stats.Endurance * GameRules.CombatHealthPerEndurance,
+            CombatHealthUpdatedAt = now,
         };
     }
 

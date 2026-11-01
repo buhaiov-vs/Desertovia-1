@@ -68,6 +68,15 @@ public sealed class Citizen
     public double StoredEnergy { get; set; }
     public DateTimeOffset EnergyUpdatedAt { get; set; }
 
+    /// <summary>
+    /// Health left after the last den fight. Regenerates toward <see cref="MaximumCombatHealth"/> over
+    /// <see cref="GameRules.CombatHealthFullRegenerationMinutes"/>. Default (never set) means full.
+    /// </summary>
+    public double StoredCombatHealth { get; set; }
+
+    /// <summary>When <see cref="StoredCombatHealth"/> was last banked; default means the citizen is at full health.</summary>
+    public DateTimeOffset CombatHealthUpdatedAt { get; set; }
+
     /// <summary>Last vigor drink; the next one waits for <see cref="GameRules.VigorDrinkCooldown"/>.</summary>
     public ResourceKind? MealKind { get; set; }
     public DateTimeOffset? MealUntil { get; set; }
@@ -318,6 +327,11 @@ public sealed class Citizen
             ? Trip.PositionAt(now)
             : IdleSpot ?? WorldMap.Places[WorldMap.Camp];
         var way = OverlandPath.Find(village, from, to);
+        if (way is null)
+        {
+            throw new GameRuleException("spot.blocked", "Mountains, thickets or water block the way.");
+        }
+
         var departure = Exploration.SetOut(village.Explored, Trip, IdleSpot ?? WorldMap.Places[WorldMap.Camp], to, now, village.Wilds?.Lookout, way);
         village.Explored = departure.Explored;
         Trip = departure.Trip;
@@ -366,6 +380,43 @@ public sealed class Citizen
     public double MedicalWalk(DateTimeOffset now) => HasMedicalEffect("breakfast",now) ? .75 : HasMedicalEffect("cast",now) ? .8 : 1;
     public double MaximumEnergy => Energy.Maximum(Stats.Endurance);
     public double EnergyLimit(DateTimeOffset now) => MaximumEnergy * (HasMedicalEffect("breakfast",now) ? .8 : 1);
+
+    /// <summary>Same pool as village raids and dens: base plus Endurance.</summary>
+    public double MaximumCombatHealth =>
+        GameRules.CombatHealthBase + Stats.Endurance * GameRules.CombatHealthPerEndurance;
+
+    /// <summary>Combat HP now, regenerating from the last den settle toward the maximum.</summary>
+    public double CurrentCombatHealth(DateTimeOffset now)
+    {
+        var maximum = MaximumCombatHealth;
+        if (CombatHealthUpdatedAt == default)
+        {
+            return maximum;
+        }
+
+        if (StoredCombatHealth >= maximum)
+        {
+            return maximum;
+        }
+
+        var minutes = Math.Max(0, (now - CombatHealthUpdatedAt).TotalMinutes);
+        var gained = maximum * (minutes / GameRules.CombatHealthFullRegenerationMinutes);
+        return Math.Min(maximum, StoredCombatHealth + gained);
+    }
+
+    /// <summary>Banks regenerating combat HP before a change that needs a fresh snapshot.</summary>
+    public void FlushCombatHealth(DateTimeOffset now)
+    {
+        StoredCombatHealth = CurrentCombatHealth(now);
+        CombatHealthUpdatedAt = now;
+    }
+
+    /// <summary>Stores the HP left after a den fight (or zero when knocked out).</summary>
+    public void SetCombatHealth(double health, DateTimeOffset now)
+    {
+        StoredCombatHealth = Math.Clamp(health, 0, MaximumCombatHealth);
+        CombatHealthUpdatedAt = now;
+    }
 
     public DateTimeOffset? GraceEndsAt => CycleEndsAt + GameRules.GraceWindow;
 

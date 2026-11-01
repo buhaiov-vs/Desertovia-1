@@ -80,7 +80,7 @@ public sealed partial class GameService
 
             await notifier.CitizenUpdated(village.Slug, citizen.ToSummaryDto(now));
             changes.Mark(village.Id);
-            return new DenEngagement(DenRules.Fighter(citizen), DenRules.Position(citizen, now), destination);
+            return new DenEngagement(DenRules.Fighter(citizen, now), DenRules.Position(citizen, now), destination);
         }, cancellationToken);
 
     public Task SettleDenAsync(Guid villageId, string denId, DenOutcome outcome, CancellationToken cancellationToken) =>

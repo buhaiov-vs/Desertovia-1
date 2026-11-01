@@ -114,7 +114,9 @@ public static class RaidSimulation
             if(c.Weapon is null)CombatRules.Arm(c,village);
             var p=nav.NearestFree(position);
             battle.Fighters.Add(new(){CitizenId=c.Id,X=p.X,Y=p.Y,Guard=false,Active=true,
-                Health=32+c.Stats.Endurance*4,MaximumHealth=32+c.Stats.Endurance*4,Weapon=c.Weapon,Armor=c.Armor,Arrows=c.Arrows,NextAttackAt=at.AddSeconds(1)});
+                Health=GameRules.CombatHealthBase+c.Stats.Endurance*GameRules.CombatHealthPerEndurance,
+                    MaximumHealth=GameRules.CombatHealthBase+c.Stats.Endurance*GameRules.CombatHealthPerEndurance,
+                    Weapon=c.Weapon,Armor=c.Armor,Arrows=c.Arrows,NextAttackAt=at.AddSeconds(1)});
         }
     }
 

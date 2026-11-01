@@ -24,9 +24,9 @@ export interface MinimapMarkers {
   buildings: Array<{ x: number; y: number; width: number; height: number; finished: boolean }>
   citizens: Array<{ x: number; y: number; kind: 'you' | 'tsar' | 'citizen' }>
   camp: { x: number; y: number }
-  /** Foe dens. `level` is drawn when the minimap marks every den. */
+  /** Foe dens (square + cross on the minimap). `level` is drawn when the minimap marks every den. */
   dens: Array<{ x: number; y: number; level?: number }>
-  /** Lone foes standing on seen ground, in tiles. */
+  /** Lone foes standing on seen ground, in tiles (filled circle on the minimap). */
   standing: Array<{ x: number; y: number }>
   /** The signed-in walker, in tiles. */
   self: { x: number; y: number } | null
@@ -72,6 +72,7 @@ export class Minimap {
   private markers: MinimapMarkers | null = null
   private terrain: Uint8Array | null = null
   private seed = 1
+  private cleared = new Set<string>()
   /** Fog of war for the camp picture, one pixel per tile. */
   private fog: HTMLCanvasElement | null = null
   private fillDarkness: DarknessFill | null = null
@@ -138,6 +139,15 @@ export class Minimap {
   setTerrain(terrain: Uint8Array, seed: number) {
     this.terrain = terrain
     this.seed = seed
+    this.builtFrame = ''
+    this.draw()
+  }
+
+  /** Cleared far thickets and rockfalls, so a gate reads as open ground on the overview. */
+  setCleared(keys: Iterable<string>) {
+    const next = new Set(keys)
+    if (next.size === this.cleared.size && [...next].every((key) => this.cleared.has(key))) return
+    this.cleared = next
     this.builtFrame = ''
     this.draw()
   }
@@ -242,7 +252,7 @@ export class Minimap {
         const kind =
           tileX >= MAP_LEFT && tileX < MAP_LEFT + MAP_WIDTH && tileY >= MAP_TOP && tileY < MAP_TOP + MAP_HEIGHT
             ? (terrain[(tileY - MAP_TOP) * MAP_WIDTH + (tileX - MAP_LEFT)] as Terrain)
-            : farTerrain(tileX, tileY, this.seed)
+            : farTerrain(tileX, tileY, this.seed, this.cleared)
         const [red, green, blue] = TERRAIN_COLORS[kind] ?? TERRAIN_COLORS[Terrain.Grass]
         image.data.set([red, green, blue, 255], (row * frame.width + column) * 4)
       }
@@ -291,30 +301,11 @@ export class Minimap {
       if (this.allDens) this.drawAllDens(context, markers.dens, unit)
       else for (const den of markers.dens) {
         if (!this.inside(den.x, den.y)) continue
-        const x = xOf(den.x)
-        const y = yOf(den.y)
-        const size = unit * 2.6
-        context.fillStyle = 'rgba(255, 60, 40, 0.28)'
-        context.beginPath()
-        context.arc(x, y, size * 1.7, 0, Math.PI * 2)
-        context.fill()
-        context.beginPath()
-        context.moveTo(x, y - size)
-        context.lineTo(x + size, y)
-        context.lineTo(x, y + size)
-        context.lineTo(x - size, y)
-        context.closePath()
-        context.strokeStyle = '#fff4e0'
-        context.lineWidth = 4
-        context.stroke()
-        context.fillStyle = '#e0261c'
-        context.strokeStyle = '#1b1206'
-        context.lineWidth = 2
-        context.fill()
-        context.stroke()
+        this.drawDenMark(context, xOf(den.x), yOf(den.y), unit * 2.4, true)
       }
       for (const foe of markers.standing) {
         if (!this.inside(foe.x, foe.y)) continue
+        // Lone standing foes stay a filled circle so dens (square + cross) read as sites, not creatures.
         context.beginPath()
         context.arc(xOf(foe.x), yOf(foe.y), Math.max(unit * 1.15, 2.5), 0, Math.PI * 2)
         context.fillStyle = '#ff4d3a'
@@ -357,8 +348,41 @@ export class Minimap {
   }
 
   /**
-   * Every den as a dot at the usual scale. A den past the picture sits on its edge, in its direction from the middle,
-   * with a dimmer dot. Nearer dens go first, and a level is drawn when it would not cover one already drawn.
+   * Spawn den as a square with a cross — a site mark, not the filled circle used for a lone standing foe.
+   * `full` adds the soft glow used on the normal overview; the developer edge marks stay flatter.
+   */
+  private drawDenMark(context: CanvasRenderingContext2D, x: number, y: number, half: number, full: boolean) {
+    const size = Math.max(half, 3)
+    if (full) {
+      context.fillStyle = 'rgba(255, 60, 40, 0.28)'
+      context.beginPath()
+      context.arc(x, y, size * 1.55, 0, Math.PI * 2)
+      context.fill()
+    }
+    context.fillStyle = full ? '#e0261c' : 'rgba(224, 38, 28, 0.75)'
+    context.strokeStyle = '#fff4e0'
+    context.lineWidth = full ? 2.5 : 1.5
+    context.fillRect(x - size, y - size, size * 2, size * 2)
+    context.strokeRect(x - size, y - size, size * 2, size * 2)
+    context.strokeStyle = '#1b1206'
+    context.lineWidth = full ? 1.5 : 1
+    context.strokeRect(x - size, y - size, size * 2, size * 2)
+    const arm = size * 0.55
+    context.strokeStyle = '#fff4e0'
+    context.lineWidth = Math.max(size * 0.35, 1.5)
+    context.lineCap = 'square'
+    context.beginPath()
+    context.moveTo(x - arm, y)
+    context.lineTo(x + arm, y)
+    context.moveTo(x, y - arm)
+    context.lineTo(x, y + arm)
+    context.stroke()
+    context.lineCap = 'butt'
+  }
+
+  /**
+   * Every den as a site mark at the usual scale. A den past the picture sits on its edge, in its direction from the middle,
+   * with a dimmer mark. Nearer dens go first, and a level is drawn when it would not cover one already drawn.
    */
   private drawAllDens(context: CanvasRenderingContext2D, dens: MinimapMarkers['dens'], unit: number) {
     const frame = this.frame
@@ -376,13 +400,7 @@ export class Minimap {
     context.textAlign = 'center'
     context.textBaseline = 'middle'
     for (const dot of dots) {
-      context.beginPath()
-      context.arc(dot.x, dot.y, dot.inside ? unit * 1.6 : unit * 1.2, 0, Math.PI * 2)
-      context.fillStyle = dot.inside ? '#e0261c' : 'rgba(224, 38, 28, 0.75)'
-      context.fill()
-      context.lineWidth = 1
-      context.strokeStyle = '#fff4e0'
-      context.stroke()
+      this.drawDenMark(context, dot.x, dot.y, dot.inside ? unit * 1.5 : unit * 1.1, false)
       if (dot.den.level == null) continue
       const dx = dot.x - midX * unit
       const dy = dot.y - midY * unit

@@ -122,6 +122,8 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   const [enemyPick,setEnemyPick]=useState<{battleId:string;unitId:string;selectionToken:number;inspect:boolean}|null>(null)
   const enemySelection=useRef(0)
   const [denInspect, setDenInspect] = useState<{ denId: string; protector: number; point: SpawnPoint } | null>(null)
+  /** Den protector marked on the map after a left click or inspect. */
+  const [denMark, setDenMark] = useState<{ denId: string; protector: number } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [serverOffset, setServerOffset] = useState(0)
   const [patientFor,setPatientFor]=useState<string|null>(null)
@@ -696,7 +698,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
     villageRef.current = live.state
   })
   const citizens = useMemo(() => [...live.citizens.values()], [live.citizens])
-  const pickCitizen = useMemo(() => (id: string) => { setEnemyPick(null); if (id === PRIEST_ID) setChaplainOpen(true); else if(id===TSAR_ID&&live.state?.tsar.injuredUntil||live.citizens.get(id)?.injuredUntil||live.citizens.get(id)?.recovery?.until)setPatientFor(id); else if (tsar) setSubtitleFor(id) }, [tsar,live.citizens,live.state?.tsar.injuredUntil])
+  const pickCitizen = useMemo(() => (id: string) => { setEnemyPick(null); setDenInspect(null); setDenMark(null); if (id === PRIEST_ID) setChaplainOpen(true); else if(id===TSAR_ID&&live.state?.tsar.injuredUntil||live.citizens.get(id)?.injuredUntil||live.citizens.get(id)?.recovery?.until)setPatientFor(id); else if (tsar) setSubtitleFor(id) }, [tsar,live.citizens,live.state?.tsar.injuredUntil])
   // Only a citizen can be sent to work; the Tsar watches and walks around, players without a character just look.
   const canWork = !tsar && !!citizen
   const working = citizen?.state === 'Paused' || citizen?.state === 'Working' && !!citizen.cycleEndsAt && Date.parse(citizen.cycleEndsAt)>raidClock
@@ -720,6 +722,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
       return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk = false) => {
         setEnemyPick(null)
         setDenInspect(null)
+        setDenMark(null)
         if (!walk) {
           if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
           if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
@@ -742,6 +745,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
     return (target: WorldTarget | null, screen: { x: number; y: number }, point: TilePoint, walk = false) => {
       setEnemyPick(null)
       setDenInspect(null)
+      setDenMark(null)
       if (!walk) {
         if(point.x>=34&&point.x<=44&&point.y>=7&&point.y<=14){setMonasteryOpen(true);setPicked(null);return}
         if (target?.kind === 'building' && target.building === 'Hospital') { setHospitalOpen(true); setPicked(null); return }
@@ -764,18 +768,21 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   const pickEnemy=useCallback((battleId:string,unitId:string)=>{
     if(monasteryOpen)return
     setDenInspect(null)
+    setDenMark(null)
     setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current,inspect:false});setPicked(null)
     void api.battleOrder(slug,battleId,unitId,'intercept').catch(e=>{setNotice(i18n.error(e));window.setTimeout(()=>setNotice(null),5000)})
   },[monasteryOpen,slug,i18n])
   const inspectEnemy=useCallback((battleId:string,unitId:string)=>{
     if(monasteryOpen)return
     setDenInspect(null)
+    setDenMark(null)
     setEnemyPick({battleId,unitId,selectionToken:++enemySelection.current,inspect:true});setPicked(null)
   },[monasteryOpen])
   const pickDen = useCallback((denId: string, protector: number, heroId: string | null) => {
     setDenInspect(null)
     setEnemyPick(null)
     setPicked(null)
+    setDenMark({ denId, protector })
     if (!ownId) {
       setNotice(i18n.error(new ApiError(409, '', 'den.unavailable')))
       window.setTimeout(() => setNotice(null), 5000)
@@ -795,6 +802,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
   const inspectDen = useCallback((denId: string, protector: number, point: SpawnPoint) => {
     setEnemyPick(null)
     setPicked(null)
+    setDenMark({ denId, protector })
     setDenInspect({ denId, protector, point })
   }, [])
   // Only the isolated E2E build exposes deterministic selection setup. Vite removes
@@ -867,6 +875,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         citizens={shownCitizens}
         highlightId={citizen?.id ?? (tsar ? TSAR_ID : null)}
         viewerIsTsar={tsar}
+        ownCitizen={citizen}
         nightOverride={catalog.devTools ? nightOverride : null}
         mapRevealed={catalog.devTools && mapRevealed}
         densHighlighted={catalog.devTools && densHighlighted}
@@ -875,6 +884,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
         catalog={catalog}
         placement={placement}
         selectedEnemyId={enemyPick?.unitId??null}
+        selectedDen={denMark}
         onEnemyPick={pickEnemy}
         onEnemyInspect={inspectEnemy}
         onDenPick={pickDen}
@@ -1017,7 +1027,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
                 fight={fight}
                 canAttack={!!ownId&&(!heroId||heroId===ownId)}
                 busyReason={busyReason}
-                onAttacked={()=>setDenInspect(null)}
+                onAttacked={()=>{setDenInspect(null);setDenMark(null)}}
                 onClose={()=>setDenInspect(null)}
               />
             }

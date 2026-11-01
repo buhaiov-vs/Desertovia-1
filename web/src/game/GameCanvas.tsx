@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import type { Catalog, CitizenSummary, TileArea, TilePoint, VillageState } from '../api'
+import type { Catalog, Citizen, CitizenSummary, TileArea, TilePoint, VillageState } from '../api'
 import { useI18n } from '../i18n'
 import type { UiKey } from '../i18n/en'
 import type { SpawnPoint } from './spawnRings'
@@ -42,6 +42,8 @@ interface Props {
   highlightId: string | null
   /** The signed-in player is the Tsar, so a hurt Tsar shows their own health bar. */
   viewerIsTsar?: boolean
+  /** Signed-in citizen: map HP bar stays until combat health is full after dens. */
+  ownCitizen?: Citizen | null
   /** Development only: forces daylight (false) or night (true); null follows the village sky. */
   nightOverride?: boolean | null
   /** Development only: no fog anywhere on this screen. */
@@ -56,6 +58,8 @@ interface Props {
   minimap?: boolean
   /** Called with the id of the citizen clicked on the map; null turns clicking off. */
   selectedEnemyId?:string|null
+  /** Den protector marked with a gold ring after a left click or inspect. */
+  selectedDen?: { denId: string; protector: number } | null
   onEnemyPick?:((battleId:string,unitId:string)=>void)|null
   /** Right click or long press on a raid foe: open its card without ordering an attack. */
   onEnemyInspect?: ((battleId: string, unitId: string) => void) | null
@@ -78,6 +82,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     citizens,
     highlightId,
     viewerIsTsar = false,
+    ownCitizen = null,
     nightOverride = null,
     mapRevealed = false,
     densHighlighted = false,
@@ -87,6 +92,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
     placement = null,
     minimap = true,
     selectedEnemyId = null,
+    selectedDen = null,
     onEnemyPick = null,
     onEnemyInspect = null,
     onDenPick = null,
@@ -131,6 +137,22 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   useEffect(() => world?.setVillage(village), [world, village])
   useEffect(() => world?.setCitizens(citizens, highlightId), [world, citizens, highlightId])
   useEffect(() => world?.setViewer(viewerIsTsar), [world, viewerIsTsar])
+  useEffect(() => {
+    if (!world) return
+    const maximum = ownCitizen?.maximumHealth
+    const health = ownCitizen?.health
+    if (!ownCitizen || maximum == null || health == null || !(maximum > 0)) {
+      world.setOwnVitals(null)
+      return
+    }
+    const updatedAt = Date.parse(ownCitizen.healthUpdatedAt ?? ownCitizen.serverNow)
+    world.setOwnVitals({
+      health,
+      maximumHealth: maximum,
+      updatedAt: Number.isFinite(updatedAt) ? updatedAt : Date.now(),
+      fullRegenerationMinutes: catalog?.rules.combatHealthFullRegenerationMinutes ?? 30,
+    })
+  }, [world, ownCitizen, catalog])
   useEffect(() => world?.setNightOverride(nightOverride), [world, nightOverride])
   useEffect(() => world?.setMapRevealed(mapRevealed), [world, mapRevealed])
   useEffect(() => world?.setDensHighlighted(densHighlighted), [world, densHighlighted])
@@ -151,6 +173,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   )
   useEffect(() => world?.setPlacement(placement?.onPick ?? null, placement?.kind, placement?.private), [world, placement])
   useEffect(()=>world?.setEnemySelection(selectedEnemyId),[world,selectedEnemyId])
+  useEffect(() => world?.setDenSelection(selectedDen ?? null), [world, selectedDen])
   useEffect(()=>world?.setEnemyPick(onEnemyPick),[world,onEnemyPick])
   useEffect(() => world?.setEnemyInspect(onEnemyInspect), [world, onEnemyInspect])
   useEffect(() => world?.setDenPick(onDenPick), [world, onDenPick])

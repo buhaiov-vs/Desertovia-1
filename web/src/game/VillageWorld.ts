@@ -341,6 +341,11 @@ export class VillageWorld {
   private catalog: Catalog | null = null
   private village: VillageState | null = null
   private citizens: CitizenSummary[] = []
+  /**
+   * Signed-in player's combat HP outside a fight: regenerates toward maximum over
+   * `fullRegenerationMinutes` from `updatedAt` (Unix ms). Null when unknown or the Tsar with no body.
+   */
+  private ownVitals: { health: number; maximumHealth: number; updatedAt: number; fullRegenerationMinutes: number } | null = null
   /** Trees and bushes by tile, hidden while a building stands on them. */
   private scenery: Array<{ view: Container; x: number; y: number }> = []
   /** Standing trees of the forest area by "x,y"; they come and go with the village state. */
@@ -358,6 +363,8 @@ export class VillageWorld {
   private onPick: ((x: number, y: number) => void) | null = null
   private onEnemyPick:((battleId:string,unitId:string)=>void)|null=null
   setEnemySelection(id:string|null){this.enemies.select(id)}
+  /** Gold ring on the den protector the player left-clicked or inspected. */
+  setDenSelection(target:{denId:string;protector:number}|null){this.dens.select(target)}
   setEnemyPick(onPick:((battleId:string,unitId:string)=>void)|null){this.onEnemyPick=onPick}
   /** Right click or long press on a raid foe: open its card without ordering an attack. */
   private onEnemyInspect:((battleId:string,unitId:string)=>void)|null=null
@@ -1211,10 +1218,27 @@ export class VillageWorld {
     this.placementLayer.visible = true
   }
 
-  /** The signed-in player. Their health bar is drawn above that figure, and only while they are hurt. */
+  /** The signed-in player. Their health bar is drawn above that figure while HP is short. */
   setViewer(isTsar: boolean) {
     this.viewerIsTsar = isTsar
     this.bindViewer()
+  }
+
+  /**
+   * Combat HP of the signed-in citizen after dens. The map bar uses this when they are not in a fight,
+   * regenerating toward full from `updatedAt` over `fullRegenerationMinutes`.
+   */
+  setOwnVitals(
+    vitals: { health: number; maximumHealth: number; updatedAt: number; fullRegenerationMinutes?: number } | null,
+  ) {
+    this.ownVitals = vitals
+      ? {
+          health: vitals.health,
+          maximumHealth: vitals.maximumHealth,
+          updatedAt: vitals.updatedAt,
+          fullRegenerationMinutes: vitals.fullRegenerationMinutes ?? 30,
+        }
+      : null
   }
 
   private bindViewer() {
@@ -2659,9 +2683,15 @@ export class VillageWorld {
   private placeOwnHealth(walker: Walker, combatant: { health: number; maximumHealth: number } | null) {
     const self = this.isSelf(walker.id)
     const den = self && !combatant ? this.dens.heroVitals(walker.id) : null
-    const health = combatant?.health ?? den?.health ?? 0
-    const maximum = combatant?.maximumHealth ?? den?.maximumHealth ?? 0
-    const show = self && walker.sprite.visible && maximum > 0 && health < maximum
+    let health = combatant?.health ?? den?.health ?? 0
+    let maximum = combatant?.maximumHealth ?? den?.maximumHealth ?? 0
+    if (self && !combatant && !den && this.ownVitals && this.ownVitals.maximumHealth > 0) {
+      maximum = this.ownVitals.maximumHealth
+      const minutes = Math.max(0, (Date.now() - this.ownVitals.updatedAt) / 60_000)
+      const gained = maximum * (minutes / Math.max(1e-6, this.ownVitals.fullRegenerationMinutes))
+      health = Math.min(maximum, this.ownVitals.health + gained)
+    }
+    const show = self && walker.sprite.visible && maximum > 0 && health < maximum - 1e-6
     if (!show) {
       if (walker.bar.visible) walker.bar.clear()
       walker.bar.visible = false

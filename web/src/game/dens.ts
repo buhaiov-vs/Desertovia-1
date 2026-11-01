@@ -100,6 +100,13 @@ function drawBar(bar: Graphics, share: number | null, x: number, y: number, widt
     .fill({ color: share > 0.5 ? 0x6fcf4a : share > 0.25 ? 0xe0b83a : 0xd8432f })
 }
 
+/** Gold ring around a left-clicked protector, matching the raid foe selection mark. */
+function drawMark(bar: Graphics, guard: { x: number; y: number; height: number }, on: boolean) {
+  if (!on) return
+  const radius = Math.max(14, guard.height * 0.55)
+  bar.circle(guard.x, guard.y - guard.height * 0.45, radius).stroke({ color: 0xffd75b, width: 2 })
+}
+
 interface Guard {
   view: Container
   bar: Graphics
@@ -158,10 +165,17 @@ export class DenLayer {
   private wander: ((foe: SpawnPoint, unixMs: number) => { x: number; y: number }) | null = null
   /** Server time now, in Unix milliseconds, so the wander matches the one the server checks. */
   private now: () => number = () => Date.now()
+  /** Protector the player left-clicked or inspected; drawn with a gold ring. */
+  private selected: { denId: string; protector: number } | null = null
 
   constructor(layer: Container, marks: Container) {
     this.layer = layer
     this.marks = marks
+  }
+
+  /** Marks one protector, or clears the mark when `null`. */
+  select(target: { denId: string; protector: number } | null) {
+    this.selected = target
   }
 
   /** Every den, explored or not. */
@@ -390,9 +404,16 @@ export class DenLayer {
             guard.view.position.set(guard.x, guard.y)
             if (sortDepth) guard.view.zIndex = guard.y
             guard.bar.clear()
+            drawMark(guard.bar, guard, this.selected?.denId === id && this.selected.protector === index)
           }
         }
-        if (!protector && guard.flash === 0 && guard.lunge === 0 && guard.x === guard.homeX && guard.y === guard.homeY) continue
+        if (!protector && guard.flash === 0 && guard.lunge === 0 && guard.x === guard.homeX && guard.y === guard.homeY) {
+          if (!(guard.orbit && guard.wander)) {
+            guard.bar.clear()
+            drawMark(guard.bar, guard, this.selected?.denId === id && this.selected.protector === index)
+          }
+          continue
+        }
         guard.view.visible = protector?.state !== 'Dead'
         if (protector?.state === 'Dead') {
           guard.x = guard.homeX
@@ -427,6 +448,7 @@ export class DenLayer {
           guard.y - guard.height - 3,
           Math.max(16, Math.round(guard.height * 0.5)),
         )
+        drawMark(guard.bar, guard, this.selected?.denId === id && this.selected.protector === index)
       }
     }
     for (const fight of this.fights.values()) {

@@ -2683,6 +2683,15 @@ export class VillageWorld {
   private placeOwnHealth(walker: Walker, combatant: { health: number; maximumHealth: number } | null) {
     const self = this.isSelf(walker.id)
     const den = self && !combatant ? this.dens.heroVitals(walker.id) : null
+    // Keep the wound when the den snapshot drops the hero, until the citizen reload arrives.
+    if (self && den && den.maximumHealth > 0) {
+      this.ownVitals = {
+        health: den.health,
+        maximumHealth: den.maximumHealth,
+        updatedAt: Date.now(),
+        fullRegenerationMinutes: this.ownVitals?.fullRegenerationMinutes ?? 30,
+      }
+    }
     let health = combatant?.health ?? den?.health ?? 0
     let maximum = combatant?.maximumHealth ?? den?.maximumHealth ?? 0
     if (self && !combatant && !den && this.ownVitals && this.ownVitals.maximumHealth > 0) {
@@ -2884,8 +2893,9 @@ export class VillageWorld {
       const dy = goal.y - walker.y
       const distance = Math.hypot(dx, dy)
       const sample=this.fighterSamples.get(walker.id)
+      // A den fight already places the walker on the server path; do not walk again or dx/0 turns into NaN and the sprite blinks.
       const moving = combatant&&sample?fighterIsMoving(sample,performance.now()):denFighter?denStep>.05:distance>0.5
-      if (moving&&!combatant) {
+      if (moving && !combatant && !denFighter && distance > 0) {
         const step = Math.min(distance, speed * seconds)
         walker.x += (dx / distance) * step
         walker.y += (dy / distance) * step
@@ -2902,10 +2912,11 @@ export class VillageWorld {
       const strikeAt=combatant?.nextAttackAt?Date.parse(combatant.nextAttackAt)-(combatant.weapon==='Bow'?2500:2000):0
       const strike=combatant&&!moving?Math.sin(Math.max(0,Math.min(1,(now-strikeAt)/240))*Math.PI)*3:0
       const bob = strike>0?-strike:moving ? Math.abs(Math.sin(walker.phase)) * -1.5 : walker.working ? Math.max(0, Math.sin(walker.phase)) * -1.5 : 0
-      // Slow fighters need subpixel world motion; Pixi still aligns the final screen pixels.
-      walker.sprite.position.set(combatant?walker.x:Math.round(walker.x), combatant?walker.y+bob:Math.round(walker.y + bob))
+      // Slow fighters and den heroes need subpixel world motion; Pixi still aligns the final screen pixels.
+      const liveFight = !!(combatant || denFighter)
+      walker.sprite.position.set(liveFight?walker.x:Math.round(walker.x), liveFight?walker.y+bob:Math.round(walker.y + bob))
       if (sortDepth) walker.sprite.zIndex = walker.y + 0.5
-      walker.icon.position.set(combatant?walker.x:Math.round(walker.x), combatant?walker.y-22:Math.round(walker.y - 22))
+      walker.icon.position.set(liveFight?walker.x:Math.round(walker.x), liveFight?walker.y-22:Math.round(walker.y - 22))
 
       const head = this.world.toGlobal({ x: walker.x, y: walker.y - (walker.icon.visible && walker.icon.children.length > 0 ? 29 : 16) })
       const subtitleHeight = walker.subtitle.visible ? walker.subtitle.height - 2 : 0

@@ -5,6 +5,8 @@ namespace Desertod.Domain.World;
 /// A course keeps a general heading, bends a little as it goes, and splits off thinner branches.
 /// Most of its length is one tile wide, and here and there it swells gradually to a broad stretch.
 /// A few mountain regions stand as solid massifs, with ranges running out of them.
+/// Every other pass across a range is an open saddle and the rest are rockfall to clear. A massif is cut by
+/// alternating open valleys and rockfall lines, and rivers and thickets have open gaps, so the whole land can be walked.
 /// The web client's farWilds.ts computes the same tiles.
 /// The camp picture stays open, and each course keeps a stretch of open country around the camp.
 /// </summary>
@@ -22,11 +24,14 @@ public static class FarWilds
     /// <summary>Thickets grow in most of the squares of this size.</summary>
     private const int ThicketRegion = 1000;
 
-    /// <summary>Rockfall passes cut a massif along lines this far apart.</summary>
+    /// <summary>Valleys and rockfall passes cut a massif along lines this far apart.</summary>
     private const int MassifPassSpacing = 40;
 
-    /// <summary>A range cuts a rockfall pass once this much of its cross-section has grown since the last one.</summary>
-    private const double GateLoad = 600;
+    /// <summary>A course cuts a pass, ford or gap once this much of its cross-section has grown since the last one.</summary>
+    private const double GateLoad = 400;
+
+    /// <summary>An open saddle, valley or ford. It reads as open ground, and no later course paints over it.</summary>
+    private const Kind Saddle = (Kind)byte.MaxValue;
 
     private static readonly Shape Range = new(0.15, 80, 0.6, 2, 150, 250, [7.5, 3.5, 1.5], 150, 0.4, 0);
     private static readonly Shape Thicket = new(0.3, 40, 0.6, 1, 50, 70, [5, 2], 80, 0.35, 0.1);
@@ -267,7 +272,7 @@ public static class FarWilds
             var prev = map.Get(x, y);
             if (prev != Kind.Open)
             {
-                if (prev == Kind.Rockfall)
+                if (prev is Saddle or Kind.Rockfall)
                 {
                     return;
                 }
@@ -298,6 +303,14 @@ public static class FarWilds
             var dx = x - 15;
             var dy = y - 13;
             return dx * dx + dy * dy >= reach * reach && !InVale(x, y);
+        }
+
+        void Open(int x, int y)
+        {
+            if (OnLand(x, y) && !InVale(x, y))
+            {
+                map.Set(x, y, Saddle);
+            }
         }
 
         void Disk(int x, int y, double radius, Kind kind, Shape shape, int salt, int reach)
@@ -397,6 +410,7 @@ public static class FarWilds
             var gateEvery = 100 + (int)Math.Floor(Roll(seed, id, salt, 4) * 40);
             var load = 0.0;
             var sinceGate = 0;
+            var gates = 0;
             var px = x;
             var py = y;
             for (var step = 0; step < length; step++)
@@ -409,17 +423,31 @@ public static class FarWilds
                 var radius = HalfWidth(id, salt, step, length, kind, depth, shape);
                 load += 2 * radius + 1;
                 sinceGate++;
-                if (kind == Kind.Mountain && step > 6 && (load >= GateLoad || sinceGate >= gateEvery))
+                if (step > 6 && (load >= GateLoad || sinceGate >= gateEvery))
                 {
                     load = 0;
                     sinceGate = 0;
-                    Paint(px, py, Kind.Rockfall);
+                    var opening = kind != Kind.Mountain || gates % 2 == 1;
+                    gates++;
+                    void Mark(int gx, int gy)
+                    {
+                        if (opening)
+                        {
+                            Open(gx, gy);
+                        }
+                        else
+                        {
+                            Paint(gx, gy, Kind.Rockfall);
+                        }
+                    }
+
+                    Mark(px, py);
                     var spoke = (int)Math.Floor(radius * 1.5) + 2;
                     for (var side = 0; side < 8; side += 2)
                     {
                         for (var n = 1; n <= spoke; n++)
                         {
-                            Paint(px + Dx8[side] * n, py + Dy8[side] * n, Kind.Rockfall);
+                            Mark(px + Dx8[side] * n, py + Dy8[side] * n);
                         }
                     }
                 }
@@ -487,14 +515,14 @@ public static class FarWilds
             Grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.ChildMin, shape.ChildSpan, shape.ForkChance);
         }
 
-        // Turns the massif's mountain tiles on one line into rockfall, so the massif can be crossed once it is cleared.
-        void Pass(int x, int y, int dx, int dy, int length)
+        // Turns the massif's mountain tiles on one line into an open valley, or into rockfall that opens once it is cleared.
+        void Pass(int x, int y, int dx, int dy, int length, bool valley)
         {
             for (var n = 0; n <= length; n++)
             {
                 if (map.Get(x + dx * n, y + dy * n) == Kind.Mountain)
                 {
-                    map.Set(x + dx * n, y + dy * n, Kind.Rockfall);
+                    map.Set(x + dx * n, y + dy * n, valley ? Saddle : Kind.Rockfall);
                 }
             }
         }
@@ -529,14 +557,14 @@ public static class FarWilds
             var top = origin.Y - radius * 2;
             var firstX = left + (int)Math.Floor(Roll(seed, index, 130, 9) * MassifPassSpacing);
             var firstY = top + (int)Math.Floor(Roll(seed, index, 130, 10) * MassifPassSpacing);
-            for (var x = firstX; x <= origin.X + radius * 2; x += MassifPassSpacing)
+            for (int x = firstX, line = 0; x <= origin.X + radius * 2; x += MassifPassSpacing, line++)
             {
-                Pass(x, top, 0, 1, radius * 4);
+                Pass(x, top, 0, 1, radius * 4, line % 2 == 1);
             }
 
-            for (var y = firstY; y <= origin.Y + radius * 2; y += MassifPassSpacing)
+            for (int y = firstY, line = 0; y <= origin.Y + radius * 2; y += MassifPassSpacing, line++)
             {
-                Pass(left, y, 1, 0, radius * 4);
+                Pass(left, y, 1, 0, radius * 4, line % 2 == 1);
             }
         }
 
@@ -648,7 +676,7 @@ public static class FarWilds
                         for (var dy = 0; dy < Size; dy++)
                         {
                             var kind = chunk[(dx << Shift) | dy];
-                            if (kind == (byte)Kind.Open)
+                            if (kind is (byte)Kind.Open or (byte)Saddle)
                             {
                                 continue;
                             }

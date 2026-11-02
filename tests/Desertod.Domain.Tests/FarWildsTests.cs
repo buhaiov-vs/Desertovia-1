@@ -120,6 +120,34 @@ public class FarWildsTests
         }
     }
 
+    [Theory]
+    [InlineData(1u)]
+    [InlineData(2u)]
+    [InlineData(3u)]
+    [InlineData(7u)]
+    [InlineData(2166136261u)]
+    public void Walker_ReachesEveryEdgeOfTheLand_WithoutClearingAnything(uint seed)
+    {
+        var land = WorldMap.Land;
+        var camp = WorldMap.Places[WorldMap.Camp];
+        var terrain = new byte[AuthoredTerrain.Width * AuthoredTerrain.Height];
+        (int X, int Y)[] edges =
+        [
+            ((int)camp.X, land.Y + 8),
+            ((int)camp.X, land.Y + land.Height - 9),
+            (land.X + 8, (int)camp.Y),
+            (land.X + land.Width - 9, (int)camp.Y),
+        ];
+        foreach (var edge in edges)
+        {
+            var goal = NearestOpen(seed, edge.X, edge.Y);
+            var to = new TilePoint(goal.X + 0.5, goal.Y + 0.5);
+            var way = OverlandPath.Find(terrain, camp, to, true, [], seed);
+            Assert.True(way is not null, $"seed {seed} cannot reach {goal.X},{goal.Y}");
+            Assert.Equal(to, way![^1]);
+        }
+    }
+
     [Fact]
     public void UnclearedRange_StopsAWalker_AndAClearedRockfallOpensIt()
     {
@@ -181,6 +209,23 @@ public class FarWildsTests
         }
 
         Assert.Equal(1845036419u, hash);
+    }
+
+    private static (int X, int Y) NearestOpen(uint seed, int x, int y)
+    {
+        for (var radius = 0; ; radius++)
+        {
+            for (var dy = -radius; dy <= radius; dy++)
+            {
+                for (var dx = -radius; dx <= radius; dx++)
+                {
+                    if (FarWilds.At(x + dx, y + dy, seed) == FarWilds.Kind.Open)
+                    {
+                        return (x + dx, y + dy);
+                    }
+                }
+            }
+        }
     }
 
     private static int Neighbours(uint seed, int x, int y, Func<FarWilds.Kind, bool> accept)

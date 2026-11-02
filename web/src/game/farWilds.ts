@@ -3,6 +3,8 @@
  * A course keeps a general heading, bends a little as it goes, and splits off thinner branches.
  * Most of its length is one tile wide, and here and there it swells gradually to a broad stretch.
  * A few mountain regions stand as solid massifs, with ranges running out of them.
+ * Every other pass across a range is an open saddle and the rest are rockfall to clear. A massif is cut by
+ * alternating open valleys and rockfall lines, and rivers and thickets have open gaps, so the whole land can be walked.
  * The same seed draws the same tiles. The server's FarWilds computes the same tiles. The camp picture
  * stays open, and each course keeps a stretch of open country around the camp.
  */
@@ -21,10 +23,10 @@ const MASSIFS = 8
 const RANGE_REGION = 3000
 /** Thickets grow in most of the squares of this size. */
 const THICKET_REGION = 1000
-/** Rockfall passes cut a massif along lines this far apart. */
+/** Valleys and rockfall passes cut a massif along lines this far apart. */
 const MASSIF_PASS_SPACING = 40
-/** A range cuts a rockfall pass once this much of its cross-section has grown since the last one. */
-const GATE_LOAD = 600
+/** A course cuts a pass, ford or gap once this much of its cross-section has grown since the last one. */
+const GATE_LOAD = 400
 
 const DX = [1, 0, -1, 0]
 const DY = [0, -1, 0, 1]
@@ -91,19 +93,25 @@ function tileKey(x: number, y: number) {
   return ((x + 8000) << 16) | ((y + 8000) & 0xffff)
 }
 
-const courses = new Map<number, Map<number, FarKind>>()
+/** An open saddle, valley or ford. It reads as open ground, and no later course paints over it. */
+type Painted = FarKind | 'saddle'
+
+const courses = new Map<number, Map<number, Painted>>()
 
 function build(seed: number) {
-  const map = new Map<number, FarKind>()
+  const map = new Map<number, Painted>()
   const paint = (x: number, y: number, kind: FarKind) => {
     if (!onLand(x, y) || inVale(x, y)) return
     const key = tileKey(x, y)
     const prev = map.get(key)
-    if (prev === 'rockfall') return
+    if (prev === 'saddle' || prev === 'rockfall') return
     if (prev === 'mountain' && kind !== 'rockfall') return
     if (kind === 'thicket' && prev) return
     if (kind === 'water' && prev) return
     map.set(key, kind)
+  }
+  const open = (x: number, y: number) => {
+    if (onLand(x, y) && !inVale(x, y)) map.set(tileKey(x, y), 'saddle')
   }
   const disk = (x: number, y: number, radius: number, kind: FarKind, shape: Shape, salt: number, reach: number) => {
     const span = Math.floor(radius)
@@ -168,6 +176,7 @@ function build(seed: number) {
     const gateEvery = 100 + Math.floor(farWildRoll(seed, id, salt, 4) * 40)
     let load = 0
     let sinceGate = 0
+    let gates = 0
     let px = x
     let py = y
     for (let step = 0; step < length; step++) {
@@ -175,13 +184,15 @@ function build(seed: number) {
       const radius = halfWidth(id, salt, step, length, kind, depth, shape)
       load += 2 * radius + 1
       sinceGate++
-      if (kind === 'mountain' && step > 6 && (load >= GATE_LOAD || sinceGate >= gateEvery)) {
+      if (step > 6 && (load >= GATE_LOAD || sinceGate >= gateEvery)) {
         load = 0
         sinceGate = 0
-        paint(px, py, 'rockfall')
+        const mark = kind !== 'mountain' || gates % 2 === 1 ? open : (gx: number, gy: number) => paint(gx, gy, 'rockfall')
+        gates++
+        mark(px, py)
         const spoke = Math.floor(radius * 1.5) + 2
         for (let side = 0; side < 8; side += 2) {
-          for (let n = 1; n <= spoke; n++) paint(px + DX8[side] * n, py + DY8[side] * n, 'rockfall')
+          for (let n = 1; n <= spoke; n++) mark(px + DX8[side] * n, py + DY8[side] * n)
         }
       }
       disk(px, py, radius, kind, shape, salt, reach)
@@ -222,11 +233,11 @@ function build(seed: number) {
     const dir = Math.floor(farWildRoll(seed, id, salt, 3) * 8)
     grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.childMin, shape.childSpan, shape.forkChance)
   }
-  /** Turns the massif's mountain tiles on one line into rockfall, so the massif can be crossed once it is cleared. */
-  const pass = (x: number, y: number, dx: number, dy: number, length: number) => {
+  /** Turns the massif's mountain tiles on one line into an open valley, or into rockfall that opens once it is cleared. */
+  const pass = (x: number, y: number, dx: number, dy: number, length: number, valley: boolean) => {
     for (let n = 0; n <= length; n++) {
       const key = tileKey(x + dx * n, y + dy * n)
-      if (map.get(key) === 'mountain') map.set(key, 'rockfall')
+      if (map.get(key) === 'mountain') map.set(key, valley ? 'saddle' : 'rockfall')
     }
   }
 
@@ -252,8 +263,8 @@ function build(seed: number) {
     const top = origin.y - radius * 2
     const firstX = left + Math.floor(farWildRoll(seed, index, 130, 9) * MASSIF_PASS_SPACING)
     const firstY = top + Math.floor(farWildRoll(seed, index, 130, 10) * MASSIF_PASS_SPACING)
-    for (let x = firstX; x <= origin.x + radius * 2; x += MASSIF_PASS_SPACING) pass(x, top, 0, 1, radius * 4)
-    for (let y = firstY; y <= origin.y + radius * 2; y += MASSIF_PASS_SPACING) pass(left, y, 1, 0, radius * 4)
+    for (let x = firstX, line = 0; x <= origin.x + radius * 2; x += MASSIF_PASS_SPACING, line++) pass(x, top, 0, 1, radius * 4, line % 2 === 1)
+    for (let y = firstY, line = 0; y <= origin.y + radius * 2; y += MASSIF_PASS_SPACING, line++) pass(left, y, 1, 0, radius * 4, line % 2 === 1)
   }
   const rangeSquares = (FAR_LAND_SIDE / RANGE_REGION) ** 2
   for (let index = 0; index < rangeSquares; index++) {
@@ -303,7 +314,8 @@ function mapFor(seed: number) {
 /** Mountain, thicket, rockfall, river or open ground. The camp picture is always open. */
 export function farKind(x: number, y: number, seed: number): FarKind {
   if (!onLand(x, y) || inVale(x, y)) return 'open'
-  return mapFor(seed).get(tileKey(x, y)) ?? 'open'
+  const kind = mapFor(seed).get(tileKey(x, y))
+  return kind === undefined || kind === 'saddle' ? 'open' : kind
 }
 
 /** A mountain, thicket or rockfall blocks a walk until it is cleared. A river is water, not a clearing. */

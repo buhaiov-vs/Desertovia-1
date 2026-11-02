@@ -91,7 +91,7 @@ import {
 const WORLD_WIDTH = LAND_WIDTH * TILE
 const WORLD_HEIGHT = LAND_HEIGHT * TILE
 /** The furthest zoom still shows at most this many tiles across, so the view never asks for the whole land. */
-const WIDEST_VIEW_TILES = 128
+const WIDEST_VIEW_TILES = 256
 const WALK_SPEED = 26
 /** Hunters run after their prey; near the end of the chase they go faster if they must to reach it in time. */
 const RUN_SPEED = 44
@@ -115,8 +115,8 @@ const VEIN_NUGGETS: Array<[number, number]> = [
   [1.6, 1.0],
 ]
 const LABEL_FONT = 'system-ui, "Segoe UI", sans-serif'
-/** Closest zoom: one tile is 4 × 16 = 64 screen pixels. */
-const MAXIMUM_SCALE = 4
+/** Closest zoom: one tile is 8 × 16 = 128 screen pixels. */
+const MAXIMUM_SCALE = 8
 /** Tiles across the screen width at the start. */
 const DEFAULT_VIEW_TILES = 34
 const MINIMUM_DEFAULT_TILE_PIXELS = 28

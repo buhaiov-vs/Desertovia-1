@@ -6,7 +6,8 @@ namespace Desertod.Domain.World;
 /// Lone foes haunting the land around the village and between the den rings. The land is cut into squares of
 /// <see cref="Cell"/> tiles; each square holds one foe at a seeded random tile. Its band is the highest ring whose floor
 /// that tile reaches, and the first band inside the first ring, so level 1 foes roam right outside the vale; the foe
-/// is of the band's level, or one level below or above it by <see cref="Neighbour"/> each. Nothing is stored: the same
+/// is of the band's level, one level below it by <see cref="Below"/>, or up to four levels above it by
+/// <see cref="Above"/>, so a careless pull can wake a much stronger foe. Nothing is stored: the same
 /// seed always places the same foes, and the browser's <c>haunts.ts</c> places them on the same tiles.
 /// A foe wanders around its tile (<see cref="PositionAt"/>) and fights as a den with one protector of its level,
 /// starting where it walked; after the fight it goes back there and wanders on.
@@ -16,8 +17,11 @@ public static class Haunts
     /// <summary>Side of the square that holds one foe, in tiles: about two foes for every 64 × 64.</summary>
     public const int Cell = 45;
 
-    /// <summary>Share of foes one level below the band, and again one level above it.</summary>
-    public const double Neighbour = 0.05;
+    /// <summary>Share of foes one level below the band.</summary>
+    public const double Below = 0.05;
+
+    /// <summary>Levels above the band and the share of foes of each: the further above, the rarer.</summary>
+    public static IReadOnlyList<(int Levels, double Share)> Above { get; } = [(4, 0.03), (3, 0.06), (2, 0.09), (1, 0.12)];
 
     /// <summary>No foe stands this close to a den, in tiles, so it never joins a den fight.</summary>
     public const double DenClearance = 40;
@@ -105,10 +109,29 @@ public static class Haunts
             return null;
         }
 
-        var mix = Roll(seed, cellX, cellY, 2);
-        var level = mix < Neighbour ? Math.Max(1, band - 1) : mix < 2 * Neighbour ? Math.Min(levels.Count, band + 1) : band;
-        var ring = levels[level - 1];
+        var ring = levels[LevelOf(band, Roll(seed, cellX, cellY, 2)) - 1];
         return new SpawnPoint($"h:{cellX}:{cellY}", ring.Level, ring.Name, ring.Kind, 1, Claim, x, y, Roams: true);
+    }
+
+    /// <summary>The level of a foe of <paramref name="band"/> for a <paramref name="mix"/> in [0, 1), within the known levels.</summary>
+    public static int LevelOf(int band, double mix)
+    {
+        if (mix < Below)
+        {
+            return Math.Max(1, band - 1);
+        }
+
+        var share = Below;
+        foreach (var (levels, chance) in Above)
+        {
+            share += chance;
+            if (mix < share)
+            {
+                return Math.Min(SpawnRings.Levels.Count, band + levels);
+            }
+        }
+
+        return band;
     }
 
     /// <summary>Foes that wander within <paramref name="radius"/> of <paramref name="position"/> at <paramref name="now"/>.</summary>

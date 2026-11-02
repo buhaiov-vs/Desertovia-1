@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { farTaken } from '../src/game/farWilds.ts'
-import { CELL, DEN_CLEARANCE, LEG_SECONDS, VALE_CLEARANCE, WANDER_RADIUS, fromVale, hauntAt, hauntsIn, wanderAt } from '../src/game/haunts.ts'
+import { CELL, DEN_CLEARANCE, LEG_SECONDS, VALE_CLEARANCE, WANDER_RADIUS, fromVale, hauntAt, hauntsIn, levelOf, wanderAt } from '../src/game/haunts.ts'
 import { SPAWN_LEVELS, spawnPoints } from '../src/game/spawnRings.ts'
 
 const side = 12_000
@@ -21,7 +21,21 @@ test('roaming foes match the ones the server places', () => {
   }
 })
 
-test('nine in ten foes are of their band, the rest one level off', () => {
+test('a foe is rarer the further above its band it is', () => {
+  const counts = new Map<number, number>()
+  for (let step = 0; step < 10_000; step++) {
+    const level = levelOf(10, (step + 0.5) / 10_000)
+    counts.set(level, (counts.get(level) ?? 0) + 1)
+  }
+  assert.deepEqual(
+    [9, 10, 11, 12, 13, 14].map((level) => counts.get(level)),
+    [500, 6_500, 1_200, 900, 600, 300],
+  )
+  assert.equal(levelOf(SPAWN_LEVELS.length - 1, 0.06), SPAWN_LEVELS.length)
+  assert.equal(levelOf(1, 0), 1)
+})
+
+test('about two in three foes are of their band, the rest one below or up to four above', () => {
   const dens = spawnPoints(7, ring)
   let own = 0
   let off = 0
@@ -31,14 +45,14 @@ test('nine in ten foes are of their band, the rest one level off', () => {
       if (!foe) continue
       const distance = Math.hypot(foe.x + 0.5 - ring.camp.x, foe.y + 0.5 - ring.camp.y)
       const band = Math.max(1, SPAWN_LEVELS.filter((level) => level.floor <= distance).length)
-      assert.ok(Math.abs(foe.level - band) <= 1, foe.id)
+      assert.ok(foe.level >= band - 1 && foe.level <= band + 4, foe.id)
       if (foe.level === band) own++
       else off++
       assert.ok(dens.every((den) => Math.hypot(den.x - foe.x, den.y - foe.y) >= DEN_CLEARANCE), foe.id)
     }
   }
   const share = off / (own + off)
-  assert.ok(share > 0.07 && share < 0.13, `off-level share ${share}`)
+  assert.ok(share > 0.3 && share < 0.4, `off-level share ${share}`)
 })
 
 test('a foe wanders near its tile and keeps moving, without jumps', () => {
@@ -63,7 +77,7 @@ test('level 1 foes roam around the vale inside the first ring, clear of it, one 
   const near = hauntsIn(1, { x: -700, y: -700, width: 1400, height: 1400 }, ring, dens)
   const inner = near.filter((foe) => Math.hypot(foe.x + 0.5 - ring.camp.x, foe.y + 0.5 - ring.camp.y) < SPAWN_LEVELS[0].floor)
   assert.ok(inner.length > 100, `${inner.length} foes inside the first ring`)
-  assert.ok(inner.every((foe) => foe.level <= 2))
+  assert.ok(inner.every((foe) => foe.level <= 5))
   for (const foe of near) {
     assert.ok(fromVale(foe.x + 0.5, foe.y + 0.5) >= VALE_CLEARANCE, foe.id)
     const [, x, y] = foe.id.split(':').map(Number)

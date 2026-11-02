@@ -4,14 +4,16 @@ import { SPAWN_LEVELS, type RingLand, type SpawnPoint } from './spawnRings.ts'
  * Lone foes haunting the land around the village and between the den rings, as the server's `Haunts` places them.
  * The land is cut into squares of `CELL` tiles; each square holds one foe at a seeded random tile. Its band is the
  * highest ring whose floor that tile reaches, and the first band inside the first ring; the foe is of the band's
- * level, or one level below or above it by `NEIGHBOUR` each.
+ * level, one level below it by `BELOW`, or up to four levels above it by `ABOVE`.
  * A foe wanders around its tile (`wanderAt`) and fights as a den with one protector of its level, starting where it walked.
  */
 
 /** Side of the square that holds one foe, in tiles: about two foes for every 64 × 64. */
 export const CELL = 45
-/** Share of foes one level below the band, and again one level above it. */
-export const NEIGHBOUR = 0.05
+/** Share of foes one level below the band. */
+export const BELOW = 0.05
+/** Levels above the band and the share of foes of each: the further above, the rarer. */
+export const ABOVE: ReadonlyArray<readonly [levels: number, share: number]> = [[4, 0.03], [3, 0.06], [2, 0.09], [1, 0.12]]
 /** No foe stands this close to a den, in tiles, so it never joins a den fight. */
 export const DEN_CLEARANCE = 40
 /** Side of a foe's claim: it gives up a chase half this far from where the chase began. */
@@ -91,10 +93,20 @@ export function hauntAt(seed: number, cellX: number, cellY: number, { camp, land
     const dy = den.y + 0.5 - centerY
     if (Math.sqrt(dx * dx + dy * dy) < DEN_CLEARANCE) return null
   }
-  const mix = roll(seed, cellX, cellY, 2)
-  const level = mix < NEIGHBOUR ? Math.max(1, band - 1) : mix < 2 * NEIGHBOUR ? Math.min(SPAWN_LEVELS.length, band + 1) : band
-  const ring = SPAWN_LEVELS[level - 1]
+  const ring = SPAWN_LEVELS[levelOf(band, roll(seed, cellX, cellY, 2)) - 1]
   return { id: `h:${cellX}:${cellY}`, level: ring.level, name: ring.name, kind: ring.kind, protectors: 1, claim: CLAIM, x, y, roams: true }
+}
+
+/** The level of a foe of `band` for a `mix` in [0, 1), within the known levels: the server's `Haunts.LevelOf`. */
+export function levelOf(band: number, mix: number): number {
+  if (mix < BELOW) return Math.max(1, band - 1)
+  let share = BELOW
+  for (const [levels, chance] of ABOVE) {
+    share += chance
+    if (mix < share) return Math.min(SPAWN_LEVELS.length, band + levels)
+  }
+
+  return band
 }
 
 /** Foes whose tile lies inside `rect`, in tiles. */

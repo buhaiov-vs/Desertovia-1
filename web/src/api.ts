@@ -369,7 +369,10 @@ export type RaidOutcome = 'Pending' | 'Repelled' | 'Lost' | 'Cancelled' | 'Prope
 export interface FortificationQuote {level:number;nextLevel:number|null;sections:number;strength:number;damaged:number;work:number;materials:ResourceAmount[];blockedBy:string|null;readyAfterBattle:boolean}
 export interface Fortification { id:string; x:number; y:number; gate:boolean; open:boolean; damage:number; level?:number }
 export interface RaidUnit {
-  enemy?:EnemyKind|null; id:string; variant:'weak'|'regular'|'strong'|'boss'; x:number; y:number; health:number; maximumHealth:number;
+  enemy?:EnemyKind|null;
+  /** Den level of the foe it is drawn as; without it, the den its `enemy` guards. */
+  level?:number|null;
+  id:string; variant:'weak'|'regular'|'strong'|'boss'; x:number; y:number; health:number; maximumHealth:number;
   attack:number; speed:number; range:number; state:string; targetKind:string|null; targetId:string|null;
   diedAt:string|null; exitedAt:string|null; nextAttackAt?:string;
   bossPhase?:number|null; strikeX?:number|null; strikeY?:number|null; strikeAt?:string|null;
@@ -1686,7 +1689,7 @@ export const api = {
   callUndead: (slug: string, enemy: EnemyKind, size: RaidSize) =>
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/undead`, { enemy, size }),
   cancelUndead: (slug: string) => request<VillageState>('DELETE', `/api/villages/${encodeURIComponent(slug)}/undead`),
-  /** Development only: a wave that strikes in a few seconds; `everyMonster` brings two of every enemy kind. */
+  /** Development only: a wave that strikes in a few seconds; `everyMonster` brings one foe of every den level. */
   devRaid: (slug: string, everyMonster: boolean) =>
     request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/dev/raid`, { everyMonster }),
   devNightRaid: (slug: string) => request<VillageState>('POST', `/api/villages/${encodeURIComponent(slug)}/dev/night-raid`),

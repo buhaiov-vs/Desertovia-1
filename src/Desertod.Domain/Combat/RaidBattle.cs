@@ -49,6 +49,8 @@ public sealed class RaidBattle
 public sealed class RaidUnit
 {
     public EnemyKind? Enemy { get; set; }
+    /// <summary>Den level of the foe it is drawn as. Null draws the den foe of <see cref="Enemy"/>.</summary>
+    public int? Level { get; set; }
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public string Variant { get; set; } = "regular";
     public double X { get; set; }

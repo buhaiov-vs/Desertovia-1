@@ -1,79 +1,19 @@
 import { Container, Graphics, Text } from 'pixi.js'
-import type { DenSnapshot, EnemyKind } from '../api'
-import { enemyFigure, enemyHeight } from './enemies'
-import { foeFigure, type FoeAnimation, type FoeLook } from './foeSprites'
+import type { DenSnapshot } from '../api'
+import { denFoeFigure } from './enemies'
+import { DEN_PICTURES, FOE_SCALE, levelHeight, PROP_SCALE } from './denPictures'
+import { foeFigure, type FoeAnimation } from './foeSprites'
 import type { LandChunkRect, TileRect } from './landChunk'
 import { TILE } from './sheets'
 import { patrolAt } from './denPatrol'
 import { spotsAround, type SpawnPoint } from './spawnRings'
 
-/** Den props are drawn this much larger than the heights in `DEN_PICTURES`. */
-const PROP_SCALE = 1.35
-/** Protectors and roaming foes of level 1 are drawn this much larger than their own looks. */
-const FOE_SCALE = 1.4
-/** Level 1 stands this tall, in world pixels: a slime at `FOE_SCALE`. */
-const LEVEL_ONE_HEIGHT = 10 * FOE_SCALE
-/** Each later level stands this many world pixels taller than the one before. */
-const LEVEL_STEP = 4
-
-/** Drawn height of a foe of `level`, in world pixels. Level 1 keeps today's size. */
-function levelHeight(level: number) {
-  return LEVEL_ONE_HEIGHT + Math.max(0, level - 1) * LEVEL_STEP
-}
 /** Radius of the trodden patch under a den, in tiles; it reaches just past the spots. */
 const PATCH_RADIUS = 2.7
 /** Dens this far past the view keep their figures, so panning does not pop them in at the edge. */
 const MARGIN_TILES = 32
 /** A spot can sit across a chunk edge; it is drawn into every chunk it reaches. */
 const SPOT_REACH = 0.5
-
-/** One protector: an enemy the game already fights, or a figure of the archive atlas. */
-type Protector = EnemyKind | FoeLook
-type ProtectorOf = (index: number, direction: number) => Protector
-
-interface DenPicture {
-  /** Height of the den prop `den-<level>`, in world pixels. */
-  prop: number
-  protector: ProtectorOf
-}
-
-const look = (idle: FoeAnimation, height: number): ProtectorOf => () => ({ idle, height })
-const known = (kind: EnemyKind): ProtectorOf => () => kind
-const SLIMES: FoeAnimation[] = ['slime-blue', 'slime-green', 'slime-red']
-
-/** The picture of each foe ring, by level. The prop comes from the area of that foe. */
-const DEN_PICTURES: readonly DenPicture[] = [
-  { prop: 16, protector: (index) => ({ idle: SLIMES[index % SLIMES.length], height: 10 }) },
-  { prop: 36, protector: known('Rat') },
-  { prop: 28, protector: known('Imp') },
-  { prop: 14, protector: look('goblin-small', 12) },
-  { prop: 26, protector: known('Wolf') },
-  { prop: 22, protector: known('Boar') },
-  { prop: 16, protector: look('goblin-club', 14) },
-  { prop: 16, protector: look('orc-hooded', 19) },
-  { prop: 18, protector: look('scarecrow', 20) },
-  { prop: 16, protector: known('Ghoul') },
-  { prop: 40, protector: look('goblin-sword', 13) },
-  { prop: 28, protector: look('goblin-banner', 13) },
-  { prop: 40, protector: known('Wraith') },
-  { prop: 28, protector: look('poison-plant', 24) },
-  { prop: 24, protector: look('slime-flaming', 18) },
-  { prop: 36, protector: look('orc-axe', 22) },
-  { prop: 32, protector: known('Bear') },
-  { prop: 36, protector: look('orc-warrior', 30) },
-  { prop: 44, protector: look('vampire', 22) },
-  { prop: 20, protector: look('orc-berserk', 31) },
-  { prop: 36, protector: look('orc-shaman', 31) },
-  { prop: 40, protector: look('vampire-winged', 24) },
-  { prop: 40, protector: look('orc-swords', 24) },
-  { prop: 26, protector: known('Zombie') },
-  { prop: 32, protector: look('fire-spirit', 26) },
-  { prop: 24, protector: known('Skeleton') },
-  { prop: 36, protector: look('orc-armored', 27) },
-  { prop: 30, protector: (_, direction) => ({ idle: `knight-${(direction % 8) + 1}` as FoeAnimation, scale: 1.2 }) },
-  { prop: 40, protector: known('BarrowKing') },
-  { prop: 44, protector: look('lich', 40) },
-]
 
 /** How fast a drawn protector closes the gap to the server position, per second. */
 const FOLLOW = 10
@@ -488,7 +428,7 @@ export class DenLayer {
       // A roaming foe: no den, one figure walking the same wander the server checks.
       const [, cellX, cellY] = point.id.split(':').map(Number)
       const height = levelHeight(point.level)
-      const figure = this.protectorFigure(picture, 0, Math.abs(cellX + cellY), height, facing)
+      const figure = denFoeFigure(point.level, 0, Math.abs(cellX + cellY), facing)
       if (!figure) return den
       const walk = this.wander
       const wander = walk
@@ -539,7 +479,7 @@ export class DenLayer {
     const direction = Number(point.id.split(':')[1])
     const height = levelHeight(point.level)
     for (let index = 0; index < point.protectors; index++) {
-      const figure = this.protectorFigure(picture, index, direction, height, facing)
+      const figure = denFoeFigure(point.level, index, direction, facing)
       if (!figure) continue
       // The same walk as the server's `DenGuards.PatrolAt`: a few steps by each post, not a circle around the den.
       const round = () => {
@@ -569,18 +509,6 @@ export class DenLayer {
       }
     }
     return den
-  }
-
-  private protectorFigure(picture: DenPicture, index: number, direction: number, height: number, facing: number) {
-    const protector = picture.protector(index, direction)
-    const figure = typeof protector === 'string' ? enemyFigure(protector) : foeFigure(protector)
-    if (!figure) return null
-    const child = figure.children[0]
-    const measured = child && 'height' in child && typeof child.height === 'number' ? child.height : figure.height
-    const natural = typeof protector === 'string' ? enemyHeight(protector) : 'height' in protector ? protector.height : measured
-    const scale = natural > 1 ? height / natural : FOE_SCALE
-    figure.scale.set(facing * scale, scale)
-    return figure
   }
 
   private placeMark(view: Container, x: number, y: number) {

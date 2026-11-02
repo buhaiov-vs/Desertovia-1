@@ -2,11 +2,12 @@ using Desertod.Domain;
 using Desertod.Domain.Combat;
 using Desertod.Domain.Entities;
 using Desertod.Domain.Rules;
+using Desertod.Domain.World;
 using Microsoft.EntityFrameworkCore;
 
 namespace Desertod.Api.Game;
 
-/// <param name="EveryMonster">Two of each enemy kind, dungeon dwellers included; otherwise a dozen zombies and skeletons.</param>
+/// <param name="EveryMonster">One foe of each of the thirty den levels, with its den health and blows; otherwise a dozen zombies and skeletons.</param>
 public sealed record DevRaidRequest(bool EveryMonster);
 
 /// <summary>Development and local deployments only; the endpoints refuse unless <see cref="GameOptions.DevTools"/> is on.</summary>
@@ -21,11 +22,11 @@ public sealed partial class GameService
             var village = await LoadVillageAsync(db, slug, ct);
             if (village.Raids.Any(r => r.IsPending) || await db.RaidBattles.AnyAsync(b => b.VillageId == village.Id && b.FinishedAt == null, ct))
                 throw new GameRuleException("raid.pending", "Finish or cancel the existing raid first.");
-            var kinds = EnemyCatalog.Enemies.Select(e => e.Kind).ToArray();
+            var levels = SpawnRings.Levels;
             var settings = new RaidSettings
             {
                 Mode = "manual",
-                Count = request.EveryMonster ? kinds.Length * 2 : 12,
+                Count = request.EveryMonster ? levels.Count : 12,
                 WeakPercent = request.EveryMonster ? 0 : 35,
                 ElitePercent = request.EveryMonster ? 0 : 20,
                 Species = request.EveryMonster ? [] : [new() { Enemy = EnemyKind.Zombie, Percent = 50 }, new() { Enemy = EnemyKind.Skeleton, Percent = 50 }],
@@ -39,16 +40,18 @@ public sealed partial class GameService
             var battle = await BuildConfiguredRaidAsync(db, village, raid, settings, now, ct);
             if (request.EveryMonster)
             {
-                // The editor refuses dungeon dwellers, so the zombies it planned are rebuilt one kind after another.
+                // The editor knows only raiding kinds, so the zombies it planned are rebuilt as the den foes, one level after another.
                 for (var index = 0; index < battle.Units.Count; index++)
                 {
                     var unit = battle.Units[index];
-                    var definition = EnemyCatalog.Get(kinds[index % kinds.Length]);
-                    var factor = RaidBalance.Factor(unit.Variant);
-                    unit.Enemy = definition.Kind;
-                    unit.Health = unit.MaximumHealth = (12 + definition.Power * 2) * factor;
-                    unit.Attack = (1.5 + definition.Power * .4) * factor;
-                    unit.Speed = definition.Kind == EnemyKind.Zombie ? .55 : .75;
+                    var level = levels[index % levels.Count];
+                    var guard = DenGuards.For(level);
+                    unit.Enemy = level.Kind;
+                    unit.Level = level.Level;
+                    unit.Health = unit.MaximumHealth = guard.Health;
+                    unit.Attack = guard.Damage;
+                    unit.Range = guard.AttackRange;
+                    unit.Speed = level.Kind == EnemyKind.Zombie ? .55 : .75;
                 }
             }
             battle.EventId = Guid.CreateVersion7();

@@ -2,6 +2,7 @@ import {receiveFighterSample,fighterPositionAt,fighterIsMoving,type FighterSampl
 import { Container, Graphics, GraphicsContext } from 'pixi.js'
 import type { EnemyKind, Raid, RaidBattle } from '../api'
 import { FoeFigure, foeFigure, foeSpritesReady, type FoeLook } from './foeSprites'
+import { DEN_PICTURES, denLevelOf, FOE_SCALE, levelHeight } from './denPictures'
 import { TILE } from './sheets'
 import { CAMPFIRE, MAP_HEIGHT, MAP_LEFT, MAP_TOP, MAP_WIDTH, Terrain } from './worldMap'
 
@@ -223,9 +224,10 @@ export function enemyFigure(kind: EnemyKind): Container {
   return (look && foeFigure(look)) ?? new Graphics(enemyContext(kind))
 }
 
-/** Plays the walk of an atlas figure while it moves. A code-drawn figure only hops. */
+/** Plays the walk of an atlas figure while it moves, also inside a `raiderFigure` holder. A code-drawn figure only hops. */
 export function setFigureMoving(figure: Container, moving: boolean) {
-  if (figure instanceof FoeFigure) figure.setMoving(moving)
+  const inner = figure instanceof FoeFigure ? figure : figure.children[0]
+  if (inner instanceof FoeFigure) inner.setMoving(moving)
 }
 
 /** Height of an enemy's look, in world pixels. */
@@ -233,6 +235,51 @@ export function enemyHeight(kind: EnemyKind) {
   const look = SPRITE_LOOKS[kind]
   if (look && foeSpritesReady()) return look.height
   return LOOKS[kind].pixels.length * (LOOKS[kind].size ?? 1)
+}
+
+/**
+ * A protector of a den of `level` at that den's height, feet at (0, 0). Null for a level with no picture, or for an
+ * atlas figure before the atlas loads.
+ */
+export function denFoeFigure(level: number, index = 0, direction = 0, facing = 1): Container | null {
+  const picture = DEN_PICTURES[level - 1]
+  if (!picture) return null
+  const protector = picture.protector(index, direction)
+  const figure = typeof protector === 'string' ? enemyFigure(protector) : foeFigure(protector)
+  if (!figure) return null
+  const child = figure.children[0]
+  const measured = child && 'height' in child && typeof child.height === 'number' ? child.height : figure.height
+  const natural = typeof protector === 'string' ? enemyHeight(protector) : 'height' in protector ? protector.height : measured
+  const scale = natural > 1 ? levelHeight(level) / natural : FOE_SCALE
+  figure.scale.set(facing * scale, scale)
+  return figure
+}
+
+/** The den level a raider is drawn as: its own, or the den its kind guards. */
+function raiderLevel(kind: EnemyKind, level?: number | null) {
+  return level ?? denLevelOf(kind)
+}
+
+/**
+ * A raider as big as at its den, feet at (0, 0), facing right; turn and grow it with the holder's `scale`.
+ * An atlas foe that has not loaded yet stands in as `kind`, at the same height.
+ */
+export function raiderFigure(kind: EnemyKind, level?: number | null): Container {
+  const at = raiderLevel(kind, level)
+  let figure = denFoeFigure(at)
+  if (!figure) {
+    figure = enemyFigure(kind)
+    figure.scale.set(levelHeight(at) / enemyHeight(kind))
+  }
+  const holder = new Container()
+  holder.addChild(figure)
+
+  return holder
+}
+
+/** Height of a `raiderFigure` before its variant grows it, in world pixels. */
+export function raiderHeight(kind: EnemyKind, level?: number | null) {
+  return levelHeight(raiderLevel(kind, level))
 }
 
 /** Raiders drawn for one attack at most; a bigger pack is shown by this many. */
@@ -338,23 +385,23 @@ export class EnemyLayer {
     for(const battle of this.battles){
       if(['Warning','Cancelled','Finished'].includes(battle.phase))continue
       const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
-      const height=(variant:string,unitKind:EnemyKind=kind)=>enemyHeight(unitKind)*(variant==='boss'?1.7:variant==='strong'?1.35:variant==='weak' ? .85 : 1)
+      const height=(u:RaidBattle['units'][number])=>raiderHeight(u.enemy??kind,u.level)*(u.variant==='boss'?1.7:u.variant==='strong'?1.35:u.variant==='weak' ? .85 : 1)
       const at=(u:RaidBattle['units'][number])=>this.liveViews.get(u.id)?.actor.position??{x:u.x*TILE,y:u.y*TILE}
       const unit=battle.units.filter(u=>{
         const p=at(u),dy=y-p.y
-        return u.health>0&&!u.exitedAt&&Math.abs(p.x-x)<=TILE*.8&&dy>=-height(u.variant,u.enemy??kind)-4&&dy<=6
-      }).sort((a,b)=>Math.hypot(at(a).x-x,at(a).y-height(a.variant,a.enemy??kind)/2-y)-Math.hypot(at(b).x-x,at(b).y-height(b.variant,b.enemy??kind)/2-y))[0]
+        return u.health>0&&!u.exitedAt&&Math.abs(p.x-x)<=TILE*.8&&dy>=-height(u)-4&&dy<=6
+      }).sort((a,b)=>Math.hypot(at(a).x-x,at(a).y-height(a)/2-y)-Math.hypot(at(b).x-x,at(b).y-height(b)/2-y))[0]
       if(unit){if(select)this.selectedUnit=unit.id;return{battleId:battle.id,unitId:unit.id}}
     }
     return null
   }
   private updateLive(now:number,sortDepth:boolean){
     const shown=new Set<string>(),warningIds=new Set<string>()
-    const draw=(id:string,x:number,y:number,hp:number,max:number,kind:EnemyKind|null,variant:string,dead:boolean,attackAt=0,deathAt=0,hideBar=false)=>{
+    const draw=(id:string,x:number,y:number,hp:number,max:number,kind:EnemyKind|null,variant:string,dead:boolean,attackAt=0,deathAt=0,hideBar=false,level:number|null=null)=>{
       shown.add(id)
       let view=this.liveViews.get(id)
       if(!view){
-        view={actor:kind?enemyFigure(kind):new Graphics(),bar:new Graphics(),health:hp,hitAt:0,barKey:'',
+        view={actor:kind?raiderFigure(kind,level):new Graphics(),bar:new Graphics(),health:hp,hitAt:0,barKey:'',
           facing:1}
         view.actor.position.set(x*TILE,y*TILE);this.layer.addChild(view.actor,view.bar);this.liveViews.set(id,view)
       }
@@ -376,7 +423,7 @@ export class EnemyLayer {
       if(view.barKey!==barKey){
         view.barKey=barKey;view.bar.clear()
         if(!dead&&!hideBar){
-          const barY=-(kind?enemyHeight(kind)*size:26)-7
+          const barY=-(kind?raiderHeight(kind,level)*size:26)-7
           view.bar.rect(-13,barY,26,4).fill(0x241910)
           view.bar.rect(-12,barY+1,24*Math.max(0,hp/Math.max(1,max)),2).fill(kind?0xda5546:0x68c86a)
           if(id===this.selectedUnit)view.bar.circle(0,0,14*size).stroke({color:0xffd75b,width:2})
@@ -399,7 +446,7 @@ export class EnemyLayer {
           if(warning.key!==key){warning.key=key;warning.view.clear().circle(0,0,1.65*TILE).fill({color:0xff5d32,alpha:.18}).stroke({color:0xff9c40,width:2})}
           warning.view.position.set(u.strikeX*TILE,u.strikeY*TILE);warning.view.zIndex=warning.view.y-.5
         }
-        draw(u.id,u.x,u.y,u.health,u.maximumHealth,u.enemy??kind,u.variant,u.health<=0,['Fighting','Breaching','Raiding'].includes(u.state)&&u.nextAttackAt?Date.parse(u.nextAttackAt)-3000:0,u.diedAt?Date.parse(u.diedAt):now)
+        draw(u.id,u.x,u.y,u.health,u.maximumHealth,u.enemy??kind,u.variant,u.health<=0,['Fighting','Breaching','Raiding'].includes(u.state)&&u.nextAttackAt?Date.parse(u.nextAttackAt)-3000:0,u.diedAt?Date.parse(u.diedAt):now,false,u.level??null)
       }
       for(const f of battle.fighters)if(!battle.finishedAt&&f.active&&f.health>0){
         const own=(!!f.isTsar&&this.viewerIsTsar)||(!f.isTsar&&f.citizenId===this.viewerCitizenId)
@@ -547,7 +594,7 @@ export class EnemyLayer {
       const angle = (index % 4) * (Math.PI / 2) + ring * 0.8 + ((seed >> index) & 3) * 0.2
       const radius = index === 0 ? 0 : (0.7 + ring * 0.6) * TILE
       const raider: Raider = {
-        view: enemyFigure(raid.enemy),
+        view: raiderFigure(raid.enemy),
         offsetX: Math.cos(angle) * radius,
         offsetY: Math.sin(angle) * radius * 0.6,
         x: 0,

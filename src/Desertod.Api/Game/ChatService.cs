@@ -21,7 +21,8 @@ public sealed class ChatService(
     /// <summary>Messages a player sees on opening the village.</summary>
     public const int HistoryLength = 50;
 
-    private sealed record Member(Guid VillageId, string Slug, Guid? CitizenId, string Name);
+    /// <param name="FallenUntil">A hero who fell in a fight lies silent until then.</param>
+    private sealed record Member(Guid VillageId, string Slug, Guid? CitizenId, string Name, DateTimeOffset? FallenUntil);
 
     public async Task<bool> IsMemberAsync(string slug, Guid accountId, CancellationToken cancellationToken)
     {
@@ -49,7 +50,14 @@ public sealed class ChatService(
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var member = await RequireMemberAsync(db, slug, accountId, cancellationToken);
-        var message = ChatMessage.Write(member.VillageId, accountId, member.CitizenId, member.Name, text, time.GetUtcNow());
+        var now = time.GetUtcNow();
+        if (member.FallenUntil is { } fallenUntil && now < fallenUntil)
+        {
+            throw new Desertod.Domain.GameRuleException("chat.fallen", "You fell in battle and cannot speak until you are back on your feet.",
+                new Dictionary<string, object> { ["readyAt"] = fallenUntil });
+        }
+
+        var message = ChatMessage.Write(member.VillageId, accountId, member.CitizenId, member.Name, text, now);
         var ids = (mentions ?? []).Distinct().ToArray();
         if (ids.Length > 5) throw new Desertod.Domain.GameRuleException("chat.mentions", "Mention up to five residents.");
         if (ids.Length > 0)
@@ -86,7 +94,7 @@ public sealed class ChatService(
     {
         var village = await db.Villages.AsNoTracking()
             .Where(v => v.Slug == slug)
-            .Select(v => new { v.Id, v.Slug, v.OwnerAccountId })
+            .Select(v => new { v.Id, v.Slug, v.OwnerAccountId, v.TsarInjuredUntil })
             .SingleOrDefaultAsync(cancellationToken);
         if (village is null)
         {
@@ -96,14 +104,14 @@ public sealed class ChatService(
         if (village.OwnerAccountId == accountId)
         {
             var owner = await db.Accounts.AsNoTracking().SingleAsync(a => a.Id == accountId, cancellationToken);
-            return new Member(village.Id, village.Slug, null, owner.Character?.Name ?? owner.DisplayName);
+            return new Member(village.Id, village.Slug, null, owner.Character?.Name ?? owner.DisplayName, village.TsarInjuredUntil);
         }
 
         var citizen = await db.Citizens.AsNoTracking()
             .Where(c => c.VillageId == village.Id && c.AccountId == accountId)
-            .Select(c => new { c.Id, c.Name })
+            .Select(c => new { c.Id, c.Name, c.InjuredUntil })
             .SingleOrDefaultAsync(cancellationToken);
-        return citizen is null ? null : new Member(village.Id, village.Slug, citizen.Id, citizen.Name);
+        return citizen is null ? null : new Member(village.Id, village.Slug, citizen.Id, citizen.Name, citizen.InjuredUntil);
     }
 
     internal static ChatMessageDto ToDto(ChaplainMessage message) =>

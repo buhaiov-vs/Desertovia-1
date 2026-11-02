@@ -30,6 +30,7 @@ export function ChatPanel({
   onModeChange,
   interrupted = false,
   actions,
+  fallenUntil = null,
 }: {
   mentionCandidates?: {id:string;name:string}[]
   incoming?: ChatMessage[]
@@ -45,6 +46,8 @@ export function ChatPanel({
   /** Server time minus local time; activities are stamped with the local time they arrived. */
   serverOffsetMs: number
   phone: boolean
+  /** Server time a hero who fell in a fight gets back on their feet; they cannot write until then. */
+  fallenUntil?: string | null
   onSend: (text: string, mentions?: string[]) => Promise<void>
 }) {
   const i18n = useI18n()
@@ -74,6 +77,15 @@ export function ChatPanel({
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const list = useRef<HTMLOListElement>(null)
+  const [fallen, setFallen] = useState(false)
+  useEffect(() => {
+    const left = fallenUntil ? Date.parse(fallenUntil) - (Date.now() + serverOffsetMs) : 0
+    setFallen(left > 0)
+    if (left <= 0) return
+    const timer = window.setTimeout(() => setFallen(false), left)
+
+    return () => window.clearTimeout(timer)
+  }, [fallenUntil, serverOffsetMs])
 
   const own = useCallback((message: ChatMessage) => (!message.isChaplain && (message.isTsar ? tsar : message.citizenId !== null && message.citizenId === ownCitizenId)),[tsar,ownCitizenId])
 
@@ -263,7 +275,11 @@ export function ChatPanel({
             )}
           </ol>
           {unread>0&&<button className="chat-jump" onClick={toBottom}>{t('chat.new')} ↓ {unread}</button>}
-          {member ? (
+          {member && fallen ? (
+            <p className="chat-line muted" role="status">
+              {t('chat.fallen', { time: new Date(Date.parse(fallenUntil!) - serverOffsetMs).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }) })}
+            </p>
+          ) : member ? (
             <>{mentionPicker&&<div className="mention-picker">{mentionCandidates.filter(c=>c.id!==ownCitizenId).map(c=><button type="button" key={c.id} onClick={()=>{const next=draft+(draft&&!draft.endsWith(' ')?' ':'')+'@'+c.name+' ';if(next.length<=CHAT_MESSAGE_MAXIMUM){setDraft(next);setSelectedMentions(previous=>[...new Set([...previous,c.id])].slice(-5))}setMentionPicker(false)}}>@{c.name}</button>)}</div>}
             <form className="chat-form" onSubmit={send}>
               <button type="button" className="chat-mention" aria-label={i18n.language==='ru'?'Упомянуть жителя':'Mention a resident'} aria-expanded={mentionPicker} onClick={()=>setMentionPicker(!mentionPicker)}>＠</button>

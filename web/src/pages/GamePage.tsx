@@ -1063,6 +1063,7 @@ function VillageView({ me, onAccountChanged, primarySlug }: { me: Me; onAccountC
           member={live.member}
           tsar={tsar}
           ownCitizenId={citizen?.id ?? null}
+          fallenUntil={tsar ? village.tsar.injuredUntil : citizen?.injuredUntil}
           serverOffsetMs={serverOffset}
           phone={phone}
           onSend={live.sendChat}

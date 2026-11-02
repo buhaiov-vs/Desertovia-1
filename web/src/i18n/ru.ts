@@ -173,6 +173,7 @@ export const ru: Dictionary = {
     'chat.send': 'Отправить',
     'chat.empty': 'Сообщений пока нет. Поздоровайтесь!',
     'chat.membersOnly': 'Поселитесь в городе, чтобы писать в чат.',
+    'chat.fallen': 'Вы пали в бою. Сможете говорить в {time}.',
     'banner.building': 'Строим {project}',
 
     'next.working': '— следующее действие через {seconds} с',
@@ -1552,6 +1553,7 @@ export const ru: Dictionary = {
     'chat.empty': 'Сначала напишите что-нибудь.',
     'chat.length': 'Сообщение может быть не длиннее {maximum} символов.',
     'chat.tooFast': 'Вы пишете слишком быстро. Подождите несколько секунд.',
+    'chat.fallen': 'Вы пали в бою и не можете говорить до {readyAt}.',
     'citizen.injured': 'Вы ранены и не можете работать до {readyAt}. Снадобье залечит рану сразу.',
     'tsar.injured': 'Вы ранены и не можете ходить до {readyAt}.',
     'heal.notInjured': 'Вы не ранены.',

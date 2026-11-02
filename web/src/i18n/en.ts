@@ -172,6 +172,7 @@ export const en = {
     'chat.send': 'Send',
     'chat.empty': 'No messages yet. Say hello!',
     'chat.membersOnly': 'Settle in the village to join the chat.',
+    'chat.fallen': 'You fell in battle. You can speak again at {time}.',
     'banner.building': 'Building {project}',
 
     'next.working': '— next action in {seconds} s',
@@ -1541,6 +1542,7 @@ export const en = {
     'chat.empty': 'Write something first.',
     'chat.length': 'A message can be at most {maximum} characters long.',
     'chat.tooFast': 'You are writing too fast. Wait a few seconds.',
+    'chat.fallen': 'You fell in battle and cannot speak until {readyAt}.',
     'citizen.injured': 'You are wounded and cannot work until {readyAt}. A remedy heals it at once.',
     'tsar.injured': 'You are wounded and cannot walk until {readyAt}.',
     'heal.notInjured': 'You are not wounded.',

@@ -1,6 +1,6 @@
 # Farming — Feature Vision
 
-Status: vision draft v0.1, 2026-11-02. Not approved. Numbers are examples for tuning, not decisions.
+Status: vision draft v0.2, 2026-11-02. Decisions on rotting, seeds and theft accepted (section 9); other questions open (section 10). Numbers are examples for tuning, not decisions.
 
 Inspiration: "Весёлый фермер" (Happy Farmer), the VKontakte farm game. It is a copy of the Chinese QQ "Happy Farm" from 2008. The mechanics listed below are from memory, not checked against the game today.
 
@@ -39,7 +39,7 @@ Farming today is a short loop: sow one of five crops into 3 beds, water every 30
 
 - **Paying real money to speed up crops.** Speed-ups only come from in-game work (manure, skill). Paid speed-ups go against a fair community game.
 - **Citizens sabotaging the village farm.** Planting weeds on others was fun between strangers; inside one village it only punishes the group.
-- **Stealing between villages.** Needs trading and travel between villages first. Kept as a future question (section 9).
+- **Stealing between villages.** Rejected for now (section 9, decision 3). Would need trading and travel between villages first.
 - **A free-placement farm editor.** Beds stay rows of the Farm building on the map. Free placement is a separate map project.
 - **Seasons and weather affecting crops.** Weatherlore exists, but seasons are a separate world feature. The design leaves room for it (section 7, P2).
 
@@ -152,20 +152,27 @@ Design notes for P2: keep the bed state open for more fields (fertility, trouble
 
 Measurement: from the server's cycle records. Whether those records can answer these questions today is an open question.
 
-## 9. Open questions
+## 9. Decisions
+
+Accepted by the owner on 2026-11-02.
+
+| # | Question | Decision | Rejected options |
+|---|---|---|---|
+| 1 | How harsh is rotting? | After the ripe window the yield falls step by step to half, then the crop rots and leaves compost. | Never rots, only falls to half; rots at once after the window |
+| 2 | Where do seeds come from? | Seed stock saved from the harvest; turnip seeds are always free. | Seeds stay free as today; seeds bought with a currency |
+| 3 | Who steals ripe crops? | Wildlife at night and raiders after a lost raid. | Only raiders; other villages too |
+
+## 10. Open questions
 
 | # | Question | Who | Blocking |
 |---|---|---|---|
-| 🚩 1 | How harsh is rotting? (a) ✅ yield falls to half, then rots into compost (b) never rots, only falls to half (c) rots at once after the window | Owner | Yes for P0.2 |
-| 🚩 2 | Seeds: (a) ✅ seed stock from the harvest, turnips always free (b) seeds stay free as today (c) seeds bought with a currency | Owner | Yes for P1.1 |
-| 🚩 3 | Who steals ripe crops: (a) ✅ wildlife at night and raiders after a lost raid (b) only raiders (c) other villages too | Owner | No (P1) |
 | 4 | Name of the Master title: Master farmer, Agronomist, Elder farmer? Russian name? | Owner | Yes for P0.3 |
 | 5 | Should farm chores get the Challenge multiplier rule (section 5.4 of game-design) so that pulling weeds is not an easy experience farm? | Owner, design | Yes for P0.1 |
 | 6 | Can the server's cycle records give the metrics in section 8? | Engineering | No |
 | 7 | How often should troubles appear so the farm feels alive but not like a chore wall? Needs playtesting. | Design | No |
 | 8 | Do troubles happen while nobody in the village is online? (Recommended: no, to not punish quiet hours.) | Owner | Yes for P0.1 |
 
-## 10. Phasing
+## 11. Phasing
 
 | Phase | Content | Depends on |
 |---|---|---|

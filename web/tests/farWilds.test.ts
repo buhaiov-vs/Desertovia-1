@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { farBlocksKind, farKind, farOpening, farWildRoll, FAR_LAND_LEFT, FAR_LAND_SIDE, FAR_LAND_TOP, type FarKind } from '../src/game/farWilds.ts'
+import { farBlocksKind, farKind, farWildRoll, FAR_LAND_LEFT, FAR_LAND_SIDE, FAR_LAND_TOP, type FarKind } from '../src/game/farWilds.ts'
 
 const DX = [1, 0, -1, 0]
 const DY = [0, -1, 0, 1]
@@ -121,13 +121,13 @@ test('hills and thickets stand in every quarter of the land', () => {
 })
 
 test('mountains, thickets and rivers are long and not straight', () => {
-  const mountain = component(1, find(1, (kind) => kind === 'mountain' || kind === 'rockfall')!, (kind) => kind === 'mountain' || kind === 'rockfall')
+  const mountain = findBig(1, (kind) => kind === 'mountain' || kind === 'rockfall', 400)!
   const mountainSpread = spread(mountain)
   assert.ok(mountain.length > 400, `mountain ${mountain.length}`)
   assert.ok(mountainSpread.width > 40 && mountainSpread.height > 40, `mountain ${mountainSpread.width}x${mountainSpread.height}`)
   assert.ok(mountain.some((tile) => farKind(tile.x, tile.y, 1) === 'rockfall'))
 
-  const river = component(1, find(1, (kind) => kind === 'water')!, (kind) => kind === 'water')
+  const river = findBig(1, (kind) => kind === 'water', 150)!
   const riverSpread = spread(river)
   assert.ok(river.length > 150, `river ${river.length}`)
   assert.ok(riverSpread.width > 20 && riverSpread.height > 20, `river ${riverSpread.width}x${riverSpread.height}`)
@@ -138,15 +138,13 @@ test('mountains, thickets and rivers are long and not straight', () => {
   assert.ok(Math.max(thicketSpread.width, thicketSpread.height) > 40, `thicket ${thicketSpread.width}x${thicketSpread.height}`)
 })
 
-test('a river is water, and a gap in a wall is open ground', () => {
+test('a river is water, not a clearing', () => {
   assert.equal(farBlocksKind('water'), false)
   assert.equal(farBlocksKind('mountain'), true)
-  const blocks = (x: number, y: number) => farBlocksKind(farKind(x, y, 1))
-  const hit = find(1, (kind) => kind === 'mountain')!
-  const opening = farOpening(hit.x, hit.y, blocks)
-  if (opening) assert.equal(blocks(opening.x, opening.y), false)
+  assert.equal(farBlocksKind('thicket'), true)
+  assert.equal(farBlocksKind('rockfall'), true)
 })
 
 test('seed 1 matches the server fingerprint', () => {
-  assert.equal(fingerprint(1), 1845036419)
+  assert.equal(fingerprint(1), 1325747551)
 })

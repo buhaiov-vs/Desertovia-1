@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test:unit": "node --test tests/denPatrol.test.ts tests/dungeonOrders.test.ts tests/farWilds.test.ts tests/haunts.test.ts tests/landChunk.test.ts tests/spawnRings.test.ts tests/tripWalk.test.ts tests/wildGoods.test.ts",
+    "test:unit": "node --test tests/denPatrol.test.ts tests/dungeonOrders.test.ts tests/farRoute.test.ts tests/farWilds.test.ts tests/haunts.test.ts tests/landChunk.test.ts tests/spawnRings.test.ts tests/tripWalk.test.ts tests/wildGoods.test.ts",
     "preview": "vite preview",
     "sprites": "node scripts/pack-sprites.mjs",
     "foes": "node scripts/pack-foes.mjs",

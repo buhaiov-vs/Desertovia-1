@@ -27,5 +27,6 @@
     <None Include="../../web/e2e/fixtures/spawn-rings.json" Link="spawn-rings.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../web/e2e/fixtures/haunts.json" Link="haunts.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../web/e2e/fixtures/haunt-walks.json" Link="haunt-walks.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../web/e2e/fixtures/far-walks.json" Link="far-walks.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

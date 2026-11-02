@@ -4,7 +4,8 @@
  * Most of its length is one tile wide, and here and there it swells gradually to a broad stretch.
  * A few mountain regions stand as solid massifs, with ranges running out of them.
  * Every other pass across a range is an open saddle and the rest are rockfall to clear. A massif is cut by
- * alternating open valleys and rockfall lines, and rivers and thickets have open gaps, so the whole land can be walked.
+ * alternating open valleys and rockfall lines, rivers and thickets have open gaps, and where two courses meet the
+ * meeting is open, so the whole land can be walked.
  * The same seed draws the same tiles. The server's FarWilds computes the same tiles. The camp picture
  * stays open, and each course keeps a stretch of open country around the camp.
  */
@@ -13,9 +14,6 @@ export const FAR_LAND_LEFT = 15 - 6_000
 export const FAR_LAND_TOP = 13 - 6_000
 export const FAR_LAND_SIDE = 12_000
 export const FAR_VALE = { x: -44, y: -32, width: 120, height: 90 }
-
-/** How many obstacle tiles a walk looks through for a gap. */
-export const FAR_OPENING_REACH = 1200
 
 const RIVER_COURSES = 12
 const MASSIFS = 8
@@ -30,8 +28,6 @@ const GATE_LOAD = 400
 /** A course stops once it heads this close to the edge of the land. */
 const EDGE_STOP = 8
 
-const DX = [1, 0, -1, 0]
-const DY = [0, -1, 0, 1]
 const DX8 = [1, 1, 0, -1, -1, -1, 0, 1]
 const DY8 = [0, -1, -1, -1, 0, 1, 1, 1]
 const TURN = [0, 1, 7, 2, 6, 3, 5, 4]
@@ -175,10 +171,12 @@ function build(seed: number) {
     forkChance: number,
   ) => {
     let home = dir
-    const gateEvery = 100 + Math.floor(farWildRoll(seed, id, salt, 4) * 40)
+    const gateEvery = 50 + Math.floor(farWildRoll(seed, id, salt, 4) * 30)
     let load = 0
     let sinceGate = 0
     let gates = 0
+    let crossingAt = -1
+    let emerged = false
     let px = x
     let py = y
     for (let step = 0; step < length; step++) {
@@ -195,6 +193,19 @@ function build(seed: number) {
         const spoke = Math.floor(radius * 1.5) + 2
         for (let side = 0; side < 8; side += 2) {
           for (let n = 1; n <= spoke; n++) mark(px + DX8[side] * n, py + DY8[side] * n)
+        }
+      }
+      // Where a course runs into another, an open cross joins the land on every side of the meeting.
+      const span = Math.floor(radius)
+      const aheadX = px + DX8[dir] * (span + 2)
+      const aheadY = py + DY8[dir] * (span + 2)
+      const ahead = map.get(tileKey(aheadX, aheadY))
+      if (ahead === undefined) emerged = true
+      else if (emerged && step > 12 && step > crossingAt && ahead !== 'saddle') {
+        crossingAt = step + 2 * span + 24
+        open(aheadX, aheadY)
+        for (let side = 0; side < 8; side += 2) {
+          for (let n = 1; n <= span + 12; n++) open(aheadX + DX8[side] * n, aheadY + DY8[side] * n)
         }
       }
       disk(px, py, radius, kind, shape, salt, reach)
@@ -325,78 +336,4 @@ export function farKind(x: number, y: number, seed: number): FarKind {
 /** A mountain, thicket or rockfall blocks a walk until it is cleared. A river is water, not a clearing. */
 export function farBlocksKind(kind: FarKind) {
   return kind === 'mountain' || kind === 'thicket' || kind === 'rockfall'
-}
-
-/**
- * The nearest open tile at a gap or at the end of the obstacle, within {@link FAR_OPENING_REACH}
- * tiles of it. Grass beside a solid stretch is not a gap. A cleared rockfall, and the end of a river, are.
- */
-/** Gaps and ends of the obstacle, nearest first. A walk tries the next one when the nearest still crosses the wall. */
-export function farOpenings(
-  x: number,
-  y: number,
-  blocked: (x: number, y: number) => boolean,
-  reach = FAR_OPENING_REACH,
-): Array<{ x: number; y: number }> {
-  if (!blocked(x, y)) return []
-  const queue: Array<{ x: number; y: number; step: number }> = [{ x, y, step: 0 }]
-  const seen = new Set<number>([tileKey(x, y)])
-  let minX = queue[0]
-  let maxX = queue[0]
-  let minY = queue[0]
-  let maxY = queue[0]
-  const passes: Array<{ x: number; y: number; step: number }> = []
-  for (let head = 0; head < queue.length && head < reach; head++) {
-    const here = queue[head]
-    if (here.x < minX.x || (here.x === minX.x && here.step < minX.step)) minX = here
-    if (here.x > maxX.x || (here.x === maxX.x && here.step < maxX.step)) maxX = here
-    if (here.y < minY.y || (here.y === minY.y && here.step < minY.step)) minY = here
-    if (here.y > maxY.y || (here.y === maxY.y && here.step < maxY.step)) maxY = here
-    for (let dir = 0; dir < 4; dir++) {
-      const nx = here.x + DX[dir]
-      const ny = here.y + DY[dir]
-      if (blocked(nx, ny)) {
-        const key = tileKey(nx, ny)
-        if (seen.has(key)) continue
-        seen.add(key)
-        queue.push({ x: nx, y: ny, step: here.step + 1 })
-        continue
-      }
-      const across = dir % 2 === 0
-        ? blocked(nx, ny - 1) && blocked(nx, ny + 1)
-        : blocked(nx - 1, ny) && blocked(nx + 1, ny)
-      if (across) passes.push({ x: nx, y: ny, step: here.step + 1 })
-    }
-  }
-  const found: Array<{ x: number; y: number; step: number }> = []
-  const gaps = new Set<number>()
-  const offer = (gap: { x: number; y: number; step: number }) => {
-    if (blocked(gap.x, gap.y)) return
-    const key = tileKey(gap.x, gap.y)
-    if (gaps.has(key)) return
-    gaps.add(key)
-    found.push(gap)
-  }
-  const tips: Array<{ x: number; y: number; step: number }> = []
-  for (const here of queue) {
-    let touch = 0
-    for (let dir = 0; dir < 4; dir++) if (blocked(here.x + DX[dir], here.y + DY[dir])) touch++
-    if (touch <= 1) tips.push(here)
-  }
-  const ends = tips.length > 0 ? tips : [minX, maxX, minY, maxY]
-  for (const tip of ends) {
-    for (let dir = 0; dir < 4; dir++) offer({ x: tip.x + DX[dir], y: tip.y + DY[dir], step: tip.step + 1 })
-  }
-  for (const pass of passes) offer(pass)
-  found.sort((a, b) => a.step - b.step)
-  return found.map((gap) => ({ x: gap.x, y: gap.y }))
-}
-
-export function farOpening(
-  x: number,
-  y: number,
-  blocked: (x: number, y: number) => boolean,
-  reach = FAR_OPENING_REACH,
-): { x: number; y: number } | null {
-  return farOpenings(x, y, blocked, reach)[0] ?? null
 }

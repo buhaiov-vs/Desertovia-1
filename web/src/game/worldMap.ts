@@ -1,5 +1,6 @@
 import { plotPosition, type AnimalKind, type Catalog, type TileArea, type TilePoint, type VillageState, type Wilds } from '../api'
-import { farBlocksKind, farKind, farOpenings } from './farWilds'
+import { farBlocksKind, farKind } from './farWilds'
+import { farRoute, firstHit } from './farRoute'
 import { EXTRAS, battle, dungeon, factory, farm, rogue, town, type TileRef } from './sheets'
 
 /**
@@ -838,8 +839,8 @@ export function farPeak(x: number, y: number, seed: number): TileRef | null {
 }
 
 /**
- * A walk that leaves the camp picture. Empty land is a straight line. The river is stepped around.
- * The search does not allocate a grid of the whole land.
+ * A walk that leaves the camp picture. Empty land is a straight line. Otherwise a capped route search finds the
+ * way around mountains, thickets and water, and only its turns are kept. Matches the server's OverlandPath.
  */
 function farWay(
   terrain: Uint8Array,
@@ -853,6 +854,8 @@ function farWay(
   const onLand = (x: number, y: number) =>
     x >= LAND_LEFT && x < LAND_LEFT + LAND_WIDTH && y >= LAND_TOP && y < LAND_TOP + LAND_HEIGHT
   const inVale = (x: number, y: number) => x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM
+  const startX = Math.floor(from.x)
+  const startY = Math.floor(from.y)
   const goalX = Math.floor(to.x)
   const goalY = Math.floor(to.y)
   const blocked = (x: number, y: number) => farBlocked(terrain, x, y, seed, goalX, goalY, opened, bridge, crossings)
@@ -863,70 +866,11 @@ function farWay(
   }
   if (!onLand(goalX, goalY)) return 'water'
   if (blocked(goalX, goalY)) return stop(goalX, goalY)
-  const points: TilePoint[] = []
-  let cursor = from
-  let lastHit = { x: goalX, y: goalY }
-  for (let hop = 0; hop < 24; hop++) {
-    const distance = Math.hypot(to.x - cursor.x, to.y - cursor.y)
-    const steps = Math.max(1, Math.min(4000, Math.ceil(distance)))
-    let hit: { x: number; y: number } | null = null
-    for (let step = 1; step < steps; step++) {
-      const x = Math.floor(cursor.x + ((to.x - cursor.x) * step) / steps)
-      const y = Math.floor(cursor.y + ((to.y - cursor.y) * step) / steps)
-      if (!blocked(x, y)) continue
-      hit = { x, y }
-      break
-    }
-    if (!hit) {
-      points.push(to)
-      return points
-    }
-    lastHit = hit
-    let stepped = false
-    for (const opening of farOpenings(hit.x, hit.y, blocked)) {
-      const gate = { x: opening.x + 0.5, y: opening.y + 0.5 }
-      const approach = approachGate(cursor, opening.x, opening.y, blocked)
-      if (lineHits(cursor, approach, blocked)) continue
-      if (Math.hypot(gate.x - approach.x, gate.y - approach.y) >= 0.01 && lineHits(approach, gate, blocked)) continue
-      if (Math.hypot(approach.x - cursor.x, approach.y - cursor.y) < 0.01 && Math.hypot(gate.x - approach.x, gate.y - approach.y) < 0.01) continue
-      if (Math.hypot(approach.x - cursor.x, approach.y - cursor.y) >= 0.01) points.push(approach)
-      if (Math.hypot(gate.x - approach.x, gate.y - approach.y) >= 0.01) {
-        points.push(gate)
-        cursor = gate
-      } else {
-        cursor = approach
-      }
-      stepped = true
-      break
-    }
-    if (!stepped) return stop(hit.x, hit.y)
-  }
-  return stop(lastHit.x, lastHit.y)
-}
-
-/** The open tile beside a gap, on the side the walker is coming from. */
-function approachGate(
-  cursor: TilePoint,
-  openX: number,
-  openY: number,
-  blocked: (x: number, y: number) => boolean,
-): TilePoint {
-  const towardX = Math.sign(cursor.x - (openX + 0.5))
-  const towardY = Math.sign(cursor.y - (openY + 0.5))
-  if (towardX !== 0 && !blocked(openX + towardX, openY)) return { x: openX + towardX + 0.5, y: openY + 0.5 }
-  if (towardY !== 0 && !blocked(openX, openY + towardY)) return { x: openX + 0.5, y: openY + towardY + 0.5 }
-  return { x: openX + 0.5, y: openY + 0.5 }
-}
-
-/** Whether the straight step enters a blocked tile. */
-function lineHits(a: TilePoint, b: TilePoint, blocked: (x: number, y: number) => boolean) {
-  const steps = Math.max(1, Math.min(4000, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y))))
-  for (let step = 1; step < steps; step++) {
-    const x = Math.floor(a.x + ((b.x - a.x) * step) / steps)
-    const y = Math.floor(a.y + ((b.y - a.y) * step) / steps)
-    if (blocked(x, y)) return true
-  }
-  return false
+  const open = (x: number, y: number) => (x === startX && y === startY) || (onLand(x, y) && !blocked(x, y))
+  const way = farRoute(from, to, open)
+  if (way) return way
+  const hit = firstHit(from, to, open)
+  return stop(hit.x, hit.y)
 }
 
 function farBlocked(

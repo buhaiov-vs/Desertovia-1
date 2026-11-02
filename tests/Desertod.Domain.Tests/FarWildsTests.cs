@@ -56,13 +56,13 @@ public class FarWildsTests
     [Fact]
     public void Courses_AreLongAndNotStraight()
     {
-        var mountain = Component(1, Find(1, kind => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall), kind => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall);
+        var mountain = FindBig(1, kind => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall, 400);
         var mountainSpread = Spread(mountain);
         Assert.True(mountain.Count > 400, $"mountain {mountain.Count}");
         Assert.True(mountainSpread.Width > 40 && mountainSpread.Height > 40, $"mountain {mountainSpread.Width}x{mountainSpread.Height}");
         Assert.Contains(mountain, tile => FarWilds.At(tile.X, tile.Y, 1) == FarWilds.Kind.Rockfall);
 
-        var river = Component(1, Find(1, kind => kind == FarWilds.Kind.Water), kind => kind == FarWilds.Kind.Water);
+        var river = FindBig(1, kind => kind == FarWilds.Kind.Water, 150);
         var riverSpread = Spread(river);
         Assert.True(river.Count > 150, $"river {river.Count}");
         Assert.True(riverSpread.Width > 20 && riverSpread.Height > 20, $"river {riverSpread.Width}x{riverSpread.Height}");
@@ -76,10 +76,12 @@ public class FarWildsTests
     public void Ranges_AreMostlyThin_AndSwellToBroadStretches()
     {
         static bool Rock(FarWilds.Kind kind) => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall;
-        var range = Component(1, Find(1, Rock), Rock);
-        var thin = range.Count(tile => Neighbours(1, tile.X, tile.Y, Rock) <= 2);
-        Assert.True(thin * 4 > range.Count, $"thin {thin} of {range.Count}");
-        Assert.Contains(range, tile => Solid(1, tile.X, tile.Y, 4, Rock));
+        bool Massif((int X, int Y) tile) => Solid(1, tile.X, tile.Y, 10, Rock);
+        var ranges = AllBig(1, Rock, 400).Where(range => !range.Any(Massif)).Take(20).ToList();
+        var tiles = ranges.Sum(range => range.Count);
+        var thin = ranges.Sum(range => range.Count(tile => Neighbours(1, tile.X, tile.Y, Rock) <= 2));
+        Assert.True(thin * 5 > tiles, $"thin {thin} of {tiles}");
+        Assert.Contains(AllBig(1, Rock, 400), range => range.Any(tile => Solid(1, tile.X, tile.Y, 4, Rock) && !Massif(tile)));
     }
 
     [Fact]
@@ -208,7 +210,7 @@ public class FarWildsTests
             }
         }
 
-        Assert.Equal(1845036419u, hash);
+        Assert.Equal(1325747551u, hash);
     }
 
     private static (int X, int Y) NearestOpen(uint seed, int x, int y)
@@ -254,7 +256,10 @@ public class FarWildsTests
         return true;
     }
 
-    private static List<(int X, int Y)> FindBig(uint seed, Func<FarWilds.Kind, bool> accept, int least)
+    private static List<(int X, int Y)> FindBig(uint seed, Func<FarWilds.Kind, bool> accept, int least) =>
+        AllBig(seed, accept, least).FirstOrDefault() ?? throw new InvalidOperationException("No long course on this seed.");
+
+    private static IEnumerable<List<(int X, int Y)>> AllBig(uint seed, Func<FarWilds.Kind, bool> accept, int least)
     {
         var seen = new HashSet<(int, int)>();
         var land = WorldMap.Land;
@@ -275,12 +280,10 @@ public class FarWildsTests
 
                 if (tiles.Count >= least)
                 {
-                    return tiles;
+                    yield return tiles;
                 }
             }
         }
-
-        throw new InvalidOperationException("No long course on this seed.");
     }
 
     private static (int X, int Y) Find(uint seed, Func<FarWilds.Kind, bool> accept)

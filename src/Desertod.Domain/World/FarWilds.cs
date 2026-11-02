@@ -6,15 +6,13 @@ namespace Desertod.Domain.World;
 /// Most of its length is one tile wide, and here and there it swells gradually to a broad stretch.
 /// A few mountain regions stand as solid massifs, with ranges running out of them.
 /// Every other pass across a range is an open saddle and the rest are rockfall to clear. A massif is cut by
-/// alternating open valleys and rockfall lines, and rivers and thickets have open gaps, so the whole land can be walked.
+/// alternating open valleys and rockfall lines, rivers and thickets have open gaps, and where two courses meet the
+/// meeting is open, so the whole land can be walked.
 /// The web client's farWilds.ts computes the same tiles.
 /// The camp picture stays open, and each course keeps a stretch of open country around the camp.
 /// </summary>
 public static class FarWilds
 {
-    /// <summary>How many obstacle tiles a walk looks through for a gap.</summary>
-    public const int OpeningReach = 1200;
-
     private const int RiverCourses = 12;
     private const int Massifs = 8;
 
@@ -40,7 +38,6 @@ public static class FarWilds
     private static readonly Shape Thicket = new(0.3, 40, 0.6, 1, 50, 70, [5, 2], 80, 0.35, 0.1);
     private static readonly Shape River = new(0.2, 80, 0.6, 2, 150, 200, [2.5, 1, 0.5], 80, 0, 0);
 
-    private static readonly int[] Dx = [1, 0, -1, 0];
     private static readonly int LandLeft = WorldMap.Land.X;
     private static readonly int LandTop = WorldMap.Land.Y;
     private static readonly int LandRight = WorldMap.Land.X + WorldMap.Land.Width;
@@ -50,7 +47,6 @@ public static class FarWilds
     private static readonly int ValeRight = WorldMap.Vale.X + WorldMap.Vale.Width;
     private static readonly int ValeBottom = WorldMap.Vale.Y + WorldMap.Vale.Height;
 
-    private static readonly int[] Dy = [0, -1, 0, 1];
     private static readonly int[] Dx8 = [1, 1, 0, -1, -1, -1, 0, 1];
     private static readonly int[] Dy8 = [0, -1, -1, -1, 0, 1, 1, 1];
     private static readonly int[] Turn = [0, 1, 7, 2, 6, 3, 5, 4];
@@ -105,114 +101,6 @@ public static class FarWilds
     public static bool Blocks(Kind kind) => kind is Kind.Mountain or Kind.Thicket or Kind.Rockfall;
 
     public static bool Blocks(int x, int y, uint seed) => Blocks(At(x, y, seed));
-
-    /// <summary>
-    /// The nearest open tile at a gap or at the end of the obstacle, within <see cref="OpeningReach"/> steps along it.
-    /// Grass beside a solid stretch is not a gap. A cleared rockfall, and the end of a river, are.
-    /// </summary>
-    public static (int X, int Y)? Opening(int x, int y, Func<int, int, bool> blocked, int reach = OpeningReach)
-    {
-        foreach (var gap in Openings(x, y, blocked, reach))
-        {
-            return gap;
-        }
-
-        return null;
-    }
-
-    /// <summary>Gaps and ends of the obstacle, nearest first. A walk tries the next one when the nearest still crosses the wall.</summary>
-    public static IReadOnlyList<(int X, int Y)> Openings(int x, int y, Func<int, int, bool> blocked, int reach = OpeningReach)
-    {
-        if (!blocked(x, y))
-        {
-            return [];
-        }
-
-        var queue = new List<(int X, int Y, int Step)> { (x, y, 0) };
-        var seen = new HashSet<int> { Key(x, y) };
-        var minX = queue[0];
-        var maxX = queue[0];
-        var minY = queue[0];
-        var maxY = queue[0];
-        var passes = new List<(int X, int Y, int Step)>();
-        for (var head = 0; head < queue.Count && head < reach; head++)
-        {
-            var here = queue[head];
-            if (here.X < minX.X || (here.X == minX.X && here.Step < minX.Step)) minX = here;
-            if (here.X > maxX.X || (here.X == maxX.X && here.Step < maxX.Step)) maxX = here;
-            if (here.Y < minY.Y || (here.Y == minY.Y && here.Step < minY.Step)) minY = here;
-            if (here.Y > maxY.Y || (here.Y == maxY.Y && here.Step < maxY.Step)) maxY = here;
-            for (var dir = 0; dir < 4; dir++)
-            {
-                var nx = here.X + Dx[dir];
-                var ny = here.Y + Dy[dir];
-                if (blocked(nx, ny))
-                {
-                    if (seen.Add(Key(nx, ny)))
-                    {
-                        queue.Add((nx, ny, here.Step + 1));
-                    }
-
-                    continue;
-                }
-
-                var across = dir % 2 == 0
-                    ? blocked(nx, ny - 1) && blocked(nx, ny + 1)
-                    : blocked(nx - 1, ny) && blocked(nx + 1, ny);
-                if (across)
-                {
-                    passes.Add((nx, ny, here.Step + 1));
-                }
-            }
-        }
-
-        var found = new List<(int X, int Y, int Step)>();
-        var gaps = new HashSet<int>();
-        void Offer(int gx, int gy, int step)
-        {
-            if (blocked(gx, gy) || !gaps.Add(Key(gx, gy)))
-            {
-                return;
-            }
-
-            found.Add((gx, gy, step));
-        }
-
-        var tips = new List<(int X, int Y, int Step)>();
-        foreach (var here in queue)
-        {
-            var touch = 0;
-            for (var dir = 0; dir < 4; dir++)
-            {
-                if (blocked(here.X + Dx[dir], here.Y + Dy[dir]))
-                {
-                    touch++;
-                }
-            }
-
-            if (touch <= 1)
-            {
-                tips.Add(here);
-            }
-        }
-
-        var ends = tips.Count > 0 ? tips : [minX, maxX, minY, maxY];
-        foreach (var tip in ends)
-        {
-            for (var dir = 0; dir < 4; dir++)
-            {
-                Offer(tip.X + Dx[dir], tip.Y + Dy[dir], tip.Step + 1);
-            }
-        }
-
-        foreach (var pass in passes)
-        {
-            Offer(pass.X, pass.Y, pass.Step);
-        }
-
-        found.Sort((a, b) => a.Step.CompareTo(b.Step));
-        return found.Select(gap => (gap.X, gap.Y)).ToList();
-    }
 
     /// <summary>Signed 32-bit pack of a tile. Matches <c>tileKey</c>.</summary>
     private static int Key(int x, int y)
@@ -410,10 +298,12 @@ public static class FarWilds
         void Grow(int id, int salt, int x, int y, int length, Kind kind, int depth, int dir, int reach, Shape shape, int childMin, int childSpan, double forkChance)
         {
             var home = dir;
-            var gateEvery = 100 + (int)Math.Floor(Roll(seed, id, salt, 4) * 40);
+            var gateEvery = 50 + (int)Math.Floor(Roll(seed, id, salt, 4) * 30);
             var load = 0.0;
             var sinceGate = 0;
             var gates = 0;
+            var crossingAt = -1;
+            var emerged = false;
             var px = x;
             var py = y;
             for (var step = 0; step < length; step++)
@@ -451,6 +341,28 @@ public static class FarWilds
                         for (var n = 1; n <= spoke; n++)
                         {
                             Mark(px + Dx8[side] * n, py + Dy8[side] * n);
+                        }
+                    }
+                }
+
+                // Where a course runs into another, an open cross joins the land on every side of the meeting.
+                var span = (int)Math.Floor(radius);
+                var aheadX = px + Dx8[dir] * (span + 2);
+                var aheadY = py + Dy8[dir] * (span + 2);
+                var ahead = map.Get(aheadX, aheadY);
+                if (ahead == Kind.Open)
+                {
+                    emerged = true;
+                }
+                else if (emerged && step > 12 && step > crossingAt && ahead != Saddle)
+                {
+                    crossingAt = step + 2 * span + 24;
+                    Open(aheadX, aheadY);
+                    for (var side = 0; side < 8; side += 2)
+                    {
+                        for (var n = 1; n <= span + 12; n++)
+                        {
+                            Open(aheadX + Dx8[side] * n, aheadY + Dy8[side] * n);
                         }
                     }
                 }

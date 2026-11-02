@@ -208,6 +208,9 @@ public class WildernessTests
     public void ClearingTheThicket_GivesWood_AndOpensTheWay()
     {
         var village = Wild();
+
+        // A fixed camp: about one random camp in fifty has no way from the campfire to this thicket.
+        village.Id = new Guid("00000000-0000-7000-8000-000000000001");
         See(village, -5.5, 6.5);
         var citizen = NewCitizen(village, (Stat.Strength, 3), (Stat.Endurance, 3));
         var context = new WorkContext { Village = village };

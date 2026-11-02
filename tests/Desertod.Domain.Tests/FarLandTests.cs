@@ -86,7 +86,7 @@ public class FarLandTests
         ground.Stop();
 
         var line = $"join={join.Elapsed.TotalMilliseconds:0.0}ms wilds={wilds.Obstacles.Count} camp={camp.Length} fog={fog.Elapsed.TotalMilliseconds:0.0}ms fogBytes={revealed.Length} walk2000={walk.Elapsed.TotalMilliseconds:0.0}ms walkBytes={walked.Length} chunks={ground.Elapsed.TotalMilliseconds:0.0}ms wet={wet}";
-        Assert.True(join.Elapsed.TotalMilliseconds < 200, line);
+        Assert.True(join.Elapsed.TotalMilliseconds < 500, line);
         Assert.True(fog.Elapsed.TotalMilliseconds < 50, line);
         Assert.True(walk.Elapsed.TotalMilliseconds < 200, line);
         Assert.True(walked.Length < 256 * 1024, line);

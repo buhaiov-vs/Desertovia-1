@@ -16,10 +16,10 @@ export const FAR_VALE = { x: -44, y: -32, width: 120, height: 90 }
 /** The land is split into squares of these sizes, so every kind of course is spread evenly across it. */
 /** One massif per square. */
 const MASSIF_REGION = 4000
-/** One river per square. Rivers, ranges and thickets share one size of square, so all three meet everywhere. */
-const RIVER_REGION = 800
+/** One river per square. Rivers and ranges share one size of square, so both meet everywhere. */
+const RIVER_REGION = 600
 /** One range per square. */
-const RANGE_REGION = 800
+const RANGE_REGION = 600
 /** Thickets grow in most of the squares of this size. */
 const THICKET_REGION = 800
 /** Every course reaches at least this far either side of its middle tile, so it is at least three tiles across. */

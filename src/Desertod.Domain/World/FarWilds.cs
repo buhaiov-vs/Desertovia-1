@@ -16,11 +16,11 @@ public static class FarWilds
     /// <summary>One massif per square.</summary>
     private const int MassifRegion = 4000;
 
-    /// <summary>One river per square. Rivers, ranges and thickets share one size of square, so all three meet everywhere.</summary>
-    private const int RiverRegion = 800;
+    /// <summary>One river per square. Rivers and ranges share one size of square, so both meet everywhere.</summary>
+    private const int RiverRegion = 600;
 
     /// <summary>One range per square.</summary>
-    private const int RangeRegion = 800;
+    private const int RangeRegion = 600;
 
     /// <summary>Thickets grow in most of the squares of this size.</summary>
     private const int ThicketRegion = 800;

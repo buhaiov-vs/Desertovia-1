@@ -197,7 +197,7 @@ public class FarWildsTests
             }
         }
 
-        Assert.Equal(3668489880u, hash);
+        Assert.Equal(2969343587u, hash);
     }
 
     /// <summary>Whether two open tiles lie in wide stretches of land that no short walk joins.</summary>

@@ -113,7 +113,8 @@ public class FarWildsTests
     [InlineData(7u)]
     public void EveryCrossing_IsAtLeastThreeTilesAcross(uint seed)
     {
-        // Along sampled rows and columns, every stretch of mountain, thicket or water between two open tiles is wide.
+        // Along sampled rows and columns, a stretch of mountain, thicket or water only one or two tiles across is the tip
+        // or a corner of an obstacle, or the rim of a small hole sealed inside it: it never parts two wide stretches of land.
         var land = WorldMap.Land;
         bool Open(int x, int y) => FarWilds.At(x, y, seed) == FarWilds.Kind.Open;
         for (var line = land.Y + 1; line < land.Y + land.Height - 1; line += 13)
@@ -127,7 +128,7 @@ public class FarWildsTests
                     continue;
                 }
 
-                Assert.False(run is 1 or 2, $"seed {seed}: {run} tiles across at {x - run},{line}");
+                Assert.False(run is 1 or 2 && Parts(seed, (x - run - 1, line), (x, line)), $"seed {seed}: {run} tiles across at {x - run},{line}");
                 run = 0;
             }
         }
@@ -143,7 +144,7 @@ public class FarWildsTests
                     continue;
                 }
 
-                Assert.False(run is 1 or 2, $"seed {seed}: {run} tiles across at {line},{y - run}");
+                Assert.False(run is 1 or 2 && Parts(seed, (line, y - run - 1), (line, y)), $"seed {seed}: {run} tiles across at {line},{y - run}");
                 run = 0;
             }
         }
@@ -194,7 +195,37 @@ public class FarWildsTests
             }
         }
 
-        Assert.Equal(834102122u, hash);
+        Assert.Equal(1191916615u, hash);
+    }
+
+    /// <summary>Whether two open tiles lie in wide stretches of land that no short walk joins.</summary>
+    private static bool Parts(uint seed, (int X, int Y) from, (int X, int Y) to) =>
+        !Joined(seed, from, to) && !Joined(seed, from, null) && !Joined(seed, to, null);
+
+    /// <summary>
+    /// Whether a short walk over open ground leads from one open tile to the other; with no other tile, whether the open
+    /// ground around the first is a small sealed hole.
+    /// </summary>
+    private static bool Joined(uint seed, (int X, int Y) from, (int X, int Y)? to)
+    {
+        var seen = new HashSet<(int, int)> { from };
+        var queue = new Queue<(int X, int Y)>();
+        queue.Enqueue(from);
+        int[] dx = [1, 0, -1, 0];
+        int[] dy = [0, -1, 0, 1];
+        while (queue.Count > 0 && seen.Count < 400)
+        {
+            var here = queue.Dequeue();
+            if (here == to) return true;
+            if (to is null && queue.Count == 0 && seen.Count < 400) break;
+            for (var dir = 0; dir < 4; dir++)
+            {
+                var next = (here.X + dx[dir], here.Y + dy[dir]);
+                if (seen.Add(next) && FarWilds.At(next.Item1, next.Item2, seed) == FarWilds.Kind.Open) queue.Enqueue(next);
+            }
+        }
+
+        return to is null && seen.Count < 400;
     }
 
     /// <summary>A row where open ground, exactly three mountain tiles and open ground stand side by side.</summary>

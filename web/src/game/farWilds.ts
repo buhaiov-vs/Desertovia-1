@@ -13,12 +13,15 @@ export const FAR_LAND_TOP = 13 - 6_000
 export const FAR_LAND_SIDE = 12_000
 export const FAR_VALE = { x: -44, y: -32, width: 120, height: 90 }
 
-const RIVER_COURSES = 12
-const MASSIFS = 8
-/** Ranges grow one per square of this size. */
-const RANGE_REGION = 3000
+/** The land is split into squares of these sizes, so every kind of course is spread evenly across it. */
+/** One massif per square. */
+const MASSIF_REGION = 4000
+/** One river per square. */
+const RIVER_REGION = 3000
+/** One range per square. */
+const RANGE_REGION = 1500
 /** Thickets grow in most of the squares of this size. */
-const THICKET_REGION = 1000
+const THICKET_REGION = 750
 /** Every course reaches at least this far either side of its middle tile, so it is at least three tiles across. */
 const MIN_HALF_WIDTH = 1.5
 /** A course stops once it heads this close to the edge of the land. */
@@ -46,7 +49,7 @@ interface Shape {
   rough: number
 }
 
-const RANGE: Shape = { wobble: 0.15, forkEvery: 80, forkChance: 0.6, maxDepth: 2, childMin: 150, childSpan: 250, swell: [7.5, 3.5, 1.5], period: 150, rough: 0.9 }
+const RANGE: Shape = { wobble: 0.15, forkEvery: 80, forkChance: 0.5, maxDepth: 2, childMin: 150, childSpan: 250, swell: [7.5, 3.5, 1.5], period: 150, rough: 0.9 }
 const THICKET: Shape = { wobble: 0.3, forkEvery: 40, forkChance: 0.6, maxDepth: 1, childMin: 50, childSpan: 70, swell: [5, 2], period: 80, rough: 0.8 }
 const RIVER: Shape = { wobble: 0.2, forkEvery: 80, forkChance: 0.6, maxDepth: 2, childMin: 150, childSpan: 200, swell: [2.5, 1, 0.5], period: 80, rough: 0 }
 
@@ -111,20 +114,14 @@ function build(seed: number) {
       }
     }
   }
-  const start = (id: number, salt: number, room: number) => {
-    const span = FAR_LAND_SIDE - 400
-    const x = FAR_LAND_LEFT + 200 + Math.floor(farWildRoll(seed, id, salt, 1) * span)
-    const y = FAR_LAND_TOP + 200 + Math.floor(farWildRoll(seed, id, salt, 2) * span)
-    if (!clearOfCamp(x, y, countryReach(seed, id, salt) + room)) return null
-    return { x, y }
-  }
-  const cell = (index: number, salt: number, region: number) => {
+  /** A random spot in one square of the land, or null when it would crowd the camp. */
+  const cell = (index: number, salt: number, region: number, room = 0) => {
     const regions = FAR_LAND_SIDE / region
     const column = index % regions
     const row = Math.floor(index / regions)
     const x = FAR_LAND_LEFT + column * region + 30 + Math.floor(farWildRoll(seed, index, salt, 1) * (region - 60))
     const y = FAR_LAND_TOP + row * region + 30 + Math.floor(farWildRoll(seed, index, salt, 2) * (region - 60))
-    if (!clearOfCamp(x, y, countryReach(seed, index, salt))) return null
+    if (!clearOfCamp(x, y, countryReach(seed, index, salt) + room)) return null
     return { x, y }
   }
   /** Three tiles across most of the way, easing up to a broad stretch now and then. A river widens downstream. */
@@ -201,9 +198,10 @@ function build(seed: number) {
     grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.childMin, shape.childSpan, shape.forkChance)
   }
 
-  for (let index = 0; index < MASSIFS; index++) {
+  const massifSquares = (FAR_LAND_SIDE / MASSIF_REGION) ** 2
+  for (let index = 0; index < massifSquares; index++) {
     const radius = 50 + Math.floor(farWildRoll(seed, index, 130, 6) * 60)
-    const origin = start(index, 130, radius * 2)
+    const origin = cell(index, 130, MASSIF_REGION, radius * 2)
     if (!origin) continue
     const reach = countryReach(seed, index, 130)
     const lumps = 14 + Math.floor(farWildRoll(seed, index, 130, 7) * 10)
@@ -222,14 +220,14 @@ function build(seed: number) {
   }
   const rangeSquares = (FAR_LAND_SIDE / RANGE_REGION) ** 2
   for (let index = 0; index < rangeSquares; index++) {
-    if (farWildRoll(seed, index, 70, 6) < 0.15) continue
     const origin = cell(index, 70, RANGE_REGION)
     if (!origin) continue
-    const length = 1200 + Math.floor(farWildRoll(seed, index, 70, 5) * 1200)
+    const length = 700 + Math.floor(farWildRoll(seed, index, 70, 5) * 700)
     course(index, 70, origin.x, origin.y, length, 'mountain', countryReach(seed, index, 70), RANGE)
   }
-  for (let index = 0; index < RIVER_COURSES; index++) {
-    const origin = start(index, 110, 0)
+  const riverSquares = (FAR_LAND_SIDE / RIVER_REGION) ** 2
+  for (let index = 0; index < riverSquares; index++) {
+    const origin = cell(index, 110, RIVER_REGION)
     if (!origin) continue
     const radius = 7 + Math.floor(farWildRoll(seed, index, 110, 6) * 4)
     const reach = countryReach(seed, index, 110)
@@ -240,16 +238,15 @@ function build(seed: number) {
         }
       }
     }
-    const toEdge = farWildRoll(seed, index, 110, 7) < 0.5
-    const length = toEdge ? 2500 : 900 + Math.floor(farWildRoll(seed, index, 110, 8) * 800)
+    const length = 700 + Math.floor(farWildRoll(seed, index, 110, 8) * 800)
     course(index, 110, origin.x, origin.y, length, 'water', reach, RIVER)
   }
   const thicketSquares = (FAR_LAND_SIDE / THICKET_REGION) ** 2
   for (let index = 0; index < thicketSquares; index++) {
-    if (farWildRoll(seed, index, 90, 6) < 0.4) continue
+    if (farWildRoll(seed, index, 90, 6) < 0.3) continue
     const origin = cell(index, 90, THICKET_REGION)
     if (!origin) continue
-    const length = 200 + Math.floor(farWildRoll(seed, index, 90, 5) * 300)
+    const length = 150 + Math.floor(farWildRoll(seed, index, 90, 5) * 200)
     course(index, 90, origin.x, origin.y, length, 'thicket', countryReach(seed, index, 90), THICKET)
   }
   return map

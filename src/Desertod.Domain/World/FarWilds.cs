@@ -11,14 +11,19 @@ namespace Desertod.Domain.World;
 /// </summary>
 public static class FarWilds
 {
-    private const int RiverCourses = 12;
-    private const int Massifs = 8;
+    // The land is split into squares of these sizes, so every kind of course is spread evenly across it.
 
-    /// <summary>Ranges grow one per square of this size.</summary>
-    private const int RangeRegion = 3000;
+    /// <summary>One massif per square.</summary>
+    private const int MassifRegion = 4000;
+
+    /// <summary>One river per square.</summary>
+    private const int RiverRegion = 3000;
+
+    /// <summary>One range per square.</summary>
+    private const int RangeRegion = 1500;
 
     /// <summary>Thickets grow in most of the squares of this size.</summary>
-    private const int ThicketRegion = 1000;
+    private const int ThicketRegion = 750;
 
     /// <summary>Every course reaches at least this far either side of its middle tile, so it is at least three tiles across.</summary>
     private const double MinHalfWidth = 1.5;
@@ -26,7 +31,7 @@ public static class FarWilds
     /// <summary>A course stops once it heads this close to the edge of the land.</summary>
     private const int EdgeStop = 8;
 
-    private static readonly Shape Range = new(0.15, 80, 0.6, 2, 150, 250, [7.5, 3.5, 1.5], 150, 0.9);
+    private static readonly Shape Range = new(0.15, 80, 0.5, 2, 150, 250, [7.5, 3.5, 1.5], 150, 0.9);
     private static readonly Shape Thicket = new(0.3, 40, 0.6, 1, 50, 70, [5, 2], 80, 0.8);
     private static readonly Shape River = new(0.2, 80, 0.6, 2, 150, 200, [2.5, 1, 0.5], 80, 0);
 
@@ -216,27 +221,15 @@ public static class FarWilds
             }
         }
 
-        (int X, int Y)? Start(int id, int salt, int room)
-        {
-            var span = WorldMap.Side - 400;
-            var x = WorldMap.Land.X + 200 + (int)Math.Floor(Roll(seed, id, salt, 1) * span);
-            var y = WorldMap.Land.Y + 200 + (int)Math.Floor(Roll(seed, id, salt, 2) * span);
-            if (!ClearOfCamp(x, y, CountryReach(id, salt) + room))
-            {
-                return null;
-            }
-
-            return (x, y);
-        }
-
-        (int X, int Y)? Cell(int index, int salt, int region)
+        // A random spot in one square of the land, or null when it would crowd the camp.
+        (int X, int Y)? Cell(int index, int salt, int region, int room = 0)
         {
             var regions = WorldMap.Side / region;
             var column = index % regions;
             var row = index / regions;
             var x = WorldMap.Land.X + column * region + 30 + (int)Math.Floor(Roll(seed, index, salt, 1) * (region - 60));
             var y = WorldMap.Land.Y + row * region + 30 + (int)Math.Floor(Roll(seed, index, salt, 2) * (region - 60));
-            if (!ClearOfCamp(x, y, CountryReach(index, salt)))
+            if (!ClearOfCamp(x, y, CountryReach(index, salt) + room))
             {
                 return null;
             }
@@ -340,10 +333,11 @@ public static class FarWilds
             Grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.ChildMin, shape.ChildSpan, shape.ForkChance);
         }
 
-        for (var index = 0; index < Massifs; index++)
+        var massifSquares = WorldMap.Side / MassifRegion * (WorldMap.Side / MassifRegion);
+        for (var index = 0; index < massifSquares; index++)
         {
             var radius = 50 + (int)Math.Floor(Roll(seed, index, 130, 6) * 60);
-            if (Start(index, 130, radius * 2) is not { } origin)
+            if (Cell(index, 130, MassifRegion, radius * 2) is not { } origin)
             {
                 continue;
             }
@@ -370,18 +364,19 @@ public static class FarWilds
         var rangeSquares = WorldMap.Side / RangeRegion * (WorldMap.Side / RangeRegion);
         for (var index = 0; index < rangeSquares; index++)
         {
-            if (Roll(seed, index, 70, 6) < 0.15 || Cell(index, 70, RangeRegion) is not { } origin)
+            if (Cell(index, 70, RangeRegion) is not { } origin)
             {
                 continue;
             }
 
-            var length = 1200 + (int)Math.Floor(Roll(seed, index, 70, 5) * 1200);
+            var length = 700 + (int)Math.Floor(Roll(seed, index, 70, 5) * 700);
             Course(index, 70, origin.X, origin.Y, length, Kind.Mountain, CountryReach(index, 70), Range);
         }
 
-        for (var index = 0; index < RiverCourses; index++)
+        var riverSquares = WorldMap.Side / RiverRegion * (WorldMap.Side / RiverRegion);
+        for (var index = 0; index < riverSquares; index++)
         {
-            if (Start(index, 110, 0) is not { } origin)
+            if (Cell(index, 110, RiverRegion) is not { } origin)
             {
                 continue;
             }
@@ -399,20 +394,19 @@ public static class FarWilds
                 }
             }
 
-            var toEdge = Roll(seed, index, 110, 7) < 0.5;
-            var length = toEdge ? 2500 : 900 + (int)Math.Floor(Roll(seed, index, 110, 8) * 800);
+            var length = 700 + (int)Math.Floor(Roll(seed, index, 110, 8) * 800);
             Course(index, 110, origin.X, origin.Y, length, Kind.Water, reach, River);
         }
 
         var thicketSquares = WorldMap.Side / ThicketRegion * (WorldMap.Side / ThicketRegion);
         for (var index = 0; index < thicketSquares; index++)
         {
-            if (Roll(seed, index, 90, 6) < 0.4 || Cell(index, 90, ThicketRegion) is not { } origin)
+            if (Roll(seed, index, 90, 6) < 0.3 || Cell(index, 90, ThicketRegion) is not { } origin)
             {
                 continue;
             }
 
-            var length = 200 + (int)Math.Floor(Roll(seed, index, 90, 5) * 300);
+            var length = 150 + (int)Math.Floor(Roll(seed, index, 90, 5) * 200);
             Course(index, 90, origin.X, origin.Y, length, Kind.Thicket, CountryReach(index, 90), Thicket);
         }
 

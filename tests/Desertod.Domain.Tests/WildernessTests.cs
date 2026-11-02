@@ -254,6 +254,7 @@ public class WildernessTests
         Assert.Equal(480, Task("dig-tunnel").WorkSeconds);
 
         citizen.StoredEnergy = citizen.MaximumEnergy;
+        citizen.IdleSpot = Centre(face);
         CycleEngine.Start(citizen, Task("dig-tunnel"), context, citizen.CycleEndsAt!.Value, Centre(inner));
         Finish(citizen, context);
 

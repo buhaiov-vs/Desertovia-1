@@ -26,6 +26,27 @@ public class FarWalkTests
         Assert.Equal(sample.Way, way?.Select(point => Text(point)).ToArray());
     }
 
+    private static TilePoint Point(string text)
+    {
+        var parts = text.Split(',');
+
+        return new TilePoint(double.Parse(parts[0], CultureInfo.InvariantCulture), double.Parse(parts[1], CultureInfo.InvariantCulture));
+    }
+
+    private static string Text(TilePoint point) =>
+        $"{point.X.ToString(CultureInfo.InvariantCulture)},{point.Y.ToString(CultureInfo.InvariantCulture)}";
+}
+
+/// <summary>Timing tests run alone, so they measure the code and not the other tests sharing the machine.</summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class TimingCollection
+{
+    public const string Name = "Timing";
+}
+
+[Collection(TimingCollection.Name)]
+public class FarWalkTimingTests
+{
     [Fact]
     public void AWalkAcrossTheWholeLand_IsAnsweredQuickly()
     {
@@ -41,14 +62,4 @@ public class FarWalkTests
 
         Assert.True(watch.ElapsedMilliseconds < 1_500, $"a walk across the land took {watch.ElapsedMilliseconds} ms");
     }
-
-    private static TilePoint Point(string text)
-    {
-        var parts = text.Split(',');
-
-        return new TilePoint(double.Parse(parts[0], CultureInfo.InvariantCulture), double.Parse(parts[1], CultureInfo.InvariantCulture));
-    }
-
-    private static string Text(TilePoint point) =>
-        $"{point.X.ToString(CultureInfo.InvariantCulture)},{point.Y.ToString(CultureInfo.InvariantCulture)}";
 }

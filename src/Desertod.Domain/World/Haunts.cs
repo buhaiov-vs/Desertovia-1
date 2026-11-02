@@ -6,8 +6,8 @@ namespace Desertod.Domain.World;
 /// Lone foes haunting the land around the village and between the den rings. The land is cut into squares of
 /// <see cref="Cell"/> tiles; each square holds one foe at a seeded random tile. Its band is the highest ring whose floor
 /// that tile reaches, and the first band inside the first ring, so level 1 foes roam right outside the vale; the foe
-/// is of the band's level, one level below it by <see cref="Below"/>, or up to four levels above it by
-/// <see cref="Above"/>, so a careless pull can wake a much stronger foe. Nothing is stored: the same
+/// is of the band's level, or up to three levels above or two below it by <see cref="Shifts"/>, so a careless pull can
+/// wake a much stronger foe. Nothing is stored: the same
 /// seed always places the same foes, and the browser's <c>haunts.ts</c> places them on the same tiles.
 /// A foe wanders around its tile (<see cref="PositionAt"/>) and fights as a den with one protector of its level,
 /// starting where it walked; after the fight it goes back there and wanders on.
@@ -17,11 +17,10 @@ public static class Haunts
     /// <summary>Side of the square that holds one foe, in tiles: about two foes for every 64 × 64.</summary>
     public const int Cell = 45;
 
-    /// <summary>Share of foes one level below the band.</summary>
-    public const double Below = 0.05;
-
-    /// <summary>Levels above the band and the share of foes of each: the further above, the rarer.</summary>
-    public static IReadOnlyList<(int Levels, double Share)> Above { get; } = [(4, 0.03), (3, 0.06), (2, 0.09), (1, 0.12)];
+    /// <summary>
+    /// Levels off the band and the share of foes of each: the further off, the rarer. The other 76% are of the band.
+    /// </summary>
+    public static IReadOnlyList<(int Levels, double Share)> Shifts { get; } = [(3, 0.03), (2, 0.06), (1, 0.09), (-1, 0.05), (-2, 0.01)];
 
     /// <summary>No foe stands this close to a den, in tiles, so it never joins a den fight.</summary>
     public const double DenClearance = 40;
@@ -116,18 +115,13 @@ public static class Haunts
     /// <summary>The level of a foe of <paramref name="band"/> for a <paramref name="mix"/> in [0, 1), within the known levels.</summary>
     public static int LevelOf(int band, double mix)
     {
-        if (mix < Below)
-        {
-            return Math.Max(1, band - 1);
-        }
-
-        var share = Below;
-        foreach (var (levels, chance) in Above)
+        var share = 0.0;
+        foreach (var (levels, chance) in Shifts)
         {
             share += chance;
             if (mix < share)
             {
-                return Math.Min(SpawnRings.Levels.Count, band + levels);
+                return Math.Clamp(band + levels, 1, SpawnRings.Levels.Count);
             }
         }
 

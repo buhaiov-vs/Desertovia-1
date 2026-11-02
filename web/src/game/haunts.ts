@@ -4,16 +4,14 @@ import { SPAWN_LEVELS, type RingLand, type SpawnPoint } from './spawnRings.ts'
  * Lone foes haunting the land around the village and between the den rings, as the server's `Haunts` places them.
  * The land is cut into squares of `CELL` tiles; each square holds one foe at a seeded random tile. Its band is the
  * highest ring whose floor that tile reaches, and the first band inside the first ring; the foe is of the band's
- * level, one level below it by `BELOW`, or up to four levels above it by `ABOVE`.
+ * level, or up to three levels above or two below it by `SHIFTS`.
  * A foe wanders around its tile (`wanderAt`) and fights as a den with one protector of its level, starting where it walked.
  */
 
 /** Side of the square that holds one foe, in tiles: about two foes for every 64 × 64. */
 export const CELL = 45
-/** Share of foes one level below the band. */
-export const BELOW = 0.05
-/** Levels above the band and the share of foes of each: the further above, the rarer. */
-export const ABOVE: ReadonlyArray<readonly [levels: number, share: number]> = [[4, 0.03], [3, 0.06], [2, 0.09], [1, 0.12]]
+/** Levels off the band and the share of foes of each: the further off, the rarer. The other 76% are of the band. */
+export const SHIFTS: ReadonlyArray<readonly [levels: number, share: number]> = [[3, 0.03], [2, 0.06], [1, 0.09], [-1, 0.05], [-2, 0.01]]
 /** No foe stands this close to a den, in tiles, so it never joins a den fight. */
 export const DEN_CLEARANCE = 40
 /** Side of a foe's claim: it gives up a chase half this far from where the chase began. */
@@ -99,11 +97,10 @@ export function hauntAt(seed: number, cellX: number, cellY: number, { camp, land
 
 /** The level of a foe of `band` for a `mix` in [0, 1), within the known levels: the server's `Haunts.LevelOf`. */
 export function levelOf(band: number, mix: number): number {
-  if (mix < BELOW) return Math.max(1, band - 1)
-  let share = BELOW
-  for (const [levels, chance] of ABOVE) {
+  let share = 0
+  for (const [levels, chance] of SHIFTS) {
     share += chance
-    if (mix < share) return Math.min(SPAWN_LEVELS.length, band + levels)
+    if (mix < share) return Math.min(SPAWN_LEVELS.length, Math.max(1, band + levels))
   }
 
   return band

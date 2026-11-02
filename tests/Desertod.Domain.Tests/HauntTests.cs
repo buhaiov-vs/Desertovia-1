@@ -98,13 +98,13 @@ public class HauntTests
             .GroupBy(level => level)
             .ToDictionary(group => group.Key, group => group.Count());
 
-        Assert.Equal([500, 6_500, 1_200, 900, 600, 300], new[] { 9, 10, 11, 12, 13, 14 }.Select(level => counts[level]));
-        Assert.Equal(SpawnRings.Levels.Count, Haunts.LevelOf(SpawnRings.Levels.Count - 1, 0.06));
-        Assert.Equal(1, Haunts.LevelOf(1, 0));
+        Assert.Equal([100, 500, 7_600, 900, 600, 300], new[] { 8, 9, 10, 11, 12, 13 }.Select(level => counts[level]));
+        Assert.Equal(SpawnRings.Levels.Count, Haunts.LevelOf(SpawnRings.Levels.Count - 1, 0.01));
+        Assert.Equal(1, Haunts.LevelOf(1, 0.335));
     }
 
     [Fact]
-    public void TwoInThreeFoes_AreOfTheirBand_AndNoneStandsNearTheValeOrADen()
+    public void ThreeInFourFoes_AreOfTheirBand_AndNoneStandsNearTheValeOrADen()
     {
         var dens = SpawnRings.Points(7);
         var camp = WorldMap.Places[WorldMap.Camp];
@@ -120,7 +120,7 @@ public class HauntTests
 
                 var distance = foe.Center.DistanceTo(camp);
                 var band = Math.Max(1, SpawnRings.Levels.Count(level => level.Floor <= distance));
-                Assert.InRange(foe.Level, band - 1, band + 4);
+                Assert.InRange(foe.Level, band - 2, band + 3);
                 Assert.True(Haunts.FromVale(foe.Center) >= Haunts.ValeClearance);
                 Assert.All(dens, den => Assert.True(den.Center.DistanceTo(foe.Center) >= Haunts.DenClearance));
                 Assert.True(foe.Roams);
@@ -129,7 +129,7 @@ public class HauntTests
             }
         }
 
-        Assert.InRange((double)off / (own + off), 0.3, 0.4);
+        Assert.InRange((double)off / (own + off), 0.19, 0.29);
     }
 
     [Fact]
@@ -150,8 +150,8 @@ public class HauntTests
         }
 
         Assert.True(inner.Count > 100, $"{inner.Count} foes inside the first ring");
-        Assert.All(inner, foe => Assert.InRange(foe.Level, 1, 5));
-        Assert.True(inner.Count(foe => foe.Level == 1) > inner.Count * 0.6);
+        Assert.All(inner, foe => Assert.InRange(foe.Level, 1, 4));
+        Assert.True(inner.Count(foe => foe.Level == 1) > inner.Count * 0.75);
         Assert.Contains(inner, foe => Haunts.FromVale(foe.Center) < 40);
         var start = DateTimeOffset.UnixEpoch.AddDays(20_000);
         Assert.All(inner, foe => Assert.All(Enumerable.Range(0, 240), step =>

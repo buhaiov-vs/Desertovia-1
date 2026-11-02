@@ -84,21 +84,27 @@ public class FarWildsTests
     }
 
     [Fact]
-    public void Massifs_StandAsBroadMountainRegions()
+    public void Massifs_StandAsSmallBroadMountainRegions()
     {
         static bool Rock(FarWilds.Kind kind) => kind == FarWilds.Kind.Mountain;
         var land = WorldMap.Land;
         var massifs = new List<(int X, int Y)>();
-        for (var y = land.Y + 20; y < land.Y + land.Height - 20; y += 16)
+        var huge = 0;
+        for (var y = land.Y + 20; y < land.Y + land.Height - 20; y += 8)
         {
-            for (var x = land.X + 20; x < land.X + land.Width - 20; x += 16)
+            for (var x = land.X + 20; x < land.X + land.Width - 20; x += 8)
             {
-                if (FarWilds.At(x, y, 1) != FarWilds.Kind.Mountain || massifs.Any(m => Math.Abs(m.X - x) + Math.Abs(m.Y - y) < 400))
+                if (FarWilds.At(x, y, 1) != FarWilds.Kind.Mountain || !Solid(1, x, y, 6, Rock))
                 {
                     continue;
                 }
 
-                if (Solid(1, x, y, 10, Rock))
+                if (Solid(1, x, y, 16, Rock))
+                {
+                    huge++;
+                }
+
+                if (!massifs.Any(m => Math.Abs(m.X - x) + Math.Abs(m.Y - y) < 400))
                 {
                     massifs.Add((x, y));
                 }
@@ -106,6 +112,7 @@ public class FarWildsTests
         }
 
         Assert.True(massifs.Count >= 3, $"massifs {massifs.Count}");
+        Assert.Equal(0, huge);
     }
 
     [Theory]
@@ -197,7 +204,7 @@ public class FarWildsTests
             }
         }
 
-        Assert.Equal(2969343587u, hash);
+        Assert.Equal(112541608u, hash);
     }
 
     /// <summary>Whether two open tiles lie in wide stretches of land that no short walk joins.</summary>

@@ -1338,6 +1338,12 @@ export class VillageWorld {
       const asleep = walker.sleepsAt !== null && Date.now() >= walker.sleepsAt
       walker.working = working || waitAt !== null
       walker.staying = stayAt !== null || asleep
+      // A walker seen for the first time stands where the server has them, not at the camp.
+      if (fresh && stayAt) {
+        walker.x = walker.targetX = stayAt.x * TILE
+        walker.y = walker.targetY = stayAt.y * TILE
+        walker.sprite.position.set(walker.x, walker.y)
+      }
       const teleportedAt = citizen.teleportedAt ? Date.parse(citizen.teleportedAt) : 0
       if (teleportedAt > walker.teleportedAt) {
         if (!fresh && stayAt) {

@@ -29,6 +29,8 @@ const MIN_HALF_WIDTH = 1.5
  * eighth from its heading, so it bends gently and never sharply.
  */
 const TURN_GAP = 20
+/** A branch starts as broad as its parent where it leaves it and eases to its own width over this many steps. */
+const BRANCH_TAPER = 40
 /** A course stops once it heads this close to the edge of the land. */
 const EDGE_STOP = 8
 
@@ -129,8 +131,17 @@ function build(seed: number) {
     if (!clearOfCamp(x, y, countryReach(seed, index, salt) + room)) return null
     return { x, y }
   }
-  /** Three tiles across most of the way, easing up to a broad stretch now and then. A river widens downstream. */
-  const halfWidth = (id: number, salt: number, step: number, length: number, kind: FarKind, depth: number, shape: Shape) => {
+  /**
+   * Three tiles across most of the way, easing up to a broad stretch now and then. A river widens downstream. A branch
+   * leaves its parent at the parent's `start` width, so where the two meet the width changes gradually.
+   */
+  const halfWidth = (id: number, salt: number, step: number, length: number, kind: FarKind, depth: number, shape: Shape, start: number) => {
+    const own = ownWidth(id, salt, step, length, kind, depth, shape, start > 0)
+    if (start <= 0 || step >= BRANCH_TAPER) return own
+    const t = step / BRANCH_TAPER
+    return start + (own - start) * (t * t * (3 - 2 * t))
+  }
+  const ownWidth = (id: number, salt: number, step: number, length: number, kind: FarKind, depth: number, shape: Shape, branch: boolean) => {
     const knot = Math.floor(step / shape.period)
     const t = step / shape.period - knot
     const from = farWildRoll(seed, id, knot, salt + 62)
@@ -138,7 +149,7 @@ function build(seed: number) {
     const swell = from + (to - from) * (t * t * (3 - 2 * t))
     const widest = shape.swell[depth]
     if (kind === 'water') return Math.max(MIN_HALF_WIDTH, widest * (0.15 + 0.85 * step / length) * (0.6 + 0.4 * swell))
-    const ends = Math.min(1, step / 24, (length - step) / 24)
+    const ends = Math.min(1, branch ? 1 : step / 24, (length - step) / 24)
     return Math.max(MIN_HALF_WIDTH, widest * swell * swell * ends)
   }
   const grow = (
@@ -155,6 +166,7 @@ function build(seed: number) {
     childMin: number,
     childSpan: number,
     forkChance: number,
+    start: number,
   ) => {
     let home = dir
     let px = x
@@ -163,7 +175,7 @@ function build(seed: number) {
     let emerged = false
     for (let step = 0; step < length; step++) {
       if (!onLand(px, py) || !clearOfCamp(px, py, reach)) break
-      const middle = halfWidth(id, salt, step, length, kind, depth, shape)
+      const middle = halfWidth(id, salt, step, length, kind, depth, shape, start)
       const radius = middle >= MIN_HALF_WIDTH + 1 ? middle + farWildRoll(seed, id, step, salt + 81) * shape.rough : middle
       // A course never runs into another one, and a branch never turns back into its parent: once it is clear of the
       // ground it started on, it ends where the tile just ahead of it is taken.
@@ -177,7 +189,7 @@ function build(seed: number) {
         const childDir = (dir + off) % 8
         const childLen = childMin + Math.floor(farWildRoll(seed, id, step, salt + 73) * childSpan)
         const childId = (id + (step + 1) * 1024 + (depth + 1) * 262144) | 0
-        grow(childId, salt, px, py, childLen, kind, depth + 1, childDir, reach, shape, Math.max(8, childMin >> 1), Math.max(8, childSpan >> 1), forkChance * 0.45)
+        grow(childId, salt, px, py, childLen, kind, depth + 1, childDir, reach, shape, Math.max(8, childMin >> 1), Math.max(8, childSpan >> 1), forkChance * 0.45, middle)
       }
       if (step > 0 && step % 240 === 0 && farWildRoll(seed, id, step, salt + 52) < 0.4) {
         home = (home + (farWildRoll(seed, id, step, salt + 53) < 0.5 ? 1 : 7)) % 8
@@ -212,18 +224,18 @@ function build(seed: number) {
       if (!moved) break
     }
   }
-  const course = (id: number, salt: number, x: number, y: number, length: number, kind: FarKind, reach: number, shape: Shape) => {
+  const course = (id: number, salt: number, x: number, y: number, length: number, kind: FarKind, reach: number, shape: Shape, start = 0) => {
     const dir = Math.floor(farWildRoll(seed, id, salt, 3) * 8)
-    grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.childMin, shape.childSpan, shape.forkChance)
+    grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.childMin, shape.childSpan, shape.forkChance, start)
   }
 
   const massifSquares = (FAR_LAND_SIDE / MASSIF_REGION) ** 2
   for (let index = 0; index < massifSquares; index++) {
-    const radius = 20 + Math.floor(farWildRoll(seed, index, 130, 6) * 20)
+    const radius = 8 + Math.floor(farWildRoll(seed, index, 130, 6) * 8)
     const origin = cell(index, 130, MASSIF_REGION, radius * 2)
     if (!origin) continue
     const reach = countryReach(seed, index, 130)
-    const lumps = 14 + Math.floor(farWildRoll(seed, index, 130, 7) * 10)
+    const lumps = 8 + Math.floor(farWildRoll(seed, index, 130, 7) * 5)
     for (let lump = 0; lump < lumps; lump++) {
       const ox = Math.floor((farWildRoll(seed, index, lump, 131) * 2 - 1) * radius * 0.75)
       const oy = Math.floor((farWildRoll(seed, index, lump, 132) * 2 - 1) * radius * 0.75)
@@ -234,7 +246,7 @@ function build(seed: number) {
     for (let arm = 0; arm < arms; arm++) {
       const id = index * 8 + arm
       const length = 400 + Math.floor(farWildRoll(seed, id, 140, 5) * 500)
-      course(id, 140, origin.x, origin.y, length, 'mountain', reach, RANGE)
+      course(id, 140, origin.x, origin.y, length, 'mountain', reach, RANGE, radius * 0.5)
     }
   }
   const rangeSquares = (FAR_LAND_SIDE / RANGE_REGION) ** 2

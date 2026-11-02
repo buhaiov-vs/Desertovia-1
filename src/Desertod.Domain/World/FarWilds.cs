@@ -37,6 +37,9 @@ public static class FarWilds
     /// </summary>
     private const int TurnGap = 20;
 
+    /// <summary>A branch starts as broad as its parent where it leaves it and eases to its own width over this many steps.</summary>
+    private const int BranchTaper = 40;
+
     private static readonly Shape Range = new(0.15, 120, 0.25, 1, 150, 250, [7.5, 3.5, 1.5], 150, 0.9);
     private static readonly Shape Thicket = new(0.3, 60, 0.25, 1, 50, 70, [5, 2], 80, 0.8);
     private static readonly Shape River = new(0.2, 100, 0.3, 1, 150, 200, [2.5, 1, 0.5], 80, 0);
@@ -246,8 +249,22 @@ public static class FarWilds
             return (x, y);
         }
 
+        // A branch leaves its parent at the parent's start width, so where the two meet the width changes gradually.
+        double HalfWidth(int id, int salt, int step, int length, Kind kind, int depth, Shape shape, double start)
+        {
+            var own = OwnWidth(id, salt, step, length, kind, depth, shape, start > 0);
+            if (start <= 0 || step >= BranchTaper)
+            {
+                return own;
+            }
+
+            var t = (double)step / BranchTaper;
+
+            return start + (own - start) * (t * t * (3 - 2 * t));
+        }
+
         // Three tiles across most of the way, easing up to a broad stretch now and then. A river widens downstream.
-        double HalfWidth(int id, int salt, int step, int length, Kind kind, int depth, Shape shape)
+        double OwnWidth(int id, int salt, int step, int length, Kind kind, int depth, Shape shape, bool branch)
         {
             var knot = step / shape.Period;
             var t = (double)step / shape.Period - knot;
@@ -260,11 +277,11 @@ public static class FarWilds
                 return Math.Max(MinHalfWidth, widest * (0.15 + 0.85 * step / length) * (0.6 + 0.4 * swell));
             }
 
-            var ends = Math.Min(1, Math.Min(step / 24.0, (length - step) / 24.0));
+            var ends = Math.Min(1, Math.Min(branch ? 1 : step / 24.0, (length - step) / 24.0));
             return Math.Max(MinHalfWidth, widest * swell * swell * ends);
         }
 
-        void Grow(int id, int salt, int x, int y, int length, Kind kind, int depth, int dir, int reach, Shape shape, int childMin, int childSpan, double forkChance)
+        void Grow(int id, int salt, int x, int y, int length, Kind kind, int depth, int dir, int reach, Shape shape, int childMin, int childSpan, double forkChance, double start)
         {
             var home = dir;
             var px = x;
@@ -278,7 +295,7 @@ public static class FarWilds
                     break;
                 }
 
-                var middle = HalfWidth(id, salt, step, length, kind, depth, shape);
+                var middle = HalfWidth(id, salt, step, length, kind, depth, shape, start);
                 var radius = middle >= MinHalfWidth + 1 ? middle + Roll(seed, id, step, salt + 81) * shape.Rough : middle;
 
                 // A course never runs into another one, and a branch never turns back into its parent: once it is clear of
@@ -300,7 +317,7 @@ public static class FarWilds
                     var childDir = (dir + off) % 8;
                     var childLen = childMin + (int)Math.Floor(Roll(seed, id, step, salt + 73) * childSpan);
                     var childId = unchecked(id + (step + 1) * 1024 + (depth + 1) * 262144);
-                    Grow(childId, salt, px, py, childLen, kind, depth + 1, childDir, reach, shape, Math.Max(8, childMin >> 1), Math.Max(8, childSpan >> 1), forkChance * 0.45);
+                    Grow(childId, salt, px, py, childLen, kind, depth + 1, childDir, reach, shape, Math.Max(8, childMin >> 1), Math.Max(8, childSpan >> 1), forkChance * 0.45, middle);
                 }
 
                 if (step > 0 && step % 240 == 0 && Roll(seed, id, step, salt + 52) < 0.4)
@@ -361,23 +378,23 @@ public static class FarWilds
             }
         }
 
-        void Course(int id, int salt, int x, int y, int length, Kind kind, int reach, Shape shape)
+        void Course(int id, int salt, int x, int y, int length, Kind kind, int reach, Shape shape, double start = 0)
         {
             var dir = (int)Math.Floor(Roll(seed, id, salt, 3) * 8);
-            Grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.ChildMin, shape.ChildSpan, shape.ForkChance);
+            Grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.ChildMin, shape.ChildSpan, shape.ForkChance, start);
         }
 
         var massifSquares = WorldMap.Side / MassifRegion * (WorldMap.Side / MassifRegion);
         for (var index = 0; index < massifSquares; index++)
         {
-            var radius = 20 + (int)Math.Floor(Roll(seed, index, 130, 6) * 20);
+            var radius = 8 + (int)Math.Floor(Roll(seed, index, 130, 6) * 8);
             if (Cell(index, 130, MassifRegion, radius * 2) is not { } origin)
             {
                 continue;
             }
 
             var reach = CountryReach(index, 130);
-            var lumps = 14 + (int)Math.Floor(Roll(seed, index, 130, 7) * 10);
+            var lumps = 8 + (int)Math.Floor(Roll(seed, index, 130, 7) * 5);
             for (var lump = 0; lump < lumps; lump++)
             {
                 var ox = (int)Math.Floor((Roll(seed, index, lump, 131) * 2 - 1) * radius * 0.75);
@@ -391,7 +408,7 @@ public static class FarWilds
             {
                 var id = index * 8 + arm;
                 var length = 400 + (int)Math.Floor(Roll(seed, id, 140, 5) * 500);
-                Course(id, 140, origin.X, origin.Y, length, Kind.Mountain, reach, Range);
+                Course(id, 140, origin.X, origin.Y, length, Kind.Mountain, reach, Range, radius * 0.5);
             }
         }
 

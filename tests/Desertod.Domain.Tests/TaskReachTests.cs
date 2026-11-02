@@ -10,6 +10,8 @@ public sealed class TaskReachTests
     public void A_spot_close_enough_is_worked()
     {
         var village = NewVillage();
+        // The ravine runs elsewhere in every camp; this one leaves the spot on open ground.
+        village.Id = new Guid("00000000-0000-7000-8000-000000000001");
         var citizen = NewCitizen(village);
 
         CycleEngine.Start(citizen, Task("quarry-stone"), WorkContext.For(village), Now, new TilePoint(-5, 10));

@@ -144,5 +144,5 @@ test('a river is water, not a clearing', () => {
 })
 
 test('seed 1 matches the server fingerprint', () => {
-  assert.equal(fingerprint(1), 2969343587)
+  assert.equal(fingerprint(1), 112541608)
 })

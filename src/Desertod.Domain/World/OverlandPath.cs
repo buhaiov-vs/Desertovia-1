@@ -10,6 +10,13 @@ namespace Desertod.Domain.World;
 public static class OverlandPath
 {
     private const double MarshCost = 3;
+    private const double Diagonal = 1.4142135623730951;
+
+    /// <summary>How many far tiles one walk may search before its way counts as blocked.</summary>
+    private const int FarSearchLimit = 300_000;
+
+    /// <summary>How strongly the far search leans toward the goal. Routes run at most this much longer than the shortest.</summary>
+    private const double FarGreed = 1.2;
     private static readonly TileArea BridgeDeck = new(30, 12, 4, 2);
 
     /// <summary>Turns from after <paramref name="from"/> through to <paramref name="to"/>, or null when blocked.</summary>
@@ -104,91 +111,171 @@ public static class OverlandPath
         Wilds? wilds)
     {
         var land = WorldMap.Land;
+        var startX = (int)Math.Floor(from.X);
+        var startY = (int)Math.Floor(from.Y);
         var goalX = (int)Math.Floor(to.X);
         var goalY = (int)Math.Floor(to.Y);
-        bool Blocked(int x, int y) => FarBlocked(terrain, x, y, seed, wilds, goalX, goalY, bridge, crossings);
+        var cleared = wilds?.Obstacles.Where(o => o.ClearedAt is not null).Select(o => (o.X, o.Y)).ToHashSet();
+        bool Blocked(int x, int y) => FarBlocked(terrain, x, y, seed, wilds, cleared, goalX, goalY, bridge, crossings);
         if (goalX < land.X || goalY < land.Y || goalX >= land.X + land.Width || goalY >= land.Y + land.Height
             || Blocked(goalX, goalY))
         {
             return null;
         }
 
-        var cursor = from;
-        var points = new List<TilePoint>();
-        for (var hop = 0; hop < 24; hop++)
+        bool Open(int x, int y) =>
+            (x == startX && y == startY)
+            || (x >= land.X && y >= land.Y && x < land.X + land.Width && y < land.Y + land.Height && !Blocked(x, y));
+
+        if (Clear(from, to, Open)) return [to];
+
+        var tiles = FarSearch(startX, startY, goalX, goalY, Open);
+        if (tiles is null) return null;
+
+        var points = new List<TilePoint> { from };
+        points.AddRange(tiles.Skip(1).SkipLast(1).Select(tile => new TilePoint(tile.X + 0.5, tile.Y + 0.5)));
+        points.Add(to);
+
+        return Pull(points, Open);
+    }
+
+    /// <summary>
+    /// Tile centres from the start tile to the goal tile, found by a slightly greedy A*: routes run at most about a fifth
+    /// longer than the shortest, and long walks stay quick. Null when no way is found within <see cref="FarSearchLimit"/> tiles.
+    /// Matches <c>farSearch</c> in the browser step for step, so both agree on what can be reached.
+    /// </summary>
+    private static List<(int X, int Y)>? FarSearch(int startX, int startY, int goalX, int goalY, Func<int, int, bool> open)
+    {
+        var cost = new Dictionary<int, double>();
+        var cameFrom = new Dictionary<int, int>();
+        var closed = new HashSet<int>();
+        var heap = new List<(int Key, double Score, double Cost)>();
+
+        double Heuristic(int x, int y)
         {
-            var distance = cursor.DistanceTo(to);
-            var steps = Math.Max(1, Math.Min(4000, (int)Math.Ceiling(distance)));
-            int? hitX = null;
-            int? hitY = null;
-            for (var step = 1; step < steps; step++)
-            {
-                var x = (int)Math.Floor(cursor.X + (to.X - cursor.X) * step / steps);
-                var y = (int)Math.Floor(cursor.Y + (to.Y - cursor.Y) * step / steps);
-                if (!Blocked(x, y)) continue;
-                hitX = x;
-                hitY = y;
-                break;
-            }
+            var dx = Math.Abs(x - goalX);
+            var dy = Math.Abs(y - goalY);
 
-            if (hitX is null || hitY is null)
-            {
-                points.Add(to);
-                return points;
-            }
-
-            var stepped = false;
-            foreach (var opening in FarWilds.Openings(hitX.Value, hitY.Value, Blocked))
-            {
-                var gate = new TilePoint(opening.X + 0.5, opening.Y + 0.5);
-                var approach = Approach(cursor, opening.X, opening.Y, Blocked);
-                if (Hits(cursor, approach, Blocked)) continue;
-                if (gate.DistanceTo(approach) >= 0.01 && Hits(approach, gate, Blocked)) continue;
-                if (approach.DistanceTo(cursor) < 0.01 && gate.DistanceTo(approach) < 0.01) continue;
-                if (approach.DistanceTo(cursor) >= 0.01) points.Add(approach);
-                if (gate.DistanceTo(approach) >= 0.01)
-                {
-                    points.Add(gate);
-                    cursor = gate;
-                }
-                else
-                {
-                    cursor = approach;
-                }
-
-                stepped = true;
-                break;
-            }
-
-            if (!stepped) return null;
+            return FarGreed * (Math.Max(dx, dy) + (Diagonal - 1) * Math.Min(dx, dy));
         }
 
-        return null;
-    }
+        // Lower score first; on a tie the node further along, then the lower key, so both sides pop in the same order.
+        bool Before((int Key, double Score, double Cost) a, (int Key, double Score, double Cost) b) =>
+            a.Score < b.Score || (a.Score == b.Score && (a.Cost > b.Cost || (a.Cost == b.Cost && a.Key < b.Key)));
 
-    /// <summary>The open tile beside a gap, on the side the walker is coming from.</summary>
-    private static TilePoint Approach(TilePoint cursor, int openX, int openY, Func<int, int, bool> blocked)
-    {
-        var towardX = Math.Sign(cursor.X - (openX + 0.5));
-        var towardY = Math.Sign(cursor.Y - (openY + 0.5));
-        if (towardX != 0 && !blocked(openX + towardX, openY)) return new TilePoint(openX + towardX + 0.5, openY + 0.5);
-        if (towardY != 0 && !blocked(openX, openY + towardY)) return new TilePoint(openX + 0.5, openY + towardY + 0.5);
-        return new TilePoint(openX + 0.5, openY + 0.5);
-    }
-
-    /// <summary>Whether the straight step from <paramref name="a"/> to <paramref name="b"/> enters a blocked tile.</summary>
-    private static bool Hits(TilePoint a, TilePoint b, Func<int, int, bool> blocked)
-    {
-        var steps = Math.Max(1, Math.Min(4000, (int)Math.Ceiling(a.DistanceTo(b))));
-        for (var step = 1; step < steps; step++)
+        void Push(int key, double score, double reached)
         {
-            var x = (int)Math.Floor(a.X + (b.X - a.X) * step / steps);
-            var y = (int)Math.Floor(a.Y + (b.Y - a.Y) * step / steps);
-            if (blocked(x, y)) return true;
+            heap.Add((key, score, reached));
+            var child = heap.Count - 1;
+            while (child > 0)
+            {
+                var parent = (child - 1) >> 1;
+                if (!Before(heap[child], heap[parent])) break;
+                (heap[parent], heap[child]) = (heap[child], heap[parent]);
+                child = parent;
+            }
         }
 
-        return false;
+        (int Key, double Score, double Cost) Pop()
+        {
+            var top = heap[0];
+            var last = heap[^1];
+            heap.RemoveAt(heap.Count - 1);
+            if (heap.Count > 0)
+            {
+                heap[0] = last;
+                var parent = 0;
+                for (;;)
+                {
+                    var left = parent * 2 + 1;
+                    var right = left + 1;
+                    var first = parent;
+                    if (left < heap.Count && Before(heap[left], heap[first])) first = left;
+                    if (right < heap.Count && Before(heap[right], heap[first])) first = right;
+                    if (first == parent) break;
+                    (heap[parent], heap[first]) = (heap[first], heap[parent]);
+                    parent = first;
+                }
+            }
+
+            return top;
+        }
+
+        var start = TileKey(startX, startY);
+        var goal = TileKey(goalX, goalY);
+        cost[start] = 0;
+        Push(start, Heuristic(startX, startY), 0);
+        while (heap.Count > 0)
+        {
+            var (node, _, reached) = Pop();
+            if (!closed.Add(node)) continue;
+            if (node == goal) break;
+            if (closed.Count > FarSearchLimit) return null;
+
+            var (x, y) = FromKey(node);
+            for (var dy = -1; dy <= 1; dy++)
+            {
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    if (dx == 0 && dy == 0 || !open(x + dx, y + dy)) continue;
+                    if (dx != 0 && dy != 0 && (!open(x + dx, y) || !open(x, y + dy))) continue;
+                    var next = TileKey(x + dx, y + dy);
+                    var nextCost = reached + (dx != 0 && dy != 0 ? Diagonal : 1);
+                    if (closed.Contains(next) || (cost.TryGetValue(next, out var known) && nextCost >= known)) continue;
+                    cost[next] = nextCost;
+                    cameFrom[next] = node;
+                    Push(next, nextCost + Heuristic(x + dx, y + dy), nextCost);
+                }
+            }
+        }
+
+        if (!closed.Contains(goal)) return null;
+
+        var tiles = new List<(int X, int Y)>();
+        for (var node = goal; ; node = cameFrom[node])
+        {
+            tiles.Add(FromKey(node));
+            if (node == start) break;
+        }
+
+        tiles.Reverse();
+
+        return tiles;
     }
+
+    /// <summary>
+    /// Keeps only the turns of a route: from each kept point, the furthest later point still in a straight clear line.
+    /// The reach doubles while the line stays clear, then halves back, so a long route is trimmed quickly.
+    /// </summary>
+    private static List<TilePoint> Pull(List<TilePoint> points, Func<int, int, bool> open)
+    {
+        var way = new List<TilePoint>();
+        for (var at = 0; at < points.Count - 1;)
+        {
+            var good = at + 1;
+            var reach = 1;
+            while (good + reach < points.Count && Clear(points[at], points[good + reach], open))
+            {
+                good += reach;
+                reach *= 2;
+            }
+
+            for (reach /= 2; reach > 0; reach /= 2)
+            {
+                if (good + reach < points.Count && Clear(points[at], points[good + reach], open)) good += reach;
+            }
+
+            way.Add(points[good]);
+            at = good;
+        }
+
+        return way;
+    }
+
+    /// <summary>Signed 32-bit pack of a tile. Matches <c>tileKey</c> in the browser.</summary>
+    private static int TileKey(int x, int y) => unchecked(((x + 8_000) << 16) | ((y + 8_000) & 0xffff));
+
+    private static (int X, int Y) FromKey(int key) => ((key >> 16) - 8_000, (key & 0xffff) - 8_000);
 
     private static bool FarBlocked(
         byte[] terrain,
@@ -196,6 +283,7 @@ public static class OverlandPath
         int y,
         uint seed,
         Wilds? wilds,
+        HashSet<(int X, int Y)>? cleared,
         int goalX,
         int goalY,
         bool bridge,
@@ -227,7 +315,7 @@ public static class OverlandPath
             return false;
         }
 
-        if (wilds?.Obstacles.Any(o => o.X == x && o.Y == y && o.ClearedAt is not null) == true)
+        if (cleared?.Contains((x, y)) == true)
         {
             return false;
         }
@@ -261,7 +349,8 @@ public static class OverlandPath
         var tMaxX = dx == 0 ? double.PositiveInfinity : (stepX > 0 ? x + 1 - a.X : a.X - x) * tDeltaX;
         var tMaxY = dy == 0 ? double.PositiveInfinity : (stepY > 0 ? y + 1 - a.Y : a.Y - y) * tDeltaY;
         if (!dry(x, y)) return false;
-        for (var guard = 0; (x != endX || y != endY) && guard < AuthoredTerrain.Width + AuthoredTerrain.Height; guard++)
+        var steps = Math.Abs(endX - x) + Math.Abs(endY - y) + 2;
+        for (var guard = 0; (x != endX || y != endY) && guard < steps; guard++)
         {
             if (tMaxX < tMaxY)
             {

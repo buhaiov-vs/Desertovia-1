@@ -27,6 +27,8 @@ const THICKET_REGION = 1000
 const MASSIF_PASS_SPACING = 40
 /** A course cuts a pass, ford or gap once this much of its cross-section has grown since the last one. */
 const GATE_LOAD = 400
+/** A course stops once it heads this close to the edge of the land. */
+const EDGE_STOP = 8
 
 const DX = [1, 0, -1, 0]
 const DY = [0, -1, 0, 1]
@@ -213,6 +215,8 @@ function build(seed: number) {
         const side = farWildRoll(seed, id, step, salt + 51) < 0.5 ? 1 : 7
         dir = (dir + side) % 8
       }
+      // A course ends short of the edge of the land rather than running along it, so it never walls off the edge.
+      if (!onLand(px + DX8[dir] * EDGE_STOP, py + DY8[dir] * EDGE_STOP)) break
       let moved = false
       for (let turn = 0; turn < 8; turn++) {
         const nd = (dir + TURN[turn]) % 8

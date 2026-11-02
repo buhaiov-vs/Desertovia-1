@@ -30,6 +30,9 @@ public static class FarWilds
     /// <summary>A course cuts a pass, ford or gap once this much of its cross-section has grown since the last one.</summary>
     private const double GateLoad = 400;
 
+    /// <summary>A course stops once it heads this close to the edge of the land.</summary>
+    private const int EdgeStop = 8;
+
     /// <summary>An open saddle, valley or ford. It reads as open ground, and no later course paints over it.</summary>
     private const Kind Saddle = (Kind)byte.MaxValue;
 
@@ -477,6 +480,12 @@ public static class FarWilds
                 {
                     var side = Roll(seed, id, step, salt + 51) < 0.5 ? 1 : 7;
                     dir = (dir + side) % 8;
+                }
+
+                // A course ends short of the edge of the land rather than running along it, so it never walls off the edge.
+                if (!OnLand(px + Dx8[dir] * EdgeStop, py + Dy8[dir] * EdgeStop))
+                {
+                    break;
                 }
 
                 var moved = false;

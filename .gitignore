@@ -21,6 +21,9 @@ CLAUDE.md
 # Personal notes
 docs/local/
 
+# Third-party asset packs (license forbids redistribution)
+art/archieves/
+
 # Editor settings
 .cursor/
 .claude/

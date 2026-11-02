@@ -375,7 +375,7 @@ export class DenLayer {
         guard.flash = Math.max(0, guard.flash - seconds)
         guard.lunge = Math.max(0, guard.lunge - seconds)
         const lunge =
-          guard.lunge > 0 ? Math.sin((1 - guard.lunge / LUNGE_SECONDS) * Math.PI) * 3 * (guard.height / LEVEL_ONE_HEIGHT) : 0
+          guard.lunge > 0 ? Math.sin((1 - guard.lunge / LUNGE_SECONDS) * Math.PI) * 3 * (guard.height / levelHeight(1)) : 0
         guard.view.scale.x = Math.abs(guard.view.scale.x) * guard.facing
         guard.view.position.set(guard.x + lunge * guard.facing, guard.y)
         this.tint(guard.view, guard.flash > 0 ? HIT_TINT : 0xffffff)

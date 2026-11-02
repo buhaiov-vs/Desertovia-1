@@ -16,20 +16,25 @@ export const FAR_VALE = { x: -44, y: -32, width: 120, height: 90 }
 /** The land is split into squares of these sizes, so every kind of course is spread evenly across it. */
 /** One massif per square. */
 const MASSIF_REGION = 4000
-/** One river per square. */
-const RIVER_REGION = 3000
+/** One river per square. Rivers, ranges and thickets share one size of square, so all three meet everywhere. */
+const RIVER_REGION = 800
 /** One range per square. */
-const RANGE_REGION = 1500
+const RANGE_REGION = 800
 /** Thickets grow in most of the squares of this size. */
-const THICKET_REGION = 750
+const THICKET_REGION = 800
 /** Every course reaches at least this far either side of its middle tile, so it is at least three tiles across. */
 const MIN_HALF_WIDTH = 1.5
+/**
+ * A course turns by one eighth of a circle at a time, at least this many steps apart, and never strays more than one
+ * eighth from its heading, so it bends gently and never sharply.
+ */
+const TURN_GAP = 20
 /** A course stops once it heads this close to the edge of the land. */
 const EDGE_STOP = 8
 
 const DX8 = [1, 1, 0, -1, -1, -1, 0, 1]
 const DY8 = [0, -1, -1, -1, 0, 1, 1, 1]
-const TURN = [0, 1, 7, 2, 6, 3, 5, 4]
+const TURN = [0, 1, 7]
 
 export type FarKind = 'open' | 'mountain' | 'thicket' | 'water'
 
@@ -49,9 +54,9 @@ interface Shape {
   rough: number
 }
 
-const RANGE: Shape = { wobble: 0.15, forkEvery: 80, forkChance: 0.5, maxDepth: 2, childMin: 150, childSpan: 250, swell: [7.5, 3.5, 1.5], period: 150, rough: 0.9 }
-const THICKET: Shape = { wobble: 0.3, forkEvery: 40, forkChance: 0.6, maxDepth: 1, childMin: 50, childSpan: 70, swell: [5, 2], period: 80, rough: 0.8 }
-const RIVER: Shape = { wobble: 0.2, forkEvery: 80, forkChance: 0.6, maxDepth: 2, childMin: 150, childSpan: 200, swell: [2.5, 1, 0.5], period: 80, rough: 0 }
+const RANGE: Shape = { wobble: 0.15, forkEvery: 120, forkChance: 0.25, maxDepth: 1, childMin: 150, childSpan: 250, swell: [7.5, 3.5, 1.5], period: 150, rough: 0.9 }
+const THICKET: Shape = { wobble: 0.3, forkEvery: 60, forkChance: 0.25, maxDepth: 1, childMin: 50, childSpan: 70, swell: [5, 2], period: 80, rough: 0.8 }
+const RIVER: Shape = { wobble: 0.2, forkEvery: 100, forkChance: 0.3, maxDepth: 1, childMin: 150, childSpan: 200, swell: [2.5, 1, 0.5], period: 80, rough: 0 }
 
 /** Stable 0…1 roll. `salt` keeps each decision on its own stream. Matches FarWilds.Roll. */
 export function farWildRoll(seed: number, a: number, b: number, salt: number) {
@@ -154,10 +159,18 @@ function build(seed: number) {
     let home = dir
     let px = x
     let py = y
+    let turnedAt = 0
+    let emerged = false
     for (let step = 0; step < length; step++) {
       if (!onLand(px, py) || !clearOfCamp(px, py, reach)) break
       const middle = halfWidth(id, salt, step, length, kind, depth, shape)
       const radius = middle >= MIN_HALF_WIDTH + 1 ? middle + farWildRoll(seed, id, step, salt + 81) * shape.rough : middle
+      // A course never runs into another one, and a branch never turns back into its parent: once it is clear of the
+      // ground it started on, it ends where the tile just ahead of it is taken.
+      const span = Math.floor(radius)
+      const ahead = map.get(tileKey(px + DX8[dir] * (span + 2), py + DY8[dir] * (span + 2)))
+      if (ahead === undefined) emerged = true
+      else if (emerged) break
       disk(px, py, radius, kind, reach)
       if (depth < shape.maxDepth && step > 5 && step % shape.forkEvery === 0 && farWildRoll(seed, id, step, salt + 70) < forkChance) {
         const off = farWildRoll(seed, id, step, salt + 71) < 0.5 ? 1 : 7
@@ -171,19 +184,25 @@ function build(seed: number) {
       }
       const drift = (dir - home + 8) % 8
       const sway = farWildRoll(seed, id, step, salt + 50)
-      if (drift >= 2 && drift <= 6 && sway < 0.6) dir = (dir + (drift <= 4 ? 7 : 1)) % 8
-      else if (sway < shape.wobble) {
-        const side = farWildRoll(seed, id, step, salt + 51) < 0.5 ? 1 : 7
-        dir = (dir + side) % 8
+      if (step - turnedAt >= TURN_GAP) {
+        if (drift !== 0 && sway < 0.5) {
+          dir = (dir + (drift <= 4 ? 7 : 1)) % 8
+          turnedAt = step
+        } else if (drift === 0 && sway < shape.wobble) {
+          dir = (dir + (farWildRoll(seed, id, step, salt + 51) < 0.5 ? 1 : 7)) % 8
+          turnedAt = step
+        }
       }
       // A course ends short of the edge of the land rather than running along it, so it never walls off the edge.
       if (!onLand(px + DX8[dir] * EDGE_STOP, py + DY8[dir] * EDGE_STOP)) break
+      // Only straight on, or one eighth of a circle to either side; anything sharper ends the course.
       let moved = false
-      for (let turn = 0; turn < 8; turn++) {
+      for (let turn = 0; turn < 3; turn++) {
         const nd = (dir + TURN[turn]) % 8
         const nx = px + DX8[nd]
         const ny = py + DY8[nd]
         if (!onLand(nx, ny) || !clearOfCamp(nx, ny, reach)) continue
+        if (nd !== dir) turnedAt = step
         dir = nd
         px = nx
         py = ny
@@ -200,7 +219,7 @@ function build(seed: number) {
 
   const massifSquares = (FAR_LAND_SIDE / MASSIF_REGION) ** 2
   for (let index = 0; index < massifSquares; index++) {
-    const radius = 50 + Math.floor(farWildRoll(seed, index, 130, 6) * 60)
+    const radius = 20 + Math.floor(farWildRoll(seed, index, 130, 6) * 20)
     const origin = cell(index, 130, MASSIF_REGION, radius * 2)
     if (!origin) continue
     const reach = countryReach(seed, index, 130)
@@ -222,14 +241,14 @@ function build(seed: number) {
   for (let index = 0; index < rangeSquares; index++) {
     const origin = cell(index, 70, RANGE_REGION)
     if (!origin) continue
-    const length = 700 + Math.floor(farWildRoll(seed, index, 70, 5) * 700)
+    const length = 500 + Math.floor(farWildRoll(seed, index, 70, 5) * 500)
     course(index, 70, origin.x, origin.y, length, 'mountain', countryReach(seed, index, 70), RANGE)
   }
   const riverSquares = (FAR_LAND_SIDE / RIVER_REGION) ** 2
   for (let index = 0; index < riverSquares; index++) {
     const origin = cell(index, 110, RIVER_REGION)
     if (!origin) continue
-    const radius = 7 + Math.floor(farWildRoll(seed, index, 110, 6) * 4)
+    const radius = 4 + Math.floor(farWildRoll(seed, index, 110, 6) * 3)
     const reach = countryReach(seed, index, 110)
     for (let dy = -radius; dy <= radius; dy++) {
       for (let dx = -radius; dx <= radius; dx++) {
@@ -238,15 +257,15 @@ function build(seed: number) {
         }
       }
     }
-    const length = 700 + Math.floor(farWildRoll(seed, index, 110, 8) * 800)
+    const length = 400 + Math.floor(farWildRoll(seed, index, 110, 8) * 400)
     course(index, 110, origin.x, origin.y, length, 'water', reach, RIVER)
   }
   const thicketSquares = (FAR_LAND_SIDE / THICKET_REGION) ** 2
   for (let index = 0; index < thicketSquares; index++) {
-    if (farWildRoll(seed, index, 90, 6) < 0.3) continue
+    if (farWildRoll(seed, index, 90, 6) < 0.15) continue
     const origin = cell(index, 90, THICKET_REGION)
     if (!origin) continue
-    const length = 150 + Math.floor(farWildRoll(seed, index, 90, 5) * 200)
+    const length = 250 + Math.floor(farWildRoll(seed, index, 90, 5) * 200)
     course(index, 90, origin.x, origin.y, length, 'thicket', countryReach(seed, index, 90), THICKET)
   }
   return map
@@ -266,6 +285,11 @@ function mapFor(seed: number) {
 export function farKind(x: number, y: number, seed: number): FarKind {
   if (!onLand(x, y) || inVale(x, y)) return 'open'
   return mapFor(seed).get(tileKey(x, y)) ?? 'open'
+}
+
+/** Water, a mountain or a thicket: ground no den, foe or cave mouth stands on. */
+export function farTaken(x: number, y: number, seed: number) {
+  return farKind(x, y, seed) !== 'open'
 }
 
 /** A mountain blocks a walk until a tunnel is dug through it, a thicket until it is cleared. A river is water, not a clearing. */

@@ -58,6 +58,39 @@ public class HauntTests
     }
 
     [Fact]
+    public void NoFoe_StandsOrWandersOnWaterMountainsOrThickets()
+    {
+        var dens = SpawnRings.Points(7);
+        var reach = (int)Haunts.WanderRadius + 1;
+        var foes = 0;
+        for (var cellY = -60; cellY <= 60; cellY += 2)
+        {
+            for (var cellX = -60; cellX <= 60; cellX += 2)
+            {
+                if (Haunts.At(7, cellX, cellY, dens) is not { } foe)
+                {
+                    continue;
+                }
+
+                foes++;
+                for (var dy = -reach; dy <= reach; dy++)
+                {
+                    for (var dx = -reach; dx <= reach; dx++)
+                    {
+                        if (dx * dx + dy * dy <= reach * reach)
+                        {
+                            Assert.False(FarWilds.Taken(foe.X + dx, foe.Y + dy, 7), $"{foe.Id} near {foe.X + dx},{foe.Y + dy}");
+                        }
+                    }
+                }
+            }
+        }
+
+        Assert.True(foes > 100, $"foes {foes}");
+        Assert.All(dens, den => Assert.False(FarWilds.Taken(den.X, den.Y, 7), den.Id));
+    }
+
+    [Fact]
     public void NineInTenFoes_AreOfTheirBand_AndNoneStandsNearTheValeOrADen()
     {
         var dens = SpawnRings.Points(7);

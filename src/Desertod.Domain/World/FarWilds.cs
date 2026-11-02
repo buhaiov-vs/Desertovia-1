@@ -16,14 +16,14 @@ public static class FarWilds
     /// <summary>One massif per square.</summary>
     private const int MassifRegion = 4000;
 
-    /// <summary>One river per square.</summary>
-    private const int RiverRegion = 3000;
+    /// <summary>One river per square. Rivers, ranges and thickets share one size of square, so all three meet everywhere.</summary>
+    private const int RiverRegion = 800;
 
     /// <summary>One range per square.</summary>
-    private const int RangeRegion = 1500;
+    private const int RangeRegion = 800;
 
     /// <summary>Thickets grow in most of the squares of this size.</summary>
-    private const int ThicketRegion = 750;
+    private const int ThicketRegion = 800;
 
     /// <summary>Every course reaches at least this far either side of its middle tile, so it is at least three tiles across.</summary>
     private const double MinHalfWidth = 1.5;
@@ -31,9 +31,15 @@ public static class FarWilds
     /// <summary>A course stops once it heads this close to the edge of the land.</summary>
     private const int EdgeStop = 8;
 
-    private static readonly Shape Range = new(0.15, 80, 0.5, 2, 150, 250, [7.5, 3.5, 1.5], 150, 0.9);
-    private static readonly Shape Thicket = new(0.3, 40, 0.6, 1, 50, 70, [5, 2], 80, 0.8);
-    private static readonly Shape River = new(0.2, 80, 0.6, 2, 150, 200, [2.5, 1, 0.5], 80, 0);
+    /// <summary>
+    /// A course turns by one eighth of a circle at a time, at least this many steps apart, and never strays more than one
+    /// eighth from its heading, so it bends gently and never sharply.
+    /// </summary>
+    private const int TurnGap = 20;
+
+    private static readonly Shape Range = new(0.15, 120, 0.25, 1, 150, 250, [7.5, 3.5, 1.5], 150, 0.9);
+    private static readonly Shape Thicket = new(0.3, 60, 0.25, 1, 50, 70, [5, 2], 80, 0.8);
+    private static readonly Shape River = new(0.2, 100, 0.3, 1, 150, 200, [2.5, 1, 0.5], 80, 0);
 
     private static readonly int LandLeft = WorldMap.Land.X;
     private static readonly int LandTop = WorldMap.Land.Y;
@@ -46,7 +52,7 @@ public static class FarWilds
 
     private static readonly int[] Dx8 = [1, 1, 0, -1, -1, -1, 0, 1];
     private static readonly int[] Dy8 = [0, -1, -1, -1, 0, 1, 1, 1];
-    private static readonly int[] Turn = [0, 1, 7, 2, 6, 3, 5, 4];
+    private static readonly int[] Turn = [0, 1, 7];
 
     /// <summary>Enough for every village a busy server or a parallel test run touches at once.</summary>
     private const int CachedSeeds = 64;
@@ -97,6 +103,9 @@ public static class FarWilds
     public static bool Blocks(Kind kind) => kind is Kind.Mountain or Kind.Thicket;
 
     public static bool Blocks(int x, int y, uint seed) => Blocks(At(x, y, seed));
+
+    /// <summary>Water, a mountain or a thicket: ground no den, foe or cave mouth stands on.</summary>
+    public static bool Taken(int x, int y, uint seed) => At(x, y, seed) != Kind.Open;
 
     /// <summary>Signed 32-bit pack of a tile. Matches <c>tileKey</c>.</summary>
     private static int Key(int x, int y)
@@ -260,6 +269,8 @@ public static class FarWilds
             var home = dir;
             var px = x;
             var py = y;
+            var turnedAt = 0;
+            var emerged = false;
             for (var step = 0; step < length; step++)
             {
                 if (!OnLand(px, py) || !ClearOfCamp(px, py, reach))
@@ -269,6 +280,19 @@ public static class FarWilds
 
                 var middle = HalfWidth(id, salt, step, length, kind, depth, shape);
                 var radius = middle >= MinHalfWidth + 1 ? middle + Roll(seed, id, step, salt + 81) * shape.Rough : middle;
+
+                // A course never runs into another one, and a branch never turns back into its parent: once it is clear of
+                // the ground it started on, it ends where the tile just ahead of it is taken.
+                var span = (int)Math.Floor(radius);
+                if (map.Get(px + Dx8[dir] * (span + 2), py + Dy8[dir] * (span + 2)) == Kind.Open)
+                {
+                    emerged = true;
+                }
+                else if (emerged)
+                {
+                    break;
+                }
+
                 Disk(px, py, radius, kind, reach);
                 if (depth < shape.MaxDepth && step > 5 && step % shape.ForkEvery == 0 && Roll(seed, id, step, salt + 70) < forkChance)
                 {
@@ -286,14 +310,18 @@ public static class FarWilds
 
                 var drift = (dir - home + 8) % 8;
                 var sway = Roll(seed, id, step, salt + 50);
-                if (drift >= 2 && drift <= 6 && sway < 0.6)
+                if (step - turnedAt >= TurnGap)
                 {
-                    dir = (dir + (drift <= 4 ? 7 : 1)) % 8;
-                }
-                else if (sway < shape.Wobble)
-                {
-                    var side = Roll(seed, id, step, salt + 51) < 0.5 ? 1 : 7;
-                    dir = (dir + side) % 8;
+                    if (drift != 0 && sway < 0.5)
+                    {
+                        dir = (dir + (drift <= 4 ? 7 : 1)) % 8;
+                        turnedAt = step;
+                    }
+                    else if (drift == 0 && sway < shape.Wobble)
+                    {
+                        dir = (dir + (Roll(seed, id, step, salt + 51) < 0.5 ? 1 : 7)) % 8;
+                        turnedAt = step;
+                    }
                 }
 
                 // A course ends short of the edge of the land rather than running along it, so it never walls off the edge.
@@ -302,8 +330,9 @@ public static class FarWilds
                     break;
                 }
 
+                // Only straight on, or one eighth of a circle to either side; anything sharper ends the course.
                 var moved = false;
-                for (var turn = 0; turn < 8; turn++)
+                for (var turn = 0; turn < Turn.Length; turn++)
                 {
                     var nd = (dir + Turn[turn]) % 8;
                     var nx = px + Dx8[nd];
@@ -311,6 +340,11 @@ public static class FarWilds
                     if (!OnLand(nx, ny) || !ClearOfCamp(nx, ny, reach))
                     {
                         continue;
+                    }
+
+                    if (nd != dir)
+                    {
+                        turnedAt = step;
                     }
 
                     dir = nd;
@@ -336,7 +370,7 @@ public static class FarWilds
         var massifSquares = WorldMap.Side / MassifRegion * (WorldMap.Side / MassifRegion);
         for (var index = 0; index < massifSquares; index++)
         {
-            var radius = 50 + (int)Math.Floor(Roll(seed, index, 130, 6) * 60);
+            var radius = 20 + (int)Math.Floor(Roll(seed, index, 130, 6) * 20);
             if (Cell(index, 130, MassifRegion, radius * 2) is not { } origin)
             {
                 continue;
@@ -369,7 +403,7 @@ public static class FarWilds
                 continue;
             }
 
-            var length = 700 + (int)Math.Floor(Roll(seed, index, 70, 5) * 700);
+            var length = 500 + (int)Math.Floor(Roll(seed, index, 70, 5) * 500);
             Course(index, 70, origin.X, origin.Y, length, Kind.Mountain, CountryReach(index, 70), Range);
         }
 
@@ -381,7 +415,7 @@ public static class FarWilds
                 continue;
             }
 
-            var radius = 7 + (int)Math.Floor(Roll(seed, index, 110, 6) * 4);
+            var radius = 4 + (int)Math.Floor(Roll(seed, index, 110, 6) * 3);
             var reach = CountryReach(index, 110);
             for (var dy = -radius; dy <= radius; dy++)
             {
@@ -394,19 +428,19 @@ public static class FarWilds
                 }
             }
 
-            var length = 700 + (int)Math.Floor(Roll(seed, index, 110, 8) * 800);
+            var length = 400 + (int)Math.Floor(Roll(seed, index, 110, 8) * 400);
             Course(index, 110, origin.X, origin.Y, length, Kind.Water, reach, River);
         }
 
         var thicketSquares = WorldMap.Side / ThicketRegion * (WorldMap.Side / ThicketRegion);
         for (var index = 0; index < thicketSquares; index++)
         {
-            if (Roll(seed, index, 90, 6) < 0.3 || Cell(index, 90, ThicketRegion) is not { } origin)
+            if (Roll(seed, index, 90, 6) < 0.15 || Cell(index, 90, ThicketRegion) is not { } origin)
             {
                 continue;
             }
 
-            var length = 150 + (int)Math.Floor(Roll(seed, index, 90, 5) * 200);
+            var length = 250 + (int)Math.Floor(Roll(seed, index, 90, 5) * 200);
             Course(index, 90, origin.X, origin.Y, length, Kind.Thicket, CountryReach(index, 90), Thicket);
         }
 

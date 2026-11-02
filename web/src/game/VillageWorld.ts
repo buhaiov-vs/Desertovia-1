@@ -22,7 +22,7 @@ import { darknessAt } from './daylight'
 import { Fog, type Viewer } from './fog'
 import { walkActive, walkPositionAt } from './tripWalk'
 import { chunksNear, type LandChunkRect } from './landChunk'
-import { farKind } from './farWilds'
+import { farKind, farTaken } from './farWilds'
 import { wildGoodAt, wildPatches, type WildPlace } from './wildGoods'
 import { TILE, TileSet, battle, dungeon, tileKey, town, type TileRef } from './sheets'
 import {
@@ -74,7 +74,6 @@ import {
   farHasTree,
   farPeak,
   farTerrain,
-  farWater,
   findWay,
   footprint,
   seedFrom,
@@ -1875,7 +1874,7 @@ export class VillageWorld {
     if (this.terrainSeed === null) {
       this.terrainSeed = seedFrom(state.id)
       const land = { x: LAND_LEFT, y: LAND_TOP, width: LAND_WIDTH, height: LAND_HEIGHT }
-      const ring = { camp: CAMPFIRE, land, water: farWater }
+      const ring = { camp: CAMPFIRE, land, blocked: farTaken }
       const seed = this.terrainSeed
       const dens = spawnPoints(seed, ring)
       this.dens.setPoints(dens, (rect) => hauntsIn(seed, rect, ring, dens), (foe, unixMs) => wanderAt(seed, foe, unixMs))

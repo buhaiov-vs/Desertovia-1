@@ -1,4 +1,4 @@
-import { farKind, farWildRoll, FAR_LAND_LEFT, FAR_LAND_SIDE, FAR_LAND_TOP, FAR_VALE } from './farWilds.ts'
+import { farKind, farTaken, farWildRoll, FAR_LAND_LEFT, FAR_LAND_SIDE, FAR_LAND_TOP, FAR_VALE } from './farWilds.ts'
 import { POINTS_ON_A_RING, SPAWN_LEVELS, SPREAD, spawnPoints } from './spawnRings.ts'
 
 /**
@@ -67,7 +67,7 @@ function build(seed: number): WildPatch[] {
   const dens = spawnPoints(seed, {
     camp: CAMP,
     land: { x: FAR_LAND_LEFT, y: FAR_LAND_TOP, width: FAR_LAND_SIDE, height: FAR_LAND_SIDE },
-    water: (x, y, ringSeed) => farKind(x, y, ringSeed) === 'water',
+    blocked: farTaken,
   })
   const patches: WildPatch[] = []
   for (const level of SPAWN_LEVELS) {

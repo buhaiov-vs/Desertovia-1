@@ -154,14 +154,17 @@ public class FarWildsTests
     public void Mountain_StopsAWalker_UntilATunnelIsDugThrough()
     {
         const uint seed = 1;
-        var (fromX, y, toX) = NarrowCrossing(seed);
         var terrain = new byte[AuthoredTerrain.Width * AuthoredTerrain.Height];
-        var from = new TilePoint(fromX + 0.5, y + 0.5);
-        var to = new TilePoint(toX + 0.5, y + 0.5);
         var wilds = new Wilds();
-        var hops = new List<IReadOnlyList<TilePoint>?>();
+        static TilePoint Centre(int x, int y) => new(x + 0.5, y + 0.5);
 
-        var around = OverlandPath.Find(terrain, from, to, true, [], seed, wilds);
+        // A narrow stretch of a range with no short way around it.
+        var (fromX, y, toX) = NarrowCrossings(seed).First(crossing =>
+            OverlandPath.Find(terrain, Centre(crossing.FromX, crossing.Y), Centre(crossing.ToX, crossing.Y), true, [], seed, wilds) is not { } way
+            || Length(Centre(crossing.FromX, crossing.Y), way) > 20);
+        var from = Centre(fromX, y);
+        var to = Centre(toX, y);
+
         for (var x = fromX + 1; x < toX; x++)
         {
             wilds.Obstacles.Add(new Obstacle { Kind = ObstacleKind.Tunnel, X = x, Y = y, ClearedAt = DateTimeOffset.UnixEpoch });
@@ -169,7 +172,6 @@ public class FarWildsTests
 
         var through = OverlandPath.Find(terrain, from, to, true, [], seed, wilds);
 
-        Assert.True(around is null || Length(from, around) > 20, "the range has no way through");
         Assert.NotNull(through);
         Assert.Equal([to], through);
     }
@@ -195,7 +197,7 @@ public class FarWildsTests
             }
         }
 
-        Assert.Equal(1191916615u, hash);
+        Assert.Equal(3668489880u, hash);
     }
 
     /// <summary>Whether two open tiles lie in wide stretches of land that no short walk joins.</summary>
@@ -228,8 +230,8 @@ public class FarWildsTests
         return to is null && seen.Count < 400;
     }
 
-    /// <summary>A row where open ground, exactly three mountain tiles and open ground stand side by side.</summary>
-    private static (int FromX, int Y, int ToX) NarrowCrossing(uint seed)
+    /// <summary>Rows where open ground, exactly three mountain tiles and open ground stand side by side.</summary>
+    private static IEnumerable<(int FromX, int Y, int ToX)> NarrowCrossings(uint seed)
     {
         var land = WorldMap.Land;
         for (var y = land.Y + 20; y < land.Y + land.Height - 20; y += 3)
@@ -240,12 +242,10 @@ public class FarWildsTests
                     && Enumerable.Range(1, 3).All(step => FarWilds.At(x + step, y, seed) == FarWilds.Kind.Mountain)
                     && FarWilds.At(x + 4, y, seed) == FarWilds.Kind.Open)
                 {
-                    return (x, y, x + 4);
+                    yield return (x, y, x + 4);
                 }
             }
         }
-
-        throw new InvalidOperationException("No narrow crossing on this seed.");
     }
 
     private static double Length(TilePoint from, IReadOnlyList<TilePoint> way)

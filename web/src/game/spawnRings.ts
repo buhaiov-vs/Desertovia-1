@@ -5,7 +5,8 @@ import type { EnemyKind } from '../api'
  * A point lands at a seeded random place in a wide band: from its floor up to `SPREAD` tiles further out,
  * and up to `SWAY` either side of its direction. When no such place is dry land, it falls back to the ring itself:
  * a point past the land is left out, so past the straight edge only the four corner points remain,
- * and a point on water slides along its ring to the nearest dry tile that is still at least that foe's floor away.
+ * and a point on water, a mountain or a thicket slides along its ring to the nearest open tile that is still at least
+ * that foe's floor away.
  */
 
 export interface SpawnLevel {
@@ -108,16 +109,16 @@ export interface RingLand {
   /** The campfire, in tiles. */
   camp: { x: number; y: number }
   land: Tiles
-  /** Water that blocks a den. The land past the camp picture is dry today. */
-  water?: (x: number, y: number, seed: number) => boolean
+  /** Ground no den, foe or cave mouth stands on: water, mountains and thickets. */
+  blocked?: (x: number, y: number, seed: number) => boolean
 }
 
 /** The dens of one village. The same seed always places the same dens. */
-export function spawnPoints(seed: number, { camp, land, water = () => false }: RingLand): SpawnPoint[] {
+export function spawnPoints(seed: number, { camp, land, blocked = () => false }: RingLand): SpawnPoint[] {
   const points: SpawnPoint[] = []
   for (const ring of SPAWN_LEVELS) {
     for (let direction = 0; direction < POINTS_ON_A_RING; direction++) {
-      const tile = place(seed, ring.level, ring.floor, direction, camp, land, water)
+      const tile = place(seed, ring.level, ring.floor, direction, camp, land, blocked)
       if (!tile) continue
       points.push({
         id: `${ring.level}:${direction}`,
@@ -170,10 +171,10 @@ function caveFree(
   land: RingLand,
   farthest: number,
 ) {
-  const { camp, land: bounds, water = () => false } = land
+  const { camp, land: bounds, blocked = () => false } = land
   if (x < bounds.x || y < bounds.y || x + 1 > bounds.x + bounds.width || y + 1 > bounds.y + bounds.height) return false
   if (x >= VALE.x && y >= VALE.y && x + 1 <= VALE.x + VALE.width && y + 1 <= VALE.y + VALE.height) return false
-  if (water(x, y, seed)) return false
+  if (blocked(x, y, seed)) return false
   const distance = Math.hypot(x + 0.5 - camp.x, y + 0.5 - camp.y)
   if (distance < CAVE_NEAR || distance > farthest) return false
   return dens.every((den) => Math.hypot(den.x - x, den.y - y) >= den.claim / 2)
@@ -205,7 +206,7 @@ function place(
   direction: number,
   camp: { x: number; y: number },
   land: Tiles,
-  water: (x: number, y: number, seed: number) => boolean,
+  blocked: (x: number, y: number, seed: number) => boolean,
 ) {
   const onLand = (x: number, y: number) => x >= land.x && y >= land.y && x + 1 <= land.x + land.width && y + 1 <= land.y + land.height
   const angle = (direction * Math.PI) / 4
@@ -213,15 +214,15 @@ function place(
     const sway = (roll(seed, level, direction, attempt * 2) * 2 - 1) * SWAY
     const radius = floor + roll(seed, level, direction, attempt * 2 + 1) * SPREAD
     const tile = near(camp, angle + sway, radius, floor)
-    if (tile && onLand(tile.x, tile.y) && !water(tile.x, tile.y, seed)) return tile
+    if (tile && onLand(tile.x, tile.y) && !blocked(tile.x, tile.y, seed)) return tile
   }
   const first = onRing(camp, angle, floor)
   if (!first || !onLand(first.x, first.y)) return null
-  if (!water(first.x, first.y, seed)) return first
+  if (!blocked(first.x, first.y, seed)) return first
   for (let turn = 1; turn <= 8; turn++) {
     for (const sign of [1, -1]) {
       const slid = onRing(camp, angle + sign * turn * (Math.PI / 64), floor)
-      if (!slid || !onLand(slid.x, slid.y) || water(slid.x, slid.y, seed)) continue
+      if (!slid || !onLand(slid.x, slid.y) || blocked(slid.x, slid.y, seed)) continue
       return slid
     }
   }

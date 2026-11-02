@@ -68,7 +68,7 @@ public static class CaveSite
     private static bool Free(int x, int y, uint seed, IReadOnlyList<SpawnPoint> dens, int farthest, IReadOnlyList<CaveTile>? apartFrom)
     {
         var tile = new TileArea(x, y, 1, 1);
-        if (!WorldMap.Land.Contains(tile) || WorldMap.Vale.Contains(tile) || FarGround.Water(x, y, seed))
+        if (!WorldMap.Land.Contains(tile) || WorldMap.Vale.Contains(tile) || FarWilds.Taken(x, y, seed))
         {
             return false;
         }

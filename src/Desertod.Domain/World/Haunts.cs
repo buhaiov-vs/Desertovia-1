@@ -65,16 +65,30 @@ public static class Haunts
     public const double ValeClearance = WanderRadius + DenGuards.AggroRange;
 
     /// <summary>
-    /// The foe of one square; null when its tile is off the land, on water, near a den or near the vale. Between the vale
+    /// The foe of one square; null when its tile is off the land, near a den or near the vale, or when water, a mountain or
+    /// a thicket lies within its wander, so it never stands on or walks into one. Between the vale
     /// and the first ring the foes are of the first band, so level 1 foes roam around the village.
     /// </summary>
     public static SpawnPoint? At(uint seed, int cellX, int cellY, IReadOnlyList<SpawnPoint> dens)
     {
         var x = cellX * Cell + (int)Math.Floor(Roll(seed, cellX, cellY, 0) * Cell);
         var y = cellY * Cell + (int)Math.Floor(Roll(seed, cellX, cellY, 1) * Cell);
-        if (!WorldMap.Land.Contains(new TileArea(x, y, 1, 1)) || FarGround.Water(x, y, seed))
+        if (!WorldMap.Land.Contains(new TileArea(x, y, 1, 1)))
         {
             return null;
+        }
+
+        // A foe never stands on or wanders into water, a mountain or a thicket.
+        var reach = (int)WanderRadius + 1;
+        for (var dy = -reach; dy <= reach; dy++)
+        {
+            for (var dx = -reach; dx <= reach; dx++)
+            {
+                if (dx * dx + dy * dy <= reach * reach && FarWilds.Taken(x + dx, y + dy, seed))
+                {
+                    return null;
+                }
+            }
         }
 
         var center = new TilePoint(x + 0.5, y + 0.5);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { FAR_LAND_LEFT, FAR_LAND_SIDE, FAR_LAND_TOP, FAR_VALE, farKind } from '../src/game/farWilds.ts'
+import { FAR_LAND_LEFT, FAR_LAND_SIDE, FAR_LAND_TOP, FAR_VALE, farKind, farTaken } from '../src/game/farWilds.ts'
 import { SPREAD, SPAWN_LEVELS, spawnPoints } from '../src/game/spawnRings.ts'
 import { WILD_PLACES, wildGoodAt, wildPatches } from '../src/game/wildGoods.ts'
 
@@ -23,7 +23,7 @@ test('patches sit between foe rings, off mountains, and the same seed keeps them
   const dens = spawnPoints(1, {
     camp,
     land: { x: FAR_LAND_LEFT, y: FAR_LAND_TOP, width: FAR_LAND_SIDE, height: FAR_LAND_SIDE },
-    water: (x, y, seed) => farKind(x, y, seed) === 'water',
+    blocked: farTaken,
   })
   const kinds = new Set<string>()
   for (const patch of patches) {

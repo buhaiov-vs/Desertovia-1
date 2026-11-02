@@ -215,7 +215,7 @@ public static class SpawnRings
         {
             var sway = (Roll(seed, level, direction, attempt * 2) * 2 - 1) * Sway;
             var radius = floor + Roll(seed, level, direction, attempt * 2 + 1) * Spread;
-            if (Near(camp, angle + sway, radius, floor, out x, out y) && WorldMap.Land.Contains(new TileArea(x, y, 1, 1)) && !FarGround.Water(x, y, seed))
+            if (Near(camp, angle + sway, radius, floor, out x, out y) && WorldMap.Land.Contains(new TileArea(x, y, 1, 1)) && !FarWilds.Taken(x, y, seed))
             {
                 return true;
             }
@@ -228,7 +228,7 @@ public static class SpawnRings
             return false;
         }
 
-        if (!FarGround.Water(x, y, seed))
+        if (!FarWilds.Taken(x, y, seed))
         {
             return true;
         }
@@ -242,7 +242,7 @@ public static class SpawnRings
                     continue;
                 }
 
-                if (!WorldMap.Land.Contains(new TileArea(x, y, 1, 1)) || FarGround.Water(x, y, seed))
+                if (!WorldMap.Land.Contains(new TileArea(x, y, 1, 1)) || FarWilds.Taken(x, y, seed))
                 {
                     continue;
                 }

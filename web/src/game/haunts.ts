@@ -66,13 +66,20 @@ export function fromVale(x: number, y: number): number {
 }
 
 /**
- * The foe of one square; null when its tile is off the land, on water, near a den or near the vale. Between the vale
+ * The foe of one square; null when its tile is off the land, near a den or near the vale, or when water, a mountain or a
+ * thicket lies within its wander, so it never stands on or walks into one. Between the vale
  * and the first ring the foes are of the first band, so level 1 foes roam around the village.
  */
-export function hauntAt(seed: number, cellX: number, cellY: number, { camp, land, water = () => false }: RingLand, dens: readonly SpawnPoint[]): SpawnPoint | null {
+export function hauntAt(seed: number, cellX: number, cellY: number, { camp, land, blocked = () => false }: RingLand, dens: readonly SpawnPoint[]): SpawnPoint | null {
   const x = cellX * CELL + Math.floor(roll(seed, cellX, cellY, 0) * CELL)
   const y = cellY * CELL + Math.floor(roll(seed, cellX, cellY, 1) * CELL)
-  if (x < land.x || y < land.y || x + 1 > land.x + land.width || y + 1 > land.y + land.height || water(x, y, seed)) return null
+  if (x < land.x || y < land.y || x + 1 > land.x + land.width || y + 1 > land.y + land.height) return null
+  const reach = WANDER_RADIUS + 1
+  for (let dy = -reach; dy <= reach; dy++) {
+    for (let dx = -reach; dx <= reach; dx++) {
+      if (dx * dx + dy * dy <= reach * reach && blocked(x + dx, y + dy, seed)) return null
+    }
+  }
   const centerX = x + 0.5
   const centerY = y + 0.5
   const distance = Math.sqrt((centerX - camp.x) * (centerX - camp.x) + (centerY - camp.y) * (centerY - camp.y))

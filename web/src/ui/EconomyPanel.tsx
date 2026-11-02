@@ -104,7 +104,7 @@ export function EconomyPanel({ village, catalog, citizen, accountId, onPrivatePl
         </details>
         {citizen && <details><summary>{text('Личная стройка за царством','Private construction outside the kingdom')}</summary>
           <p className="small">{text('Только твои материалы, без общего склада и казённой зарплаты. Участок должен быть разведан и доступен.','Your own materials only, with no communal supplies or wages. The plot must be explored and reachable.')}</p>
-          <div className="economy-controls"><label>{text('Здание','Building')}<select value={building} onChange={e=>setBuilding(e.target.value)}>{catalog.buildings.filter(b=>b.stages.length>0&&!['Castle','Hospital','RopeBridge'].includes(b.kind)).map(b=><option key={b.kind} value={b.kind}>{i18n.building(b.kind).name}</option>)}</select></label>
+          <div className="economy-controls"><label>{text('Здание','Building')}<select value={building} onChange={e=>setBuilding(e.target.value)}>{catalog.buildings.filter(b=>b.stages.length>0&&!['Castle','Hospital','RopeBridge','RiverBridge'].includes(b.kind)).map(b=><option key={b.kind} value={b.kind}>{i18n.building(b.kind).name}</option>)}</select></label>
             <button disabled={busy||!onPrivatePlace} onClick={()=>{const definition=catalog.buildings.find(b=>b.kind===building);if(definition)onPrivatePlace?.(definition)}}>{text('Выбрать место на карте','Choose a plot on the map')}</button>
           </div>
           {view.privateProperty.map(p=><div className="economy-lot" key={(p.site?'site:':'building:')+p.plotId}><span>{i18n.building(p.kind).name} · {buildingNumber(village,p.plotId)} · {p.site?text('Строится','Under construction'):text('Уровень','Level')+' '+p.level}</span><div>

@@ -36,6 +36,7 @@ public enum BuildingKind
     Castle,
     FortificationUpgrade,
     Waystone,
+    RiverBridge,
 }
 
 public enum JobKind
@@ -318,6 +319,11 @@ public static class BuildingCatalog
                 Stage("posts", "Posts", 2, Job("bring-logs", 12), Job("raise-posts", 2)),
                 Stage("ropes", "Ropes", 2, Job("bring-reeds", 16), Job("stretch-ropes", 3)),
                 Stage("deck", "Deck", 3, Job("bring-logs", 16), Job("lay-deck", 3)),
+            ]),
+        new(BuildingKind.RiverBridge, "River bridge", "Posts on both banks and a plank deck over three tiles of river.", [],
+            [
+                Stage("posts", "Posts", 2, Job("bring-logs", 16), Job("raise-posts", 3)),
+                Stage("deck", "Deck", 3, Job("bring-logs", 24), Job("lay-deck", 4)),
             ]),
         new(BuildingKind.Waystone, "Waystone",
             "A ring of standing stones around a moonstone. Whoever reads a scroll of teleport is summoned here.", [],

@@ -58,6 +58,11 @@ import {
   PROJECT_AREAS,
   PROJECT_YARDS,
   ROPE_BRIDGE,
+  RIVER_BRIDGE,
+  BRIDGE_LENGTH,
+  bridgeArea,
+  plotArea,
+  riverBridgeAt,
   Terrain,
   bridgeCrossings,
   buildLayout,
@@ -1206,8 +1211,9 @@ export class VillageWorld {
     return null
   }
 
-  /** Top-left tile of a building centred under a point of the world, in world pixels. */
+  /** Top-left tile and size of a building centred under a point of the world, in world pixels. */
   private placementAt(worldX: number, worldY: number) {
+    if (this.placingKind === RIVER_BRIDGE) return this.bridgePlacementAt(Math.floor(worldX / TILE), Math.floor(worldY / TILE))
     const x = Math.floor(worldX / TILE) - Math.floor(PLOT_WIDTH / 2)
     const y = Math.floor(worldY / TILE) - 1
     const free =
@@ -1215,20 +1221,40 @@ export class VillageWorld {
       this.village !== null &&
       (this.placingKind === ROPE_BRIDGE ? canBridgeAt(this.village, x, y) : canBuildAt(this.catalog, this.village, x, y, this.placingPrivate)) &&
       this.fog.isAreaExplored(footprint(x, y))
-    return { x, y, free }
+    return { x, y, free, width: PLOT_WIDTH, height: PLOT_HEIGHT }
   }
 
-  private showGhost(x: number, y: number, free: boolean) {
+  /** A river bridge across the tile under the pointer: north–south when it fits, else east–west. */
+  private bridgePlacementAt(tileX: number, tileY: number) {
+    const seed = this.terrainSeed ?? 1
+    const middle = Math.floor(BRIDGE_LENGTH / 2)
+    const across = Math.floor(PLOT_WIDTH / 2)
+    const placements = [
+      { x: tileX - across, y: tileY - middle },
+      { x: tileX - middle, y: tileY - across },
+    ]
+    for (const { x, y } of placements) {
+      const way = riverBridgeAt(seed, x, y)
+      if (!way) continue
+      const area = bridgeArea(x, y, way)
+      const taken = this.village !== null && buildingFootprints(this.village).some((other) =>
+        other.x < area.x + area.width && area.x < other.x + other.width && other.y < area.y + area.height && area.y < other.y + other.height)
+      return { x, y, free: !taken && this.fog.isAreaExplored(area), width: area.width, height: area.height }
+    }
+    return { x: placements[0].x, y: placements[0].y, free: false, width: PLOT_WIDTH, height: BRIDGE_LENGTH }
+  }
+
+  private showGhost(x: number, y: number, free: boolean, width = PLOT_WIDTH, height = PLOT_HEIGHT) {
     const color = free ? 0xffe066 : 0xe05050
     this.ghost
       .clear()
-      .rect(x * TILE, y * TILE, PLOT_WIDTH * TILE, PLOT_HEIGHT * TILE)
+      .rect(x * TILE, y * TILE, width * TILE, height * TILE)
       .fill({ color, alpha: 0.3 })
       .stroke({ color, width: 2 })
     if (free) {
       this.ghost
-        .rect((x + 1.5) * TILE - 2, (y + 2) * TILE - 8, 4, 16)
-        .rect((x + 1.5) * TILE - 8, (y + 2) * TILE - 2, 16, 4)
+        .rect((x + width / 2) * TILE - 2, (y + height / 2) * TILE - 8, 4, 16)
+        .rect((x + width / 2) * TILE - 8, (y + height / 2) * TILE - 2, 16, 4)
         .fill({ color: 0xfff8e7 })
     }
     this.placementLayer.visible = true
@@ -1551,6 +1577,11 @@ export class VillageWorld {
     for (const structure of village.structures) {
       const plot = this.plot(structure.plotId)
       if (!plot) continue
+      if (structure.kind === RIVER_BRIDGE) {
+        const area = plotArea(structure.plotId)
+        if (area) add(this.riverBridgeView(area, 1))
+        continue
+      }
       const view = this.finishedView(structure.kind, plot.x, plot.y)
       if(structure.ruinedAt){view.alpha=.3;const rubble=this.damageView(structure.plotId,100,plot.x,plot.y);add(rubble)}
       add(view)
@@ -1573,6 +1604,11 @@ export class VillageWorld {
     for (const site of village.sites) {
       const plot = this.plot(site.plotId)
       if (!plot) continue
+      if (site.kind === RIVER_BRIDGE) {
+        const area = plotArea(site.plotId)
+        if (area) add(this.riverBridgeView(area, Math.min(1, site.progress)))
+        continue
+      }
       const view = this.siteView(site, plot.x, plot.y)
       if(site.ruinedAt)view.alpha=.3
       add(view)
@@ -2222,6 +2258,39 @@ export class VillageWorld {
     return g
   }
 
+  /**
+   * A river bridge's plank deck from bank to bank, with posts at both ends and a rail on each side. While it is built,
+   * the outline shows the whole deck and planks are laid as far as the work has come.
+   */
+  private riverBridgeView(area: TileArea, progress: number): Container {
+    const g = new Graphics()
+    const northSouth = area.height > area.width
+    const length = northSouth ? area.height : area.width
+    g.rect(0, 0, area.width * TILE, area.height * TILE).stroke({ color: 0x5a3b1c, width: 1, alpha: progress < 1 ? 0.6 : 0 })
+    const planks = Math.floor(length * 3 * progress)
+    for (let plank = 0; plank < planks; plank++) {
+      const at = (plank / 3 + 0.04) * TILE
+      const color = plank % 2 ? 0x8f5f33 : 0xa06c3c
+      if (northSouth) g.rect(0.35 * TILE, at, (area.width - 0.7) * TILE, 0.28 * TILE).fill({ color })
+      else g.rect(at, 0.35 * TILE, 0.28 * TILE, (area.height - 0.7) * TILE).fill({ color })
+    }
+    if (progress >= 1) {
+      const pole = 0x6b4a2a
+      for (const side of [0.3, (northSouth ? area.width : area.height) - 0.3]) {
+        if (northSouth) g.moveTo(side * TILE, 0.5 * TILE).lineTo(side * TILE, (length - 0.5) * TILE)
+        else g.moveTo(0.5 * TILE, side * TILE).lineTo((length - 0.5) * TILE, side * TILE)
+        g.stroke({ color: 0xc9a46a, width: 1.5 })
+        for (const end of [0.5, length - 0.5]) {
+          const [px, py] = northSouth ? [side, end] : [end, side]
+          g.rect(px * TILE - 1.5, py * TILE - 6, 3, 8).fill({ color: pole })
+        }
+      }
+    }
+    g.position.set(area.x * TILE, area.y * TILE)
+    g.zIndex = area.y * TILE
+    return g
+  }
+
   /** Broken rock on a mountain tile dug through, so the tunnel reads on the map. */
   private tunnelView(x: number, y: number): Graphics {
     const g = new Graphics().rect(-0.5, -0.5, TILE + 1, TILE + 1).fill({ color: 0x8d857b })
@@ -2600,10 +2669,10 @@ export class VillageWorld {
         this.onWorldPick?.(this.targetAt(point.x, point.y), screen, { x: point.x / TILE, y: point.y / TILE })
         return
       }
-      const { x, y, free } = placementUnder(event)
+      const { x, y, free, width, height } = placementUnder(event)
       // Touch has no hover: a tap on taken ground shows the red outline there instead.
       if (free) this.onPick(x, y)
-      else this.showGhost(x, y, free)
+      else this.showGhost(x, y, free, width, height)
     })
     canvas.addEventListener('pointermove', (event) => {
       if (this.onPick || event.pointerType === 'touch' || this.dragging?.moved) return
@@ -2626,8 +2695,8 @@ export class VillageWorld {
     })
     canvas.addEventListener('pointermove', (event) => {
       if (!this.onPick || pointers.size > 1 || event.pointerType === 'touch') return
-      const { x, y, free } = placementUnder(event)
-      this.showGhost(x, y, free)
+      const { x, y, free, width, height } = placementUnder(event)
+      this.showGhost(x, y, free, width, height)
     })
     canvas.addEventListener('pointermove', (event) => {
       if (!this.dragging || pointers.size > 1) return

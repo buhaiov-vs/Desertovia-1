@@ -15,13 +15,14 @@ public static class ConstructionRules
     public static ConstructionSite Place(Village village, BuildingKind kind, int x, int y, DateTimeOffset now, Guid? privateOwner = null)
     {
         ValidatePlacement(village, kind, x, y, privateOwner);
-        var footprint = WorldMap.Footprint(x, y);
+        var plotId = PlotFor(village, kind, x, y);
+        var footprint = WorldMap.Footprint(plotId)!.Value;
         var site = new ConstructionSite
         {
             Kind = kind,
             OwnerAccountId = privateOwner,
             PlacedByAccountId = privateOwner,
-            PlotId = WorldMap.PlotAt(x, y),
+            PlotId = plotId,
             PlacedAt = now,
             Scale = Math.Pow(BuildingCatalog.RepeatCostGrowth, village.CountOf(kind,privateOwner)),
             TreesToFell = Forest.Hold(village, footprint, now),
@@ -30,6 +31,14 @@ public static class ConstructionRules
         BuildingNumbers.Ensure(village);
         return site;
     }
+
+    /// <summary>The plot a building placed at this top-left tile takes. A river bridge's plot also tells which way its deck runs.</summary>
+    public static string PlotFor(Village village, BuildingKind kind, int x, int y) =>
+        kind != BuildingKind.RiverBridge
+            ? WorldMap.PlotAt(x, y)
+            : Wilderness.RiverBridgePlot(village, x, y) ?? throw new GameRuleException("building.bridgeNeedsRiver",
+                "A river bridge must stand on both banks with exactly three tiles of river between.",
+                new Dictionary<string, object> { ["x"] = x, ["y"] = y });
 
     /// <summary>Pure validation: pending applications do not occupy land, fell trees or consume a construction slot.</summary>
     public static void ValidatePlacement(Village village, BuildingKind kind, int x, int y, Guid? privateOwner = null, bool checkCapacity = true)
@@ -59,9 +68,11 @@ public static class ConstructionRules
                 new Dictionary<string, object> { ["building"] = kind.ToString(), ["requires"] = string.Join(",", missing) });
         }
 
-        var footprint = WorldMap.Footprint(x, y);
-        BankAccess.Require(village, WorldMap.Yard(WorldMap.PlotAt(x, y)));
-        if (privateOwner is not null && (kind is BuildingKind.Castle or BuildingKind.Hospital or BuildingKind.RopeBridge || KingdomRules.Area(village).Overlaps(footprint)))
+        var plotId = PlotFor(village, kind, x, y);
+        var footprint = WorldMap.Footprint(plotId)!.Value;
+        BankAccess.Require(village, WorldMap.Yard(plotId));
+        var crossing = kind is BuildingKind.RopeBridge or BuildingKind.RiverBridge;
+        if (privateOwner is not null && (kind is BuildingKind.Castle or BuildingKind.Hospital || crossing || KingdomRules.Area(village).Overlaps(footprint)))
             throw new GameRuleException("building.privateKind", "This building requires the Tsar's approval.");
         if (kind == BuildingKind.RopeBridge)
         {
@@ -71,13 +82,15 @@ public static class ConstructionRules
                     new Dictionary<string, object> { ["x"] = x, ["y"] = y });
             }
         }
-        else if (!(privateOwner is null ? KingdomRules.Area(village).Contains(footprint) : WorldMap.Land.Contains(footprint)) || WorldMap.ReservedAreas.Any(reserved => reserved.Overlaps(footprint)))
+        else if (kind != BuildingKind.RiverBridge
+                 && (!(privateOwner is null ? KingdomRules.Area(village).Contains(footprint) : WorldMap.Land.Contains(footprint))
+                     || WorldMap.ReservedAreas.Any(reserved => reserved.Overlaps(footprint))))
         {
             throw new GameRuleException("building.cannotBuildHere", "Nothing can be built here.",
                 new Dictionary<string, object> { ["x"] = x, ["y"] = y });
         }
 
-        if (kind != BuildingKind.RopeBridge && !WorldMap.BuildArea.Contains(footprint) && !KingdomRules.ClearGround(village,footprint))
+        if (!crossing && !WorldMap.BuildArea.Contains(footprint) && !KingdomRules.ClearGround(village,footprint))
             throw new GameRuleException("building.clearGround", "Choose dry, cleared land away from the river and ravine.");
         if (!village.IsExplored(footprint))
         {

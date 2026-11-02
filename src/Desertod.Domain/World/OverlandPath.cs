@@ -25,7 +25,7 @@ public static class OverlandPath
         var terrain = AuthoredTerrain.For(village.Id, village.Wilds);
         var bridge = village.BridgeOpened && village.BridgeRuinedAt is null;
         var crossings = village.Structures
-            .Where(s => s.Kind == BuildingKind.RopeBridge)
+            .Where(s => s.Kind is BuildingKind.RopeBridge or BuildingKind.RiverBridge)
             .Select(s => WorldMap.Footprint(s.PlotId))
             .Where(a => a is not null)
             .Select(a => a!.Value)
@@ -328,6 +328,12 @@ public static class OverlandPath
         }
 
         if (wilds is not null && Wilderness.IsMouth(wilds, x, y))
+        {
+            return false;
+        }
+
+        // A finished river bridge carries walkers over the water under its deck.
+        if (far == FarWilds.Kind.Water && crossings.Any(crossing => crossing.Contains(new TileArea(x, y, 1, 1))))
         {
             return false;
         }

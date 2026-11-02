@@ -82,23 +82,53 @@ public static class WorldMap
         new(18, 0, 3, 4),
     ];
 
+    /// <summary>A river bridge's deck runs this many tiles: a bank, three tiles of water and the other bank.</summary>
+    public const int BridgeLength = 5;
+
+    /// <summary>The end of a river bridge's plot id when its deck runs north to south, 3 tiles wide and 5 long.</summary>
+    public const string NorthSouth = "ns";
+
+    /// <summary>The end of a river bridge's plot id when its deck runs east to west, 5 tiles wide and 3 long.</summary>
+    public const string EastWest = "ew";
+
     /// <summary>A plot id is the top-left tile of the building, written as "x,y".</summary>
     public static string PlotAt(int x, int y) => string.Create(CultureInfo.InvariantCulture, $"{x},{y}");
+
+    /// <summary>A river bridge's plot id: its top-left tile and the way its deck runs, "x,y,ns" or "x,y,ew".</summary>
+    public static string BridgePlotAt(int x, int y, bool northSouth) =>
+        string.Create(CultureInfo.InvariantCulture, $"{x},{y},{(northSouth ? NorthSouth : EastWest)}");
 
     /// <summary>Top-left tile of a plot, or null for an id that is not a plot.</summary>
     public static TilePoint? PlotPosition(string plotId)
     {
         var parts = plotId.Split(',');
-        return parts.Length == 2
+        return (parts.Length == 2 || (parts.Length == 3 && parts[2] is NorthSouth or EastWest))
                && int.TryParse(parts[0], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var x)
                && int.TryParse(parts[1], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var y)
             ? new TilePoint(x, y)
             : null;
     }
 
-    /// <summary>Tiles a building and its yard cover.</summary>
-    public static TileArea? Footprint(string plotId) =>
-        PlotPosition(plotId) is { } plot ? Footprint((int)plot.X, (int)plot.Y) : null;
+    /// <summary>Tiles a building and its yard cover; for a river bridge, its deck from bank to bank.</summary>
+    public static TileArea? Footprint(string plotId)
+    {
+        if (PlotPosition(plotId) is not { } plot)
+        {
+            return null;
+        }
+
+        var (x, y) = ((int)plot.X, (int)plot.Y);
+
+        return BridgeWay(plotId) switch
+        {
+            NorthSouth => new TileArea(x, y, PlotWidth, BridgeLength),
+            EastWest => new TileArea(x, y, BridgeLength, PlotWidth),
+            _ => Footprint(x, y),
+        };
+    }
+
+    /// <summary>The way a river bridge's deck runs, or null for any other plot.</summary>
+    private static string? BridgeWay(string plotId) => plotId.Split(',') is [_, _, var way] ? way : null;
 
     public static TileArea Footprint(int x, int y) => new(x, y, PlotWidth, PlotHeight);
 
@@ -110,6 +140,16 @@ public static class WorldMap
     {
         if(plotId=="fortifications")return Places[plotId];
         var plot = PlotPosition(plotId) ?? Places[Camp];
+        if (BridgeWay(plotId) is { } way)
+        {
+            // Builders stand on the bank nearer the camp.
+            var (near, far) = way == NorthSouth
+                ? (new TilePoint(plot.X + PlotWidth / 2.0, plot.Y + 0.5), new TilePoint(plot.X + PlotWidth / 2.0, plot.Y + BridgeLength - 0.5))
+                : (new TilePoint(plot.X + 0.5, plot.Y + PlotWidth / 2.0), new TilePoint(plot.X + BridgeLength - 0.5, plot.Y + PlotWidth / 2.0));
+
+            return near.DistanceTo(Places[Camp]) <= far.DistanceTo(Places[Camp]) ? near : far;
+        }
+
         return new TilePoint(plot.X + PlotWidth / 2.0, plot.Y + PlotHeight - 0.5);
     }
 

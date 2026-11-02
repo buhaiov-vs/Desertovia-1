@@ -1045,6 +1045,10 @@ export const en = {
       name: 'Rope bridge',
       description: 'Posts on both rims, ropes and a plank deck across the ravine. Place it where the ravine runs through its middle rows.',
     },
+    RiverBridge: {
+      name: 'River bridge',
+      description: 'Posts on both banks and a plank deck over the river. It fits only where the river is exactly three tiles wide.',
+    },
     Waystone: {
       name: 'Waystone',
       description: 'A ring of standing stones around a moonstone. Whoever reads a scroll of teleport is summoned here.',
@@ -1480,6 +1484,7 @@ export const en = {
     'tunnel.unseen': 'Nobody has seen this mountain yet.',
     'tunnel.notFace': 'A tunnel is dug from open ground or from a tile already dug.',
     'building.bridgeNeedsRavine': 'A rope bridge must span the ravine from rim to rim.',
+    'building.bridgeNeedsRiver': 'A river bridge must stand on both banks with exactly three tiles of river between.',
     'goto.working': 'Finish the current task first.',
     'drink.cooldown': 'Your heart is still racing from the last drink. Try again at {readyAt}.',
     'drink.full': 'You are full of energy already. Save the drink for later.',

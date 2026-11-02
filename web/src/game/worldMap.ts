@@ -37,14 +37,31 @@ export const CAMPFIRE = { x: 15.5, y: 13.5 }
 /** Tiles a building and its yard cover when its top-left tile is (`x`, `y`). */
 export const footprint = (x: number, y: number): TileArea => ({ x, y, width: PLOT_WIDTH, height: PLOT_HEIGHT })
 
+/** A river bridge's deck runs this many tiles: a bank, three tiles of water and the other bank. */
+export const BRIDGE_LENGTH = 5
+
+export type BridgeWay = 'ns' | 'ew'
+
+/** The deck of a river bridge whose top-left tile is (`x`, `y`). */
+export const bridgeArea = (x: number, y: number, way: BridgeWay): TileArea =>
+  way === 'ns' ? { x, y, width: PLOT_WIDTH, height: BRIDGE_LENGTH } : { x, y, width: BRIDGE_LENGTH, height: PLOT_WIDTH }
+
+/** Tiles a plot covers: a building and its yard, or a river bridge's deck from bank to bank. Mirrors WorldMap.Footprint. */
+export function plotArea(plotId: string): TileArea | null {
+  const plot = plotPosition(plotId)
+  if (!plot) return null
+  const way = plotId.split(',')[2]
+  return way === 'ns' || way === 'ew' ? bridgeArea(plot.x, plot.y, way) : footprint(plot.x, plot.y)
+}
+
 const overlaps = (a: TileArea, b: TileArea) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 
 /** Footprints of every building and open site. */
 export function buildingFootprints(village: VillageState): TileArea[] {
   return [...village.storages, ...village.structures, ...village.sites].flatMap((building) => {
-    const plot = plotPosition(building.plotId)
-    return plot ? [footprint(plot.x, plot.y)] : []
+    const area = plotArea(building.plotId)
+    return area ? [area] : []
   })
 }
 
@@ -83,14 +100,38 @@ export function canBridgeAt(village: VillageState, x: number, y: number) {
   return !buildingFootprints(village).some((taken) => overlaps(taken, area))
 }
 
-/** Footprints of the finished rope bridges: walkers cross the ravine there. */
+/** Footprints of the finished rope and river bridges: walkers cross the ravine or the river there. */
 export const bridgeCrossings = (village: VillageState): TileArea[] =>
   village.structures.flatMap((structure) => {
-    const plot = structure.kind === ROPE_BRIDGE ? plotPosition(structure.plotId) : null
-    return plot ? [footprint(plot.x, plot.y)] : []
+    const area = structure.kind === ROPE_BRIDGE || structure.kind === RIVER_BRIDGE ? plotArea(structure.plotId) : null
+    return area ? [area] : []
   })
 
 export const ROPE_BRIDGE = 'RopeBridge'
+export const RIVER_BRIDGE = 'RiverBridge'
+
+/**
+ * Which way a river bridge with its top-left tile at (`x`, `y`) runs: in every column of a north–south deck, open ground at
+ * both ends and exactly three tiles of river between, or the same turned east–west. Null when the river does not fit.
+ * Mirrors Wilderness.RiverBridgePlot.
+ */
+export function riverBridgeAt(seed: number, x: number, y: number): BridgeWay | null {
+  const fits = (northSouth: boolean) => {
+    for (let across = 0; across < PLOT_WIDTH; across++) {
+      for (let along = 0; along < BRIDGE_LENGTH; along++) {
+        const tx = northSouth ? x + across : x + along
+        const ty = northSouth ? y + along : y + across
+        const kind = farKind(tx, ty, seed)
+        const bank = along === 0 || along === BRIDGE_LENGTH - 1
+        const onLand = tx >= LAND_LEFT && ty >= LAND_TOP && tx < LAND_LEFT + LAND_WIDTH && ty < LAND_TOP + LAND_HEIGHT
+        const inVale = tx >= MAP_LEFT && tx < MAP_RIGHT && ty >= MAP_TOP && ty < MAP_BOTTOM
+        if (bank ? !onLand || inVale || kind !== 'open' : kind !== 'water') return false
+      }
+    }
+    return true
+  }
+  return fits(true) ? 'ns' : fits(false) ? 'ew' : null
+}
 
 /** True when a building or an open site covers the tile; its trees belong to the builders, not to wood gatherers. */
 export const tileBuiltOver = (village: VillageState, x: number, y: number) =>
@@ -892,6 +933,8 @@ function farBlocked(
   }
   if (opened.has(`${x},${y}`)) return false
   const kind = farKind(x, y, seed)
+  // A finished river bridge carries walkers over the water under its deck.
+  if (kind === 'water' && crossings.some((area) => x >= area.x && x < area.x + area.width && y >= area.y && y < area.y + area.height)) return false
   // A walker may step up to the thicket they clear or the mountain face they dig.
   if (x === goalX && y === goalY && (kind === 'thicket' || kind === 'mountain')) return false
   return farBlocksKind(kind) || farWater(x, y, seed)

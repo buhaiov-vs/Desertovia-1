@@ -1808,7 +1808,7 @@ export function buildingMaterials(catalog: Catalog, definition: BuildingDefiniti
 
 /** Top-left tile of a plot, whose id is that tile written as "x,y"; null for an id that is not a plot. Mirrors the server's map. */
 export function plotPosition(plotId: string): TilePoint | null {
-  const match = /^(-?\d+),(-?\d+)$/.exec(plotId)
+  const match = /^(-?\d+),(-?\d+)(?:,(?:ns|ew))?$/.exec(plotId)
   return match ? { x: Number(match[1]), y: Number(match[2]) } : null
 }
 

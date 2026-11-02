@@ -399,6 +399,40 @@ public static class Wilderness
         return true;
     }
 
+    /// <summary>
+    /// The plot of a river bridge with its top-left tile at (<paramref name="x"/>, <paramref name="y"/>): in every column
+    /// of a north–south deck, open ground at both ends and exactly three tiles of river between, or the same turned
+    /// east–west. One top-left tile never fits both ways. Null when the river does not fit there.
+    /// </summary>
+    public static string? RiverBridgePlot(Village village, int x, int y)
+    {
+        var seed = Seed(village.Id.ToString());
+        bool Fits(bool northSouth)
+        {
+            for (var across = 0; across < WorldMap.PlotWidth; across++)
+            {
+                for (var along = 0; along < WorldMap.BridgeLength; along++)
+                {
+                    var (tx, ty) = northSouth ? (x + across, y + along) : (x + along, y + across);
+                    var bank = along == 0 || along == WorldMap.BridgeLength - 1;
+                    var tile = new TileArea(tx, ty, 1, 1);
+                    var kind = FarWilds.At(tx, ty, seed);
+                    var fits = bank
+                        ? WorldMap.Land.Contains(tile) && !WorldMap.Vale.Contains(tile) && kind == FarWilds.Kind.Open
+                        : kind == FarWilds.Kind.Water;
+                    if (!fits)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        return Fits(true) ? WorldMap.BridgePlotAt(x, y, true) : Fits(false) ? WorldMap.BridgePlotAt(x, y, false) : null;
+    }
+
     /// <summary>The ravine and the cave of a new village. Hills and thickets are not planted around the camp.</summary>
     public static Wilds Generate(Guid villageId)
     {

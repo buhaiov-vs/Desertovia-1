@@ -23,3 +23,4 @@ docs/local/
 
 # Editor settings
 .cursor/
+.claude/

@@ -43,7 +43,7 @@ public class FarWildsTests
                 for (var x = x0; x < x0 + span && (!mountain || !thicket); x += 4)
                 {
                     var kind = FarWilds.At(x, y, 1);
-                    if (kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall) mountain = true;
+                    if (kind == FarWilds.Kind.Mountain) mountain = true;
                     if (kind == FarWilds.Kind.Thicket) thicket = true;
                 }
             }
@@ -56,11 +56,10 @@ public class FarWildsTests
     [Fact]
     public void Courses_AreLongAndNotStraight()
     {
-        var mountain = FindBig(1, kind => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall, 400);
+        var mountain = FindBig(1, kind => kind == FarWilds.Kind.Mountain, 400);
         var mountainSpread = Spread(mountain);
         Assert.True(mountain.Count > 400, $"mountain {mountain.Count}");
         Assert.True(mountainSpread.Width > 40 && mountainSpread.Height > 40, $"mountain {mountainSpread.Width}x{mountainSpread.Height}");
-        Assert.Contains(mountain, tile => FarWilds.At(tile.X, tile.Y, 1) == FarWilds.Kind.Rockfall);
 
         var river = FindBig(1, kind => kind == FarWilds.Kind.Water, 150);
         var riverSpread = Spread(river);
@@ -73,21 +72,21 @@ public class FarWildsTests
     }
 
     [Fact]
-    public void Ranges_AreMostlyThin_AndSwellToBroadStretches()
+    public void Ranges_AreMostlyNarrow_AndSwellToBroadStretches()
     {
-        static bool Rock(FarWilds.Kind kind) => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall;
+        static bool Rock(FarWilds.Kind kind) => kind == FarWilds.Kind.Mountain;
         bool Massif((int X, int Y) tile) => Solid(1, tile.X, tile.Y, 10, Rock);
         var ranges = AllBig(1, Rock, 400).Where(range => !range.Any(Massif)).Take(20).ToList();
         var tiles = ranges.Sum(range => range.Count);
-        var thin = ranges.Sum(range => range.Count(tile => Neighbours(1, tile.X, tile.Y, Rock) <= 2));
-        Assert.True(thin * 5 > tiles, $"thin {thin} of {tiles}");
+        var narrow = ranges.Sum(range => range.Count(tile => !Solid(1, tile.X, tile.Y, 3, Rock)));
+        Assert.True(narrow * 2 > tiles, $"narrow {narrow} of {tiles}");
         Assert.Contains(AllBig(1, Rock, 400), range => range.Any(tile => Solid(1, tile.X, tile.Y, 4, Rock) && !Massif(tile)));
     }
 
     [Fact]
-    public void Massifs_StandAsBroadMountainRegions_CutByRockfallPasses()
+    public void Massifs_StandAsBroadMountainRegions()
     {
-        static bool Rock(FarWilds.Kind kind) => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall;
+        static bool Rock(FarWilds.Kind kind) => kind == FarWilds.Kind.Mountain;
         var land = WorldMap.Land;
         var massifs = new List<(int X, int Y)>();
         for (var y = land.Y + 20; y < land.Y + land.Height - 20; y += 16)
@@ -107,85 +106,71 @@ public class FarWildsTests
         }
 
         Assert.True(massifs.Count >= 3, $"massifs {massifs.Count}");
-        foreach (var (x, y) in massifs)
-        {
-            var passes = 0;
-            for (var dy = -40; dy <= 40; dy++)
-            {
-                for (var dx = -40; dx <= 40; dx++)
-                {
-                    if (FarWilds.At(x + dx, y + dy, 1) == FarWilds.Kind.Rockfall) passes++;
-                }
-            }
-
-            Assert.True(passes > 40, $"rockfall near massif {x},{y}: {passes}");
-        }
     }
 
     [Theory]
     [InlineData(1u)]
-    [InlineData(2u)]
-    [InlineData(3u)]
     [InlineData(7u)]
-    [InlineData(2166136261u)]
-    public void Walker_ReachesEveryEdgeOfTheLand_WithoutClearingAnything(uint seed)
+    public void EveryCrossing_IsAtLeastThreeTilesAcross(uint seed)
     {
+        // Along sampled rows and columns, every stretch of mountain, thicket or water between two open tiles is wide.
         var land = WorldMap.Land;
-        var camp = WorldMap.Places[WorldMap.Camp];
-        var terrain = new byte[AuthoredTerrain.Width * AuthoredTerrain.Height];
-        (int X, int Y)[] edges =
-        [
-            ((int)camp.X, land.Y + 8),
-            ((int)camp.X, land.Y + land.Height - 9),
-            (land.X + 8, (int)camp.Y),
-            (land.X + land.Width - 9, (int)camp.Y),
-        ];
-        foreach (var edge in edges)
+        bool Open(int x, int y) => FarWilds.At(x, y, seed) == FarWilds.Kind.Open;
+        for (var line = land.Y + 1; line < land.Y + land.Height - 1; line += 13)
         {
-            var goal = NearestOpen(seed, edge.X, edge.Y);
-            var to = new TilePoint(goal.X + 0.5, goal.Y + 0.5);
-            var way = OverlandPath.Find(terrain, camp, to, true, [], seed);
-            Assert.True(way is not null, $"seed {seed} cannot reach {goal.X},{goal.Y}");
-            Assert.Equal(to, way![^1]);
+            var run = -1;
+            for (var x = land.X; x < land.X + land.Width; x++)
+            {
+                if (!Open(x, line))
+                {
+                    if (run >= 0) run++;
+                    continue;
+                }
+
+                Assert.False(run is 1 or 2, $"seed {seed}: {run} tiles across at {x - run},{line}");
+                run = 0;
+            }
+        }
+
+        for (var line = land.X + 1; line < land.X + land.Width - 1; line += 13)
+        {
+            var run = -1;
+            for (var y = land.Y; y < land.Y + land.Height; y++)
+            {
+                if (!Open(line, y))
+                {
+                    if (run >= 0) run++;
+                    continue;
+                }
+
+                Assert.False(run is 1 or 2, $"seed {seed}: {run} tiles across at {line},{y - run}");
+                run = 0;
+            }
         }
     }
 
     [Fact]
-    public void UnclearedRange_StopsAWalker_AndAClearedRockfallOpensIt()
+    public void Mountain_StopsAWalker_UntilATunnelIsDugThrough()
     {
-        var range = Component(1, Find(1, kind => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall), kind => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall);
-        Assert.True(TryGate(1, range, out var fromX, out var fromY, out var toX, out var toY));
+        const uint seed = 1;
+        var (fromX, y, toX) = NarrowCrossing(seed);
         var terrain = new byte[AuthoredTerrain.Width * AuthoredTerrain.Height];
-        var from = new TilePoint(fromX + 0.5, fromY + 0.5);
-        var to = new TilePoint(toX + 0.5, toY + 0.5);
-
+        var from = new TilePoint(fromX + 0.5, y + 0.5);
+        var to = new TilePoint(toX + 0.5, y + 0.5);
         var wilds = new Wilds();
-        var left = Math.Min(fromX, toX) - 2;
-        var right = Math.Max(fromX, toX) + 2;
-        var top = Math.Min(fromY, toY) - 2;
-        var bottom = Math.Max(fromY, toY) + 2;
-        for (var y = top; y <= bottom; y++)
-        {
-            for (var x = left; x <= right; x++)
-            {
-                if (FarWilds.At(x, y, 1) != FarWilds.Kind.Rockfall)
-                {
-                    continue;
-                }
+        var hops = new List<IReadOnlyList<TilePoint>?>();
 
-                wilds.Obstacles.Add(new Obstacle
-                {
-                    Kind = ObstacleKind.Rockfall,
-                    X = x,
-                    Y = y,
-                    ClearedAt = DateTimeOffset.UnixEpoch,
-                });
-            }
+        var around = OverlandPath.Find(terrain, from, to, true, [], seed, wilds);
+        for (var x = fromX + 1; x < toX; x++)
+        {
+            wilds.Obstacles.Add(new Obstacle { Kind = ObstacleKind.Tunnel, X = x, Y = y, ClearedAt = DateTimeOffset.UnixEpoch });
         }
 
-        var way = OverlandPath.Find(terrain, from, to, false, [], 1, wilds);
-        Assert.NotNull(way);
-        Assert.Equal(to, way![^1]);
+        var through = OverlandPath.Find(terrain, from, to, true, [], seed, wilds);
+
+        Assert.True(around is null || Length(from, around) > 20, "the range has no way through");
+        Assert.NotNull(through);
+        Assert.Equal([to], through);
     }
 
     [Fact]
@@ -203,44 +188,46 @@ public class FarWildsTests
                     FarWilds.Kind.Open => 0,
                     FarWilds.Kind.Mountain => 1,
                     FarWilds.Kind.Thicket => 2,
-                    FarWilds.Kind.Rockfall => 3,
                     _ => 4,
                 };
                 hash = (hash ^ (uint)code ^ (uint)((x & 255) << 8) ^ (uint)(y & 255)) * 16777619u;
             }
         }
 
-        Assert.Equal(1325747551u, hash);
+        Assert.Equal(834102122u, hash);
     }
 
-    private static (int X, int Y) NearestOpen(uint seed, int x, int y)
+    /// <summary>A row where open ground, exactly three mountain tiles and open ground stand side by side.</summary>
+    private static (int FromX, int Y, int ToX) NarrowCrossing(uint seed)
     {
-        for (var radius = 0; ; radius++)
+        var land = WorldMap.Land;
+        for (var y = land.Y + 20; y < land.Y + land.Height - 20; y += 3)
         {
-            for (var dy = -radius; dy <= radius; dy++)
+            for (var x = land.X + 20; x < land.X + land.Width - 20; x++)
             {
-                for (var dx = -radius; dx <= radius; dx++)
+                if (FarWilds.At(x, y, seed) == FarWilds.Kind.Open
+                    && Enumerable.Range(1, 3).All(step => FarWilds.At(x + step, y, seed) == FarWilds.Kind.Mountain)
+                    && FarWilds.At(x + 4, y, seed) == FarWilds.Kind.Open)
                 {
-                    if (FarWilds.At(x + dx, y + dy, seed) == FarWilds.Kind.Open)
-                    {
-                        return (x + dx, y + dy);
-                    }
+                    return (x, y, x + 4);
                 }
             }
         }
+
+        throw new InvalidOperationException("No narrow crossing on this seed.");
     }
 
-    private static int Neighbours(uint seed, int x, int y, Func<FarWilds.Kind, bool> accept)
+    private static double Length(TilePoint from, IReadOnlyList<TilePoint> way)
     {
-        int[] dx = [1, 0, -1, 0];
-        int[] dy = [0, -1, 0, 1];
-        var count = 0;
-        for (var dir = 0; dir < 4; dir++)
+        var length = 0.0;
+        var at = from;
+        foreach (var turn in way)
         {
-            if (accept(FarWilds.At(x + dx[dir], y + dy[dir], seed))) count++;
+            length += at.DistanceTo(turn);
+            at = turn;
         }
 
-        return count;
+        return length;
     }
 
     private static bool Solid(uint seed, int x, int y, int half, Func<FarWilds.Kind, bool> accept)
@@ -337,84 +324,5 @@ public class FarWildsTests
         var minY = tiles.Min(tile => tile.Y);
         var maxY = tiles.Max(tile => tile.Y);
         return (maxX - minX, maxY - minY);
-    }
-
-    private static bool TryGate(uint seed, List<(int X, int Y)> range, out int fromX, out int fromY, out int toX, out int toY)
-    {
-        (int X, int Y)[] axes = [(1, 0), (0, 1)];
-        foreach (var (x, y) in range)
-        {
-            if (FarWilds.At(x, y, seed) != FarWilds.Kind.Rockfall)
-            {
-                continue;
-            }
-
-            foreach (var (dx, dy) in axes)
-            {
-                if (Span(seed, x, y, dx, dy, out fromX, out fromY, out toX, out toY))
-                {
-                    return true;
-                }
-            }
-        }
-
-        fromX = fromY = toX = toY = 0;
-        return false;
-    }
-
-    private static bool Span(uint seed, int x, int y, int dx, int dy, out int fromX, out int fromY, out int toX, out int toY)
-    {
-        fromX = x;
-        fromY = y;
-        toX = x;
-        toY = y;
-        for (var step = 1; step <= 8; step++)
-        {
-            var kind = FarWilds.At(x - dx * step, y - dy * step, seed);
-            if (kind == FarWilds.Kind.Rockfall)
-            {
-                continue;
-            }
-
-            if (kind != FarWilds.Kind.Open)
-            {
-                return false;
-            }
-
-            fromX = x - dx * step;
-            fromY = y - dy * step;
-            break;
-        }
-
-        for (var step = 1; step <= 8; step++)
-        {
-            var kind = FarWilds.At(x + dx * step, y + dy * step, seed);
-            if (kind == FarWilds.Kind.Rockfall)
-            {
-                continue;
-            }
-
-            if (kind != FarWilds.Kind.Open)
-            {
-                return false;
-            }
-
-            toX = x + dx * step;
-            toY = y + dy * step;
-            break;
-        }
-
-        if (fromX == x && fromY == y)
-        {
-            return false;
-        }
-
-        if (toX == x && toY == y)
-        {
-            return false;
-        }
-
-        var across = Math.Abs(toX - fromX) + Math.Abs(toY - fromY);
-        return across >= 2 && across <= 8;
     }
 }

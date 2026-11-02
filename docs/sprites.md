@@ -667,11 +667,11 @@ story quests are goals.
 | effect | Walk target marker | Marker on the ground where the Tsar or a citizen is walking to. | Not drawn | Strip of 2 frames, each 16×16 effect: small parchment-yellow ring on the ground with a downward arrow bobbing above it. |
 | effect | Ripe sparkle | Glint over a ripe farm bed, ready to harvest. | Not drawn | Strip of 3 frames, each 16×16 effect: small four-point white-yellow star twinkling (small, big, small). |
 
-## 22. Obstacles (28)
+## 22. Obstacles (25)
 
 Planned land that stands in the walkers' way, beyond the mountains of section 8. Marsh only slows walkers. Thickets and
 rockfalls block until citizens clear them; the ravine blocks until the Tsar or a Governor places a rope bridge and citizens build
-it. The cave and the lookout sit in the mountain ridges. None of these is drawn yet.
+it. The cave sits in a mountain ridge. None of these is drawn yet.
 
 | Type | Name | Description | Currently drawn by | Prompt |
 | --- | --- | --- | --- | --- |
@@ -700,9 +700,6 @@ it. The cave and the lookout sit in the mountain ridges. None of these is drawn 
 | prop | Cave mouth | Dark opening in a mountain ridge; laborers dig stone in it and sometimes find coal or iron ore. | Not drawn (planned) | 32×32 prop: rough natural arch opening in a grey rock face, deep darkness inside, a few rocks at the entrance and two small glints of ore on the inner wall, the rock face fills the top half and sides. |
 | prop | Worked cave mouth | The cave once citizens have dug in it: timber props and a lantern. | Not drawn (planned) | 32×32 prop: the same cave arch with two rough timber props holding the entrance, a small lantern hanging on one, a little heap of broken stone outside. |
 | icon | Dig in the cave (`dig-cave`) | Pickaxe before a cave arch. Laborer digs stone, sometimes coal or ore. | Not drawn (planned) | 16×16 icon: small iron pickaxe in front of a dark rocky cave arch with one orange ore glint. |
-| prop | Lookout peak | A rocky peak with a way up; from the top a climber sees far over the land. | Not drawn (planned) | 32×32 prop: a rocky grey peak with a narrow zig-zag trail of flat stone steps climbing its south face to a small flat top, a few tufts of grass on the ledges. |
-| prop | Lookout cairn | A stone cairn with a ribbon on a pole, raised on the lookout once someone has climbed it. | Not drawn (planned) | 16×32 prop: small cairn of stacked flat grey stones with a thin wooden pole rising from it and a red ribbon fluttering at the top. |
-| terrain | Mountain trail | Flat stone steps up the lookout; the only mountain tile walkers may climb. | Not drawn (planned) | 16×16 terrain tile: three flat grey stone steps rising from the bottom to the top edge, rough rock on both sides, seamless top and bottom. |
 
 ## 23. Dungeon: Dead Lands (24)
 

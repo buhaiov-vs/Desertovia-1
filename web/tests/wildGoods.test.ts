@@ -39,7 +39,6 @@ test('patches sit between foe rings, off mountains, and the same seed keeps them
         const kind = farKind(patch.x + dx, patch.y + dy, 1)
         assert.notEqual(kind, 'mountain')
         assert.notEqual(kind, 'thicket')
-        assert.notEqual(kind, 'rockfall')
         assert.equal(wildGoodAt(patch.x + dx, patch.y + dy, 1), patch.kind)
       }
     }

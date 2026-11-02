@@ -1093,12 +1093,12 @@ export interface VillageState {
 
 /**
  * Generated once per village by the server. A pass is 2×2 tiles from its top-left tile; `horizontal` means its ridge
- * runs east to west. The cave mouth and the lookout top are single tiles.
+ * runs east to west. The cave mouth is a single tile.
  */
 export interface Wilds {
   ravine: Array<{ x: number; top: number; height: number }>
   passes: Array<{ x: number; y: number; horizontal: boolean }>
-  obstacles: Array<{ kind: 'Thicket' | 'Rockfall'; x: number; y: number; cleared: boolean }>
+  obstacles: Array<{ kind: 'Thicket' | 'Tunnel'; x: number; y: number; cleared: boolean }>
   caveX: number
   caveY: number
   coalX: number
@@ -1107,8 +1107,6 @@ export interface Wilds {
   ironY: number
   moonX: number
   moonY: number
-  lookoutX: number
-  lookoutY: number
   gold: Array<{ x: number; y: number; level: number; remaining: number }>
 }
 

@@ -1566,6 +1566,8 @@ namespace Desertod.Infrastructure.Data.Migrations
 
                             b1.Property<Guid>("Id");
 
+                            b1.Property<int?>("Level");
+
                             b1.Property<double>("MaximumHealth");
 
                             b1.Property<DateTimeOffset>("NextAttackAt");
@@ -3442,10 +3444,6 @@ namespace Desertod.Infrastructure.Data.Migrations
                             b1.Property<int>("IronX");
 
                             b1.Property<int>("IronY");
-
-                            b1.Property<int>("LookoutX");
-
-                            b1.Property<int>("LookoutY");
 
                             b1.Property<int>("MoonX");
 

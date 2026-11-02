@@ -239,7 +239,6 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
             {
                 wilds.ToJson();
                 wilds.Ignore(w => w.CaveMouth);
-                wilds.Ignore(w => w.Lookout);
                 wilds.OwnsMany(w => w.Ravine);
                 wilds.OwnsMany(w => w.Passes);
                 wilds.OwnsMany(w => w.Obstacles, obstacle =>

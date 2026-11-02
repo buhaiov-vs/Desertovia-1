@@ -71,15 +71,9 @@
       ],
       "caveX": -28,
       "caveY": -8,
-      "lookoutX": -25,
-      "lookoutY": 38,
       "caveMouth": {
         "x": -27.5,
         "y": -7.5
-      },
-      "lookout": {
-        "x": -24.5,
-        "y": 38.5
       }
     },
     "hash": "580a0d28c6aeab6cf3fbcf43bd6e52135a939cac10937664f171acb476a16272",
@@ -158,19 +152,13 @@
       ],
       "caveX": -28,
       "caveY": -8,
-      "lookoutX": -25,
-      "lookoutY": 38,
       "caveMouth": {
         "x": -27.5,
         "y": -7.5
-      },
-      "lookout": {
-        "x": -24.5,
-        "y": 38.5
       }
     },
-    "hash": "3d5fa896a3e5eb907da41413a5590eeaaabfc576130fd126429d4a051e638655",
-    "blocked": 319,
+    "hash": "effaea2c964d72bbdc414aa0d1ce0541d8bb223a1baca092f5f7fcf563cc6927",
+    "blocked": 289,
     "marsh": 176
   },
   {
@@ -245,15 +233,9 @@
       ],
       "caveX": -28,
       "caveY": -8,
-      "lookoutX": -25,
-      "lookoutY": 38,
       "caveMouth": {
         "x": -27.5,
         "y": -7.5
-      },
-      "lookout": {
-        "x": -24.5,
-        "y": 38.5
       }
     },
     "hash": "87fcd3a832298eca94f37e731b607f37ac88e2beae52e71a72c1535300583c94",
@@ -332,15 +314,9 @@
       ],
       "caveX": -28,
       "caveY": -8,
-      "lookoutX": -25,
-      "lookoutY": 38,
       "caveMouth": {
         "x": -27.5,
         "y": -7.5
-      },
-      "lookout": {
-        "x": -24.5,
-        "y": 38.5
       }
     },
     "hash": "f2ac6dded03c4e4bc861c4c2eb7f3d719ff9d654e04ecaa8128d332018cba729",

@@ -3,11 +3,9 @@ namespace Desertod.Domain.World;
 /// <summary>
 /// Mountains, thickets and rivers outside the camp picture.
 /// A course keeps a general heading, bends a little as it goes, and splits off thinner branches.
-/// Most of its length is one tile wide, and here and there it swells gradually to a broad stretch.
-/// A few mountain regions stand as solid massifs, with ranges running out of them.
-/// Every other pass across a range is an open saddle and the rest are rockfall to clear. A massif is cut by
-/// alternating open valleys and rockfall lines, rivers and thickets have open gaps, and where two courses meet the
-/// meeting is open, so the whole land can be walked.
+/// Every course is solid and at least three tiles wide, and here and there it swells gradually to a broad stretch.
+/// A few mountain regions stand as solid massifs, with ranges running out of them. There are no gaps: a walker
+/// goes around, digs a tunnel through a mountain, clears a thicket or bridges a river.
 /// The web client's farWilds.ts computes the same tiles.
 /// The camp picture stays open, and each course keeps a stretch of open country around the camp.
 /// </summary>
@@ -22,21 +20,15 @@ public static class FarWilds
     /// <summary>Thickets grow in most of the squares of this size.</summary>
     private const int ThicketRegion = 1000;
 
-    /// <summary>Valleys and rockfall passes cut a massif along lines this far apart.</summary>
-    private const int MassifPassSpacing = 40;
-
-    /// <summary>A course cuts a pass, ford or gap once this much of its cross-section has grown since the last one.</summary>
-    private const double GateLoad = 400;
+    /// <summary>Every course reaches at least this far either side of its middle tile, so it is at least three tiles across.</summary>
+    private const double MinHalfWidth = 1.5;
 
     /// <summary>A course stops once it heads this close to the edge of the land.</summary>
     private const int EdgeStop = 8;
 
-    /// <summary>An open saddle, valley or ford. It reads as open ground, and no later course paints over it.</summary>
-    private const Kind Saddle = (Kind)byte.MaxValue;
-
-    private static readonly Shape Range = new(0.15, 80, 0.6, 2, 150, 250, [7.5, 3.5, 1.5], 150, 0.4, 0);
-    private static readonly Shape Thicket = new(0.3, 40, 0.6, 1, 50, 70, [5, 2], 80, 0.35, 0.1);
-    private static readonly Shape River = new(0.2, 80, 0.6, 2, 150, 200, [2.5, 1, 0.5], 80, 0, 0);
+    private static readonly Shape Range = new(0.15, 80, 0.6, 2, 150, 250, [7.5, 3.5, 1.5], 150, 0.9);
+    private static readonly Shape Thicket = new(0.3, 40, 0.6, 1, 50, 70, [5, 2], 80, 0.8);
+    private static readonly Shape River = new(0.2, 80, 0.6, 2, 150, 200, [2.5, 1, 0.5], 80, 0);
 
     private static readonly int LandLeft = WorldMap.Land.X;
     private static readonly int LandTop = WorldMap.Land.Y;
@@ -70,7 +62,6 @@ public static class FarWilds
         Open,
         Mountain,
         Thicket,
-        Rockfall,
         Water,
     }
 
@@ -97,8 +88,8 @@ public static class FarWilds
         return CoursesFor(seed).At(Key(x, y));
     }
 
-    /// <summary>A mountain, thicket or rockfall blocks a walk until it is cleared. A river is water, not a clearing.</summary>
-    public static bool Blocks(Kind kind) => kind is Kind.Mountain or Kind.Thicket or Kind.Rockfall;
+    /// <summary>A mountain blocks a walk until a tunnel is dug through it, a thicket until it is cleared. A river is water, not a clearing.</summary>
+    public static bool Blocks(Kind kind) => kind is Kind.Mountain or Kind.Thicket;
 
     public static bool Blocks(int x, int y, uint seed) => Blocks(At(x, y, seed));
 
@@ -163,12 +154,7 @@ public static class FarWilds
             var prev = map.Get(x, y);
             if (prev != Kind.Open)
             {
-                if (prev is Saddle or Kind.Rockfall)
-                {
-                    return;
-                }
-
-                if (prev == Kind.Mountain && kind != Kind.Rockfall)
+                if (prev == Kind.Mountain)
                 {
                     return;
                 }
@@ -196,18 +182,9 @@ public static class FarWilds
             return dx * dx + dy * dy >= reach * reach && !InVale(x, y);
         }
 
-        void Open(int x, int y)
-        {
-            if (OnLand(x, y) && !InVale(x, y))
-            {
-                map.Set(x, y, Saddle);
-            }
-        }
-
-        void Disk(int x, int y, double radius, Kind kind, Shape shape, int salt, int reach)
+        void Disk(int x, int y, double radius, Kind kind, int reach)
         {
             var span = (int)Math.Floor(radius);
-            var inner = (radius - 1) * (radius - 1);
             var awayFromCamp = Math.Sqrt((x - 15.0) * (x - 15.0) + (y - 13.0) * (y - 13.0)) >= reach + span + 2;
             for (var oy = -span; oy <= span; oy++)
             {
@@ -224,17 +201,7 @@ public static class FarWilds
 
                     // A tile this paint could not change needs no rolls.
                     var prev = map.Get(tx, ty);
-                    if (prev is Kind.Mountain or Kind.Rockfall || (prev != Kind.Open && kind is Kind.Thicket or Kind.Water))
-                    {
-                        continue;
-                    }
-
-                    if (radius >= 1.5 && distance > inner && Roll(seed, tx, ty, salt + 81) < shape.Edge)
-                    {
-                        continue;
-                    }
-
-                    if (shape.Skip > 0 && Roll(seed, tx, ty, salt + 80) < shape.Skip)
+                    if (prev == Kind.Mountain || (prev != Kind.Open && kind is Kind.Thicket or Kind.Water))
                     {
                         continue;
                     }
@@ -277,7 +244,7 @@ public static class FarWilds
             return (x, y);
         }
 
-        // Thin most of the way, easing up to a broad stretch now and then, narrowing at both ends. A river widens downstream.
+        // Three tiles across most of the way, easing up to a broad stretch now and then. A river widens downstream.
         double HalfWidth(int id, int salt, int step, int length, Kind kind, int depth, Shape shape)
         {
             var knot = step / shape.Period;
@@ -288,22 +255,16 @@ public static class FarWilds
             var widest = shape.Swell[depth];
             if (kind == Kind.Water)
             {
-                return widest * (0.15 + 0.85 * step / length) * (0.6 + 0.4 * swell);
+                return Math.Max(MinHalfWidth, widest * (0.15 + 0.85 * step / length) * (0.6 + 0.4 * swell));
             }
 
             var ends = Math.Min(1, Math.Min(step / 24.0, (length - step) / 24.0));
-            return widest * swell * swell * ends;
+            return Math.Max(MinHalfWidth, widest * swell * swell * ends);
         }
 
         void Grow(int id, int salt, int x, int y, int length, Kind kind, int depth, int dir, int reach, Shape shape, int childMin, int childSpan, double forkChance)
         {
             var home = dir;
-            var gateEvery = 50 + (int)Math.Floor(Roll(seed, id, salt, 4) * 30);
-            var load = 0.0;
-            var sinceGate = 0;
-            var gates = 0;
-            var crossingAt = -1;
-            var emerged = false;
             var px = x;
             var py = y;
             for (var step = 0; step < length; step++)
@@ -313,61 +274,9 @@ public static class FarWilds
                     break;
                 }
 
-                var radius = HalfWidth(id, salt, step, length, kind, depth, shape);
-                load += 2 * radius + 1;
-                sinceGate++;
-                if (step > 6 && (load >= GateLoad || sinceGate >= gateEvery))
-                {
-                    load = 0;
-                    sinceGate = 0;
-                    var opening = kind != Kind.Mountain || gates % 2 == 1;
-                    gates++;
-                    void Mark(int gx, int gy)
-                    {
-                        if (opening)
-                        {
-                            Open(gx, gy);
-                        }
-                        else
-                        {
-                            Paint(gx, gy, Kind.Rockfall);
-                        }
-                    }
-
-                    Mark(px, py);
-                    var spoke = (int)Math.Floor(radius * 1.5) + 2;
-                    for (var side = 0; side < 8; side += 2)
-                    {
-                        for (var n = 1; n <= spoke; n++)
-                        {
-                            Mark(px + Dx8[side] * n, py + Dy8[side] * n);
-                        }
-                    }
-                }
-
-                // Where a course runs into another, an open cross joins the land on every side of the meeting.
-                var span = (int)Math.Floor(radius);
-                var aheadX = px + Dx8[dir] * (span + 2);
-                var aheadY = py + Dy8[dir] * (span + 2);
-                var ahead = map.Get(aheadX, aheadY);
-                if (ahead == Kind.Open)
-                {
-                    emerged = true;
-                }
-                else if (emerged && step > 12 && step > crossingAt && ahead != Saddle)
-                {
-                    crossingAt = step + 2 * span + 24;
-                    Open(aheadX, aheadY);
-                    for (var side = 0; side < 8; side += 2)
-                    {
-                        for (var n = 1; n <= span + 12; n++)
-                        {
-                            Open(aheadX + Dx8[side] * n, aheadY + Dy8[side] * n);
-                        }
-                    }
-                }
-
-                Disk(px, py, radius, kind, shape, salt, reach);
+                var middle = HalfWidth(id, salt, step, length, kind, depth, shape);
+                var radius = middle >= MinHalfWidth + 1 ? middle + Roll(seed, id, step, salt + 81) * shape.Rough : middle;
+                Disk(px, py, radius, kind, reach);
                 if (depth < shape.MaxDepth && step > 5 && step % shape.ForkEvery == 0 && Roll(seed, id, step, salt + 70) < forkChance)
                 {
                     var off = Roll(seed, id, step, salt + 71) < 0.5 ? 1 : 7;
@@ -414,11 +323,6 @@ public static class FarWilds
                     dir = nd;
                     px = nx;
                     py = ny;
-                    if (Dx8[nd] != 0 && Dy8[nd] != 0)
-                    {
-                        Paint(px - Dx8[nd], py, kind);
-                    }
-
                     moved = true;
                     break;
                 }
@@ -436,18 +340,6 @@ public static class FarWilds
             Grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.ChildMin, shape.ChildSpan, shape.ForkChance);
         }
 
-        // Turns the massif's mountain tiles on one line into an open valley, or into rockfall that opens once it is cleared.
-        void Pass(int x, int y, int dx, int dy, int length, bool valley)
-        {
-            for (var n = 0; n <= length; n++)
-            {
-                if (map.Get(x + dx * n, y + dy * n) == Kind.Mountain)
-                {
-                    map.Set(x + dx * n, y + dy * n, valley ? Saddle : Kind.Rockfall);
-                }
-            }
-        }
-
         for (var index = 0; index < Massifs; index++)
         {
             var radius = 50 + (int)Math.Floor(Roll(seed, index, 130, 6) * 60);
@@ -463,7 +355,7 @@ public static class FarWilds
                 var ox = (int)Math.Floor((Roll(seed, index, lump, 131) * 2 - 1) * radius * 0.75);
                 var oy = (int)Math.Floor((Roll(seed, index, lump, 132) * 2 - 1) * radius * 0.75);
                 var size = radius * (0.25 + Roll(seed, index, lump, 133) * 0.25);
-                Disk(origin.X + ox, origin.Y + oy, size, Kind.Mountain, Range, 130, reach);
+                Disk(origin.X + ox, origin.Y + oy, size, Kind.Mountain, reach);
             }
 
             var arms = 2 + (int)Math.Floor(Roll(seed, index, 130, 8) * 2);
@@ -472,20 +364,6 @@ public static class FarWilds
                 var id = index * 8 + arm;
                 var length = 400 + (int)Math.Floor(Roll(seed, id, 140, 5) * 500);
                 Course(id, 140, origin.X, origin.Y, length, Kind.Mountain, reach, Range);
-            }
-
-            var left = origin.X - radius * 2;
-            var top = origin.Y - radius * 2;
-            var firstX = left + (int)Math.Floor(Roll(seed, index, 130, 9) * MassifPassSpacing);
-            var firstY = top + (int)Math.Floor(Roll(seed, index, 130, 10) * MassifPassSpacing);
-            for (int x = firstX, line = 0; x <= origin.X + radius * 2; x += MassifPassSpacing, line++)
-            {
-                Pass(x, top, 0, 1, radius * 4, line % 2 == 1);
-            }
-
-            for (int y = firstY, line = 0; y <= origin.Y + radius * 2; y += MassifPassSpacing, line++)
-            {
-                Pass(left, y, 1, 0, radius * 4, line % 2 == 1);
             }
         }
 
@@ -597,7 +475,7 @@ public static class FarWilds
                         for (var dy = 0; dy < Size; dy++)
                         {
                             var kind = chunk[(dx << Shift) | dy];
-                            if (kind is (byte)Kind.Open or (byte)Saddle)
+                            if (kind == (byte)Kind.Open)
                             {
                                 continue;
                             }
@@ -643,8 +521,7 @@ public static class FarWilds
     /// <summary>How a course grows. Matches <c>Shape</c> in farWilds.ts.</summary>
     /// <param name="Swell">The widest half-width at each depth of branching.</param>
     /// <param name="Period">Steps between one width and the next one the course eases toward.</param>
-    /// <param name="Edge">Share of tiles left out along the outer edge of a wide stretch.</param>
-    /// <param name="Skip">Share of tiles left out anywhere.</param>
+    /// <param name="Rough">Up to this much is added to a broad stretch's half-width at each step, so its edge is wavy but has no loose tiles.</param>
     private sealed record Shape(
         double Wobble,
         int ForkEvery,
@@ -654,6 +531,5 @@ public static class FarWilds
         int ChildSpan,
         double[] Swell,
         int Period,
-        double Edge,
-        double Skip);
+        double Rough);
 }

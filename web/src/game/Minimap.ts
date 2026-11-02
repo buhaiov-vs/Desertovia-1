@@ -11,11 +11,9 @@ const TERRAIN_COLORS: Record<Terrain, [number, number, number]> = {
   [Terrain.Mountain]: [104, 96, 92],
   [Terrain.Ravine]: [52, 38, 28],
   [Terrain.Thicket]: [36, 80, 31],
-  [Terrain.Rockfall]: [130, 122, 114],
+  [Terrain.Tunnel]: [130, 122, 114],
   [Terrain.Marsh]: [95, 122, 69],
   [Terrain.Cave]: [28, 23, 18],
-  [Terrain.Lookout]: [200, 190, 175],
-  [Terrain.Trail]: [156, 127, 90],
 }
 
 const FOG: [number, number, number] = [12, 14, 20]
@@ -143,7 +141,7 @@ export class Minimap {
     this.draw()
   }
 
-  /** Cleared far thickets and rockfalls, so a gate reads as open ground on the overview. */
+  /** Cleared far thickets and dug tunnel tiles, so a way through reads on the overview. */
   setCleared(keys: Iterable<string>) {
     const next = new Set(keys)
     if (next.size === this.cleared.size && [...next].every((key) => this.cleared.has(key))) return

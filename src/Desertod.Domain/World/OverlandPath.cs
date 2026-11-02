@@ -56,7 +56,7 @@ public static class OverlandPath
             if (!AuthoredTerrain.Inside(x, y)) return false;
             if (x == startX && y == startY) return true;
             var kind = terrain[AuthoredTerrain.Index(x, y)];
-            if (kind is AuthoredTerrain.Thicket or AuthoredTerrain.Rockfall) return x == goalX && y == goalY;
+            if (kind == AuthoredTerrain.Thicket) return x == goalX && y == goalY;
             if (kind == AuthoredTerrain.Water) return bridge && BridgeDeck.Contains(new(x, y, 1, 1));
             if (kind == AuthoredTerrain.Ravine) return bridging || crossings.Any(c => c.Contains(new(x, y, 1, 1)));
             return climbing || kind != AuthoredTerrain.Mountain;
@@ -292,7 +292,7 @@ public static class OverlandPath
         if (AuthoredTerrain.Inside(x, y))
         {
             var kind = terrain[AuthoredTerrain.Index(x, y)];
-            if (x == goalX && y == goalY && kind is AuthoredTerrain.Thicket or AuthoredTerrain.Rockfall)
+            if (x == goalX && y == goalY && kind == AuthoredTerrain.Thicket)
             {
                 return false;
             }
@@ -307,7 +307,7 @@ public static class OverlandPath
                 return !crossings.Any(crossing => crossing.Contains(new TileArea(x, y, 1, 1)));
             }
 
-            if (kind is AuthoredTerrain.Mountain or AuthoredTerrain.Thicket or AuthoredTerrain.Rockfall)
+            if (kind is AuthoredTerrain.Mountain or AuthoredTerrain.Thicket)
             {
                 return true;
             }
@@ -321,7 +321,8 @@ public static class OverlandPath
         }
 
         var far = FarWilds.At(x, y, seed);
-        if (x == goalX && y == goalY && far is FarWilds.Kind.Thicket or FarWilds.Kind.Rockfall)
+        // A walker may step up to the thicket they clear or the mountain face they dig.
+        if (x == goalX && y == goalY && far is FarWilds.Kind.Thicket or FarWilds.Kind.Mountain)
         {
             return false;
         }
@@ -331,7 +332,7 @@ public static class OverlandPath
             return false;
         }
 
-        return FarWilds.Blocks(far) || FarGround.Water(x, y, seed);
+        return FarWilds.Blocks(far) || far == FarWilds.Kind.Water;
     }
 
     private static bool Clear(TilePoint a, TilePoint b, Func<int, int, bool> dry)

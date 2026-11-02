@@ -129,6 +129,8 @@ const DEFAULT_SIGHT = 6
 const PEAK_SCALE = 2
 /** Depth of scrolled-away trees: sorts them behind every live object so they can be removed as one range. */
 const RETIRED_DEPTH = Number.MAX_SAFE_INTEGER
+/** Marks the broken-rock view of a dug tunnel tile, so it is not swapped again. */
+const TUNNEL_LABEL = 'tunnel'
 
 const NATURE: Partial<Record<number, NatureKind>> = {
   [Terrain.Tree]: 'tree',
@@ -137,7 +139,6 @@ const NATURE: Partial<Record<number, NatureKind>> = {
   [Terrain.Reeds]: 'reeds',
   [Terrain.Water]: 'water',
   [Terrain.Thicket]: 'thicket',
-  [Terrain.Rockfall]: 'rockfall',
   [Terrain.Cave]: 'cave',
 }
 
@@ -350,7 +351,7 @@ export class VillageWorld {
   private scenery: Array<{ view: Container; x: number; y: number }> = []
   /** Standing trees of the forest area by "x,y"; they come and go with the village state. */
   private readonly trees = new Map<string, Container>()
-  /** Standing thickets and rockfalls, by tile. */
+  /** Standing thickets inside the camp picture, by tile. */
   private readonly obstacles = new Map<string, Container>()
   /** Kind of the building being placed: a rope bridge goes over the ravine, everything else on the camp land. */
   private placingKind = ''
@@ -526,9 +527,6 @@ export class VillageWorld {
           .stroke({ color: 0x8aa04a, width: 1 })
       }
     }
-    for (const step of layout.trail) {
-      water.rect(step.x * TILE + 5, step.y * TILE, 6, TILE).fill({ color: 0x9c7f5a })
-    }
     // Trampled earth around the campfire.
     water
       .ellipse(CAMPFIRE.x * TILE, CAMPFIRE.y * TILE, 2.6 * TILE, 1.9 * TILE)
@@ -550,7 +548,6 @@ export class VillageWorld {
     if (wilds) {
       for (const mine of this.mineTiles) addScenery(this.mineView(mine.x, mine.y, mine.kind), mine.x, mine.y)
       for (const vein of this.goldTiles) addScenery(this.mineView(vein.x, vein.y, 'vein'), vein.x, vein.y)
-      addScenery(this.lookoutView(wilds.lookoutX, wilds.lookoutY), wilds.lookoutX, wilds.lookoutY)
     }
     for (const bush of layout.bushes) addScenery(this.scattered(this.bushView(bush.x, bush.y), bush.x, bush.y), bush.x, bush.y)
     for (const reed of layout.reeds) this.objects.addChild(cull(this.reedView(reed.x, reed.y)))
@@ -637,7 +634,7 @@ export class VillageWorld {
         batch.addChild(sprite)
         if (mine || authored !== undefined) continue
         const kind = farKind(tileX, tileY, seed)
-        if (kind !== 'mountain' && kind !== 'rockfall') continue
+        if (kind !== 'mountain') continue
         // The peak sprite is a small cap. The rock under it is what shows the ridge you cannot walk.
         rock.rect(column * TILE - 1, row * TILE - 1, TILE + 2, TILE + 2).fill({ color: 0x8d857b })
         rock.rect(column * TILE + 3, row * TILE + 4, 4, 3).fill({ color: 0x6e675f })
@@ -703,7 +700,7 @@ export class VillageWorld {
     this.farTrees.delete(key)
   }
 
-  /** Peaks, thicket hedges and rockfall gates past the camp picture. Cleared tiles stay open. */
+  /** Peaks and thicket hedges past the camp picture. A cleared thicket stays open; a dug mountain tile shows broken rock. */
   private plantFarWilds(key: string, chunk: LandChunkRect) {
     const seed = this.terrainSeed ?? 1
     const tiles: string[] = []
@@ -714,12 +711,12 @@ export class VillageWorld {
         if (tileX >= MAP_LEFT && tileX < MAP_LEFT + MAP_WIDTH && tileY >= MAP_TOP && tileY < MAP_TOP + MAP_HEIGHT) continue
         if (this.mineAt(tileX, tileY) || this.goldAt(tileX, tileY)) continue
         const tileKey = `${tileX},${tileY}`
-        if (this.farWild.has(tileKey) || this.farCleared(tileX, tileY)) continue
+        if (this.farWild.has(tileKey)) continue
+        const cleared = this.farCleared(tileX, tileY)
         const kind = farKind(tileX, tileY, seed)
         const view =
-          kind === 'thicket' ? this.thicketView(tileX, tileY)
-          : kind === 'rockfall' ? this.rockfallView(tileX, tileY)
-          : kind === 'mountain' ? this.farPeakView(tileX, tileY, seed)
+          kind === 'mountain' ? (cleared ? this.tunnelView(tileX, tileY) : this.farPeakView(tileX, tileY, seed))
+          : kind === 'thicket' && !cleared ? this.thicketView(tileX, tileY)
           : null
         if (!view) continue
         view.cullable = true
@@ -737,6 +734,14 @@ export class VillageWorld {
   private farPeakView(x: number, y: number, seed: number) {
     const peak = farPeak(x, y, seed)
     return peak ? this.peakView(peak, x, y) : null
+  }
+
+  /** A mountain tile can be dug when open ground or a dug tunnel tile touches one of its four sides. Matches Wilderness.CanDig. */
+  private canDig(x: number, y: number, seed: number) {
+    return [[1, 0], [0, -1], [-1, 0], [0, 1]].some(([dx, dy]) => {
+      const kind = farKind(x + dx, y + dy, seed)
+      return kind === 'open' || (kind === 'mountain' && this.farCleared(x + dx, y + dy))
+    })
   }
 
   private farCleared(x: number, y: number) {
@@ -835,7 +840,7 @@ export class VillageWorld {
     if (changed) this.minimap?.setTerrain(terrain, this.terrainSeed ?? 1)
   }
 
-  /** Draws the standing thickets and rockfalls; cleared ones turn to grass and let walkers through. */
+  /** Draws the standing thickets; cleared ones turn to grass. A dug tunnel tile far out swaps its peak for broken rock. */
   private drawObstacles(wilds: Wilds | null) {
     const terrain = this.terrain
     if (!terrain || !wilds) return
@@ -845,10 +850,22 @@ export class VillageWorld {
       const outside =
         obstacle.x < MAP_LEFT || obstacle.y < MAP_TOP || obstacle.x >= MAP_LEFT + MAP_WIDTH || obstacle.y >= MAP_TOP + MAP_HEIGHT
       if (outside) {
-        if (obstacle.cleared) this.dropFarWildTile(key)
+        if (!obstacle.cleared) continue
+        const tunnel = obstacle.kind === 'Tunnel'
+        if (tunnel && this.farWild.get(key)?.label === TUNNEL_LABEL) continue
+        this.dropFarWildTile(key)
+        if (tunnel) {
+          const dug = this.tunnelView(obstacle.x, obstacle.y)
+          dug.label = TUNNEL_LABEL
+          dug.cullable = true
+          this.objects.addChild(dug)
+          this.farWild.set(key, dug)
+          this.cullDirty = true
+        }
         continue
       }
-      const kind = obstacle.kind === 'Thicket' ? Terrain.Thicket : Terrain.Rockfall
+      if (obstacle.kind !== 'Thicket') continue
+      const kind = Terrain.Thicket
       const tile = (obstacle.y - MAP_TOP) * MAP_WIDTH + (obstacle.x - MAP_LEFT)
       const view = this.obstacles.get(key)
       if (obstacle.cleared) {
@@ -861,7 +878,7 @@ export class VillageWorld {
         continue
       }
       if (view) continue
-      const created = kind === Terrain.Thicket ? this.thicketView(obstacle.x, obstacle.y) : this.rockfallView(obstacle.x, obstacle.y)
+      const created = this.thicketView(obstacle.x, obstacle.y)
       created.cullable = true
       this.objects.addChild(created)
       this.obstacles.set(key, created)
@@ -1174,8 +1191,7 @@ export class VillageWorld {
         const kind = farKind(tileX, tileY, seed)
         if (kind === 'water') return 'water' as const
         if (kind === 'thicket') return 'thicket' as const
-        if (kind === 'rockfall') return 'rockfall' as const
-        if (kind === 'mountain') return undefined
+        if (kind === 'mountain') return this.canDig(tileX, tileY, seed) ? ('tunnel' as const) : undefined
         const ground = farTerrain(tileX, tileY, seed)
         if (ground === Terrain.Tree) return 'tree' as const
         if (ground === Terrain.Stone) return 'stone' as const
@@ -2206,8 +2222,8 @@ export class VillageWorld {
     return g
   }
 
-  /** Boulders piled in a mountain pass. */
-  private rockfallView(x: number, y: number): Graphics {
+  /** Broken rock on a mountain tile dug through, so the tunnel reads on the map. */
+  private tunnelView(x: number, y: number): Graphics {
     const g = new Graphics().rect(-0.5, -0.5, TILE + 1, TILE + 1).fill({ color: 0x8d857b })
     const tilt = pseudo(x, y) * 3
     for (const [bx, by, radiusX, radiusY] of [[5, 10, 5, 4], [11.5 - tilt, 11, 4.5, 3.5], [8, 5.5 + tilt, 4.5, 4], [13, 5, 3, 2.5]]) {
@@ -2270,18 +2286,6 @@ export class VillageWorld {
 
   private goldAt(x: number, y: number) {
     return this.goldTiles.some((vein) => vein.x === x && vein.y === y)
-  }
-
-  /** The bare top of the lookout peak with a cairn of stones on it. */
-  private lookoutView(x: number, y: number): Graphics {
-    const g = new Graphics().rect(-0.5, -0.5, TILE + 1, TILE + 1).fill({ color: 0xa39a8e })
-    for (const [bx, by, radiusX] of [[8, 12, 5], [8, 8.5, 4], [8, 5.5, 3], [8, 3, 2]]) {
-      g.ellipse(bx, by, radiusX, radiusX * 0.6).fill({ color: 0x6f6860 })
-    }
-    g.moveTo(11, 4).lineTo(11, -6).stroke({ color: 0x6b4423, width: 1.5 }).rect(11, -6, 5, 3).fill({ color: 0xc04040 })
-    g.position.set(x * TILE, y * TILE)
-    g.zIndex = (y + 1) * TILE - 1
-    return g
   }
 
   private bushView(x: number, y: number): Graphics {

@@ -152,7 +152,7 @@ public sealed record FogChunk(int X, int Y, bool Complete, byte[]? Bits);
 /// </summary>
 public static class Exploration
 {
-    /// <summary>How far, in tiles, a walker sees around them (gameplay / lookout, not the walk fog trail).</summary>
+    /// <summary>How far, in tiles, a walker sees around them (gameplay, not the walk fog trail).</summary>
     public const double SightRadius = 6;
 
     /// <summary>How wide the fog opens along a walk (same reach as live sight; hard tile bumps on the client).</summary>
@@ -168,12 +168,6 @@ public static class Exploration
 
     /// <summary>The pace figures walk at on the map; the land ahead is seen no sooner than the map shows them there.</summary>
     public const double SecondsPerTile = 0.6;
-
-    /// <summary>How far, in tiles, a walker sees from the top of the lookout peak.</summary>
-    public const double LookoutSightRadius = 22;
-
-    /// <summary>A walk that ends this close to the top of the lookout counts as climbing it.</summary>
-    public const double LookoutReach = 1.5;
 
     /// <summary>Tiles on a side of one stored block.</summary>
     public const int ChunkSize = 32;
@@ -316,20 +310,15 @@ public static class Exploration
     }
 
     /// <summary>
-    /// Marks the land seen along the part of the trip walked by <paramref name="now"/>, and the wide view from the
-    /// <paramref name="lookout"/> once the trip ends on top of it. Returns the chunks; the passed buffer is not changed.
+    /// Marks the land seen along the part of the trip walked by <paramref name="now"/>. Returns the chunks; the passed
+    /// buffer is not changed.
     /// </summary>
-    public static byte[] Reveal(byte[] map, Trip trip, DateTimeOffset now, TilePoint? lookout = null)
+    public static byte[] Reveal(byte[] map, Trip trip, DateTimeOffset now)
     {
         var chunks = Decode(map);
         if (now < trip.SetOutAt)
         {
             return chunks.Encode();
-        }
-
-        if (lookout is { } peak && now >= trip.ArrivesAt && trip.To.DistanceTo(peak) <= LookoutReach)
-        {
-            chunks.RevealOval(peak, LookoutSightRadius, LookoutSightRadius);
         }
 
         var walked = trip.WalkedRoute(now);
@@ -374,12 +363,12 @@ public static class Exploration
     /// The village's seen land plus the parts of the trips walked by <paramref name="now"/>. Trips still count after
     /// they end, until the next trip of the same walker writes them into the village's map.
     /// </summary>
-    public static byte[] Seen(byte[] explored, IEnumerable<Trip> trips, DateTimeOffset now, TilePoint? lookout = null)
+    public static byte[] Seen(byte[] explored, IEnumerable<Trip> trips, DateTimeOffset now)
     {
         var map = IsChunkFormat(explored) || explored.Length == LegacySize ? explored : Camp();
         foreach (var trip in trips)
         {
-            map = Reveal(map, trip, now, lookout);
+            map = Reveal(map, trip, now);
         }
 
         return map;
@@ -399,14 +388,13 @@ public static class Exploration
         TilePoint resting,
         TilePoint to,
         DateTimeOffset now,
-        TilePoint? lookout = null,
         IReadOnlyList<TilePoint>? way = null)
     {
         var from = resting;
         var map = explored;
         if (current is not null)
         {
-            map = Reveal(map, current, now, lookout);
+            map = Reveal(map, current, now);
             if (now < current.ArrivesAt)
             {
                 from = current.PositionAt(now);

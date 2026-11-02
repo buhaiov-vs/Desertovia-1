@@ -297,7 +297,7 @@ const FLEE_SPEED = 2.2
 /** Guards meet the pack this far in front of it, in tiles. */
 const FRONT_GAP = 1.5
 
-const BLOCKING: number[] = [Terrain.Water, Terrain.Reeds, Terrain.Mountain, Terrain.Ravine, Terrain.Thicket, Terrain.Rockfall]
+const BLOCKING: number[] = [Terrain.Water, Terrain.Reeds, Terrain.Mountain, Terrain.Ravine, Terrain.Thicket]
 
 interface Raider {
   view: Container

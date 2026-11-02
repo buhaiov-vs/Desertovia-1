@@ -10,7 +10,7 @@ namespace Desertod.Domain.Tests;
 
 public class WildernessTests
 {
-    /// <summary>A small hand-made wild land: a level stretch of ravine, one thicket tile, one rockfall tile, the cave and the lookout.</summary>
+    /// <summary>A small hand-made wild land: a level stretch of ravine, one thicket tile and the cave.</summary>
     private static Village Wild()
     {
         var village = NewVillage();
@@ -20,12 +20,9 @@ public class WildernessTests
             Obstacles =
             [
                 new Obstacle { Kind = ObstacleKind.Thicket, X = -6, Y = 6 },
-                new Obstacle { Kind = ObstacleKind.Rockfall, X = -8, Y = 14 },
             ],
             CaveX = -20,
             CaveY = 0,
-            LookoutX = -30,
-            LookoutY = 20,
         };
         return village;
     }
@@ -46,7 +43,7 @@ public class WildernessTests
         var again = Wilderness.Generate(village.Id);
         Assert.Equal(wilds.Ravine.Select(s => (s.X, s.Top)), again.Ravine.Select(s => (s.X, s.Top)));
         Assert.Equal(wilds.Obstacles.Select(o => (o.X, o.Y)), again.Obstacles.Select(o => (o.X, o.Y)));
-        Assert.Equal((wilds.CaveX, wilds.CaveY, wilds.LookoutX, wilds.LookoutY), (again.CaveX, again.CaveY, again.LookoutX, again.LookoutY));
+        Assert.Equal((wilds.CaveX, wilds.CaveY), (again.CaveX, again.CaveY));
     }
 
     [Theory]
@@ -98,7 +95,6 @@ public class WildernessTests
             var den = SpawnRings.Points(Wilderness.Seed(new Guid(seed, 0, 0, new byte[8]).ToString())).First(point => point.Level == vein.Level);
             Assert.True(vein.Center.DistanceTo(den.Center) > den.Claim / 2.0);
         });
-        Assert.True(WorldMap.Land.Contains(new TileArea(wilds.LookoutX, wilds.LookoutY, 1, 1)));
     }
 
     [Theory]
@@ -130,8 +126,6 @@ public class WildernessTests
             ],
             CaveX = -20,
             CaveY = 0,
-            LookoutX = -30,
-            LookoutY = 20,
         };
 
         Assert.True(Wilderness.ClearAroundVillage(village));
@@ -226,41 +220,107 @@ public class WildernessTests
     }
 
     [Fact]
-    public void PickedSpot_MustBeAtAStandingObstacle()
+    public void Tunnel_IsDugOnlyAtAPickedMountainFace()
     {
-        var village = Wild();
-        See(village, -7.5, 14.5);
-        var citizen = NewCitizen(village);
+        var village = TunnelVillage(out var face, out var inner);
+        var citizen = NewCitizen(village, (Stat.Strength, 3), (Stat.Endurance, 3));
+        var open = new TilePoint(face.X - 0.5, face.Y + 0.5);
+        citizen.IdleSpot = open;
         var context = new WorkContext { Village = village };
 
-        Assert.Equal("spot.nothingToClear", Assert.Throws<GameRuleException>(() =>
-            CycleEngine.Start(citizen, Task("break-rockfall"), context, Now, new TilePoint(-2.5, 14.5))).Code);
+        Assert.Equal("tunnel.pickTile", Assert.Throws<GameRuleException>(() =>
+            CycleEngine.Start(citizen, Task("dig-tunnel"), context, Now)).Code);
+        Assert.Equal("tunnel.notMountain", Assert.Throws<GameRuleException>(() =>
+            CycleEngine.Start(citizen, Task("dig-tunnel"), context, Now, open)).Code);
+        Assert.Equal("tunnel.notFace", Assert.Throws<GameRuleException>(() =>
+            CycleEngine.Start(citizen, Task("dig-tunnel"), context, Now, Centre(inner))).Code);
     }
 
     [Fact]
-    public void Rockfall_TakesSeveralCycles_AndGivesStone()
+    public void Tunnel_OpensOneTileACycle_GivesStone_AndLetsTheNextTileBeDug()
+    {
+        var village = TunnelVillage(out var face, out var inner);
+        var citizen = NewCitizen(village, (Stat.Strength, 3), (Stat.Endurance, 3));
+        citizen.IdleSpot = new TilePoint(face.X - 0.5, face.Y + 0.5);
+        var context = new WorkContext { Village = village };
+
+        CycleEngine.Start(citizen, Task("dig-tunnel"), context, Now, Centre(face));
+        var report = Finish(citizen, context);
+
+        var dug = Assert.Single(village.Wilds!.Obstacles, o => o.Kind == ObstacleKind.Tunnel);
+        Assert.Equal((face.X, face.Y), (dug.X, dug.Y));
+        Assert.NotNull(dug.ClearedAt);
+        Assert.Contains(report.Produced, p => p.Resource == ResourceKind.Stone && p.Amount > 0);
+        Assert.Equal(480, Task("dig-tunnel").WorkSeconds);
+
+        citizen.StoredEnergy = citizen.MaximumEnergy;
+        CycleEngine.Start(citizen, Task("dig-tunnel"), context, citizen.CycleEndsAt!.Value, Centre(inner));
+        Finish(citizen, context);
+
+        Assert.Equal(2, village.Wilds.Obstacles.Count(o => o.Kind == ObstacleKind.Tunnel && o.ClearedAt is not null));
+    }
+
+    [Fact]
+    public void ClearAround_KeepsFarThicketsAndTunnels_AndDropsEveryRockfall()
+    {
+        var village = NewVillage();
+        village.Wilds = new Wilds
+        {
+            Obstacles =
+            [
+                new Obstacle { Kind = ObstacleKind.Thicket, X = 400, Y = 10, ClearedAt = Now },
+                new Obstacle { Kind = ObstacleKind.Tunnel, X = 401, Y = 10, ClearedAt = Now },
+                new Obstacle { Kind = ObstacleKind.Rockfall, X = 402, Y = 10, ClearedAt = Now },
+                new Obstacle { Kind = ObstacleKind.Rockfall, X = 403, Y = 10 },
+            ],
+        };
+
+        Assert.True(Wilderness.ClearAroundVillage(village));
+        Assert.Equal([ObstacleKind.Thicket, ObstacleKind.Tunnel], village.Wilds.Obstacles.Select(o => o.Kind));
+        Assert.False(Wilderness.ClearAroundVillage(village));
+    }
+
+    private static TilePoint Centre((int X, int Y) tile) => new(tile.X + 0.5, tile.Y + 0.5);
+
+    /// <summary>
+    /// A fixed camp with a mountain face the campfire can walk to: open ground west of the face, mountain under it and
+    /// one more mountain tile east of it. Both tiles are already seen.
+    /// </summary>
+    private static Village TunnelVillage(out (int X, int Y) face, out (int X, int Y) inner)
     {
         var village = Wild();
-        See(village, -7.5, 14.5);
-        var citizen = NewCitizen(village, (Stat.Strength, 3), (Stat.Endurance, 3));
-        var context = new WorkContext { Village = village };
-        var rockfall = village.Wilds!.Obstacles[1];
-        var stone = 0.0;
-        var cycles = 0;
-        var now = Now;
-
-        while (rockfall.ClearedAt is null && cycles < 20)
+        village.Id = new Guid("00000000-0000-7000-8000-000000000001");
+        var seed = Wilderness.Seed(village.Id.ToString());
+        var camp = WorldMap.Places[WorldMap.Camp];
+        for (var radius = 130; radius < 2_000; radius += 7)
         {
-            CycleEngine.Start(citizen, Task("break-rockfall"), context, now, new TilePoint(-7.5, 14.5));
-            now = citizen.CycleEndsAt!.Value;
-            stone += Finish(citizen, context).Produced.Where(p => p.Resource == ResourceKind.Stone).Sum(p => p.Amount);
-            citizen.StoredEnergy = citizen.MaximumEnergy;
-            cycles++;
+            for (var step = 0; step < 64; step++)
+            {
+                var x = (int)(camp.X + radius * Math.Cos(step * Math.PI / 32));
+                var y = (int)(camp.Y + radius * Math.Sin(step * Math.PI / 32));
+                if (FarWilds.At(x - 1, y, seed) != FarWilds.Kind.Open
+                    || FarWilds.At(x, y, seed) != FarWilds.Kind.Mountain
+                    || FarWilds.At(x + 1, y, seed) != FarWilds.Kind.Mountain
+                    || FarWilds.At(x + 1, y - 1, seed) == FarWilds.Kind.Open
+                    || FarWilds.At(x + 1, y + 1, seed) == FarWilds.Kind.Open
+                    || FarWilds.At(x + 2, y, seed) == FarWilds.Kind.Open)
+                {
+                    continue;
+                }
+
+                if (OverlandPath.Find(village, camp, new TilePoint(x + 0.5, y + 0.5)) is null)
+                {
+                    continue;
+                }
+
+                face = (x, y);
+                inner = (x + 1, y);
+                See(village, x + 0.5, y + 0.5);
+                return village;
+            }
         }
 
-        Assert.NotNull(rockfall.ClearedAt);
-        Assert.True(cycles > 1);
-        Assert.True(stone > 0);
+        throw new InvalidOperationException("No reachable mountain face near this camp.");
     }
 
     [Fact]
@@ -297,32 +357,6 @@ public class WildernessTests
 
         Assert.Equal(BuildingKind.RopeBridge, site.Kind);
         Assert.Equal(["posts", "ropes", "deck"], site.Definition.Stages.Select(s => s.Id));
-    }
-
-    [Fact]
-    public void ClimbingTheLookout_RevealsTheLandFarAround()
-    {
-        var village = Wild();
-        var lookout = village.Wilds!.Lookout;
-
-        village.TsarGoTo(lookout, Now);
-        var arrived = village.TsarTrip!.ArrivesAt;
-        village.Explore([], arrived);
-
-        Assert.True(Seen(village, lookout.X + 20, lookout.Y));
-        Assert.True(Seen(village, lookout.X, lookout.Y - 20));
-    }
-
-    [Fact]
-    public void WalkingPastTheLookout_DoesNotRevealTheFarLand()
-    {
-        var village = Wild();
-        var lookout = village.Wilds!.Lookout;
-
-        village.TsarGoTo(new TilePoint(lookout.X + 4, lookout.Y), Now);
-        village.Explore([], village.TsarTrip!.ArrivesAt);
-
-        Assert.False(Seen(village, lookout.X, lookout.Y - 20));
     }
 
     [Fact]

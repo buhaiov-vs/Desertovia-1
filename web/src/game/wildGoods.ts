@@ -112,7 +112,7 @@ function fits(x: number, y: number, seed: number) {
       const tileY = y + dy
       if (!onLand(tileX, tileY) || inVale(tileX, tileY)) return false
       const kind = farKind(tileX, tileY, seed)
-      if (kind === 'mountain' || kind === 'thicket' || kind === 'rockfall' || kind === 'water') return false
+      if (kind === 'mountain' || kind === 'thicket' || kind === 'water') return false
     }
   }
   return true

@@ -332,7 +332,7 @@ public sealed class Citizen
             throw new GameRuleException("spot.blocked", "Mountains, thickets or water block the way.");
         }
 
-        var departure = Exploration.SetOut(village.Explored, Trip, IdleSpot ?? WorldMap.Places[WorldMap.Camp], to, now, village.Wilds?.Lookout, way);
+        var departure = Exploration.SetOut(village.Explored, Trip, IdleSpot ?? WorldMap.Places[WorldMap.Camp], to, now, way);
         village.Explored = departure.Explored;
         Trip = departure.Trip;
         Trip.SpeedMultiplier = MedicalWalk(now);

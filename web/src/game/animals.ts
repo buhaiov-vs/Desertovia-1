@@ -100,7 +100,7 @@ const MINIMUM_STAMINA = 0.2
 /** Top of a citizen's head above their feet, in world pixels. */
 const CARRY_HEIGHT = 17
 
-const BLOCKING: number[] = [Terrain.Water, Terrain.Reeds, Terrain.Mountain, Terrain.Ravine, Terrain.Thicket, Terrain.Rockfall]
+const BLOCKING: number[] = [Terrain.Water, Terrain.Reeds, Terrain.Mountain, Terrain.Ravine, Terrain.Thicket]
 
 interface Animal {
   kind: AnimalKind

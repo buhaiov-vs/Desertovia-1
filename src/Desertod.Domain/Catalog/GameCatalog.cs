@@ -65,6 +65,9 @@ public static class GameCatalog
     public const string KeepWatch = "keep-watch";
 
     private const int Craft = GameRules.CraftSeconds;
+
+    /// <summary>Digging one tile of tunnel is long, hard work, so a mountain really stops the tribe.</summary>
+    private const int TunnelSeconds = 480;
     private const int GuardShiftSeconds = GameRules.GuardShiftSeconds;
 
     private static readonly DangerDefinition RabbitWoods = new(0.04, [EnemyKind.Wolf]);
@@ -110,8 +113,8 @@ public static class GameCatalog
             [Amount(ResourceKind.Gold, 1)], None, WorldMap.GoldVein, RequiredProject: ProjectCatalog.TsarBridge),
         new("clear-thicket", "Clear the thicket", "laborer", 0, Stat.Strength, Stat.Endurance, Skill.Woodcutting, TaskEffect.Resources, 0,
             [Amount(ResourceKind.Wood, 3)], None, Wilderness.Thicket),
-        new("break-rockfall", "Break the rockfall", "laborer", 0, Stat.Strength, Stat.Endurance, Skill.Quarrying, TaskEffect.Resources, 0,
-            [Amount(ResourceKind.Stone, 4)], None, Wilderness.Rockfall),
+        new("dig-tunnel", "Dig a tunnel", "laborer", 0, Stat.Strength, Stat.Endurance, Skill.Mining, TaskEffect.Resources, 0,
+            [Amount(ResourceKind.Stone, 1)], None, Wilderness.Tunnel, WorkSeconds: TunnelSeconds),
         new("dig-cave", "Dig in the cave", "laborer", 0, Stat.Strength, Stat.Endurance, Skill.Mining, TaskEffect.Resources, 0,
             [Amount(ResourceKind.Stone, 3)], None, Wilderness.Cave),
         new("dig-coal", "Dig coal", "laborer", 0, Stat.Strength, Stat.Endurance, Skill.Mining, TaskEffect.Resources, 0,

@@ -109,8 +109,6 @@ public sealed record WildsDto(
     int IronY,
     int MoonX,
     int MoonY,
-    int LookoutX,
-    int LookoutY,
     IReadOnlyList<GoldDepositDto> Gold);
 
 /// <param name="Growth">0 when sown, 1 when ripe; 0 for an empty bed.</param>
@@ -556,8 +554,7 @@ public static class DtoMapper
         var seen = Exploration.Seen(
             village.Explored,
             (village.TsarTrip is null ? citizenTrips : citizenTrips.Append(village.TsarTrip)).Where(t=>BankAccess.CanReach(village,t.To)),
-            now,
-            village.Wilds?.Lookout);
+            now);
         return new(
         village.Id,
         village.Slug,
@@ -635,8 +632,6 @@ public static class DtoMapper
         wilds.IronY,
         wilds.MoonX,
         wilds.MoonY,
-        wilds.LookoutX,
-        wilds.LookoutY,
         (wilds.Gold ?? []).Select(vein => new GoldDepositDto(vein.X, vein.Y, vein.Level, vein.Remaining)).ToList());
 
     public static RaidDto ToDto(this Raid raid) => new(

@@ -46,7 +46,7 @@ public static class DenRules
     {
         var here = Position(citizen, now);
         TilePoint? destination = citizen.Trip is { } trip && now < trip.ArrivesAt ? trip.To : null;
-        var departure = Exploration.SetOut(village.Explored, citizen.Trip, here, here, now, village.Wilds?.Lookout);
+        var departure = Exploration.SetOut(village.Explored, citizen.Trip, here, here, now);
         village.Explored = departure.Explored;
         citizen.Trip = departure.Trip;
         citizen.IdleSpot = here;

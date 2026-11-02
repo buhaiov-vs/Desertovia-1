@@ -302,7 +302,7 @@ public sealed class Village
             throw new GameRuleException("spot.blocked", "Mountains, thickets or water block the way.");
         }
 
-        var departure = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, Wilds?.Lookout, way);
+        var departure = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, way);
         Explored = departure.Explored;
         TsarTrip = departure.Trip;
         TsarSpot = spot;
@@ -318,7 +318,7 @@ public sealed class Village
 
         foreach (var trip in TsarTrip is null ? trips : trips.Append(TsarTrip))
         {
-            if (BankAccess.CanReach(this, trip.To)) Explored = Exploration.Reveal(Explored, trip, now, Wilds?.Lookout);
+            if (BankAccess.CanReach(this, trip.To)) Explored = Exploration.Reveal(Explored, trip, now);
         }
     }
 

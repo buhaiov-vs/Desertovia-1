@@ -139,15 +139,13 @@ export const Terrain = {
   Mountain: 7,
   /** Nobody walks into the ravine; a finished rope bridge carries walkers over it. */
   Ravine: 8,
-  /** Thickets and rockfalls block the way until citizens clear them; cleared tiles become grass. */
+  /** Thickets block the way until citizens clear them; cleared tiles become grass. */
   Thicket: 9,
-  Rockfall: 10,
+  /** A mountain tile dug through. Walkers pass, and it keeps the look of broken rock. */
+  Tunnel: 10,
   /** Wet ground: walkers wade through it slowly, so their ways go around it when they can. */
   Marsh: 11,
   Cave: 12,
-  /** The top of the lookout peak, and the trail up to it. */
-  Lookout: 13,
-  Trail: 14,
 } as const
 export type Terrain = (typeof Terrain)[keyof typeof Terrain]
 
@@ -166,8 +164,6 @@ export interface MapLayout {
   mountains: Array<{ x: number; y: number; peak: TileRef }>
   /** Wet tiles around the ponds. */
   marsh: Array<{ x: number; y: number }>
-  /** Tiles of the trail up to the lookout. */
-  trail: Array<{ x: number; y: number }>
   /** One entry per tile, row by row from the top-left corner of the map. */
   terrain: Uint8Array
 }
@@ -483,9 +479,9 @@ export type WalkBlock = 'water' | 'river' | 'mountain' | 'ravine'
 const MARSH_COST = 3
 
 /**
- * The way on foot between two points, in tiles: the turns to take, ending at `to`. Water, mountains, the ravine,
- * thickets and rockfalls stop walkers, except the deck of a finished bridge and the `crossings` of finished rope
- * bridges. A walker may still walk off the tile they stand on, and up to the thicket or rockfall they are sent to clear.
+ * The way on foot between two points, in tiles: the turns to take, ending at `to`. Water, mountains, the ravine and
+ * thickets stop walkers, except the deck of a finished bridge, the `crossings` of finished rope bridges and dug tunnel
+ * tiles. A walker may still walk off the tile they stand on, and up to the thicket they clear or the face they dig.
  */
 export function findWay(
   terrain: Uint8Array,
@@ -512,7 +508,7 @@ export function findWay(
     if (!inside(x, y)) return false
     if (x === startX && y === startY) return true
     const kind = terrain[index(x, y)]
-    if (kind === Terrain.Thicket || kind === Terrain.Rockfall) return x === goalX && y === goalY
+    if (kind === Terrain.Thicket) return x === goalX && y === goalY
     if (kind === Terrain.Water) return bridge && onDeck(x, y)
     if (kind === Terrain.Ravine) return bridging || onCrossing(x, y)
     return climbing || kind !== Terrain.Mountain
@@ -664,7 +660,7 @@ function searchTiles(
 }
 
 /** Natural places a click can send a citizen to; `spot` is the centre of the clicked tile. */
-export type NatureKind = 'tree' | 'bush' | 'stone' | 'reeds' | 'water' | 'vein' | 'thicket' | 'rockfall' | 'cave' | 'coal-mine' | 'iron-mine' | 'moonstone-mine' | 'herbs' | 'flint' | 'clay' | 'salt' | 'resin' | 'copper'
+export type NatureKind = 'tree' | 'bush' | 'stone' | 'reeds' | 'water' | 'vein' | 'thicket' | 'tunnel' | 'cave' | 'coal-mine' | 'iron-mine' | 'moonstone-mine' | 'herbs' | 'flint' | 'clay' | 'salt' | 'resin' | 'copper'
 
 /** Something on the map a citizen can be sent to work at. `area` is outlined while the choice is open. */
 export type WorldTarget = { area: TileArea | null } & (
@@ -796,7 +792,7 @@ function wildTree(x: number, y: number, forest: number, roll: number) {
 export function farGroundTile(x: number, y: number, seed: number): TileRef {
   const kind = farKind(x, y, seed)
   if (kind === 'water') return battle(37)
-  if (kind === 'mountain' || kind === 'rockfall') {
+  if (kind === 'mountain') {
     const grass = farRoll(seed + 4, x, y)
     return town(grass < 0.06 ? 1 : grass < 0.09 ? 2 : 0)
   }
@@ -817,13 +813,12 @@ export function farHasTree(x: number, y: number, seed: number): boolean {
   return wildTree(x, y, forest, farRoll(seed + 5, x, y))
 }
 
-/** What a far-land tile is, for overviews. A cleared thicket or rockfall is open grass. */
+/** What a far-land tile is, for overviews. A cleared thicket is open grass, a dug mountain tile a tunnel. */
 export function farTerrain(x: number, y: number, seed: number, opened?: { has(key: string): boolean }): Terrain {
-  if (opened?.has(`${x},${y}`)) return Terrain.Grass
   const kind = farKind(x, y, seed)
+  if (opened?.has(`${x},${y}`)) return kind === 'mountain' ? Terrain.Tunnel : Terrain.Grass
   if (kind === 'water') return Terrain.Water
   if (kind === 'mountain') return Terrain.Mountain
-  if (kind === 'rockfall') return Terrain.Rockfall
   if (kind === 'thicket') return Terrain.Thicket
   const forest = forestCover(seed, x, y)
   const stone = valueNoise(seed + 3, 7)(x, y)
@@ -886,24 +881,25 @@ function farBlocked(
 ) {
   if (x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM) {
     const kind = terrain[(y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)]
-    if (x === goalX && y === goalY && (kind === Terrain.Thicket || kind === Terrain.Rockfall)) return false
+    if (x === goalX && y === goalY && kind === Terrain.Thicket) return false
     if (kind === Terrain.Water) {
       return !(bridge && x >= BRIDGE_DECK.x && x < BRIDGE_DECK.x + BRIDGE_DECK.width && y >= BRIDGE_DECK.y && y < BRIDGE_DECK.y + BRIDGE_DECK.height)
     }
     if (kind === Terrain.Ravine) {
       return !crossings.some((area) => x >= area.x && x < area.x + area.width && y >= area.y && y < area.y + area.height)
     }
-    return kind === Terrain.Mountain || kind === Terrain.Thicket || kind === Terrain.Rockfall
+    return kind === Terrain.Mountain || kind === Terrain.Thicket
   }
   if (opened.has(`${x},${y}`)) return false
   const kind = farKind(x, y, seed)
-  if (x === goalX && y === goalY && (kind === 'thicket' || kind === 'rockfall')) return false
+  // A walker may step up to the thicket they clear or the mountain face they dig.
+  if (x === goalX && y === goalY && (kind === 'thicket' || kind === 'mountain')) return false
   return farBlocksKind(kind) || farWater(x, y, seed)
 }
 
 /**
  * The land around the first campfire. Clearings stay open for the camp, the road and the workplaces.
- * Woods and stones use the same rolls as the land beyond the picture. The ravine, the cave and the lookout
+ * Woods and stones use the same rolls as the land beyond the picture. The ravine and the cave
  * come from the server's `wilds`. `seed` is the village, so every viewer sees the same land.
  */
 export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
@@ -942,21 +938,16 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
     ground.push(row)
   }
 
-  // The cave mouth and the lookout stay. Hills, hedges and rockfalls do not stand around the camp.
-  const trail: MapLayout['trail'] = []
+  // The cave mouth stays. Hills and hedges do not stand around the camp.
   if (wilds) {
     for (const span of wilds.ravine) {
       mark(span.x, span.top - 1)
       mark(span.x, span.top, 1, span.height, Terrain.Ravine)
       mark(span.x, span.top + span.height)
     }
-    const { caveX, caveY, lookoutX, lookoutY } = wilds
+    const { caveX, caveY } = wilds
     mark(caveX, caveY, 1, 1, Terrain.Cave)
     mark(caveX - 1, caveY + 1, 3, 1)
-    mark(lookoutX, lookoutY, 1, 1, Terrain.Lookout)
-    mark(lookoutX, lookoutY + 1, 1, 1, Terrain.Trail)
-    trail.push({ x: lookoutX, y: lookoutY + 1 })
-    mark(lookoutX - 1, lookoutY + 2, 3, 1)
   }
 
   // The river runs the whole height of the map.
@@ -1094,7 +1085,7 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
     }
   }
 
-  return { ground, decor, bushes, reeds, ponds, mountains, marsh, trail, terrain }
+  return { ground, decor, bushes, reeds, ponds, mountains, marsh, terrain }
 }
 
 /** Villager sprites from Tiny Dungeon (the hooded monk, 111, is reserved for the elder). */
@@ -1185,7 +1176,7 @@ export const TASK_ICONS: Record<string, TileRef> = {
   'measure-river': POST,
   'dig-gold': RESOURCE_ICONS.Gold,
   'clear-thicket': town(127),
-  'break-rockfall': PICKAXE,
+  'dig-tunnel': PICKAXE,
   'dig-cave': PICKAXE,
   'dig-coal': RESOURCE_ICONS.Coal,
   'dig-iron': RESOURCE_ICONS.IronOre,

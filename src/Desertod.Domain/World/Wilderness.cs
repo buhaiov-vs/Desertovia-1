@@ -9,11 +9,14 @@ public enum ObstacleKind
     /// <summary>A long hedge of brambles. Cutting a gap through it is shorter than walking around.</summary>
     Thicket,
 
-    /// <summary>Boulders in a mountain pass. The ridge runs to the edge of the vale, so breaking them opens the way.</summary>
+    /// <summary>Retired. Villages saved before tunnels may still list it; <see cref="Wilderness.ClearAroundVillage"/> drops it on load.</summary>
     Rockfall,
+
+    /// <summary>A mountain tile being dug through. Once dug it stays open, so a tunnel grows one tile at a time.</summary>
+    Tunnel,
 }
 
-/// <summary>One tile of a thicket or a rockfall. Nobody walks through it until citizens have worked it away.</summary>
+/// <summary>One tile of a thicket or of a tunnel being dug. Nobody walks through it until citizens have worked it away.</summary>
 public sealed class Obstacle
 {
     public ObstacleKind Kind { get; set; }
@@ -39,7 +42,7 @@ public sealed class RavineSpan
     public int Height { get; set; }
 }
 
-/// <summary>A pass through a mountain ridge, 2×2 tiles from its top-left tile; a rockfall fills it.</summary>
+/// <summary>Retired pass through a camp ridge. Saved villages may still list one; it is dropped on load.</summary>
 public sealed class MountainPass
 {
     public int X { get; set; }
@@ -51,8 +54,8 @@ public sealed class MountainPass
 
 /// <summary>
 /// What stands in the walkers' way out in the wild land, generated once per village. The camp picture keeps the
-/// ravine, the cave and the lookout. Hills and thickets stand farther out. The server owns this because citizens
-/// clear a thicket or a rockfall, dig in the cave and bridge the ravine.
+/// ravine and the cave. Hills and thickets stand farther out. The server owns this because citizens
+/// clear a thicket, dig a tunnel, dig in the cave and bridge the ravine.
 /// </summary>
 public sealed class Wilds
 {
@@ -80,14 +83,7 @@ public sealed class Wilds
     /// <summary>Gold veins beside foe dens. Each one is dug on its own.</summary>
     public List<GoldDeposit> Gold { get; set; } = [];
 
-    /// <summary>Tile at the top of the lookout peak; the trail up to it leaves from the tile below.</summary>
-    public int LookoutX { get; set; }
-
-    public int LookoutY { get; set; }
-
     public TilePoint CaveMouth => new(CaveX + 0.5, CaveY + 0.5);
-
-    public TilePoint Lookout => new(LookoutX + 0.5, LookoutY + 0.5);
 }
 
 /// <summary>One gold vein beside a foe den. <see cref="Mined"/> counts gold already taken from this vein.</summary>
@@ -106,7 +102,7 @@ public sealed class GoldDeposit
 public static class Wilderness
 {
     public const string Thicket = "thicket";
-    public const string Rockfall = "rockfall";
+    public const string Tunnel = "tunnel";
     public const string Cave = "cave";
     public const string CoalMine = "coal-mine";
     public const string IronMine = "iron-mine";
@@ -133,14 +129,15 @@ public static class Wilderness
     private const int RavineNorth = -22;
     private const int RavineSouth = -12;
 
-    public static int WorkNeeded(ObstacleKind kind) => kind == ObstacleKind.Thicket ? 1 : 3;
+    /// <summary>A rested digger opens one tunnel tile in one cycle; a tired one needs two.</summary>
+    public static int WorkNeeded(ObstacleKind kind) => kind == ObstacleKind.Thicket ? 1 : 2;
 
     public static int WorkPerCycle(ObstacleKind kind) => kind == ObstacleKind.Thicket ? 3 : 2;
 
     public static ObstacleKind? ObstacleOf(TaskDefinition task) => task.Workplace switch
     {
         Thicket => ObstacleKind.Thicket,
-        Rockfall => ObstacleKind.Rockfall,
+        Tunnel => ObstacleKind.Tunnel,
         _ => null,
     };
 
@@ -243,9 +240,14 @@ public static class Wilderness
         }
 
         var kind = ObstacleOf(task) ?? throw new ArgumentException("Not a wild task.", nameof(task));
+        if (kind == ObstacleKind.Tunnel)
+        {
+            return TunnelFace(village, wilds, picked ?? throw new GameRuleException("tunnel.pickTile", "Pick the mountain tile to dig."));
+        }
+
         if (picked is { } chosen)
         {
-            Materialize(wilds, kind, chosen, Seed(village.Id.ToString()), SpotReach);
+            Materialize(wilds, chosen, Seed(village.Id.ToString()), SpotReach);
             var near = wilds.Obstacles.Where(o => o.Kind == kind && Stands(o) && o.Center.DistanceTo(chosen) <= SpotReach)
                 .MinBy(o => o.Center.DistanceTo(chosen));
             return near?.Center ?? throw new GameRuleException("spot.nothingToClear", "Nothing is left to clear here.");
@@ -255,22 +257,80 @@ public static class Wilderness
 
         var camp = WorldMap.Places[WorldMap.Camp];
         var nearest = standing.Where(o => village.IsExplored(o.Tile)).MinBy(o => o.Center.DistanceTo(camp));
-        return nearest?.Center ?? (kind == ObstacleKind.Thicket
-            ? throw new GameRuleException("wilds.noThicket", "Nobody has found a thicket yet. Explore the land first.")
-            : throw new GameRuleException("wilds.noRockfall", "Nobody has found a rockfall yet. Explore the mountains first."));
+        return nearest?.Center
+            ?? throw new GameRuleException("wilds.noThicket", "Nobody has found a thicket yet. Explore the land first.");
+    }
+
+    /// <summary>
+    /// The mountain tile a tunnel goes on through: a tile the tribe has seen, not dug yet, beside open ground or beside a
+    /// tile already dug. Records it as a tunnel tile still standing.
+    /// </summary>
+    private static TilePoint TunnelFace(Village village, Wilds wilds, TilePoint picked)
+    {
+        var x = (int)Math.Floor(picked.X);
+        var y = (int)Math.Floor(picked.Y);
+        var seed = Seed(village.Id.ToString());
+        var dug = wilds.Obstacles.FirstOrDefault(o => o.X == x && o.Y == y && o.Kind == ObstacleKind.Tunnel);
+        if (FarWilds.At(x, y, seed) != FarWilds.Kind.Mountain || dug?.ClearedAt is not null)
+        {
+            throw new GameRuleException("tunnel.notMountain", "Only a mountain tile can be dug.");
+        }
+
+        if (!village.IsExplored(new TileArea(x, y, 1, 1)))
+        {
+            throw new GameRuleException("tunnel.unseen", "Nobody has seen this mountain yet.");
+        }
+
+        if (!CanDig(wilds, x, y, seed))
+        {
+            throw new GameRuleException("tunnel.notFace", "A tunnel is dug from open ground or from a tile already dug.");
+        }
+
+        if (dug is null)
+        {
+            wilds.Obstacles.Add(new Obstacle { Kind = ObstacleKind.Tunnel, X = x, Y = y });
+        }
+
+        return new TilePoint(x + 0.5, y + 0.5);
+    }
+
+    /// <summary>Whether this mountain tile touches open ground or a dug tunnel tile on one of its four sides.</summary>
+    public static bool CanDig(Wilds wilds, int x, int y, uint seed)
+    {
+        int[] dx = [1, 0, -1, 0];
+        int[] dy = [0, -1, 0, 1];
+        for (var side = 0; side < 4; side++)
+        {
+            var nx = x + dx[side];
+            var ny = y + dy[side];
+            if (wilds.Obstacles.Any(o => o.X == nx && o.Y == ny && o.Kind == ObstacleKind.Tunnel && o.ClearedAt is not null))
+            {
+                return true;
+            }
+
+            var kind = FarWilds.At(nx, ny, seed);
+            if (kind == FarWilds.Kind.Open)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Works away obstacle tiles around the spot, nearest first, up to <paramref name="work"/>. Returns the work done.</summary>
     public static int Clear(Village village, ObstacleKind kind, int work, TilePoint spot, DateTimeOffset now)
     {
-        if (village.Wilds is { } wilds)
+        // A tunnel is dug one picked tile at a time; a thicket is cut around the spot.
+        var reach = kind == ObstacleKind.Tunnel ? 0.5 : PatchReach;
+        if (village.Wilds is { } wilds && kind == ObstacleKind.Thicket)
         {
-            Materialize(wilds, kind, spot, Seed(village.Id.ToString()), PatchReach);
+            Materialize(wilds, spot, Seed(village.Id.ToString()), PatchReach);
         }
 
         var done = 0;
         var near = (village.Wilds?.Obstacles ?? [])
-            .Where(o => o.Kind == kind && Stands(o) && o.Center.DistanceTo(spot) <= PatchReach)
+            .Where(o => o.Kind == kind && Stands(o) && o.Center.DistanceTo(spot) <= reach)
             .OrderBy(o => o.Center.DistanceTo(spot))
             .ThenBy(o => o.Y)
             .ThenBy(o => o.X);
@@ -294,13 +354,11 @@ public static class Wilderness
     }
 
     /// <summary>
-    /// Records far thicket and rockfall tiles around a spot the first time someone works them.
-    /// The camp picture is already stored. A tile that was cleared stays cleared.
+    /// Records far thicket tiles around a spot the first time someone works them. A tile that was cleared stays cleared.
     /// </summary>
-    private static void Materialize(Wilds wilds, ObstacleKind kind, TilePoint spot, uint seed, double reach)
+    private static void Materialize(Wilds wilds, TilePoint spot, uint seed, double reach)
     {
         var known = wilds.Obstacles.Select(o => (o.X, o.Y)).ToHashSet();
-        var wanted = kind == ObstacleKind.Thicket ? FarWilds.Kind.Thicket : FarWilds.Kind.Rockfall;
         var x0 = (int)Math.Floor(spot.X - reach);
         var x1 = (int)Math.Floor(spot.X + reach);
         var y0 = (int)Math.Floor(spot.Y - reach);
@@ -311,8 +369,8 @@ public static class Wilderness
             {
                 if (known.Contains((x, y))) continue;
                 if (new TilePoint(x + 0.5, y + 0.5).DistanceTo(spot) > reach) continue;
-                if (FarWilds.At(x, y, seed) != wanted) continue;
-                wilds.Obstacles.Add(new Obstacle { Kind = kind, X = x, Y = y });
+                if (FarWilds.At(x, y, seed) != FarWilds.Kind.Thicket) continue;
+                wilds.Obstacles.Add(new Obstacle { Kind = ObstacleKind.Thicket, X = x, Y = y });
                 known.Add((x, y));
             }
         }
@@ -341,7 +399,7 @@ public static class Wilderness
         return true;
     }
 
-    /// <summary>The ravine, the cave and the lookout of a new village. Hills and thickets are not planted around the camp.</summary>
+    /// <summary>The ravine and the cave of a new village. Hills and thickets are not planted around the camp.</summary>
     public static Wilds Generate(Guid villageId)
     {
         var seed = Seed(villageId.ToString());
@@ -367,58 +425,19 @@ public static class Wilderness
             wilds.Ravine.Add(new RavineSpan { X = x, Top = rows[0], Height = rows.Count });
         }
 
-        var ravine = wilds.Ravine.SelectMany(s => Enumerable.Range(s.Top, s.Height).Select(y => new TilePoint(s.X + 0.5, y + 0.5))).ToList();
-        var mountains = new List<TilePoint>();
-        var thickets = new List<TilePoint>();
-
-        bool Fits(int x, int y, int campClearance, int riverClearance, double ravineClearance)
-        {
-            var point = new TilePoint(x + 0.5, y + 0.5);
-            return x >= land.X + 4 && y >= land.Y + 4 && x < land.X + land.Width - 4 && y < land.Y + land.Height - 4
-                   && !(x >= -campClearance && y >= -campClearance && x < CoreWidth + campClearance && y < CoreHeight + campClearance)
-                   && Math.Abs(x + 0.5 - RiverCenter(y, seed)) > riverClearance
-                   && !(x > RiverRight && y >= RoadTop - 1 && y <= RoadTop + 2)
-                   && ravine.All(r => r.DistanceTo(point) > ravineClearance);
-        }
-
-        TilePoint? Pick(int campClearance, int riverClearance, double ravineClearance, double mountainSpacing, double thicketSpacing)
-        {
-            for (var attempt = 0; attempt < 200; attempt++)
-            {
-                var x = random.Next(land.X, land.X + land.Width);
-                var y = random.Next(land.Y, land.Y + land.Height);
-                var point = new TilePoint(x, y);
-                if (Fits(x, y, campClearance, riverClearance, ravineClearance)
-                    && mountains.All(m => m.DistanceTo(point) > mountainSpacing)
-                    && thickets.All(t => t.DistanceTo(point) > thicketSpacing))
-                {
-                    return point;
-                }
-            }
-
-            return null;
-        }
-
-        // Mountain features keep away from each other, so each gets a ridge of its own.
-        // This draw used to be the cave. It stays in the sequence so the lookout, the passes and the thickets
-        // keep their places. The mouth itself stands outside the vale, at the seed's place.
-        mountains.Add(Pick(10, 8, 6, 14, 0) ?? new TilePoint(-30, 20));
+        // The cave mouth stands outside the vale, at the seed's place.
         var mouth = CaveSite.At(seed);
         wilds.CaveX = mouth.X;
         wilds.CaveY = mouth.Y;
         PlaceMines(wilds, seed);
         wilds.Gold = GoldVein.Place(seed);
 
-        var lookout = Pick(10, 8, 6, 14, 0) ?? new TilePoint(-30, 40);
-        mountains.Add(lookout);
-        wilds.LookoutX = (int)lookout.X;
-        wilds.LookoutY = (int)lookout.Y;
-
         return wilds;
     }
 
     /// <summary>
-    /// Takes the thickets, rockfalls and passes off the camp picture. Returns true when something was removed.
+    /// Takes obstacles and passes off the camp picture, and drops every retired rockfall. Far thickets and tunnels stay.
+    /// Returns true when something was removed.
     /// </summary>
     public static bool ClearAroundVillage(Village village)
     {
@@ -428,7 +447,7 @@ public static class Wilderness
         }
 
         var removed = wilds.Obstacles.RemoveAll(obstacle =>
-            obstacle.Kind is ObstacleKind.Thicket or ObstacleKind.Rockfall);
+            obstacle.Kind == ObstacleKind.Rockfall || WorldMap.Vale.Contains(obstacle.Tile));
         var passes = wilds.Passes.Count;
         wilds.Passes.Clear();
         return removed > 0 || passes > 0;

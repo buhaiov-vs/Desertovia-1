@@ -10,7 +10,7 @@ export function farOpen(seed: number, from: { x: number; y: number }, to: { x: n
     if (x === startX && y === startY) return true
     if (x < FAR_LAND_LEFT || y < FAR_LAND_TOP || x >= FAR_LAND_LEFT + FAR_LAND_SIDE || y >= FAR_LAND_TOP + FAR_LAND_SIDE) return false
     const kind = farKind(x, y, seed)
-    if (x === goalX && y === goalY && (kind === 'thicket' || kind === 'rockfall')) return true
+    if (x === goalX && y === goalY && (kind === 'thicket' || kind === 'mountain')) return true
     return !farBlocksKind(kind) && kind !== 'water'
   }
 }

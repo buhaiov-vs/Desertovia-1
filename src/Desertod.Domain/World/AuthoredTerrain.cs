@@ -11,11 +11,11 @@ namespace Desertod.Domain.World;
 public static class AuthoredTerrain
 {
     public const int Left=-44,Top=-32,Width=120,Height=90,Right=76,Bottom=58;
-    public const byte Water=2,Mountain=7,Ravine=8,Thicket=9,Rockfall=10,Marsh=11,Cave=12,Lookout=13,Trail=14;
+    public const byte Water=2,Mountain=7,Ravine=8,Thicket=9,Marsh=11,Cave=12;
     private static readonly ConcurrentDictionary<string,byte[]> Cache=new();
     public static byte[] For(Guid village,Wilds? wilds)
     {
-        var key=village+":"+JsonSerializer.Serialize(new{wilds?.CaveX,wilds?.CaveY,wilds?.LookoutX,wilds?.LookoutY,
+        var key=village+":"+JsonSerializer.Serialize(new{wilds?.CaveX,wilds?.CaveY,
             wilds?.Ravine,wilds?.Passes,Obstacles=wilds?.Obstacles.Select(o=>new{o.Kind,o.X,o.Y})});
         if(Cache.Count>256)Cache.Clear();
         return Cache.GetOrAdd(key,_=>Generate(Wilderness.Seed(village.ToString()),wilds));
@@ -40,8 +40,8 @@ public static class AuthoredTerrain
         if(wilds is not null)
         {
             foreach(var r in wilds.Ravine){Mark(r.X,r.Top-1);Mark(r.X,r.Top,1,r.Height,Ravine);Mark(r.X,r.Top+r.Height);}
-            var cx=wilds.CaveX;var cy=wilds.CaveY;var lx=wilds.LookoutX;var ly=wilds.LookoutY;
-            Mark(cx,cy,1,1,Cave);Mark(cx-1,cy+1,3,1);Mark(lx,ly,1,1,Lookout);Mark(lx,ly+1,1,1,Trail);Mark(lx-1,ly+2,3,1);
+            var cx=wilds.CaveX;var cy=wilds.CaveY;
+            Mark(cx,cy,1,1,Cave);Mark(cx-1,cy+1,3,1);
         }
         for(var y=Top;y<Bottom;y++)
         {

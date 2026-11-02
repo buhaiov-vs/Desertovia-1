@@ -10,7 +10,7 @@ function fingerprint(seed: number) {
   for (let y = FAR_LAND_TOP; y < FAR_LAND_TOP + FAR_LAND_SIDE; y += 80) {
     for (let x = FAR_LAND_LEFT; x < FAR_LAND_LEFT + FAR_LAND_SIDE; x += 80) {
       const kind = farKind(x, y, seed)
-      const code = kind === 'open' ? 0 : kind === 'mountain' ? 1 : kind === 'thicket' ? 2 : kind === 'rockfall' ? 3 : 4
+      const code = kind === 'open' ? 0 : kind === 'mountain' ? 1 : kind === 'thicket' ? 2 : 4
       hash = Math.imul(hash ^ code ^ ((x & 255) << 8) ^ (y & 255), 16777619) >>> 0
     }
   }
@@ -111,7 +111,7 @@ test('hills and thickets stand in every quarter of the land', () => {
     for (let y = y0; y < y0 + span && (!mountain || !thicket); y += 4) {
       for (let x = x0; x < x0 + span && (!mountain || !thicket); x += 4) {
         const kind = farKind(x, y, 1)
-        if (kind === 'mountain' || kind === 'rockfall') mountain = true
+        if (kind === 'mountain') mountain = true
         if (kind === 'thicket') thicket = true
       }
     }
@@ -121,11 +121,10 @@ test('hills and thickets stand in every quarter of the land', () => {
 })
 
 test('mountains, thickets and rivers are long and not straight', () => {
-  const mountain = findBig(1, (kind) => kind === 'mountain' || kind === 'rockfall', 400)!
+  const mountain = findBig(1, (kind) => kind === 'mountain', 400)!
   const mountainSpread = spread(mountain)
   assert.ok(mountain.length > 400, `mountain ${mountain.length}`)
   assert.ok(mountainSpread.width > 40 && mountainSpread.height > 40, `mountain ${mountainSpread.width}x${mountainSpread.height}`)
-  assert.ok(mountain.some((tile) => farKind(tile.x, tile.y, 1) === 'rockfall'))
 
   const river = findBig(1, (kind) => kind === 'water', 150)!
   const riverSpread = spread(river)
@@ -142,9 +141,8 @@ test('a river is water, not a clearing', () => {
   assert.equal(farBlocksKind('water'), false)
   assert.equal(farBlocksKind('mountain'), true)
   assert.equal(farBlocksKind('thicket'), true)
-  assert.equal(farBlocksKind('rockfall'), true)
 })
 
 test('seed 1 matches the server fingerprint', () => {
-  assert.equal(fingerprint(1), 1325747551)
+  assert.equal(fingerprint(1), 834102122)
 })

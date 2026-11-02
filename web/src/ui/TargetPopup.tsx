@@ -33,7 +33,7 @@ const NATURE_WORKPLACES: Record<NatureKind, string[]> = {
   water: ['pier', 'ford', 'reeds'],
   vein: ['gold-vein'],
   thicket: ['thicket'],
-  rockfall: ['rockfall'],
+  tunnel: ['tunnel'],
   cave: ['cave'],
   'coal-mine': ['coal-mine'],
   'iron-mine': ['iron-mine'],
@@ -49,8 +49,8 @@ const NATURE_WORKPLACES: Record<NatureKind, string[]> = {
 /** A picked spot is only kept where the citizen really gathers what the place offers. */
 const SPOT_KINDS: readonly NatureKind[] = ['tree', 'bush', 'stone', 'reeds']
 
-/** Places in the wild the server knows: the picked tile tells it which thicket or rockfall to clear. */
-const WILD_KINDS: readonly NatureKind[] = ['thicket', 'rockfall', 'cave', 'coal-mine', 'iron-mine', 'moonstone-mine', 'vein', 'herbs', 'flint', 'clay', 'salt', 'resin', 'copper']
+/** Places in the wild the server knows: the picked tile tells it which thicket to clear or which mountain tile to dig. */
+const WILD_KINDS: readonly NatureKind[] = ['thicket', 'tunnel', 'cave', 'coal-mine', 'iron-mine', 'moonstone-mine', 'vein', 'herbs', 'flint', 'clay', 'salt', 'resin', 'copper']
 
 const NATURE_TITLES: Record<NatureKind, UiKey> = {
   tree: 'target.tree',
@@ -60,7 +60,7 @@ const NATURE_TITLES: Record<NatureKind, UiKey> = {
   water: 'target.water',
   vein: 'target.vein',
   thicket: 'target.thicket',
-  rockfall: 'target.rockfall',
+  tunnel: 'target.tunnel',
   cave: 'target.cave',
   'coal-mine': 'target.coalMine',
   'iron-mine': 'target.ironMine',

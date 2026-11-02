@@ -32,14 +32,15 @@ public class FarWildsTests
     public void Hills_StandInEveryQuarterOfTheLand()
     {
         var land = WorldMap.Land;
-        (int X, int Y)[] corners = [(land.X, land.Y), (land.X + land.Width - 750, land.Y), (land.X, land.Y + land.Height - 750), (land.X + land.Width - 750, land.Y + land.Height - 750)];
+        var span = land.Width / 2;
+        (int X, int Y)[] corners = [(land.X, land.Y), (land.X + span, land.Y), (land.X, land.Y + span), (land.X + span, land.Y + span)];
         foreach (var (x0, y0) in corners)
         {
             var mountain = false;
             var thicket = false;
-            for (var y = y0; y < y0 + 750 && (!mountain || !thicket); y += 4)
+            for (var y = y0; y < y0 + span && (!mountain || !thicket); y += 4)
             {
-                for (var x = x0; x < x0 + 750 && (!mountain || !thicket); x += 4)
+                for (var x = x0; x < x0 + span && (!mountain || !thicket); x += 4)
                 {
                     var kind = FarWilds.At(x, y, 1);
                     if (kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall) mountain = true;
@@ -66,9 +67,57 @@ public class FarWildsTests
         Assert.True(river.Count > 150, $"river {river.Count}");
         Assert.True(riverSpread.Width > 20 && riverSpread.Height > 20, $"river {riverSpread.Width}x{riverSpread.Height}");
 
-        var thicket = FindBig(1, kind => kind == FarWilds.Kind.Thicket, 80);
+        var thicket = FindBig(1, kind => kind == FarWilds.Kind.Thicket, 150);
         var thicketSpread = Spread(thicket);
-        Assert.True(thicketSpread.Width > 15 && thicketSpread.Height > 15, $"thicket {thicketSpread.Width}x{thicketSpread.Height}");
+        Assert.True(Math.Max(thicketSpread.Width, thicketSpread.Height) > 40, $"thicket {thicketSpread.Width}x{thicketSpread.Height}");
+    }
+
+    [Fact]
+    public void Ranges_AreMostlyThin_AndSwellToBroadStretches()
+    {
+        static bool Rock(FarWilds.Kind kind) => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall;
+        var range = Component(1, Find(1, Rock), Rock);
+        var thin = range.Count(tile => Neighbours(1, tile.X, tile.Y, Rock) <= 2);
+        Assert.True(thin * 4 > range.Count, $"thin {thin} of {range.Count}");
+        Assert.Contains(range, tile => Solid(1, tile.X, tile.Y, 4, Rock));
+    }
+
+    [Fact]
+    public void Massifs_StandAsBroadMountainRegions_CutByRockfallPasses()
+    {
+        static bool Rock(FarWilds.Kind kind) => kind is FarWilds.Kind.Mountain or FarWilds.Kind.Rockfall;
+        var land = WorldMap.Land;
+        var massifs = new List<(int X, int Y)>();
+        for (var y = land.Y + 20; y < land.Y + land.Height - 20; y += 16)
+        {
+            for (var x = land.X + 20; x < land.X + land.Width - 20; x += 16)
+            {
+                if (FarWilds.At(x, y, 1) != FarWilds.Kind.Mountain || massifs.Any(m => Math.Abs(m.X - x) + Math.Abs(m.Y - y) < 400))
+                {
+                    continue;
+                }
+
+                if (Solid(1, x, y, 10, Rock))
+                {
+                    massifs.Add((x, y));
+                }
+            }
+        }
+
+        Assert.True(massifs.Count >= 3, $"massifs {massifs.Count}");
+        foreach (var (x, y) in massifs)
+        {
+            var passes = 0;
+            for (var dy = -40; dy <= 40; dy++)
+            {
+                for (var dx = -40; dx <= 40; dx++)
+                {
+                    if (FarWilds.At(x + dx, y + dy, 1) == FarWilds.Kind.Rockfall) passes++;
+                }
+            }
+
+            Assert.True(passes > 40, $"rockfall near massif {x},{y}: {passes}");
+        }
     }
 
     [Fact]
@@ -131,7 +180,33 @@ public class FarWildsTests
             }
         }
 
-        Assert.Equal(257289047u, hash);
+        Assert.Equal(1845036419u, hash);
+    }
+
+    private static int Neighbours(uint seed, int x, int y, Func<FarWilds.Kind, bool> accept)
+    {
+        int[] dx = [1, 0, -1, 0];
+        int[] dy = [0, -1, 0, 1];
+        var count = 0;
+        for (var dir = 0; dir < 4; dir++)
+        {
+            if (accept(FarWilds.At(x + dx[dir], y + dy[dir], seed))) count++;
+        }
+
+        return count;
+    }
+
+    private static bool Solid(uint seed, int x, int y, int half, Func<FarWilds.Kind, bool> accept)
+    {
+        for (var dy = -half; dy <= half; dy++)
+        {
+            for (var dx = -half; dx <= half; dx++)
+            {
+                if (!accept(FarWilds.At(x + dx, y + dy, seed))) return false;
+            }
+        }
+
+        return true;
     }
 
     private static List<(int X, int Y)> FindBig(uint seed, Func<FarWilds.Kind, bool> accept, int least)

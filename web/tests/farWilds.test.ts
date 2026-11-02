@@ -98,7 +98,7 @@ test('open country around the camp stays free of far hills and rivers', () => {
 })
 
 test('hills and thickets stand in every quarter of the land', () => {
-  const span = 750
+  const span = FAR_LAND_SIDE / 2
   const corners = [
     [FAR_LAND_LEFT, FAR_LAND_TOP],
     [FAR_LAND_LEFT + FAR_LAND_SIDE - span, FAR_LAND_TOP],
@@ -132,10 +132,10 @@ test('mountains, thickets and rivers are long and not straight', () => {
   assert.ok(river.length > 150, `river ${river.length}`)
   assert.ok(riverSpread.width > 20 && riverSpread.height > 20, `river ${riverSpread.width}x${riverSpread.height}`)
 
-  const thicket = findBig(1, (kind) => kind === 'thicket', 80)
+  const thicket = findBig(1, (kind) => kind === 'thicket', 150)
   assert.ok(thicket, 'no long thicket')
   const thicketSpread = spread(thicket!)
-  assert.ok(thicketSpread.width > 15 && thicketSpread.height > 15, `thicket ${thicketSpread.width}x${thicketSpread.height}`)
+  assert.ok(Math.max(thicketSpread.width, thicketSpread.height) > 40, `thicket ${thicketSpread.width}x${thicketSpread.height}`)
 })
 
 test('a river is water, and a gap in a wall is open ground', () => {
@@ -148,5 +148,5 @@ test('a river is water, and a gap in a wall is open ground', () => {
 })
 
 test('seed 1 matches the server fingerprint', () => {
-  assert.equal(fingerprint(1), 257289047)
+  assert.equal(fingerprint(1), 1845036419)
 })

@@ -1,9 +1,10 @@
 /**
  * Mountains, thickets and rivers outside the camp picture.
- * A ridge keeps a general heading, bends a little as it goes, and splits off shorter spurs, the way a
- * range forks. Thickets are clumps along that same growth. The same seed draws the same tiles.
- * The server's FarWilds computes the same tiles. The camp picture stays open, and each course keeps
- * a stretch of open country around the camp. One ridge and one thicket stand in every square of the land.
+ * A course keeps a general heading, bends a little as it goes, and splits off thinner branches.
+ * Most of its length is one tile wide, and here and there it swells gradually to a broad stretch.
+ * A few mountain regions stand as solid massifs, with ranges running out of them.
+ * The same seed draws the same tiles. The server's FarWilds computes the same tiles. The camp picture
+ * stays open, and each course keeps a stretch of open country around the camp.
  */
 
 export const FAR_LAND_LEFT = 15 - 6_000
@@ -11,13 +12,19 @@ export const FAR_LAND_TOP = 13 - 6_000
 export const FAR_LAND_SIDE = 12_000
 export const FAR_VALE = { x: -44, y: -32, width: 120, height: 90 }
 
-/** How far along an obstacle a walk looks for a gap. */
-export const FAR_OPENING_REACH = 240
+/** How many obstacle tiles a walk looks through for a gap. */
+export const FAR_OPENING_REACH = 1200
 
-const RIVER_COURSES = 8
-/** The land is split into these squares. Each square grows its own ridge and thicket. */
-const REGION = 750
-const REGIONS = FAR_LAND_SIDE / REGION
+const RIVER_COURSES = 12
+const MASSIFS = 8
+/** Ranges grow one per square of this size. */
+const RANGE_REGION = 3000
+/** Thickets grow in most of the squares of this size. */
+const THICKET_REGION = 1000
+/** Rockfall passes cut a massif along lines this far apart. */
+const MASSIF_PASS_SPACING = 40
+/** A range cuts a rockfall pass once this much of its cross-section has grown since the last one. */
+const GATE_LOAD = 600
 
 const DX = [1, 0, -1, 0]
 const DY = [0, -1, 0, 1]
@@ -26,6 +33,28 @@ const DY8 = [0, -1, -1, -1, 0, 1, 1, 1]
 const TURN = [0, 1, 7, 2, 6, 3, 5, 4]
 
 export type FarKind = 'open' | 'mountain' | 'thicket' | 'rockfall' | 'water'
+
+/** How a course grows. Matches FarWilds.Shape. */
+interface Shape {
+  wobble: number
+  forkEvery: number
+  forkChance: number
+  maxDepth: number
+  childMin: number
+  childSpan: number
+  /** The widest half-width at each depth of branching. */
+  swell: number[]
+  /** Steps between one width and the next one the course eases toward. */
+  period: number
+  /** Share of tiles left out along the outer edge of a wide stretch. */
+  edge: number
+  /** Share of tiles left out anywhere. */
+  skip: number
+}
+
+const RANGE: Shape = { wobble: 0.15, forkEvery: 80, forkChance: 0.6, maxDepth: 2, childMin: 150, childSpan: 250, swell: [7.5, 3.5, 1.5], period: 150, edge: 0.4, skip: 0 }
+const THICKET: Shape = { wobble: 0.3, forkEvery: 40, forkChance: 0.6, maxDepth: 1, childMin: 50, childSpan: 70, swell: [5, 2], period: 80, edge: 0.35, skip: 0.1 }
+const RIVER: Shape = { wobble: 0.2, forkEvery: 80, forkChance: 0.6, maxDepth: 2, childMin: 150, childSpan: 200, swell: [2.5, 1, 0.5], period: 80, edge: 0, skip: 0 }
 
 /** Stable 0…1 roll. `salt` keeps each decision on its own stream. Matches FarWilds.Roll. */
 export function farWildRoll(seed: number, a: number, b: number, salt: number) {
@@ -76,20 +105,49 @@ function build(seed: number) {
     if (kind === 'water' && prev) return
     map.set(key, kind)
   }
-  const start = (id: number, salt: number) => {
+  const disk = (x: number, y: number, radius: number, kind: FarKind, shape: Shape, salt: number, reach: number) => {
+    const span = Math.floor(radius)
+    const inner = (radius - 1) * (radius - 1)
+    for (let oy = -span; oy <= span; oy++) {
+      for (let ox = -span; ox <= span; ox++) {
+        const distance = ox * ox + oy * oy
+        if (distance > radius * radius) continue
+        const tx = x + ox
+        const ty = y + oy
+        if (radius >= 1.5 && distance > inner && farWildRoll(seed, tx, ty, salt + 81) < shape.edge) continue
+        if (shape.skip > 0 && farWildRoll(seed, tx, ty, salt + 80) < shape.skip) continue
+        if (!clearOfCamp(tx, ty, reach)) continue
+        paint(tx, ty, kind)
+      }
+    }
+  }
+  const start = (id: number, salt: number, room: number) => {
     const span = FAR_LAND_SIDE - 400
     const x = FAR_LAND_LEFT + 200 + Math.floor(farWildRoll(seed, id, salt, 1) * span)
     const y = FAR_LAND_TOP + 200 + Math.floor(farWildRoll(seed, id, salt, 2) * span)
-    if (!clearOfCamp(x, y, countryReach(seed, id, salt))) return null
+    if (!clearOfCamp(x, y, countryReach(seed, id, salt) + room)) return null
     return { x, y }
   }
-  const cell = (index: number, salt: number) => {
-    const column = index % REGIONS
-    const row = Math.floor(index / REGIONS)
-    const x = FAR_LAND_LEFT + column * REGION + 30 + Math.floor(farWildRoll(seed, index, salt, 1) * (REGION - 60))
-    const y = FAR_LAND_TOP + row * REGION + 30 + Math.floor(farWildRoll(seed, index, salt, 2) * (REGION - 60))
+  const cell = (index: number, salt: number, region: number) => {
+    const regions = FAR_LAND_SIDE / region
+    const column = index % regions
+    const row = Math.floor(index / regions)
+    const x = FAR_LAND_LEFT + column * region + 30 + Math.floor(farWildRoll(seed, index, salt, 1) * (region - 60))
+    const y = FAR_LAND_TOP + row * region + 30 + Math.floor(farWildRoll(seed, index, salt, 2) * (region - 60))
     if (!clearOfCamp(x, y, countryReach(seed, index, salt))) return null
     return { x, y }
+  }
+  /** Thin most of the way, easing up to a broad stretch now and then, narrowing at both ends. A river widens downstream. */
+  const halfWidth = (id: number, salt: number, step: number, length: number, kind: FarKind, depth: number, shape: Shape) => {
+    const knot = Math.floor(step / shape.period)
+    const t = step / shape.period - knot
+    const from = farWildRoll(seed, id, knot, salt + 62)
+    const to = farWildRoll(seed, id, knot + 1, salt + 62)
+    const swell = from + (to - from) * (t * t * (3 - 2 * t))
+    const widest = shape.swell[depth]
+    if (kind === 'water') return widest * (0.15 + 0.85 * step / length) * (0.6 + 0.4 * swell)
+    const ends = Math.min(1, step / 24, (length - step) / 24)
+    return widest * swell * swell * ends
   }
   const grow = (
     id: number,
@@ -100,50 +158,47 @@ function build(seed: number) {
     kind: FarKind,
     depth: number,
     dir: number,
-    home: number,
     reach: number,
-    wobble: number,
-    forkEvery: number,
-    forkChance: number,
-    maxDepth: number,
+    shape: Shape,
     childMin: number,
     childSpan: number,
+    forkChance: number,
   ) => {
+    let home = dir
+    const gateEvery = 100 + Math.floor(farWildRoll(seed, id, salt, 4) * 40)
+    let load = 0
+    let sinceGate = 0
     let px = x
     let py = y
     for (let step = 0; step < length; step++) {
       if (!onLand(px, py) || !clearOfCamp(px, py, reach)) break
-      const bulk = kind === 'water' ? (farWildRoll(seed, id, step, salt + 61) < 0.18 ? 1 : 0)
-        : kind === 'thicket' ? (depth === 0 ? 2 : 1)
-        : depth === 0 ? 1 + (farWildRoll(seed, px, py, salt + 60) < 0.4 ? 1 : 0)
-        : depth === 1 ? 1 : 0
-      const skip = kind === 'thicket' ? 0.34 : 0
-      const gateEvery = 36 + Math.floor(farWildRoll(seed, id, salt, 4) * 12)
-      const gating = kind === 'mountain' && depth === 0 && step > 6 && step % gateEvery === 0
-      if (gating) {
+      const radius = halfWidth(id, salt, step, length, kind, depth, shape)
+      load += 2 * radius + 1
+      sinceGate++
+      if (kind === 'mountain' && step > 6 && (load >= GATE_LOAD || sinceGate >= gateEvery)) {
+        load = 0
+        sinceGate = 0
         paint(px, py, 'rockfall')
-        for (let spoke = 0; spoke < 8; spoke += 2) {
-          for (let n = 1; n <= bulk + 2; n++) paint(px + DX8[spoke] * n, py + DY8[spoke] * n, 'rockfall')
+        const spoke = Math.floor(radius * 1.5) + 2
+        for (let side = 0; side < 8; side += 2) {
+          for (let n = 1; n <= spoke; n++) paint(px + DX8[side] * n, py + DY8[side] * n, 'rockfall')
         }
       }
-      for (let oy = -bulk; oy <= bulk; oy++) {
-        for (let ox = -bulk; ox <= bulk; ox++) {
-          if (ox * ox + oy * oy > bulk * bulk) continue
-          if (skip > 0 && farWildRoll(seed, px + ox, py + oy, salt + 80) < skip) continue
-          paint(px + ox, py + oy, gating ? 'rockfall' : kind)
-        }
-      }
-      if (depth < maxDepth && step > 5 && step % forkEvery === 0 && farWildRoll(seed, id, step, salt + 70) < forkChance) {
-        const off = farWildRoll(seed, id, step, salt + 71) < 0.5 ? 2 : 6
+      disk(px, py, radius, kind, shape, salt, reach)
+      if (depth < shape.maxDepth && step > 5 && step % shape.forkEvery === 0 && farWildRoll(seed, id, step, salt + 70) < forkChance) {
+        const off = farWildRoll(seed, id, step, salt + 71) < 0.5 ? 1 : 7
         const childDir = (dir + off) % 8
         const childLen = childMin + Math.floor(farWildRoll(seed, id, step, salt + 73) * childSpan)
         const childId = (id + (step + 1) * 1024 + (depth + 1) * 262144) | 0
-        grow(childId, salt, px, py, childLen, kind, depth + 1, childDir, childDir, reach, wobble, forkEvery, forkChance * 0.45, maxDepth, Math.max(8, childMin >> 1), Math.max(8, childSpan >> 1))
+        grow(childId, salt, px, py, childLen, kind, depth + 1, childDir, reach, shape, Math.max(8, childMin >> 1), Math.max(8, childSpan >> 1), forkChance * 0.45)
+      }
+      if (step > 0 && step % 240 === 0 && farWildRoll(seed, id, step, salt + 52) < 0.4) {
+        home = (home + (farWildRoll(seed, id, step, salt + 53) < 0.5 ? 1 : 7)) % 8
       }
       const drift = (dir - home + 8) % 8
       const sway = farWildRoll(seed, id, step, salt + 50)
-      if (drift >= 3 && drift <= 5 && sway < 0.75) dir = (dir + (drift <= 4 ? 7 : 1)) % 8
-      else if (sway < wobble) {
+      if (drift >= 2 && drift <= 6 && sway < 0.6) dir = (dir + (drift <= 4 ? 7 : 1)) % 8
+      else if (sway < shape.wobble) {
         const side = farWildRoll(seed, id, step, salt + 51) < 0.5 ? 1 : 7
         dir = (dir + side) % 8
       }
@@ -156,24 +211,60 @@ function build(seed: number) {
         dir = nd
         px = nx
         py = ny
-        if (DX8[nd] !== 0 && DY8[nd] !== 0) paint(px - DX8[nd], py, gating ? 'rockfall' : kind)
+        if (DX8[nd] !== 0 && DY8[nd] !== 0) paint(px - DX8[nd], py, kind)
         moved = true
         break
       }
       if (!moved) break
     }
   }
+  const course = (id: number, salt: number, x: number, y: number, length: number, kind: FarKind, reach: number, shape: Shape) => {
+    const dir = Math.floor(farWildRoll(seed, id, salt, 3) * 8)
+    grow(id, salt, x, y, length, kind, 0, dir, reach, shape, shape.childMin, shape.childSpan, shape.forkChance)
+  }
+  /** Turns the massif's mountain tiles on one line into rockfall, so the massif can be crossed once it is cleared. */
+  const pass = (x: number, y: number, dx: number, dy: number, length: number) => {
+    for (let n = 0; n <= length; n++) {
+      const key = tileKey(x + dx * n, y + dy * n)
+      if (map.get(key) === 'mountain') map.set(key, 'rockfall')
+    }
+  }
 
-  const squares = REGIONS * REGIONS
-  for (let index = 0; index < squares; index++) {
-    const origin = cell(index, 70)
+  for (let index = 0; index < MASSIFS; index++) {
+    const radius = 50 + Math.floor(farWildRoll(seed, index, 130, 6) * 60)
+    const origin = start(index, 130, radius * 2)
     if (!origin) continue
-    const length = 78 + Math.floor(farWildRoll(seed, index, 70, 5) * 36)
-    const dir = Math.floor(farWildRoll(seed, index, 70, 3) * 8)
-    grow(index, 70, origin.x, origin.y, length, 'mountain', 0, dir, dir, countryReach(seed, index, 70), 0.55, 8, 0.9, 2, 18, 26)
+    const reach = countryReach(seed, index, 130)
+    const lumps = 14 + Math.floor(farWildRoll(seed, index, 130, 7) * 10)
+    for (let lump = 0; lump < lumps; lump++) {
+      const ox = Math.floor((farWildRoll(seed, index, lump, 131) * 2 - 1) * radius * 0.75)
+      const oy = Math.floor((farWildRoll(seed, index, lump, 132) * 2 - 1) * radius * 0.75)
+      const size = radius * (0.25 + farWildRoll(seed, index, lump, 133) * 0.25)
+      disk(origin.x + ox, origin.y + oy, size, 'mountain', RANGE, 130, reach)
+    }
+    const arms = 2 + Math.floor(farWildRoll(seed, index, 130, 8) * 2)
+    for (let arm = 0; arm < arms; arm++) {
+      const id = index * 8 + arm
+      const length = 400 + Math.floor(farWildRoll(seed, id, 140, 5) * 500)
+      course(id, 140, origin.x, origin.y, length, 'mountain', reach, RANGE)
+    }
+    const left = origin.x - radius * 2
+    const top = origin.y - radius * 2
+    const firstX = left + Math.floor(farWildRoll(seed, index, 130, 9) * MASSIF_PASS_SPACING)
+    const firstY = top + Math.floor(farWildRoll(seed, index, 130, 10) * MASSIF_PASS_SPACING)
+    for (let x = firstX; x <= origin.x + radius * 2; x += MASSIF_PASS_SPACING) pass(x, top, 0, 1, radius * 4)
+    for (let y = firstY; y <= origin.y + radius * 2; y += MASSIF_PASS_SPACING) pass(left, y, 1, 0, radius * 4)
+  }
+  const rangeSquares = (FAR_LAND_SIDE / RANGE_REGION) ** 2
+  for (let index = 0; index < rangeSquares; index++) {
+    if (farWildRoll(seed, index, 70, 6) < 0.15) continue
+    const origin = cell(index, 70, RANGE_REGION)
+    if (!origin) continue
+    const length = 1200 + Math.floor(farWildRoll(seed, index, 70, 5) * 1200)
+    course(index, 70, origin.x, origin.y, length, 'mountain', countryReach(seed, index, 70), RANGE)
   }
   for (let index = 0; index < RIVER_COURSES; index++) {
-    const origin = start(index, 110)
+    const origin = start(index, 110, 0)
     if (!origin) continue
     const radius = 7 + Math.floor(farWildRoll(seed, index, 110, 6) * 4)
     const reach = countryReach(seed, index, 110)
@@ -185,16 +276,16 @@ function build(seed: number) {
       }
     }
     const toEdge = farWildRoll(seed, index, 110, 7) < 0.5
-    const length = toEdge ? 1400 : 420 + Math.floor(farWildRoll(seed, index, 110, 8) * 380)
-    const dir = Math.floor(farWildRoll(seed, index, 110, 3) * 8)
-    grow(index, 110, origin.x, origin.y, length, 'water', 0, dir, dir, countryReach(seed, index, 110), 0.42, 90, 0.55, 1, 36, 40)
+    const length = toEdge ? 2500 : 900 + Math.floor(farWildRoll(seed, index, 110, 8) * 800)
+    course(index, 110, origin.x, origin.y, length, 'water', reach, RIVER)
   }
-  for (let index = 0; index < squares; index++) {
-    const origin = cell(index, 90)
+  const thicketSquares = (FAR_LAND_SIDE / THICKET_REGION) ** 2
+  for (let index = 0; index < thicketSquares; index++) {
+    if (farWildRoll(seed, index, 90, 6) < 0.4) continue
+    const origin = cell(index, 90, THICKET_REGION)
     if (!origin) continue
-    const length = 28 + Math.floor(farWildRoll(seed, index, 90, 5) * 18)
-    const dir = Math.floor(farWildRoll(seed, index, 90, 3) * 8)
-    grow(index, 90, origin.x, origin.y, length, 'thicket', 0, dir, dir, countryReach(seed, index, 90), 0.7, 6, 0.85, 2, 10, 12)
+    const length = 200 + Math.floor(farWildRoll(seed, index, 90, 5) * 300)
+    course(index, 90, origin.x, origin.y, length, 'thicket', countryReach(seed, index, 90), THICKET)
   }
   return map
 }
@@ -222,7 +313,7 @@ export function farBlocksKind(kind: FarKind) {
 
 /**
  * The nearest open tile at a gap or at the end of the obstacle, within {@link FAR_OPENING_REACH}
- * steps along it. Grass beside a solid stretch is not a gap. A cleared rockfall, and the end of a river, are.
+ * tiles of it. Grass beside a solid stretch is not a gap. A cleared rockfall, and the end of a river, are.
  */
 /** Gaps and ends of the obstacle, nearest first. A walk tries the next one when the nearest still crosses the wall. */
 export function farOpenings(
@@ -293,4 +384,3 @@ export function farOpening(
 ): { x: number; y: number } | null {
   return farOpenings(x, y, blocked, reach)[0] ?? null
 }
-

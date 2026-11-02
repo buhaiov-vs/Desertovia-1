@@ -17,3 +17,6 @@ __pycache__/
 # Local agent instruction dumps (not part of the game source)
 AGENTS.md
 CLAUDE.md
+
+# Personal notes
+docs/local/

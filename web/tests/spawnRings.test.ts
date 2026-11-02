@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
+import { farKind } from '../src/game/farWilds.ts'
 import { CAVE_FAR, CAVE_NEAR, caveTile, SPAWN_LEVELS, spawnPoints, spotsAround } from '../src/game/spawnRings.ts'
 
 const side = 12_000
-const ring = { camp: { x: 15.5, y: 13.5 }, land: { x: 15 - side / 2, y: 13 - side / 2, width: side, height: side } }
+const ring = { camp: { x: 15.5, y: 13.5 }, land: { x: 15 - side / 2, y: 13 - side / 2, width: side, height: side }, water: (x: number, y: number, seed: number) => farKind(x, y, seed) === 'water' }
 const cases = JSON.parse(readFileSync(new URL('../e2e/fixtures/spawn-rings.json', import.meta.url), 'utf8')) as Array<{ seed: number; points: string[] }>
 
 test('dens match the ones the server places', () => {

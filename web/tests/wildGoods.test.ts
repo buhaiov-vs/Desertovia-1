@@ -23,6 +23,7 @@ test('patches sit between foe rings, off mountains, and the same seed keeps them
   const dens = spawnPoints(1, {
     camp,
     land: { x: FAR_LAND_LEFT, y: FAR_LAND_TOP, width: FAR_LAND_SIDE, height: FAR_LAND_SIDE },
+    water: (x, y, seed) => farKind(x, y, seed) === 'water',
   })
   const kinds = new Set<string>()
   for (const patch of patches) {

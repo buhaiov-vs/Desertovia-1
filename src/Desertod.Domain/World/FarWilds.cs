@@ -33,15 +33,32 @@ public static class FarWilds
     private static readonly Shape River = new(0.2, 80, 0.6, 2, 150, 200, [2.5, 1, 0.5], 80, 0, 0);
 
     private static readonly int[] Dx = [1, 0, -1, 0];
+    private static readonly int LandLeft = WorldMap.Land.X;
+    private static readonly int LandTop = WorldMap.Land.Y;
+    private static readonly int LandRight = WorldMap.Land.X + WorldMap.Land.Width;
+    private static readonly int LandBottom = WorldMap.Land.Y + WorldMap.Land.Height;
+    private static readonly int ValeLeft = WorldMap.Vale.X;
+    private static readonly int ValeTop = WorldMap.Vale.Y;
+    private static readonly int ValeRight = WorldMap.Vale.X + WorldMap.Vale.Width;
+    private static readonly int ValeBottom = WorldMap.Vale.Y + WorldMap.Vale.Height;
+
     private static readonly int[] Dy = [0, -1, 0, 1];
     private static readonly int[] Dx8 = [1, 1, 0, -1, -1, -1, 0, 1];
     private static readonly int[] Dy8 = [0, -1, -1, -1, 0, 1, 1, 1];
     private static readonly int[] Turn = [0, 1, 7, 2, 6, 3, 5, 4];
 
-    private const int CachedSeeds = 8;
+    /// <summary>Enough for every village a busy server or a parallel test run touches at once.</summary>
+    private const int CachedSeeds = 64;
 
-    private static readonly Dictionary<uint, Lazy<Dictionary<int, Kind>>> Cache = new();
-    private static readonly Queue<uint> CacheOrder = new();
+    private static readonly Dictionary<uint, (Lazy<Courses> Land, LinkedListNode<uint> Use)> Cache = new();
+    private static readonly LinkedList<uint> CacheOrder = new();
+
+    /// <summary>The land this thread looked at last, so repeated lookups on one seed skip the shared cache.</summary>
+    [ThreadStatic]
+    private static uint LastSeed;
+
+    [ThreadStatic]
+    private static Courses? LastCourses;
     private static readonly object CacheLock = new();
 
     public enum Kind
@@ -73,7 +90,7 @@ public static class FarWilds
             return Kind.Open;
         }
 
-        return Courses(seed).TryGetValue(Key(x, y), out var kind) ? kind : Kind.Open;
+        return CoursesFor(seed).At(Key(x, y));
     }
 
     /// <summary>A mountain, thicket or rockfall blocks a walk until it is cleared. A river is water, not a clearing.</summary>
@@ -199,32 +216,46 @@ public static class FarWilds
     }
 
     /// <summary>
-    /// Each seed's land is built once and shared. Only the most recent seeds stay in memory,
+    /// Each seed's land is built once and shared. The most recently used seeds stay in memory,
     /// and one seed being built does not hold up lookups on another.
     /// </summary>
-    private static Dictionary<int, Kind> Courses(uint seed)
+    private static Courses CoursesFor(uint seed)
     {
-        Lazy<Dictionary<int, Kind>> entry;
+        if (LastCourses is not null && LastSeed == seed)
+        {
+            return LastCourses;
+        }
+
+        Lazy<Courses> entry;
         lock (CacheLock)
         {
-            if (!Cache.TryGetValue(seed, out entry!))
+            if (Cache.TryGetValue(seed, out var cached))
             {
-                entry = new Lazy<Dictionary<int, Kind>>(() => Build(seed));
-                Cache[seed] = entry;
-                CacheOrder.Enqueue(seed);
+                CacheOrder.Remove(cached.Use);
+                CacheOrder.AddLast(cached.Use);
+                entry = cached.Land;
+            }
+            else
+            {
+                entry = new Lazy<Courses>(() => Build(seed).Pack());
+                Cache[seed] = (entry, CacheOrder.AddLast(seed));
                 while (CacheOrder.Count > CachedSeeds)
                 {
-                    Cache.Remove(CacheOrder.Dequeue());
+                    Cache.Remove(CacheOrder.First!.Value);
+                    CacheOrder.RemoveFirst();
                 }
             }
         }
 
-        return entry.Value;
+        LastSeed = seed;
+        LastCourses = entry.Value;
+
+        return LastCourses;
     }
 
-    private static Dictionary<int, Kind> Build(uint seed)
+    private static Grid Build(uint seed)
     {
-        var map = new Dictionary<int, Kind>();
+        var map = new Grid();
 
         void Paint(int x, int y, Kind kind)
         {
@@ -233,8 +264,8 @@ public static class FarWilds
                 return;
             }
 
-            var key = Key(x, y);
-            if (map.TryGetValue(key, out var prev))
+            var prev = map.Get(x, y);
+            if (prev != Kind.Open)
             {
                 if (prev == Kind.Rockfall)
                 {
@@ -257,7 +288,7 @@ public static class FarWilds
                 }
             }
 
-            map[key] = kind;
+            map.Set(x, y, kind);
         }
 
         int CountryReach(int id, int salt) => 120 + (int)Math.Floor(Roll(seed, id, salt, 91) * 160);
@@ -273,6 +304,7 @@ public static class FarWilds
         {
             var span = (int)Math.Floor(radius);
             var inner = (radius - 1) * (radius - 1);
+            var awayFromCamp = Math.Sqrt((x - 15.0) * (x - 15.0) + (y - 13.0) * (y - 13.0)) >= reach + span + 2;
             for (var oy = -span; oy <= span; oy++)
             {
                 for (var ox = -span; ox <= span; ox++)
@@ -285,6 +317,14 @@ public static class FarWilds
 
                     var tx = x + ox;
                     var ty = y + oy;
+
+                    // A tile this paint could not change needs no rolls.
+                    var prev = map.Get(tx, ty);
+                    if (prev is Kind.Mountain or Kind.Rockfall || (prev != Kind.Open && kind is Kind.Thicket or Kind.Water))
+                    {
+                        continue;
+                    }
+
                     if (radius >= 1.5 && distance > inner && Roll(seed, tx, ty, salt + 81) < shape.Edge)
                     {
                         continue;
@@ -295,7 +335,7 @@ public static class FarWilds
                         continue;
                     }
 
-                    if (!ClearOfCamp(tx, ty, reach))
+                    if (!awayFromCamp && !ClearOfCamp(tx, ty, reach))
                     {
                         continue;
                     }
@@ -452,10 +492,9 @@ public static class FarWilds
         {
             for (var n = 0; n <= length; n++)
             {
-                var key = Key(x + dx * n, y + dy * n);
-                if (map.TryGetValue(key, out var kind) && kind == Kind.Mountain)
+                if (map.Get(x + dx * n, y + dy * n) == Kind.Mountain)
                 {
-                    map[key] = Kind.Rockfall;
+                    map.Set(x + dx * n, y + dy * n, Kind.Rockfall);
                 }
             }
         }
@@ -553,13 +592,104 @@ public static class FarWilds
         return map;
     }
 
-    private static bool OnLand(int x, int y)
+    private static bool OnLand(int x, int y) => x >= LandLeft && y >= LandTop && x < LandRight && y < LandBottom;
+
+    private static bool InVale(int x, int y) => x >= ValeLeft && y >= ValeTop && x < ValeRight && y < ValeBottom;
+
+    /// <summary>The non-open tiles of one seed, packed as sorted tile keys with a byte per kind.</summary>
+    private sealed class Courses
     {
-        var land = WorldMap.Land;
-        return x >= land.X && y >= land.Y && x < land.X + land.Width && y < land.Y + land.Height;
+        private readonly int[] keys;
+        private readonly byte[] kinds;
+
+        /// <param name="keys">Tile keys in ascending order.</param>
+        public Courses(int[] keys, byte[] kinds)
+        {
+            this.keys = keys;
+            this.kinds = kinds;
+        }
+
+        public Kind At(int key)
+        {
+            var index = Array.BinarySearch(keys, key);
+
+            return index >= 0 ? (Kind)kinds[index] : Kind.Open;
+        }
     }
 
-    private static bool InVale(int x, int y) => WorldMap.Vale.Contains(new TileArea(x, y, 1, 1));
+    /// <summary>Kinds painted while the land is built, kept in small square chunks so a paint is an array write.</summary>
+    private sealed class Grid
+    {
+        private const int Shift = 5;
+        private const int Size = 1 << Shift;
+
+        private readonly Dictionary<long, byte[]> chunks = new();
+        private long lastKey = long.MinValue;
+        private byte[]? last;
+
+        public Kind Get(int x, int y) =>
+            Chunk(x, y, false) is { } chunk ? (Kind)chunk[Index(x, y)] : Kind.Open;
+
+        public void Set(int x, int y, Kind kind) => Chunk(x, y, true)![Index(x, y)] = (byte)kind;
+
+        /// <summary>The painted tiles in ascending key order, which is column by column and top to bottom.</summary>
+        public Courses Pack()
+        {
+            var keys = new List<int>();
+            var kinds = new List<byte>();
+            var columns = chunks.Keys.GroupBy(key => (int)(key >> 32)).OrderBy(column => column.Key);
+            foreach (var column in columns)
+            {
+                var stack = column.OrderBy(key => (int)key).Select(key => ((int)key, chunks[key])).ToList();
+                for (var dx = 0; dx < Size; dx++)
+                {
+                    foreach (var (row, chunk) in stack)
+                    {
+                        for (var dy = 0; dy < Size; dy++)
+                        {
+                            var kind = chunk[(dx << Shift) | dy];
+                            if (kind == (byte)Kind.Open)
+                            {
+                                continue;
+                            }
+
+                            keys.Add(Key((column.Key << Shift) + dx, (row << Shift) + dy));
+                            kinds.Add(kind);
+                        }
+                    }
+                }
+            }
+
+            return new Courses(keys.ToArray(), kinds.ToArray());
+        }
+
+        private static int Index(int x, int y) => ((x & (Size - 1)) << Shift) | (y & (Size - 1));
+
+        private byte[]? Chunk(int x, int y, bool create)
+        {
+            var key = ((long)(x >> Shift) << 32) | (uint)(y >> Shift);
+            if (key == lastKey && last is not null)
+            {
+                return last;
+            }
+
+            if (!chunks.TryGetValue(key, out var chunk))
+            {
+                if (!create)
+                {
+                    return null;
+                }
+
+                chunk = new byte[Size * Size];
+                chunks[key] = chunk;
+            }
+
+            lastKey = key;
+            last = chunk;
+
+            return chunk;
+        }
+    }
 
     /// <summary>How a course grows. Matches <c>Shape</c> in farWilds.ts.</summary>
     /// <param name="Swell">The widest half-width at each depth of branching.</param>

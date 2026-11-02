@@ -67,6 +67,7 @@ function build(seed: number): WildPatch[] {
   const dens = spawnPoints(seed, {
     camp: CAMP,
     land: { x: FAR_LAND_LEFT, y: FAR_LAND_TOP, width: FAR_LAND_SIDE, height: FAR_LAND_SIDE },
+    water: (x, y, ringSeed) => farKind(x, y, ringSeed) === 'water',
   })
   const patches: WildPatch[] = []
   for (const level of SPAWN_LEVELS) {

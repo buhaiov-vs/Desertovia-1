@@ -124,7 +124,7 @@ public class TeleportScrollTests
         Assert.Contains(write.Inputs, i => i.Resource == ResourceKind.Moonstone);
         Assert.Contains(write.Inputs, i => i.Resource == ResourceKind.Parchment);
         Assert.Equal(TechnologyCatalog.Waystones, Task("chip-moonstone").RequiredTechnology);
-        Assert.Equal(Wilderness.Cave, Task("chip-moonstone").Workplace);
+        Assert.Equal(Wilderness.MoonstoneMine, Task("chip-moonstone").Workplace);
         Assert.Equal(TechnologyCatalog.Waystones, BuildingCatalog.Get(BuildingKind.Waystone).Technology);
         Assert.Contains(TechnologyCatalog.Writing, TechnologyCatalog.Get(TechnologyCatalog.Waystones).Requires);
     }

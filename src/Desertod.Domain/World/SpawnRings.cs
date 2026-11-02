@@ -43,8 +43,8 @@ public static class SpawnRings
     public const int SingleClaim = 64;
     public static readonly TimeSpan Hold = TimeSpan.FromSeconds(3);
 
-    /// <summary>A den lands up to this many tiles past its floor; the next ring starts 541 tiles out.</summary>
-    public const int Spread = 400;
+    /// <summary>A den lands up to this many tiles past its floor; the next ring starts about 270 tiles out.</summary>
+    public const int Spread = 200;
 
     /// <summary>A den turns up to this far either side of its direction, in radians (18 degrees).</summary>
     public const double Sway = Math.PI / 10;
@@ -52,41 +52,41 @@ public static class SpawnRings
     /// <summary>Random places tried before the den falls back to its own ring.</summary>
     private const int ScatterTries = 6;
 
-    /// <summary>The cave has no chosen tile. It is not the cave in the home vale.</summary>
-    public static TilePoint? CavePlace => null;
+    /// <summary>The cave mouth. It is outside the vale. Wood and stone are not moved to make room for it.</summary>
+    public static TilePoint CaveAt(uint seed) => CaveSite.At(seed).Mouth;
 
     public static IReadOnlyList<SpawnLevel> Levels { get; } =
     [
-        Level(1, "Plain slime", 600, 3, null),
-        Level(2, "Grave rat", 1_141, 4, EnemyKind.Rat),
-        Level(3, "Imp", 1_682, 2, EnemyKind.Imp),
-        Level(4, "Small goblin", 2_223, 3, null),
-        Level(5, "Wolf", 2_764, 4, EnemyKind.Wolf),
-        Level(6, "Boar", 3_305, 3, EnemyKind.Boar),
-        Level(7, "Goblin with a club", 3_846, 3, null),
-        Level(8, "Hooded orc", 4_387, 1, null),
-        Level(9, "Scarecrow", 4_928, 1, null),
-        Level(10, "Ghoul", 5_469, 2, EnemyKind.Ghoul),
-        Level(11, "Goblin with a sword", 6_010, 3, null),
-        Level(12, "Banner goblin", 6_551, 3, null),
-        Level(13, "Wraith", 7_092, 1, EnemyKind.Wraith),
-        Level(14, "Poison plant", 7_633, 1, null),
-        Level(15, "Flaming slime", 8_174, 1, null),
-        Level(16, "Orc with one axe", 8_715, 1, null),
-        Level(17, "Bear", 9_256, 1, EnemyKind.Bear),
-        Level(18, "Orc warrior", 9_797, 1, null),
-        Level(19, "Vampire", 10_338, 1, null),
-        Level(20, "Orc berserk", 10_879, 1, null),
-        Level(21, "Orc shaman", 11_420, 1, null),
-        Level(22, "Winged vampire", 11_961, 1, null),
-        Level(23, "Orc with two swords", 12_502, 1, null),
-        Level(24, "Zombie", 13_043, 1, EnemyKind.Zombie),
-        Level(25, "Fire spirit", 13_584, 1, null),
-        Level(26, "Skeleton", 14_125, 1, EnemyKind.Skeleton),
-        Level(27, "Armored orc", 14_666, 1, null),
-        Level(28, "Fortress knight", 15_207, 1, null),
-        Level(29, "Barrow king", 15_748, 1, EnemyKind.BarrowKing),
-        Level(30, "Lich", 16_289, 1, null),
+        Level(1, "Plain slime", 300, 3, null),
+        Level(2, "Grave rat", 570, 4, EnemyKind.Rat),
+        Level(3, "Imp", 841, 2, EnemyKind.Imp),
+        Level(4, "Small goblin", 1_111, 3, null),
+        Level(5, "Wolf", 1_382, 4, EnemyKind.Wolf),
+        Level(6, "Boar", 1_652, 3, EnemyKind.Boar),
+        Level(7, "Goblin with a club", 1_923, 3, null),
+        Level(8, "Hooded orc", 2_193, 1, null),
+        Level(9, "Scarecrow", 2_464, 1, null),
+        Level(10, "Ghoul", 2_734, 2, EnemyKind.Ghoul),
+        Level(11, "Goblin with a sword", 3_005, 3, null),
+        Level(12, "Banner goblin", 3_275, 3, null),
+        Level(13, "Wraith", 3_546, 1, EnemyKind.Wraith),
+        Level(14, "Poison plant", 3_816, 1, null),
+        Level(15, "Flaming slime", 4_087, 1, null),
+        Level(16, "Orc with one axe", 4_357, 1, null),
+        Level(17, "Bear", 4_628, 1, EnemyKind.Bear),
+        Level(18, "Orc warrior", 4_898, 1, null),
+        Level(19, "Vampire", 5_169, 1, null),
+        Level(20, "Orc berserk", 5_439, 1, null),
+        Level(21, "Orc shaman", 5_710, 1, null),
+        Level(22, "Winged vampire", 5_980, 1, null),
+        Level(23, "Orc with two swords", 6_251, 1, null),
+        Level(24, "Zombie", 6_521, 1, EnemyKind.Zombie),
+        Level(25, "Fire spirit", 6_792, 1, null),
+        Level(26, "Skeleton", 7_062, 1, EnemyKind.Skeleton),
+        Level(27, "Armored orc", 7_333, 1, null),
+        Level(28, "Fortress knight", 7_603, 1, null),
+        Level(29, "Barrow king", 7_874, 1, EnemyKind.BarrowKing),
+        Level(30, "Lich", 8_144, 1, null),
     ];
 
     /// <summary>The dens of one village. The same seed always places the same dens.</summary>
@@ -192,7 +192,7 @@ public static class SpawnRings
 
     /// <summary>
     /// The cave sends the foes of destroyed dens, and only when at least one den is destroyed.
-    /// It has no tile yet, so it cannot place those foes on a line.
+    /// Their line would start at <see cref="CaveAt"/>. The night does not march them from there yet.
     /// </summary>
     public static IReadOnlyList<string> CaveFoes(IReadOnlyList<SpawnPoint> points, IReadOnlySet<string> destroyed)
     {

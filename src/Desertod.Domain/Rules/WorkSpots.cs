@@ -12,7 +12,11 @@ namespace Desertod.Domain.Rules;
 public static class WorkSpots
 {
     /// <summary>Workplaces whose goods can be gathered anywhere on the land, not only at the workplace itself.</summary>
-    public static IReadOnlySet<string> Workplaces { get; } = new HashSet<string> { Forest.Workplace, "stones", "berries", "reeds" };
+    public static IReadOnlySet<string> Workplaces { get; } = new HashSet<string>
+    {
+        Forest.Workplace, "stones", "berries", "reeds",
+        WildGoods.Herbs, WildGoods.Flint, WildGoods.Clay, WildGoods.Salt, WildGoods.Resin, WildGoods.Copper,
+    };
 
     public static bool Takes(TaskDefinition task) =>
         task.Effect == TaskEffect.Resources && task.Hunt is null && task.Inputs.Count == 0 && Workplaces.Contains(task.Workplace);
@@ -42,6 +46,12 @@ public static class WorkSpots
         if (!WorldMap.Land.Contains(tile))
         {
             throw new GameRuleException("spot.outsideLand", "This spot is beyond the land.");
+        }
+
+        if (WildGoods.IsPlace(task.Workplace) && WildGoods.At(tile.X, tile.Y, Wilderness.Seed(village.Id.ToString())) != task.Workplace)
+        {
+            throw new GameRuleException("spot.notForTask", "This is gathered where it grows.",
+                new Dictionary<string, object> { ["taskId"] = task.Id });
         }
 
         if (task.Workplace == Forest.Workplace && Forest.Area.Contains(tile) && TreeAt(village, task, spot, now) is null)

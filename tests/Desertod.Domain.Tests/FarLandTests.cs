@@ -8,8 +8,8 @@ public class FarLandTests
     [Fact]
     public void Land_IsTheSquareAroundTheCamp_AndTheValeStaysTheOldPicture()
     {
-        Assert.Equal(24_000, WorldMap.Land.Width);
-        Assert.Equal(24_000, WorldMap.Land.Height);
+        Assert.Equal(12_000, WorldMap.Land.Width);
+        Assert.Equal(12_000, WorldMap.Land.Height);
         Assert.Equal(120, WorldMap.Vale.Width);
         Assert.Equal(90, WorldMap.Vale.Height);
         Assert.Equal(1_350, Exploration.LegacySize);

@@ -94,6 +94,8 @@ public sealed record MountainPassDto(int X, int Y, bool Horizontal);
 /// <param name="Cleared">Worked away by citizens: walkers pass and the map shows bare ground.</param>
 public sealed record ObstacleDto(ObstacleKind Kind, int X, int Y, bool Cleared);
 
+public sealed record GoldDepositDto(int X, int Y, int Level, int Remaining);
+
 /// <summary>The ravine, mountain features and obstacles of the wild land; the client shapes the map around them.</summary>
 public sealed record WildsDto(
     IReadOnlyList<RavineSpanDto> Ravine,
@@ -101,8 +103,15 @@ public sealed record WildsDto(
     IReadOnlyList<ObstacleDto> Obstacles,
     int CaveX,
     int CaveY,
+    int CoalX,
+    int CoalY,
+    int IronX,
+    int IronY,
+    int MoonX,
+    int MoonY,
     int LookoutX,
-    int LookoutY);
+    int LookoutY,
+    IReadOnlyList<GoldDepositDto> Gold);
 
 /// <param name="Growth">0 when sown, 1 when ripe; 0 for an empty bed.</param>
 /// <param name="WateredUntil">The bed is wet until then.</param>
@@ -620,8 +629,15 @@ public static class DtoMapper
         wilds.Obstacles.Select(o => new ObstacleDto(o.Kind, o.X, o.Y, !Wilderness.Stands(o))).ToList(),
         wilds.CaveX,
         wilds.CaveY,
+        wilds.CoalX,
+        wilds.CoalY,
+        wilds.IronX,
+        wilds.IronY,
+        wilds.MoonX,
+        wilds.MoonY,
         wilds.LookoutX,
-        wilds.LookoutY);
+        wilds.LookoutY,
+        (wilds.Gold ?? []).Select(vein => new GoldDepositDto(vein.X, vein.Y, vein.Level, vein.Remaining)).ToList());
 
     public static RaidDto ToDto(this Raid raid) => new(
         raid.Id,

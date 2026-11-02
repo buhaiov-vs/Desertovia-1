@@ -35,13 +35,22 @@ const NATURE_WORKPLACES: Record<NatureKind, string[]> = {
   thicket: ['thicket'],
   rockfall: ['rockfall'],
   cave: ['cave'],
+  'coal-mine': ['coal-mine'],
+  'iron-mine': ['iron-mine'],
+  'moonstone-mine': ['moonstone-mine'],
+  herbs: ['herbs'],
+  flint: ['flint'],
+  clay: ['clay'],
+  salt: ['salt'],
+  resin: ['resin'],
+  copper: ['copper'],
 }
 
 /** A picked spot is only kept where the citizen really gathers what the place offers. */
 const SPOT_KINDS: readonly NatureKind[] = ['tree', 'bush', 'stone', 'reeds']
 
 /** Places in the wild the server knows: the picked tile tells it which thicket or rockfall to clear. */
-const WILD_KINDS: readonly NatureKind[] = ['thicket', 'rockfall', 'cave']
+const WILD_KINDS: readonly NatureKind[] = ['thicket', 'rockfall', 'cave', 'coal-mine', 'iron-mine', 'moonstone-mine', 'vein', 'herbs', 'flint', 'clay', 'salt', 'resin', 'copper']
 
 const NATURE_TITLES: Record<NatureKind, UiKey> = {
   tree: 'target.tree',
@@ -53,6 +62,15 @@ const NATURE_TITLES: Record<NatureKind, UiKey> = {
   thicket: 'target.thicket',
   rockfall: 'target.rockfall',
   cave: 'target.cave',
+  'coal-mine': 'target.coalMine',
+  'iron-mine': 'target.ironMine',
+  'moonstone-mine': 'target.moonstoneMine',
+  herbs: 'target.herbs',
+  flint: 'target.flint',
+  clay: 'target.clay',
+  salt: 'target.salt',
+  resin: 'target.resin',
+  copper: 'target.copper',
 }
 
 function damageOf(village: VillageState, plotId: string) {
@@ -105,14 +123,20 @@ function titleOf(target: WorldTarget, catalog: Catalog, citizen: Citizen, i18n: 
       const hunting = citizen.skills.find((skill) => skill.skill === 'Hunting')?.level ?? 0
       return hunting >= needed ? i18n.animal(target.prey) : i18n.t('task.preyUnknown')
     }
-    default:
+    default: {
+      if (target.kind === 'vein' && 'spot' in target) {
+        const level = village.wilds?.gold.find((vein) => vein.x === Math.floor(target.spot.x) && vein.y === Math.floor(target.spot.y))?.level
+        return level ? `${i18n.t('target.vein')} · ${level}` : i18n.t('target.vein')
+      }
       return i18n.t(NATURE_TITLES[target.kind])
+    }
   }
 }
 
 /** Spot sent with a gathering task, so the citizen works right at the clicked tree, bush or stone. */
 function spotFor(target: WorldTarget, task: Task): TilePoint | null {
   if (!('spot' in target)) return null
+  if (target.kind === 'vein' && task.workplace === 'gold-vein') return target.spot
   if (WILD_KINDS.includes(target.kind) && task.workplace === target.kind) return target.spot
   if (!SPOT_KINDS.includes(target.kind) || !takesSpot(task)) return null
   return target.spot
@@ -235,7 +259,11 @@ export function TargetPopup({
             built={built}
             discovered={discoveredTechnologies(village)}
             wildlife={village.wildlife}
-            goldVein={village.goldVeinRemaining}
+            goldVein={
+              target.kind === 'vein' && 'spot' in target
+                ? (village.wilds?.gold.find((vein) => vein.x === Math.floor(target.spot.x) && vein.y === Math.floor(target.spot.y))?.remaining ?? 0)
+                : village.goldVeinRemaining
+            }
             fields={village.fields}
             resources={village.resources}
             disabled={disabled}

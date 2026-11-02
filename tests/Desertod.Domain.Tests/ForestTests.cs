@@ -20,9 +20,14 @@ public class ForestTests
     [Fact]
     public void NewLand_HasTreesInTheForest_ButNotInTheClearing()
     {
-        var trees = Forest.Plant(new Random(7));
+        var trees = Forest.Plant(7);
 
-        Assert.True(trees.Count(t => t.X < 8 && t.Y < 12) > 40);
+        Assert.NotEmpty(trees);
+        // These three tiles are the web client's wildTree for the same seeds.
+        Assert.False(WildCover.Tree(1, 20, 20));
+        Assert.True(WildCover.Tree(7, 20, 20));
+        Assert.False(WildCover.Tree(1, 5, 8));
+        Assert.True(trees.Count(t => t.X < 8 && t.Y < 12) < 40);
         Assert.DoesNotContain(trees, t => t.X is >= 12 and < 19 && t.Y is >= 10 and < 17);
         Assert.All(trees, t => Assert.True(Forest.Area.Contains(t.Tile)));
     }

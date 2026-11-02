@@ -87,7 +87,13 @@ public class SpawnRingTests
         Assert.Equal("The renewal resource is not set.", SpawnRings.RenewalBlock(29));
         Assert.Equal("A lich point cannot be renewed.", SpawnRings.RenewalBlock(30));
         Assert.Empty(SpawnRings.RenewalGoods);
-        Assert.Null(SpawnRings.CavePlace);
+        var cave = SpawnRings.CaveAt(1);
+        Assert.Equal((-1078, -5128), (CaveSite.At(1).X, CaveSite.At(1).Y));
+        Assert.Equal(cave, SpawnRings.CaveAt(1));
+        Assert.NotEqual(cave, SpawnRings.CaveAt(2));
+        Assert.True(WorldMap.Land.Contains(cave.ToTile()));
+        Assert.False(WorldMap.Vale.Contains(cave.ToTile()));
+        Assert.InRange(cave.DistanceTo(WorldMap.Places[WorldMap.Camp]), CaveSite.Near, CaveSite.Far);
         Assert.Empty(SpawnRings.CaveFoes(SpawnRings.Points(1), new HashSet<string>()));
         var destroyed = new HashSet<string> { point.Id };
         Assert.Equal([point.Name], SpawnRings.CaveFoes(SpawnRings.Points(1), destroyed));

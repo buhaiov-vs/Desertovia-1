@@ -1,4 +1,5 @@
 import { plotPosition, type AnimalKind, type Catalog, type TileArea, type TilePoint, type VillageState, type Wilds } from '../api'
+import { farBlocksKind, farKind, farOpenings } from './farWilds'
 import { EXTRAS, battle, dungeon, factory, farm, rogue, town, type TileRef } from './sheets'
 
 /**
@@ -12,8 +13,8 @@ export const MAP_HEIGHT = 90
 export const MAP_RIGHT = MAP_LEFT + MAP_WIDTH
 export const MAP_BOTTOM = MAP_TOP + MAP_HEIGHT
 
-/** One edge of the land, in tiles. The camp tile sits in the middle. The picture of the camp stays MAP_*. */
-export const LAND_SIDE = 24_000
+/** One edge of the land, in tiles. The camp tile sits in the middle. A healthy walker takes one real hour to an edge. The picture of the camp stays MAP_*. */
+export const LAND_SIDE = 12_000
 export const LAND_LEFT = 15 - LAND_SIDE / 2
 export const LAND_TOP = 13 - LAND_SIDE / 2
 export const LAND_WIDTH = LAND_SIDE
@@ -492,13 +493,14 @@ export function findWay(
   bridge: boolean,
   crossings: TileArea[] = [],
   seed = 1,
+  opened: ReadonlySet<string> = new Set(),
 ): TilePoint[] | WalkBlock {
   const startX = Math.floor(from.x)
   const startY = Math.floor(from.y)
   const goalX = Math.floor(to.x)
   const goalY = Math.floor(to.y)
   const inVale = (x: number, y: number) => x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM
-  if (!inVale(startX, startY) || !inVale(goalX, goalY)) return farWay(terrain, from, to, seed)
+  if (!inVale(startX, startY) || !inVale(goalX, goalY)) return farWay(terrain, from, to, seed, opened, bridge, crossings)
   const inside = (x: number, y: number) => x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM
   const index = (x: number, y: number) => (y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)
   const onDeck = (x: number, y: number) =>
@@ -661,7 +663,7 @@ function searchTiles(
 }
 
 /** Natural places a click can send a citizen to; `spot` is the centre of the clicked tile. */
-export type NatureKind = 'tree' | 'bush' | 'stone' | 'reeds' | 'water' | 'vein' | 'thicket' | 'rockfall' | 'cave'
+export type NatureKind = 'tree' | 'bush' | 'stone' | 'reeds' | 'water' | 'vein' | 'thicket' | 'rockfall' | 'cave' | 'coal-mine' | 'iron-mine' | 'moonstone-mine' | 'herbs' | 'flint' | 'clay' | 'salt' | 'resin' | 'copper'
 
 /** Something on the map a citizen can be sent to work at. `area` is outlined while the choice is open. */
 export type WorldTarget = { area: TileArea | null } & (
@@ -729,11 +731,6 @@ function valueNoise(seed: number, scale: number) {
 
 const inCore = (x: number, y: number) => x >= 0 && x < CORE_WIDTH && y >= 0 && y < CORE_HEIGHT
 
-const MOUNTAIN_RIDGES = 4
-/** Tiles around the camp area kept free of mountains. */
-const MOUNTAIN_CLEARANCE = 6
-/** Tiles of ridge on each side of a rockfall pass. */
-const PASS_ARM = 7
 /** Share of the ponds with marsh around them. */
 const MARSH_PONDS = 0.5
 
@@ -749,9 +746,9 @@ export function riverCenter(y: number, seed: number) {
 
 const RIVER_WIDTH = 4
 
-/** The land outside the camp picture is dry grass. The river is not drawn there. */
-export function farWater(_x: number, _y: number, _seed: number) {
-  return false
+/** A river tile outside the camp picture. The camp picture's river is authored terrain. */
+export function farWater(x: number, y: number, seed: number) {
+  return farKind(x, y, seed) === 'water'
 }
 
 /** Stable 0…1 roll for one far tile, so ground and trees stay put between visits. */
@@ -763,76 +760,210 @@ function farRoll(seed: number, x: number, y: number) {
 }
 
 /**
- * Ground outside the camp picture. Same grass scatter and stone patches as the wild inside the vale,
- * so the rim does not read as a flat border against the authored map.
+ * Tiles from the campfire. A healthy walker takes 0.6 seconds a tile:
+ * 300 is 3 minutes, 600 is 6 minutes, 2,000 is 20 minutes.
+ */
+function tilesFromCamp(x: number, y: number) {
+  return Math.hypot(x + 0.5 - CAMPFIRE.x, y + 0.5 - CAMPFIRE.y)
+}
+
+/** Stone outcrops start past the camp meadow and then keep the same spacing. */
+const STONE_OUTCROP_TILES = 80
+
+function forestCover(seed: number, x: number, y: number) {
+  return valueNoise(seed + 1, 9)(x, y) * 0.75 + valueNoise(seed + 2, 3)(x, y) * 0.25
+}
+
+/** A few stones on high ground, only once the walk has left the open country. */
+function stoneOutcrop(x: number, y: number, forest: number, stone: number) {
+  return tilesFromCamp(x, y) >= STONE_OUTCROP_TILES && stone > 0.9 && forest < 0.45
+}
+
+/**
+ * The campfire stays open. Everywhere else the same groves run, inside the vale and past it.
+ * `roll` is 0…1 for this tile.
+ */
+function wildTree(x: number, y: number, forest: number, roll: number) {
+  if (tilesFromCamp(x, y) < 8) return false
+  return forest > 0.64 ? roll < 0.18 : forest > 0.54 ? roll < 0.05 : roll < 0.012
+}
+
+/**
+ * Ground outside the camp picture. Grass stays grass. Stone and trees use the same
+ * rolls as the ground inside the picture, so the edge does not turn into empty land.
  */
 export function farGroundTile(x: number, y: number, seed: number): TileRef {
-  const forest = valueNoise(seed + 1, 9)(x, y) * 0.75 + valueNoise(seed + 2, 3)(x, y) * 0.25
+  const kind = farKind(x, y, seed)
+  if (kind === 'water') return battle(37)
+  if (kind === 'mountain' || kind === 'rockfall') {
+    const grass = farRoll(seed + 4, x, y)
+    return town(grass < 0.06 ? 1 : grass < 0.09 ? 2 : 0)
+  }
+  const forest = forestCover(seed, x, y)
   const stone = valueNoise(seed + 3, 7)(x, y)
-  if (stone > 0.74 && forest < 0.55) return town(43)
+  if (stoneOutcrop(x, y, forest, stone)) return town(43)
   const roll = farRoll(seed + 4, x, y)
   return town(roll < 0.06 ? 1 : roll < 0.09 ? 2 : 0)
 }
 
-/**
- * Whether a tree stands on a far-land tile. Density matches the wild forest inside the camp picture,
- * so woods continue past the vale instead of stopping on a hard line.
- */
+/** Whether a tree stands on a far-land tile. Same bands as the wild inside the vale. */
 export function farHasTree(x: number, y: number, seed: number): boolean {
-  const forest = valueNoise(seed + 1, 9)(x, y) * 0.75 + valueNoise(seed + 2, 3)(x, y) * 0.25
+  const kind = farKind(x, y, seed)
+  if (kind === 'water' || farBlocksKind(kind)) return false
+  const forest = forestCover(seed, x, y)
   const stone = valueNoise(seed + 3, 7)(x, y)
-  if (stone > 0.74 && forest < 0.55) return false
-  const roll = farRoll(seed + 5, x, y)
-  return forest > 0.56 ? roll < 0.85 : forest > 0.48 ? roll < 0.3 : roll < 0.03
+  if (stoneOutcrop(x, y, forest, stone)) return false
+  return wildTree(x, y, forest, farRoll(seed + 5, x, y))
 }
 
-/** What a far-land tile is, for overviews: the stone patch or tree that `farGroundTile` and `farHasTree` draw there. */
-export function farTerrain(x: number, y: number, seed: number): Terrain {
-  const forest = valueNoise(seed + 1, 9)(x, y) * 0.75 + valueNoise(seed + 2, 3)(x, y) * 0.25
+/** What a far-land tile is, for overviews. A cleared thicket or rockfall is open grass. */
+export function farTerrain(x: number, y: number, seed: number, opened?: { has(key: string): boolean }): Terrain {
+  if (opened?.has(`${x},${y}`)) return Terrain.Grass
+  const kind = farKind(x, y, seed)
+  if (kind === 'water') return Terrain.Water
+  if (kind === 'mountain') return Terrain.Mountain
+  if (kind === 'rockfall') return Terrain.Rockfall
+  if (kind === 'thicket') return Terrain.Thicket
+  const forest = forestCover(seed, x, y)
   const stone = valueNoise(seed + 3, 7)(x, y)
-  if (stone > 0.74 && forest < 0.55) return Terrain.Stone
+  if (stoneOutcrop(x, y, forest, stone)) return Terrain.Stone
   return farHasTree(x, y, seed) ? Terrain.Tree : Terrain.Grass
+}
+
+/** A peak on every far mountain tile. The six mountain sprites, never the stone ground tile. */
+export function farPeak(x: number, y: number, seed: number): TileRef | null {
+  if (farKind(x, y, seed) !== 'mountain') return null
+  const looks = [...MOUNTAIN_PEAKS, ...MOSSY_PEAKS]
+  return looks[Math.floor(farRoll(seed + 6, x, y) * looks.length)]
 }
 
 /**
  * A walk that leaves the camp picture. Empty land is a straight line. The river is stepped around.
  * The search does not allocate a grid of the whole land.
  */
-function farWay(terrain: Uint8Array, from: TilePoint, to: TilePoint, seed: number): TilePoint[] | WalkBlock {
+function farWay(
+  terrain: Uint8Array,
+  from: TilePoint,
+  to: TilePoint,
+  seed: number,
+  opened: ReadonlySet<string>,
+  bridge: boolean,
+  crossings: TileArea[],
+): TilePoint[] | WalkBlock {
   const onLand = (x: number, y: number) =>
     x >= LAND_LEFT && x < LAND_LEFT + LAND_WIDTH && y >= LAND_TOP && y < LAND_TOP + LAND_HEIGHT
+  const inVale = (x: number, y: number) => x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM
   const goalX = Math.floor(to.x)
   const goalY = Math.floor(to.y)
-  if (!onLand(goalX, goalY) || farBlocked(terrain, goalX, goalY, seed)) return 'water'
-  const distance = Math.hypot(to.x - from.x, to.y - from.y)
-  const steps = Math.max(1, Math.min(4000, Math.ceil(distance)))
-  for (let step = 1; step < steps; step++) {
-    const x = Math.floor(from.x + ((to.x - from.x) * step) / steps)
-    const y = Math.floor(from.y + ((to.y - from.y) * step) / steps)
-    if (!farBlocked(terrain, x, y, seed)) continue
-    const bank = Math.round(riverCenter(y, seed) - 1.5) - 1
-    return [{ x: bank + 0.5, y: y + 0.5 }, to]
+  const blocked = (x: number, y: number) => farBlocked(terrain, x, y, seed, goalX, goalY, opened, bridge, crossings)
+  const stop = (x: number, y: number): WalkBlock => {
+    if (!inVale(x, y)) return farKind(x, y, seed) === 'water' ? 'water' : 'mountain'
+    const kind = terrain[(y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)]
+    return kind === Terrain.Mountain || kind === Terrain.Thicket ? 'mountain' : kind === Terrain.Ravine ? 'ravine' : 'water'
   }
-  return [to]
+  if (!onLand(goalX, goalY)) return 'water'
+  if (blocked(goalX, goalY)) return stop(goalX, goalY)
+  const points: TilePoint[] = []
+  let cursor = from
+  let lastHit = { x: goalX, y: goalY }
+  for (let hop = 0; hop < 24; hop++) {
+    const distance = Math.hypot(to.x - cursor.x, to.y - cursor.y)
+    const steps = Math.max(1, Math.min(4000, Math.ceil(distance)))
+    let hit: { x: number; y: number } | null = null
+    for (let step = 1; step < steps; step++) {
+      const x = Math.floor(cursor.x + ((to.x - cursor.x) * step) / steps)
+      const y = Math.floor(cursor.y + ((to.y - cursor.y) * step) / steps)
+      if (!blocked(x, y)) continue
+      hit = { x, y }
+      break
+    }
+    if (!hit) {
+      points.push(to)
+      return points
+    }
+    lastHit = hit
+    let stepped = false
+    for (const opening of farOpenings(hit.x, hit.y, blocked)) {
+      const gate = { x: opening.x + 0.5, y: opening.y + 0.5 }
+      const approach = approachGate(cursor, opening.x, opening.y, blocked)
+      if (lineHits(cursor, approach, blocked)) continue
+      if (Math.hypot(gate.x - approach.x, gate.y - approach.y) >= 0.01 && lineHits(approach, gate, blocked)) continue
+      if (Math.hypot(approach.x - cursor.x, approach.y - cursor.y) < 0.01 && Math.hypot(gate.x - approach.x, gate.y - approach.y) < 0.01) continue
+      if (Math.hypot(approach.x - cursor.x, approach.y - cursor.y) >= 0.01) points.push(approach)
+      if (Math.hypot(gate.x - approach.x, gate.y - approach.y) >= 0.01) {
+        points.push(gate)
+        cursor = gate
+      } else {
+        cursor = approach
+      }
+      stepped = true
+      break
+    }
+    if (!stepped) return stop(hit.x, hit.y)
+  }
+  return stop(lastHit.x, lastHit.y)
 }
 
-function farBlocked(terrain: Uint8Array, x: number, y: number, seed: number) {
+/** The open tile beside a gap, on the side the walker is coming from. */
+function approachGate(
+  cursor: TilePoint,
+  openX: number,
+  openY: number,
+  blocked: (x: number, y: number) => boolean,
+): TilePoint {
+  const towardX = Math.sign(cursor.x - (openX + 0.5))
+  const towardY = Math.sign(cursor.y - (openY + 0.5))
+  if (towardX !== 0 && !blocked(openX + towardX, openY)) return { x: openX + towardX + 0.5, y: openY + 0.5 }
+  if (towardY !== 0 && !blocked(openX, openY + towardY)) return { x: openX + 0.5, y: openY + towardY + 0.5 }
+  return { x: openX + 0.5, y: openY + 0.5 }
+}
+
+/** Whether the straight step enters a blocked tile. */
+function lineHits(a: TilePoint, b: TilePoint, blocked: (x: number, y: number) => boolean) {
+  const steps = Math.max(1, Math.min(4000, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y))))
+  for (let step = 1; step < steps; step++) {
+    const x = Math.floor(a.x + ((b.x - a.x) * step) / steps)
+    const y = Math.floor(a.y + ((b.y - a.y) * step) / steps)
+    if (blocked(x, y)) return true
+  }
+  return false
+}
+
+function farBlocked(
+  terrain: Uint8Array,
+  x: number,
+  y: number,
+  seed: number,
+  goalX: number,
+  goalY: number,
+  opened: ReadonlySet<string>,
+  bridge: boolean,
+  crossings: TileArea[],
+) {
   if (x >= MAP_LEFT && x < MAP_RIGHT && y >= MAP_TOP && y < MAP_BOTTOM) {
     const kind = terrain[(y - MAP_TOP) * MAP_WIDTH + (x - MAP_LEFT)]
-    return kind === Terrain.Water || kind === Terrain.Mountain || kind === Terrain.Ravine
+    if (x === goalX && y === goalY && (kind === Terrain.Thicket || kind === Terrain.Rockfall)) return false
+    if (kind === Terrain.Water) {
+      return !(bridge && x >= BRIDGE_DECK.x && x < BRIDGE_DECK.x + BRIDGE_DECK.width && y >= BRIDGE_DECK.y && y < BRIDGE_DECK.y + BRIDGE_DECK.height)
+    }
+    if (kind === Terrain.Ravine) {
+      return !crossings.some((area) => x >= area.x && x < area.x + area.width && y >= area.y && y < area.y + area.height)
+    }
+    return kind === Terrain.Mountain || kind === Terrain.Thicket || kind === Terrain.Rockfall
   }
-  return farWater(x, y, seed)
+  if (opened.has(`${x},${y}`)) return false
+  const kind = farKind(x, y, seed)
+  if (x === goalX && y === goalY && (kind === 'thicket' || kind === 'rockfall')) return false
+  return farBlocksKind(kind) || farWater(x, y, seed)
 }
 
 /**
- * The land around the first campfire. The camp area keeps the features the server's workplaces expect
- * (forest west, stones north, berries south-west, reeds by the river); the ravine, the cave, the lookout, the passes
- * and the thickets come from the server's `wilds`; the rest is generated from `seed`, so every village has its own land
- * and every viewer of a village sees the same one.
+ * The land around the first campfire. Clearings stay open for the camp, the road and the workplaces.
+ * Woods and stones use the same rolls as the land beyond the picture. The ravine, the cave and the lookout
+ * come from the server's `wilds`. `seed` is the village, so every viewer sees the same land.
  */
 export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
   const next = random(seed)
-  const forestNoise = valueNoise(seed + 1, 9)
   const detailNoise = valueNoise(seed + 2, 3)
   const stoneNoise = valueNoise(seed + 3, 7)
   const ground: TileRef[][] = []
@@ -867,25 +998,13 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
     ground.push(row)
   }
 
-  // The server's wild land. Ridges wall in the cave and the lookout and run out from both sides of each pass; their
-  // tiles are kept now and raised with the other mountains.
-  const nearCamp = (x: number, y: number) =>
-    x >= -MOUNTAIN_CLEARANCE && y >= -MOUNTAIN_CLEARANCE && x < CORE_WIDTH + MOUNTAIN_CLEARANCE && y < CORE_HEIGHT + MOUNTAIN_CLEARANCE
-  const featureRidges: Array<{ x: number; y: number }> = []
-  const ridgeAt = (x: number, y: number) => {
-    if (!inside(x, y) || nearCamp(x, y) || occupied.has(index(x, y))) return
-    featureRidges.push({ x, y })
-    mark(x, y)
-  }
+  // The cave mouth and the lookout stay. Hills, hedges and rockfalls do not stand around the camp.
   const trail: MapLayout['trail'] = []
   if (wilds) {
     for (const span of wilds.ravine) {
       mark(span.x, span.top - 1)
       mark(span.x, span.top, 1, span.height, Terrain.Ravine)
       mark(span.x, span.top + span.height)
-    }
-    for (const obstacle of wilds.obstacles) {
-      mark(obstacle.x, obstacle.y, 1, 1, obstacle.kind === 'Thicket' ? Terrain.Thicket : Terrain.Rockfall)
     }
     const { caveX, caveY, lookoutX, lookoutY } = wilds
     mark(caveX, caveY, 1, 1, Terrain.Cave)
@@ -894,29 +1013,6 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
     mark(lookoutX, lookoutY + 1, 1, 1, Terrain.Trail)
     trail.push({ x: lookoutX, y: lookoutY + 1 })
     mark(lookoutX - 1, lookoutY + 2, 3, 1)
-    for (let dx = -3; dx <= 3; dx++) ridgeAt(caveX + dx, caveY - 1)
-    for (let dx = -2; dx <= 2; dx++) ridgeAt(caveX + dx, caveY - 2)
-    ridgeAt(caveX - 1, caveY)
-    ridgeAt(caveX + 1, caveY)
-    for (let dy = -2; dy <= 1; dy++) {
-      for (let dx = -2; dx <= 2; dx++) {
-        if (Math.abs(dx) === 2 && dy !== -1 && dy !== 0) continue
-        ridgeAt(lookoutX + dx, lookoutY + dy)
-      }
-    }
-    for (const pass of wilds.passes) {
-      for (let arm = 1; arm <= PASS_ARM; arm++) {
-        for (let side = 0; side < 2; side++) {
-          if (pass.horizontal) {
-            ridgeAt(pass.x - arm, pass.y + side)
-            ridgeAt(pass.x + 1 + arm, pass.y + side)
-          } else {
-            ridgeAt(pass.x + side, pass.y - arm)
-            ridgeAt(pass.x + side, pass.y + 1 + arm)
-          }
-        }
-      }
-    }
   }
 
   // The river runs the whole height of the map.
@@ -983,22 +1079,10 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
     }
   }
 
-  // Loose stones on the hillside north of the camp.
-  for (const [x, y] of [[9, 1], [10, 1], [11, 1], [9, 2], [10, 3], [11, 2], [12, 2], [8, 3], [12, 4]]) {
-    setGround(x, y, town(43))
-    mark(x, y, 1, 1, Terrain.Stone)
-  }
-
-  // Berry bushes in the meadow south-west of the camp.
+  // The old berry rolls stay, so the ponds and the bank keep their places. The bushes themselves do not.
   for (let y = 16; y <= 20; y++) {
-    for (let x = 1; x <= 7; x++) {
-      if (next() < 0.45) {
-        bushes.push({ x: x + 0.5, y: y + 0.6 })
-        mark(x, y, 1, 1, Terrain.Bush)
-      }
-    }
+    for (let x = 1; x <= 7; x++) next()
   }
-  mark(1, 16, 7, 5)
 
   // The old bank rolls stay, so the meadows beyond them keep their places. The reeds themselves went with the river.
   for (let y = 14; y <= 22; y++) {
@@ -1021,84 +1105,6 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
   mark(bellTower.x - 3, bellTower.y - 1, 7, 6, Terrain.Clearing)
   mark(RIVER_RIGHT + 1, ROAD_TOP, MAP_RIGHT - RIVER_RIGHT - 1, 2, Terrain.Clearing)
   mark(VEIN_OUTCROP.x - 1, VEIN_OUTCROP.y - 1, VEIN_OUTCROP.width + 2, VEIN_OUTCROP.height + 2, Terrain.Clearing)
-  for (let y = VEIN_OUTCROP.y; y < VEIN_OUTCROP.y + VEIN_OUTCROP.height; y++) {
-    for (let x = VEIN_OUTCROP.x; x < VEIN_OUTCROP.x + VEIN_OUTCROP.width; x++) {
-      setGround(x, y, town(43))
-      mark(x, y, 1, 1, Terrain.Stone)
-    }
-  }
-
-  // Mountain ridges out in the wild, beyond what the camp first sees: the server's features first, then a few more.
-  // Long ridges keep a pass through them, so a ridge never walls off the land behind it.
-  const raiseMountain = (x: number, y: number) => {
-    mark(x, y, 1, 1, Terrain.Mountain)
-    const looks = next() < 0.3 ? MOSSY_PEAKS : MOUNTAIN_PEAKS
-    mountains.push({ x, y, peak: looks[Math.floor(next() * looks.length)] })
-  }
-  for (const ridge of featureRidges) raiseMountain(ridge.x, ridge.y)
-  for (let attempt = 0, ridges = 0; attempt < 40 && ridges < MOUNTAIN_RIDGES; attempt++) {
-    let x = MAP_LEFT + 4 + next() * (MAP_WIDTH - 8)
-    let y = MAP_TOP + 4 + next() * (MAP_HEIGHT - 8)
-    if (nearCamp(Math.floor(x), Math.floor(y))) continue
-    let heading = next() * Math.PI * 2
-    const length = 10 + Math.floor(next() * 20)
-    const pass = length >= 16 ? Math.floor(length * (0.3 + next() * 0.4)) : -Infinity
-    const ridge = new Map<number, { x: number; y: number }>()
-    for (let step = 0; step < length; step++) {
-      heading += (next() - 0.5) * 0.8
-      x += Math.cos(heading)
-      y += Math.sin(heading)
-      if (Math.abs(step - pass) <= 2) continue
-      const radius = 0.9 + next() * 0.8
-      for (let row = Math.floor(y - radius); row <= y + radius; row++) {
-        for (let column = Math.floor(x - radius); column <= x + radius; column++) {
-          if (Math.hypot(column + 0.5 - x, row + 0.5 - y) > radius) continue
-          if (!inside(column, row) || nearCamp(column, row) || occupied.has(index(column, row))) continue
-          ridge.set(index(column, row), { x: column, y: row })
-        }
-      }
-    }
-    if (ridge.size < 8) continue
-    ridges++
-    for (const peak of ridge.values()) raiseMountain(peak.x, peak.y)
-  }
-  // Land the ridges close in, with water or with each other, becomes part of the mountain, so every open tile that
-  // could be walked to without the mountains still can be once the bridges stand and the obstacles are cleared. The
-  // server's features stay as they are.
-  const reach = (climbing: boolean) => {
-    const reached = new Uint8Array(MAP_WIDTH * MAP_HEIGHT)
-    const queue = [index(Math.floor(CAMPFIRE.x), Math.floor(CAMPFIRE.y))]
-    reached[queue[0]] = 1
-    while (queue.length > 0) {
-      const node = queue.pop()!
-      const x = (node % MAP_WIDTH) + MAP_LEFT
-      const y = Math.floor(node / MAP_WIDTH) + MAP_TOP
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = x + dx
-        const ny = y + dy
-        if (!inside(nx, ny)) continue
-        const neighbour = index(nx, ny)
-        if (reached[neighbour] || (!climbing && terrain[neighbour] === Terrain.Mountain)) continue
-        const onDeck = nx >= BRIDGE_DECK.x && nx < BRIDGE_DECK.x + BRIDGE_DECK.width && ny >= BRIDGE_DECK.y && ny < BRIDGE_DECK.y + BRIDGE_DECK.height
-        if (terrain[neighbour] === Terrain.Water && !onDeck) continue
-        reached[neighbour] = 1
-        queue.push(neighbour)
-      }
-    }
-    return reached
-  }
-  const walkable = reach(false)
-  const climbable = reach(true)
-  const kept: number[] = [Terrain.Mountain, Terrain.Ravine, Terrain.Thicket, Terrain.Rockfall, Terrain.Cave, Terrain.Lookout, Terrain.Trail]
-  for (let node = 0; node < terrain.length; node++) {
-    if (walkable[node] || !climbable[node] || kept.includes(terrain[node])) continue
-    raiseMountain((node % MAP_WIDTH) + MAP_LEFT, Math.floor(node / MAP_WIDTH) + MAP_TOP)
-  }
-  const onMountain = (point: { x: number; y: number }) => terrain[index(Math.floor(point.x), Math.floor(point.y))] === Terrain.Mountain
-  reeds.splice(0, reeds.length, ...reeds.filter((reed) => !onMountain(reed)))
-  bushes.splice(0, bushes.length, ...bushes.filter((bush) => !onMountain(bush)))
-  marsh.splice(0, marsh.length, ...marsh.filter((wet) => !onMountain(wet)))
-
   const plantTree = (x: number, y: number) => {
     const look = TREE_TILES[Math.floor(next() * TREE_TILES.length)]
     // Trees of the forest area come from the server; the roll and the mark still happen so the wild keeps its look.
@@ -1107,33 +1113,17 @@ export function buildLayout(seed: number, wilds: Wilds | null): MapLayout {
     mark(x, y, 1, 1, Terrain.Tree)
   }
 
-  // Camp area: forest on the left, hunting woods in the south, groves elsewhere.
-  const plant = (x0: number, y0: number, x1: number, y1: number, density: number) => {
-    for (let y = y0; y <= y1; y++) {
-      for (let x = x0; x <= x1; x++) {
-        if (occupied.has(index(x, y)) || next() > density) continue
-        plantTree(x, y)
-      }
-    }
-  }
-  plant(0, 0, 7, 11, 0.8)
-  plant(0, 21, 16, 25, 0.55)
-  plant(0, 0, 29, 3, 0.3)
-  plant(34, 0, 43, 25, 0.45)
-  plant(8, 4, 29, 20, 0.08)
-  plant(17, 21, 29, 25, 0.3)
-
-  // The wild: forests and stony ground follow the noise; bushes and lone trees dot the meadows.
+  // The same groves and outcrops as the land beyond the picture. Clearings stay bare.
   for (let y = MAP_TOP; y < MAP_BOTTOM; y++) {
     for (let x = MAP_LEFT; x < MAP_RIGHT; x++) {
-      if (inCore(x, y) || occupied.has(index(x, y))) continue
-      const forest = forestNoise(x, y) * 0.75 + detailNoise(x, y) * 0.25
+      if (occupied.has(index(x, y))) continue
+      const forest = forestCover(seed, x, y)
       const stone = stoneNoise(x, y)
-      const roll = next()
-      if (stone > 0.74 && forest < 0.55) {
+      const roll = farRoll(seed + 5, x, y)
+      if (stoneOutcrop(x, y, forest, stone)) {
         setGround(x, y, town(43))
         mark(x, y, 1, 1, Terrain.Stone)
-      } else if (forest > 0.56 ? roll < 0.85 : forest > 0.48 ? roll < 0.3 : roll < 0.03) {
+      } else if (wildTree(x, y, forest, roll)) {
         plantTree(x, y)
       } else if (forest > 0.4 && forest < 0.5 && roll > 0.97) {
         bushes.push({ x: x + 0.5, y: y + 0.6 })
@@ -1210,6 +1200,14 @@ export const RESOURCE_ICONS: Record<string, TileRef> = {
   IronPickaxe: PICKAXE,
   SteelPickaxe: PICKAXE,
   Moonstone: rogue(563),
+  Flint: ROCKS,
+  Clay: farm(89),
+  Brick: town(73),
+  Salt: town(93),
+  Herbs: farm(80),
+  CopperOre: dungeon(41),
+  Copper: dungeon(102),
+  Resin: town(29),
   Parchment: rogue(896),
   TeleportScroll: rogue(898),
 }
@@ -1245,6 +1243,8 @@ export const TASK_ICONS: Record<string, TileRef> = {
   'clear-thicket': town(127),
   'break-rockfall': PICKAXE,
   'dig-cave': PICKAXE,
+  'dig-coal': RESOURCE_ICONS.Coal,
+  'dig-iron': RESOURCE_ICONS.IronOre,
   'deliver-iron': RESOURCE_ICONS.IronIngot,
   build: HAMMER,
   expedition: town(119),
@@ -1326,6 +1326,20 @@ export const TASK_ICONS: Record<string, TileRef> = {
   'lay-deck': RESOURCE_ICONS.Planks,
   'lend-a-hand': HAMMER,
   'chip-moonstone': RESOURCE_ICONS.Moonstone,
+  'gather-herbs': RESOURCE_ICONS.Herbs,
+  'gather-flint': RESOURCE_ICONS.Flint,
+  'dig-clay': RESOURCE_ICONS.Clay,
+  'scrape-salt': RESOURCE_ICONS.Salt,
+  'tap-resin': RESOURCE_ICONS.Resin,
+  'dig-copper': RESOURCE_ICONS.CopperOre,
+  'knapp-arrows': RESOURCE_ICONS.Arrows,
+  'pitch-bow': RESOURCE_ICONS.Bow,
+  'lay-bricks': RESOURCE_ICONS.Brick,
+  'fire-bricks': RESOURCE_ICONS.Brick,
+  'smelt-copper': RESOURCE_ICONS.Copper,
+  'wire-mechanism': RESOURCE_ICONS.Mechanism,
+  'brew-herbs': RESOURCE_ICONS.Remedy,
+  'salt-food': RESOURCE_ICONS.Food,
   'scrape-parchment': RESOURCE_ICONS.Parchment,
   'write-teleport-scroll': RESOURCE_ICONS.TeleportScroll,
   'bring-moonstones': RESOURCE_ICONS.Moonstone,

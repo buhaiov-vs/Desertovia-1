@@ -65,16 +65,117 @@ public class WildernessTests
         }
 
         Assert.All(wilds.Ravine, span => Assert.True(span.Top + span.Height <= 0));
-        Assert.Equal(3, wilds.Passes.Count);
-        Assert.Equal(12, wilds.Obstacles.Count(o => o.Kind == ObstacleKind.Rockfall));
-        Assert.Contains(wilds.Obstacles, o => o.Kind == ObstacleKind.Thicket);
+        Assert.Empty(wilds.Passes);
+        Assert.DoesNotContain(wilds.Obstacles, o => o.Kind is ObstacleKind.Rockfall or ObstacleKind.Thicket);
         Assert.All(wilds.Obstacles, o =>
         {
             Assert.True(WorldMap.Land.Contains(o.Tile));
             Assert.False(WorldMap.BuildArea.Overlaps(o.Tile));
         });
         Assert.True(WorldMap.Land.Contains(new TileArea(wilds.CaveX, wilds.CaveY, 1, 1)));
+        Assert.False(WorldMap.Vale.Contains(new TileArea(wilds.CaveX, wilds.CaveY, 1, 1)));
+        var mouth = new TilePoint(wilds.CaveX + 0.5, wilds.CaveY + 0.5);
+        Assert.InRange(mouth.DistanceTo(WorldMap.Places[WorldMap.Camp]), CaveSite.Near, CaveSite.Far);
+        Assert.Equal((wilds.CaveX, wilds.CaveY), (CaveSite.At(Wilderness.Seed(new Guid(seed, 0, 0, new byte[8]).ToString())).X, CaveSite.At(Wilderness.Seed(new Guid(seed, 0, 0, new byte[8]).ToString())).Y));
+        var mines = new[] { (wilds.CaveX, wilds.CaveY), (wilds.CoalX, wilds.CoalY), (wilds.IronX, wilds.IronY), (wilds.MoonX, wilds.MoonY) };
+        Assert.Equal(4, mines.Distinct().Count());
+        for (var i = 0; i < mines.Length; i++)
+        {
+            Assert.False(WorldMap.Vale.Contains(new TileArea(mines[i].Item1, mines[i].Item2, 1, 1)));
+            for (var j = i + 1; j < mines.Length; j++)
+            {
+                var apart = new TilePoint(mines[i].Item1 + 0.5, mines[i].Item2 + 0.5)
+                    .DistanceTo(new TilePoint(mines[j].Item1 + 0.5, mines[j].Item2 + 0.5));
+                Assert.True(apart >= CaveSite.Apart);
+            }
+        }
+        var gold = wilds.Gold.Select(vein => vein.Level).OrderBy(level => level).ToArray();
+        Assert.Equal(GoldVein.Levels, gold);
+        Assert.All(wilds.Gold, vein =>
+        {
+            Assert.False(WorldMap.Vale.Contains(vein.Center.ToTile()));
+            Assert.True(vein.Center.DistanceTo(WorldMap.Places[WorldMap.Camp]) > 1_000);
+            var den = SpawnRings.Points(Wilderness.Seed(new Guid(seed, 0, 0, new byte[8]).ToString())).First(point => point.Level == vein.Level);
+            Assert.True(vein.Center.DistanceTo(den.Center) > den.Claim / 2.0);
+        });
         Assert.True(WorldMap.Land.Contains(new TileArea(wilds.LookoutX, wilds.LookoutY, 1, 1)));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void GeneratedThickets_StayOffTheCamp(int seed)
+    {
+        var wilds = Wilderness.Generate(new Guid(seed, 0, 0, new byte[8]));
+
+        Assert.DoesNotContain(wilds.Obstacles, o => o.Kind is ObstacleKind.Thicket or ObstacleKind.Rockfall);
+        Assert.Empty(wilds.Passes);
+    }
+
+    [Fact]
+    public void OldThicketBlob_GrowsIntoAHedge_Once()
+    {
+        var village = NewVillage();
+        village.Wilds = new Wilds
+        {
+            Ravine = [],
+            Obstacles =
+            [
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -30, Y = 40 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -31, Y = 40 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -29, Y = 40 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -30, Y = 39 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -30, Y = 41 },
+            ],
+            CaveX = -20,
+            CaveY = 0,
+            LookoutX = -30,
+            LookoutY = 20,
+        };
+
+        Assert.True(Wilderness.ClearAroundVillage(village));
+        Assert.Empty(village.Wilds.Obstacles);
+        Assert.False(Wilderness.ClearAroundVillage(village));
+    }
+
+    [Fact]
+    public void StraightThicket_IsLeftAlone()
+    {
+        var village = NewVillage();
+        village.Wilds = new Wilds
+        {
+            Obstacles = Enumerable.Range(0, 8).SelectMany(step => new[]
+            {
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -30 + step, Y = 40 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -30 + step, Y = 41 },
+            }).ToList(),
+        };
+
+        Assert.True(Wilderness.ClearAroundVillage(village));
+        Assert.Empty(village.Wilds.Obstacles);
+        Assert.False(Wilderness.ClearAroundVillage(village));
+    }
+
+    [Fact]
+    public void ClearedThicket_IsNotFilledIn()
+    {
+        var village = NewVillage();
+        village.Wilds = new Wilds
+        {
+            Obstacles =
+            [
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -30, Y = 40 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -31, Y = 40 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -29, Y = 40 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -30, Y = 39 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -30, Y = 41 },
+                new Obstacle { Kind = ObstacleKind.Thicket, X = -31, Y = 39, ClearedAt = Now },
+            ],
+        };
+
+        Assert.True(Wilderness.ClearAroundVillage(village));
+        Assert.Empty(village.Wilds.Obstacles);
     }
 
     [Fact]
@@ -175,7 +276,7 @@ public class WildernessTests
 
         Assert.Equal(village.Wilds!.CaveMouth, citizen.Spot);
         Assert.Contains(report.Produced, p => p.Resource == ResourceKind.Stone && p.Amount > 0);
-        Assert.All(report.Produced, p => Assert.Contains(p.Resource, new[] { ResourceKind.Stone, ResourceKind.Coal, ResourceKind.IronOre }));
+        Assert.All(report.Produced, p => Assert.Equal(ResourceKind.Stone, p.Resource));
     }
 
     [Fact]
@@ -219,5 +320,34 @@ public class WildernessTests
         village.Explore([], village.TsarTrip!.ArrivesAt);
 
         Assert.False(Seen(village, lookout.X, lookout.Y - 20));
+    }
+
+    [Fact]
+    public void FarThicket_IsRecordedWhenCleared_AndNotFilledBack()
+    {
+        var village = Wild();
+        var seed = Wilderness.Seed(village.Id.ToString());
+        int? foundX = null;
+        int? foundY = null;
+        var land = WorldMap.Land;
+        for (var y = land.Y; foundX is null && y < land.Y + land.Height; y += 16)
+        {
+            for (var x = land.X; x < land.X + land.Width; x += 16)
+            {
+                if (FarWilds.At(x, y, seed) != FarWilds.Kind.Thicket) continue;
+                foundX = x;
+                foundY = y;
+                break;
+            }
+        }
+
+        Assert.NotNull(foundX);
+        var spot = new TilePoint(foundX!.Value + 0.5, foundY!.Value + 0.5);
+        Assert.True(Wilderness.Clear(village, ObstacleKind.Thicket, 3, spot, Now) > 0);
+        Assert.Contains(village.Wilds!.Obstacles, obstacle => obstacle.X == foundX && obstacle.Y == foundY && obstacle.ClearedAt is not null);
+        var count = village.Wilds.Obstacles.Count;
+        Wilderness.Clear(village, ObstacleKind.Thicket, 3, spot, Now);
+        Assert.Equal(count, village.Wilds.Obstacles.Count);
+        Assert.Contains(village.Wilds.Obstacles, obstacle => obstacle.X == foundX && obstacle.Y == foundY && obstacle.ClearedAt is not null);
     }
 }

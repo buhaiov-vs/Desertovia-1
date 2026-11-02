@@ -1091,6 +1091,7 @@ public sealed partial class GameService(
     public async Task<CitizenDto> GoToAsync(string slug, Guid accountId, GoToRequest request, CancellationToken cancellationToken)
     {
         var key = await RequireCitizenAsync(slug, accountId, cancellationToken);
+        dens.ClearAttack(key.Id);
         if (await GoToInDenFightAsync(key.Id, request.Spot, cancellationToken) is { } fighting)
         {
             return fighting;

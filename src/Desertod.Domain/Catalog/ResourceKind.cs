@@ -39,4 +39,12 @@ public enum ResourceKind
     Moonstone,
     Parchment,
     TeleportScroll,
+    Flint,
+    Clay,
+    Brick,
+    Salt,
+    Herbs,
+    CopperOre,
+    Copper,
+    Resin,
 }

@@ -19,6 +19,7 @@ import {
 import { UndeadPanel } from './RaidBanner'
 import { DungeonPanel } from './Dungeon'
 import type { FeedEntry } from '../hooks'
+import { isWildPlace } from '../game/wildGoods'
 import { useI18n } from '../i18n'
 import type { UiKey } from '../i18n/en'
 import { BuildPanel } from './BuildPanel'
@@ -123,7 +124,7 @@ export function GameMenu(props: MenuProps) {
   const built = new Set<string>([...builtKinds(village, catalog), ...village.structures.filter(s=>s.ownerAccountId===props.me.id).map(s=>s.kind), ...village.completedProjects])
   const discovered = discoveredTechnologies(village)
   // Project tasks only show while a project runs, and only the ones it has use for.
-  const visibleTask = (task: Task) => task.id!=='rescue-wounded' && projectWants(village.project, task)
+  const visibleTask = (task: Task) => task.id!=='rescue-wounded' && !isWildPlace(task.workplace) && projectWants(village.project, task)
   const projectTasks = village.project ? catalog.tasks.filter((task) => isProjectTask(task) && visibleTask(task)) : []
   const expedition = catalog.tasks.find((task) => task.id === 'expedition')
   const roam = catalog.tasks.find((task) => task.id === 'roam')

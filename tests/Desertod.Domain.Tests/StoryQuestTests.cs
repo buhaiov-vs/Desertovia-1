@@ -6,6 +6,7 @@ using Desertod.Domain.Quests;
 using Desertod.Domain.Rules;
 using Desertod.Domain.Skills;
 using Desertod.Domain.Stats;
+using Desertod.Domain.World;
 using static Desertod.Domain.Tests.TestWorld;
 
 namespace Desertod.Domain.Tests;
@@ -210,6 +211,8 @@ public class StoryQuestTests
         Assert.Equal("task.needsProject", error.Code);
 
         var afterBridge = new WorkContext { Village = village, RecentCitizenCount = 1, CompletedProjects = new HashSet<string> { ProjectCatalog.TsarBridge } };
+        var vein = village.Wilds!.Gold.MinBy(item => item.Center.DistanceTo(WorldMap.Places[WorldMap.Camp]))!;
+        digger.IdleSpot = vein.Center;
         var now = Now;
         var report = Work(digger, GoldVein.DigTask, afterBridge, ref now);
         Assert.Equal(ResourceKind.Gold, Assert.Single(report.Produced).Resource);
@@ -217,13 +220,15 @@ public class StoryQuestTests
         QuestRules.Credit(village, [quest], report);
         Assert.Single(quest.Contributions);
 
-        village.GoldVeinMined = GoldVein.Size - 1;
+        vein.Mined = GoldVein.Size - 1;
+        digger.IdleSpot = vein.Center;
         var last = Work(digger, GoldVein.DigTask, afterBridge, ref now);
         Assert.Equal(1, last.Produced.Sum(p => p.Amount));
-        Assert.True(GoldVein.IsEmpty(village));
+        Assert.Equal(0, vein.Remaining);
 
-        var empty = Assert.Throws<GameRuleException>(() => CycleEngine.Start(digger, Task(GoldVein.DigTask), afterBridge, now));
+        var empty = Assert.Throws<GameRuleException>(() => CycleEngine.Start(digger, Task(GoldVein.DigTask), afterBridge, now, vein.Center));
         Assert.Equal("task.veinEmpty", empty.Code);
+        Assert.False(GoldVein.IsEmpty(village));
     }
 
     [Theory]

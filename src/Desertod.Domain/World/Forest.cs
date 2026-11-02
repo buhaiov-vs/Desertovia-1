@@ -37,60 +37,66 @@ public static class Forest
     /// <summary>Camp land up to the river; the web client mirrors it.</summary>
     public static TileArea Area { get; } = new(0, 0, 30, 26);
 
-    /// <summary>Groves planted on new land, with the share of tiles that get a tree. The web client used the same ones.</summary>
-    private static readonly (TileArea Area, double Density)[] Groves =
-    [
-        (new TileArea(0, 0, 8, 12), 0.8),
-        (new TileArea(0, 21, 17, 5), 0.55),
-        (new TileArea(0, 0, 30, 4), 0.3),
-        (new TileArea(8, 4, 22, 17), 0.08),
-        (new TileArea(17, 21, 13, 5), 0.3),
-    ];
-
-    /// <summary>Ground that never grows trees: the clearing and the bare plot east of it, the trail to the gate, stones, berry bushes and reeds.</summary>
+    /// <summary>Ground that never grows trees: the campfire, the bare plot, the trail to the gate and the reeds.</summary>
     private static readonly TileArea[] Bare =
     [
         new(12, 10, 7, 7),
         new(15, 8, 3, 4),
         new(0, 12, 12, 3),
         new(17, 12, WorldMap.PlotWidth, WorldMap.PlotHeight),
-        new(1, 16, 7, 5),
         new(28, 14, 2, 9),
-        new(9, 1, 3, 1),
-        new(9, 2, 1, 1),
-        new(11, 2, 2, 1),
-        new(8, 3, 1, 1),
-        new(10, 3, 1, 1),
-        new(12, 4, 1, 1),
     ];
 
-    /// <summary>Trees of new land, different for every village.</summary>
-    public static List<Tree> Plant(Random random)
+    /// <summary>Trees of the camp land. The same rolls as the woods drawn past it, so the picture does not stop.</summary>
+    public static List<Tree> Plant(uint seed)
     {
-        var planted = new HashSet<(int X, int Y)>();
         var trees = new List<Tree>();
-        foreach (var (area, density) in Groves)
+        for (var y = Area.Y; y < Area.Y + Area.Height; y++)
         {
-            for (var y = area.Y; y < area.Y + area.Height; y++)
+            for (var x = Area.X; x < Area.X + Area.Width; x++)
             {
-                for (var x = area.X; x < area.X + area.Width; x++)
+                if (!Open(x, y) || !WildCover.Tree(seed, x, y))
                 {
-                    var tile = new TileArea(x, y, 1, 1);
-                    if (random.NextDouble() > density
-                        || !Area.Contains(tile)
-                        || Bare.Any(bare => bare.Overlaps(tile))
-                        || WorldMap.ReservedAreas.Any(reserved => reserved.Overlaps(tile))
-                        || !planted.Add((x, y)))
-                    {
-                        continue;
-                    }
-
-                    trees.Add(new Tree { X = x, Y = y });
+                    continue;
                 }
+
+                trees.Add(new Tree { X = x, Y = y });
             }
         }
 
         return trees;
+    }
+
+    /// <summary>
+    /// Makes the standing trees follow <see cref="WildCover"/>. A tree someone has started chopping stays.
+    /// Returns true when a tree was added or an untouched one was taken away.
+    /// </summary>
+    public static bool MatchTheWild(Village village)
+    {
+        var wanted = Plant(Wilderness.Seed(village.Id.ToString()))
+            .Select(tree => (tree.X, tree.Y))
+            .ToHashSet();
+        var changed = village.Trees.RemoveAll(tree => tree.Chopped == 0 && !wanted.Contains((tree.X, tree.Y))) > 0;
+        foreach (var (x, y) in wanted)
+        {
+            if (village.Trees.Exists(tree => tree.X == x && tree.Y == y))
+            {
+                continue;
+            }
+
+            village.Trees.Add(new Tree { X = x, Y = y });
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private static bool Open(int x, int y)
+    {
+        var tile = new TileArea(x, y, 1, 1);
+        return Area.Contains(tile)
+            && !Bare.Any(bare => bare.Overlaps(tile))
+            && !WorldMap.ReservedAreas.Any(reserved => reserved.Overlaps(tile));
     }
 
     /// <summary>A felled tree stands again once its stump had time to grow, unless a building covers it.</summary>

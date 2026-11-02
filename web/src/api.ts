@@ -1098,8 +1098,15 @@ export interface Wilds {
   obstacles: Array<{ kind: 'Thicket' | 'Rockfall'; x: number; y: number; cleared: boolean }>
   caveX: number
   caveY: number
+  coalX: number
+  coalY: number
+  ironX: number
+  ironY: number
+  moonX: number
+  moonY: number
   lookoutX: number
   lookoutY: number
+  gold: Array<{ x: number; y: number; level: number; remaining: number }>
 }
 
 /** Active foot trip of the Tsar or a citizen — the map places the sprite with the same wall clock as fog. */

@@ -41,12 +41,20 @@ export const SPOTS = 8
 export const PROTECTORS_PER_DEN = 8
 export const PACK_CLAIM = 48
 export const SINGLE_CLAIM = 64
-/** A den lands up to this many tiles past its floor; the next ring starts 541 tiles out. */
-export const SPREAD = 400
+/** A den lands up to this many tiles past its floor; the next ring starts about 270 tiles out. */
+export const SPREAD = 200
 /** A den turns up to this far either side of its direction, in radians (18 degrees). */
 export const SWAY = Math.PI / 10
 /** Random places tried before the den falls back to its own ring. */
 const SCATTER_TRIES = 6
+
+/** Closest the cave may stand, in tiles. A healthy walker takes 6 minutes. Wood groves start here too. */
+export const CAVE_NEAR = 600
+/** Farthest the cave may stand, in tiles. A healthy walker takes 1 hour. */
+export const CAVE_FAR = 6_000
+const CAVE_TRIES = 48
+/** The home picture. The cave is never placed inside it. Mirrors the server's vale. */
+const VALE = { x: -44, y: -32, width: 120, height: 90 }
 
 const level = (level: number, name: string, floor: number, protectors: number, kind: EnemyKind | null): SpawnLevel => ({
   level,
@@ -57,36 +65,36 @@ const level = (level: number, name: string, floor: number, protectors: number, k
 })
 
 export const SPAWN_LEVELS: readonly SpawnLevel[] = [
-  level(1, 'Plain slime', 600, 3, null),
-  level(2, 'Grave rat', 1_141, 4, 'Rat'),
-  level(3, 'Imp', 1_682, 2, 'Imp'),
-  level(4, 'Small goblin', 2_223, 3, null),
-  level(5, 'Wolf', 2_764, 4, 'Wolf'),
-  level(6, 'Boar', 3_305, 3, 'Boar'),
-  level(7, 'Goblin with a club', 3_846, 3, null),
-  level(8, 'Hooded orc', 4_387, 1, null),
-  level(9, 'Scarecrow', 4_928, 1, null),
-  level(10, 'Ghoul', 5_469, 2, 'Ghoul'),
-  level(11, 'Goblin with a sword', 6_010, 3, null),
-  level(12, 'Banner goblin', 6_551, 3, null),
-  level(13, 'Wraith', 7_092, 1, 'Wraith'),
-  level(14, 'Poison plant', 7_633, 1, null),
-  level(15, 'Flaming slime', 8_174, 1, null),
-  level(16, 'Orc with one axe', 8_715, 1, null),
-  level(17, 'Bear', 9_256, 1, 'Bear'),
-  level(18, 'Orc warrior', 9_797, 1, null),
-  level(19, 'Vampire', 10_338, 1, null),
-  level(20, 'Orc berserk', 10_879, 1, null),
-  level(21, 'Orc shaman', 11_420, 1, null),
-  level(22, 'Winged vampire', 11_961, 1, null),
-  level(23, 'Orc with two swords', 12_502, 1, null),
-  level(24, 'Zombie', 13_043, 1, 'Zombie'),
-  level(25, 'Fire spirit', 13_584, 1, null),
-  level(26, 'Skeleton', 14_125, 1, 'Skeleton'),
-  level(27, 'Armored orc', 14_666, 1, null),
-  level(28, 'Fortress knight', 15_207, 1, null),
-  level(29, 'Barrow king', 15_748, 1, 'BarrowKing'),
-  level(30, 'Lich', 16_289, 1, null),
+  level(1, 'Plain slime', 300, 3, null),
+  level(2, 'Grave rat', 570, 4, 'Rat'),
+  level(3, 'Imp', 841, 2, 'Imp'),
+  level(4, 'Small goblin', 1_111, 3, null),
+  level(5, 'Wolf', 1_382, 4, 'Wolf'),
+  level(6, 'Boar', 1_652, 3, 'Boar'),
+  level(7, 'Goblin with a club', 1_923, 3, null),
+  level(8, 'Hooded orc', 2_193, 1, null),
+  level(9, 'Scarecrow', 2_464, 1, null),
+  level(10, 'Ghoul', 2_734, 2, 'Ghoul'),
+  level(11, 'Goblin with a sword', 3_005, 3, null),
+  level(12, 'Banner goblin', 3_275, 3, null),
+  level(13, 'Wraith', 3_546, 1, 'Wraith'),
+  level(14, 'Poison plant', 3_816, 1, null),
+  level(15, 'Flaming slime', 4_087, 1, null),
+  level(16, 'Orc with one axe', 4_357, 1, null),
+  level(17, 'Bear', 4_628, 1, 'Bear'),
+  level(18, 'Orc warrior', 4_898, 1, null),
+  level(19, 'Vampire', 5_169, 1, null),
+  level(20, 'Orc berserk', 5_439, 1, null),
+  level(21, 'Orc shaman', 5_710, 1, null),
+  level(22, 'Winged vampire', 5_980, 1, null),
+  level(23, 'Orc with two swords', 6_251, 1, null),
+  level(24, 'Zombie', 6_521, 1, 'Zombie'),
+  level(25, 'Fire spirit', 6_792, 1, null),
+  level(26, 'Skeleton', 7_062, 1, 'Skeleton'),
+  level(27, 'Armored orc', 7_333, 1, null),
+  level(28, 'Fortress knight', 7_603, 1, null),
+  level(29, 'Barrow king', 7_874, 1, 'BarrowKing'),
+  level(30, 'Lich', 8_144, 1, null),
 ]
 
 interface Tiles {
@@ -124,6 +132,62 @@ export function spawnPoints(seed: number, { camp, land, water = () => false }: R
     }
   }
   return points
+}
+
+/**
+ * The one cave mouth. Wood and stone stay where they are. The same seed always returns the same tile,
+ * between a 6-minute walk and a 1-hour walk, outside the vale. Matches the server's `CaveSite.At`.
+ */
+export function caveTile(seed: number, land: RingLand): { x: number; y: number } {
+  const dens = spawnPoints(seed, land)
+  const { camp } = land
+  for (let attempt = 0; attempt < CAVE_TRIES; attempt++) {
+    const radius = caveRadius(seed, attempt)
+    const angle = caveRoll(seed, attempt * 2 + 1) * 2 * Math.PI
+    const x = Math.floor(camp.x + Math.cos(angle) * radius)
+    const y = Math.floor(camp.y + Math.sin(angle) * radius)
+    if (caveFree(seed, x, y, dens, land, CAVE_FAR)) return { x, y }
+  }
+  const fallback = caveRoll(seed, 1) * 2 * Math.PI
+  for (let radius = CAVE_NEAR; radius < land.land.width / 2; radius += 50) {
+    const x = Math.floor(camp.x + Math.cos(fallback) * radius)
+    const y = Math.floor(camp.y + Math.sin(fallback) * radius)
+    if (caveFree(seed, x, y, dens, land, land.land.width)) return { x, y }
+  }
+  return { x: Math.floor(camp.x + CAVE_NEAR), y: Math.floor(camp.y) }
+}
+
+function caveRadius(seed: number, attempt: number) {
+  const span = CAVE_FAR * CAVE_FAR - CAVE_NEAR * CAVE_NEAR
+  return Math.sqrt(CAVE_NEAR * CAVE_NEAR + caveRoll(seed, attempt * 2) * span)
+}
+
+function caveFree(
+  seed: number,
+  x: number,
+  y: number,
+  dens: readonly SpawnPoint[],
+  land: RingLand,
+  farthest: number,
+) {
+  const { camp, land: bounds, water = () => false } = land
+  if (x < bounds.x || y < bounds.y || x + 1 > bounds.x + bounds.width || y + 1 > bounds.y + bounds.height) return false
+  if (x >= VALE.x && y >= VALE.y && x + 1 <= VALE.x + VALE.width && y + 1 <= VALE.y + VALE.height) return false
+  if (water(x, y, seed)) return false
+  const distance = Math.hypot(x + 0.5 - camp.x, y + 0.5 - camp.y)
+  if (distance < CAVE_NEAR || distance > farthest) return false
+  return dens.every((den) => Math.hypot(den.x - x, den.y - y) >= den.claim / 2)
+}
+
+/** A number in [0, 1). The same bits as the server's cave roll. */
+function caveRoll(seed: number, draw: number) {
+  let hash = (seed ^ 0xc0ffee01 ^ Math.imul(draw + 1, 0x9e3779b1)) >>> 0
+  hash ^= hash >>> 16
+  hash = Math.imul(hash, 0x85ebca6b) >>> 0
+  hash ^= hash >>> 13
+  hash = Math.imul(hash, 0xc2b2ae35) >>> 0
+  hash ^= hash >>> 16
+  return (hash >>> 0) / 4_294_967_296
 }
 
 /** Eight places around the den, two tiles out, starting east and turning clockwise. */

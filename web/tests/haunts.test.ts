@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import { CELL, DEN_CLEARANCE, LEG_SECONDS, VALE_CLEARANCE, WANDER_RADIUS, fromVale, hauntAt, hauntsIn, wanderAt } from '../src/game/haunts.ts'
 import { SPAWN_LEVELS, spawnPoints } from '../src/game/spawnRings.ts'
 
-const side = 24_000
+const side = 12_000
 const ring = { camp: { x: 15.5, y: 13.5 }, land: { x: 15 - side / 2, y: 13 - side / 2, width: side, height: side } }
 const cases = JSON.parse(readFileSync(new URL('../e2e/fixtures/haunts.json', import.meta.url), 'utf8')) as Array<{ seed: number; foes: string[] }>
 

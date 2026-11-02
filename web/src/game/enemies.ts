@@ -319,7 +319,11 @@ export class EnemyLayer {
   private liveSamples=new Map<string,FighterSample>()
   private warnings=new Map<string,{view:Graphics;key:string}>()
   private selectedUnit:string|null=null
+  /** Signed-in citizen, and whether that player is the Tsar. Their bar is drawn above the figure. */
+  private viewerCitizenId:string|null=null
+  private viewerIsTsar=false
   select(id:string|null){this.selectedUnit=id}
+  setViewer(citizenId:string|null,isTsar:boolean){this.viewerCitizenId=citizenId;this.viewerIsTsar=isTsar}
   setBattles(battles:RaidBattle[]){
     this.battles=battles
     const at=performance.now(),seen=new Set<string>()
@@ -329,7 +333,8 @@ export class EnemyLayer {
     }
     for(const id of this.liveSamples.keys())if(!seen.has(id))this.liveSamples.delete(id)
   }
-  pick(x:number,y:number):{battleId:string;unitId:string}|null{
+  /** `select` marks the unit as the current target. Hover checks pass false so the cursor does not change the selection. */
+  pick(x:number,y:number,select=true):{battleId:string;unitId:string}|null{
     for(const battle of this.battles){
       if(['Warning','Cancelled','Finished'].includes(battle.phase))continue
       const kind=this.raids.find(r=>r.id===battle.id)?.enemy??'Skeleton'
@@ -339,13 +344,13 @@ export class EnemyLayer {
         const p=at(u),dy=y-p.y
         return u.health>0&&!u.exitedAt&&Math.abs(p.x-x)<=TILE*.8&&dy>=-height(u.variant,u.enemy??kind)-4&&dy<=6
       }).sort((a,b)=>Math.hypot(at(a).x-x,at(a).y-height(a.variant,a.enemy??kind)/2-y)-Math.hypot(at(b).x-x,at(b).y-height(b.variant,b.enemy??kind)/2-y))[0]
-      if(unit){this.selectedUnit=unit.id;return{battleId:battle.id,unitId:unit.id}}
+      if(unit){if(select)this.selectedUnit=unit.id;return{battleId:battle.id,unitId:unit.id}}
     }
     return null
   }
   private updateLive(now:number,sortDepth:boolean){
     const shown=new Set<string>(),warningIds=new Set<string>()
-    const draw=(id:string,x:number,y:number,hp:number,max:number,kind:EnemyKind|null,variant:string,dead:boolean,attackAt=0,deathAt=0)=>{
+    const draw=(id:string,x:number,y:number,hp:number,max:number,kind:EnemyKind|null,variant:string,dead:boolean,attackAt=0,deathAt=0,hideBar=false)=>{
       shown.add(id)
       let view=this.liveViews.get(id)
       if(!view){
@@ -367,10 +372,10 @@ export class EnemyLayer {
       if(hp<view.health)view.hitAt=now
       view.health=hp;view.actor.tint=now-view.hitAt<180?0xff7777:0xffffff
       view.actor.alpha=dead?Math.max(0,1-(now-deathAt)/10000):1
-      const barKey=`${hp}/${max}/${variant}/${dead}/${id===this.selectedUnit}`
+      const barKey=`${hp}/${max}/${variant}/${dead}/${id===this.selectedUnit}/${hideBar}`
       if(view.barKey!==barKey){
         view.barKey=barKey;view.bar.clear()
-        if(!dead){
+        if(!dead&&!hideBar){
           const barY=-(kind?enemyHeight(kind)*size:26)-7
           view.bar.rect(-13,barY,26,4).fill(0x241910)
           view.bar.rect(-12,barY+1,24*Math.max(0,hp/Math.max(1,max)),2).fill(kind?0xda5546:0x68c86a)
@@ -396,7 +401,10 @@ export class EnemyLayer {
         }
         draw(u.id,u.x,u.y,u.health,u.maximumHealth,u.enemy??kind,u.variant,u.health<=0,['Fighting','Breaching','Raiding'].includes(u.state)&&u.nextAttackAt?Date.parse(u.nextAttackAt)-3000:0,u.diedAt?Date.parse(u.diedAt):now)
       }
-      for(const f of battle.fighters)if(!battle.finishedAt&&f.active&&f.health>0)draw('guard:'+(f.isTsar?f.accountId:f.citizenId),f.x,f.y,f.health,f.maximumHealth,null,'regular',false)
+      for(const f of battle.fighters)if(!battle.finishedAt&&f.active&&f.health>0){
+        const own=(!!f.isTsar&&this.viewerIsTsar)||(!f.isTsar&&f.citizenId===this.viewerCitizenId)
+        draw('guard:'+(f.isTsar?f.accountId:f.citizenId),f.x,f.y,f.health,f.maximumHealth,null,'regular',false,0,0,own)
+      }
     }
     for(const [id,warning] of this.warnings)if(!warningIds.has(id)){warning.view.destroy();this.warnings.delete(id)}
     for(const [id,view] of this.liveViews)if(!shown.has(id)){view.actor.destroy();view.bar.destroy();this.liveViews.delete(id)}

@@ -23,7 +23,7 @@ public static class OverlandPath
             .Where(a => a is not null)
             .Select(a => a!.Value)
             .ToList();
-        return Find(terrain, from, to, bridge, crossings, Wilderness.Seed(village.Id.ToString()));
+        return Find(terrain, from, to, bridge, crossings, Wilderness.Seed(village.Id.ToString()), village.Wilds);
     }
 
     public static IReadOnlyList<TilePoint>? Find(
@@ -32,7 +32,8 @@ public static class OverlandPath
         TilePoint to,
         bool bridge,
         IReadOnlyList<TileArea> crossings,
-        uint seed)
+        uint seed,
+        Wilds? wilds = null)
     {
         var startX = (int)Math.Floor(from.X);
         var startY = (int)Math.Floor(from.Y);
@@ -40,7 +41,7 @@ public static class OverlandPath
         var goalY = (int)Math.Floor(to.Y);
         if (!AuthoredTerrain.Inside(startX, startY) || !AuthoredTerrain.Inside(goalX, goalY))
         {
-            return FarWay(terrain, from, to, seed);
+            return FarWay(terrain, from, to, bridge, crossings, seed, wilds);
         }
 
         bool Passable(int x, int y, bool climbing, bool bridging)
@@ -93,40 +94,156 @@ public static class OverlandPath
         return way;
     }
 
-    private static IReadOnlyList<TilePoint>? FarWay(byte[] terrain, TilePoint from, TilePoint to, uint seed)
+    private static IReadOnlyList<TilePoint>? FarWay(
+        byte[] terrain,
+        TilePoint from,
+        TilePoint to,
+        bool bridge,
+        IReadOnlyList<TileArea> crossings,
+        uint seed,
+        Wilds? wilds)
     {
         var land = WorldMap.Land;
         var goalX = (int)Math.Floor(to.X);
         var goalY = (int)Math.Floor(to.Y);
+        bool Blocked(int x, int y) => FarBlocked(terrain, x, y, seed, wilds, goalX, goalY, bridge, crossings);
         if (goalX < land.X || goalY < land.Y || goalX >= land.X + land.Width || goalY >= land.Y + land.Height
-            || FarBlocked(terrain, goalX, goalY, seed))
+            || Blocked(goalX, goalY))
         {
             return null;
         }
 
-        var distance = from.DistanceTo(to);
-        var steps = Math.Max(1, Math.Min(4000, (int)Math.Ceiling(distance)));
-        for (var step = 1; step < steps; step++)
+        var cursor = from;
+        var points = new List<TilePoint>();
+        for (var hop = 0; hop < 24; hop++)
         {
-            var x = (int)Math.Floor(from.X + (to.X - from.X) * step / steps);
-            var y = (int)Math.Floor(from.Y + (to.Y - from.Y) * step / steps);
-            if (!FarBlocked(terrain, x, y, seed)) continue;
-            var bank = FarGround.RiverLeft(y, seed) - 1;
-            return [new TilePoint(bank + 0.5, y + 0.5), to];
+            var distance = cursor.DistanceTo(to);
+            var steps = Math.Max(1, Math.Min(4000, (int)Math.Ceiling(distance)));
+            int? hitX = null;
+            int? hitY = null;
+            for (var step = 1; step < steps; step++)
+            {
+                var x = (int)Math.Floor(cursor.X + (to.X - cursor.X) * step / steps);
+                var y = (int)Math.Floor(cursor.Y + (to.Y - cursor.Y) * step / steps);
+                if (!Blocked(x, y)) continue;
+                hitX = x;
+                hitY = y;
+                break;
+            }
+
+            if (hitX is null || hitY is null)
+            {
+                points.Add(to);
+                return points;
+            }
+
+            var stepped = false;
+            foreach (var opening in FarWilds.Openings(hitX.Value, hitY.Value, Blocked))
+            {
+                var gate = new TilePoint(opening.X + 0.5, opening.Y + 0.5);
+                var approach = Approach(cursor, opening.X, opening.Y, Blocked);
+                if (Hits(cursor, approach, Blocked)) continue;
+                if (gate.DistanceTo(approach) >= 0.01 && Hits(approach, gate, Blocked)) continue;
+                if (approach.DistanceTo(cursor) < 0.01 && gate.DistanceTo(approach) < 0.01) continue;
+                if (approach.DistanceTo(cursor) >= 0.01) points.Add(approach);
+                if (gate.DistanceTo(approach) >= 0.01)
+                {
+                    points.Add(gate);
+                    cursor = gate;
+                }
+                else
+                {
+                    cursor = approach;
+                }
+
+                stepped = true;
+                break;
+            }
+
+            if (!stepped) return null;
         }
 
-        return [to];
+        return null;
     }
 
-    private static bool FarBlocked(byte[] terrain, int x, int y, uint seed)
+    /// <summary>The open tile beside a gap, on the side the walker is coming from.</summary>
+    private static TilePoint Approach(TilePoint cursor, int openX, int openY, Func<int, int, bool> blocked)
+    {
+        var towardX = Math.Sign(cursor.X - (openX + 0.5));
+        var towardY = Math.Sign(cursor.Y - (openY + 0.5));
+        if (towardX != 0 && !blocked(openX + towardX, openY)) return new TilePoint(openX + towardX + 0.5, openY + 0.5);
+        if (towardY != 0 && !blocked(openX, openY + towardY)) return new TilePoint(openX + 0.5, openY + towardY + 0.5);
+        return new TilePoint(openX + 0.5, openY + 0.5);
+    }
+
+    /// <summary>Whether the straight step from <paramref name="a"/> to <paramref name="b"/> enters a blocked tile.</summary>
+    private static bool Hits(TilePoint a, TilePoint b, Func<int, int, bool> blocked)
+    {
+        var steps = Math.Max(1, Math.Min(4000, (int)Math.Ceiling(a.DistanceTo(b))));
+        for (var step = 1; step < steps; step++)
+        {
+            var x = (int)Math.Floor(a.X + (b.X - a.X) * step / steps);
+            var y = (int)Math.Floor(a.Y + (b.Y - a.Y) * step / steps);
+            if (blocked(x, y)) return true;
+        }
+
+        return false;
+    }
+
+    private static bool FarBlocked(
+        byte[] terrain,
+        int x,
+        int y,
+        uint seed,
+        Wilds? wilds,
+        int goalX,
+        int goalY,
+        bool bridge,
+        IReadOnlyList<TileArea> crossings)
     {
         if (AuthoredTerrain.Inside(x, y))
         {
             var kind = terrain[AuthoredTerrain.Index(x, y)];
-            return kind is AuthoredTerrain.Water or AuthoredTerrain.Mountain or AuthoredTerrain.Ravine;
+            if (x == goalX && y == goalY && kind is AuthoredTerrain.Thicket or AuthoredTerrain.Rockfall)
+            {
+                return false;
+            }
+
+            if (kind == AuthoredTerrain.Water)
+            {
+                return !(bridge && BridgeDeck.Contains(new TileArea(x, y, 1, 1)));
+            }
+
+            if (kind == AuthoredTerrain.Ravine)
+            {
+                return !crossings.Any(crossing => crossing.Contains(new TileArea(x, y, 1, 1)));
+            }
+
+            if (kind is AuthoredTerrain.Mountain or AuthoredTerrain.Thicket or AuthoredTerrain.Rockfall)
+            {
+                return true;
+            }
+
+            return false;
         }
 
-        return FarGround.Water(x, y, seed);
+        if (wilds?.Obstacles.Any(o => o.X == x && o.Y == y && o.ClearedAt is not null) == true)
+        {
+            return false;
+        }
+
+        var far = FarWilds.At(x, y, seed);
+        if (x == goalX && y == goalY && far is FarWilds.Kind.Thicket or FarWilds.Kind.Rockfall)
+        {
+            return false;
+        }
+
+        if (wilds is not null && Wilderness.IsMouth(wilds, x, y))
+        {
+            return false;
+        }
+
+        return FarWilds.Blocks(far) || FarGround.Water(x, y, seed);
     }
 
     private static bool Clear(TilePoint a, TilePoint b, Func<int, int, bool> dry)

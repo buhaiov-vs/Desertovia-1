@@ -592,7 +592,11 @@ export class DungeonWorld {
 
     for (const hero of this.heroes.values()) {
       if (hero.state !== 'Left' && hero.view.visible) move(hero)
-      drawBar(hero.bar, hero.health / Math.max(1, hero.maximumHealth), hero.id === this.myHeroId ? 0xffd23a : 0x60c040)
+      const mine = hero.id === this.myHeroId
+      const share = hero.health / Math.max(1, hero.maximumHealth)
+      hero.bar.visible = hero.view.visible && (!mine || (hero.maximumHealth > 1 && share < 1))
+      hero.bar.position.y = mine ? -30 : -20
+      if (hero.bar.visible) drawBar(hero.bar, share, mine ? 0xffd23a : 0x60c040)
       hero.skull.visible = hero.state === 'Fleeing' && hero.view.visible
       if (hero.state === 'Left') hero.view.visible = false
       hero.view.alpha = hero.view.visible ? 1 : Math.max(0, hero.view.alpha - seconds)

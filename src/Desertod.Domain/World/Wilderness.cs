@@ -6,10 +6,10 @@ namespace Desertod.Domain.World;
 
 public enum ObstacleKind
 {
-    /// <summary>Dense brambles; cut away for a little wood.</summary>
+    /// <summary>A long hedge of brambles. Cutting a gap through it is shorter than walking around.</summary>
     Thicket,
 
-    /// <summary>Boulders fallen into a mountain pass; broken up for stone.</summary>
+    /// <summary>Boulders in a mountain pass. The ridge runs to the edge of the vale, so breaking them opens the way.</summary>
     Rockfall,
 }
 
@@ -50,9 +50,9 @@ public sealed class MountainPass
 }
 
 /// <summary>
-/// What stands in the walkers' way out in the wild land, generated once per village. The web client draws the
-/// mountain ridges around the cave, the lookout and the passes, and keeps walkers out of the ravine, thickets and
-/// rockfalls; the server owns these because citizens clear them, dig in the cave and bridge the ravine.
+/// What stands in the walkers' way out in the wild land, generated once per village. The camp picture keeps the
+/// ravine, the cave and the lookout. Hills and thickets stand farther out. The server owns this because citizens
+/// clear a thicket or a rockfall, dig in the cave and bridge the ravine.
 /// </summary>
 public sealed class Wilds
 {
@@ -65,6 +65,21 @@ public sealed class Wilds
 
     public int CaveY { get; set; }
 
+    /// <summary>Coal mouth. Black rock, its own tile, kept apart from the other mines.</summary>
+    public int CoalX { get; set; }
+    public int CoalY { get; set; }
+
+    /// <summary>Iron mouth. Rust-coloured rock.</summary>
+    public int IronX { get; set; }
+    public int IronY { get; set; }
+
+    /// <summary>Moonstone mouth. Pale rock. Chipping it still needs the waystone technology.</summary>
+    public int MoonX { get; set; }
+    public int MoonY { get; set; }
+
+    /// <summary>Gold veins beside foe dens. Each one is dug on its own.</summary>
+    public List<GoldDeposit> Gold { get; set; } = [];
+
     /// <summary>Tile at the top of the lookout peak; the trail up to it leaves from the tile below.</summary>
     public int LookoutX { get; set; }
 
@@ -75,26 +90,38 @@ public sealed class Wilds
     public TilePoint Lookout => new(LookoutX + 0.5, LookoutY + 0.5);
 }
 
+/// <summary>One gold vein beside a foe den. <see cref="Mined"/> counts gold already taken from this vein.</summary>
+public sealed class GoldDeposit
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    public int Level { get; set; }
+    public int Mined { get; set; }
+
+    public TilePoint Center => new(X + 0.5, Y + 0.5);
+
+    public int Remaining => Math.Max(0, Rules.GoldVein.Size - Mined);
+}
+
 public static class Wilderness
 {
     public const string Thicket = "thicket";
     public const string Rockfall = "rockfall";
     public const string Cave = "cave";
+    public const string CoalMine = "coal-mine";
+    public const string IronMine = "iron-mine";
+    public const string MoonstoneMine = "moonstone-mine";
 
-    /// <summary>How far, in tiles, a picked spot may be from the obstacle or the cave it is meant for.</summary>
+    /// <summary>Salt for the coal mouth. The stone cave uses no salt, so its tile stays put.</summary>
+    public const uint CoalSalt = 0xC0A10001;
+    public const uint IronSalt = 0xA00E0001;
+    public const uint MoonstoneSalt = 0x90050001;
+
+    /// <summary>How far, in tiles, a picked spot may be from the obstacle or the mine it is meant for.</summary>
     public const double SpotReach = 1.5;
 
     /// <summary>A cycle of clearing works on the obstacle tiles this close to the citizen's spot, nearest first.</summary>
     public const double PatchReach = 2.5;
-
-    /// <summary>Chance per cycle, at a stat factor of 1, that digging in the cave turns up coal or iron ore.</summary>
-    public const double CaveFindChance = 0.3;
-
-    public static IReadOnlyList<LootEntry> CaveFinds { get; } =
-    [
-        new(ResourceKind.Coal, 1, 60),
-        new(ResourceKind.IronOre, 1, 40),
-    ];
 
     private const int RiverLeft = 30;
     private const int RiverRight = 33;
@@ -105,8 +132,6 @@ public static class Wilderness
     private const int CoreHeight = 26;
     private const int RavineNorth = -22;
     private const int RavineSouth = -12;
-    private const int PassCount = 3;
-    private const int ThicketCount = 7;
 
     public static int WorkNeeded(ObstacleKind kind) => kind == ObstacleKind.Thicket ? 1 : 3;
 
@@ -119,8 +144,49 @@ public static class Wilderness
         _ => null,
     };
 
-    /// <summary>Tasks done out in the wild land at a place the server knows: an obstacle or the cave.</summary>
-    public static bool IsWild(TaskDefinition task) => ObstacleOf(task) is not null || task.Workplace == Cave;
+    /// <summary>Tasks done out in the wild land at a place the server knows: an obstacle or a mine mouth.</summary>
+    public static bool IsWild(TaskDefinition task) =>
+        ObstacleOf(task) is not null || IsMine(task.Workplace) || task.Workplace == WorldMap.GoldVein;
+
+    public static bool IsMine(string workplace) =>
+        workplace is Cave or CoalMine or IronMine or MoonstoneMine;
+
+    public static bool IsMouth(Wilds wilds, int x, int y) =>
+        (x == wilds.CaveX && y == wilds.CaveY)
+        || (x == wilds.CoalX && y == wilds.CoalY)
+        || (x == wilds.IronX && y == wilds.IronY)
+        || (x == wilds.MoonX && y == wilds.MoonY);
+
+    public static TilePoint Mouth(Wilds wilds, string workplace) => workplace switch
+    {
+        CoalMine => new TilePoint(wilds.CoalX + 0.5, wilds.CoalY + 0.5),
+        IronMine => new TilePoint(wilds.IronX + 0.5, wilds.IronY + 0.5),
+        MoonstoneMine => new TilePoint(wilds.MoonX + 0.5, wilds.MoonY + 0.5),
+        _ => wilds.CaveMouth,
+    };
+
+    public static string UnknownMine(string workplace) => workplace switch
+    {
+        CoalMine => "wilds.coalUnknown",
+        IronMine => "wilds.ironUnknown",
+        MoonstoneMine => "wilds.moonstoneUnknown",
+        _ => "wilds.caveUnknown",
+    };
+
+    /// <summary>Places the coal, iron and moonstone mouths. The stone cave is <see cref="CaveSite.At"/> with no salt.</summary>
+    public static void PlaceMines(Wilds wilds, uint seed)
+    {
+        var stone = CaveSite.At(seed);
+        var coal = CaveSite.At(seed, CoalSalt, [stone]);
+        var iron = CaveSite.At(seed, IronSalt, [stone, coal]);
+        var moon = CaveSite.At(seed, MoonstoneSalt, [stone, coal, iron]);
+        wilds.CoalX = coal.X;
+        wilds.CoalY = coal.Y;
+        wilds.IronX = iron.X;
+        wilds.IronY = iron.Y;
+        wilds.MoonX = moon.X;
+        wilds.MoonY = moon.Y;
+    }
 
     public static bool Stands(Obstacle obstacle) => obstacle.ClearedAt is null;
 
@@ -131,29 +197,61 @@ public static class Wilderness
     public static TilePoint WorkSpot(Village village, TaskDefinition task, TilePoint? picked)
     {
         var wilds = village.Wilds ?? throw new GameRuleException("wilds.unknown", "Nobody knows the wild land yet.");
-        if (task.Workplace == Cave)
+        if (task.Workplace == WorldMap.GoldVein)
         {
-            if (picked is { } spot && spot.DistanceTo(wilds.CaveMouth) > SpotReach)
+            var veins = wilds.Gold ?? [];
+            var goldCamp = WorldMap.Places[WorldMap.Camp];
+            if (picked is { } goldSpot)
+            {
+                var near = veins.MinBy(vein => vein.Center.DistanceTo(goldSpot));
+                if (near is null || near.Center.DistanceTo(goldSpot) > SpotReach)
+                {
+                    throw new GameRuleException("spot.notForTask", $"\"{task.Name}\" is done at its own place.",
+                        new Dictionary<string, object> { ["taskId"] = task.Id });
+                }
+
+                if (near.Remaining == 0)
+                {
+                    throw new GameRuleException("task.veinEmpty", "The gold vein is empty.",
+                        new Dictionary<string, object> { ["taskId"] = task.Id });
+                }
+
+                return near.Center;
+            }
+
+            return veins.Where(vein => vein.Remaining > 0).MinBy(vein => vein.Center.DistanceTo(goldCamp))?.Center
+                ?? throw new GameRuleException("task.veinEmpty", "The gold vein is empty.",
+                    new Dictionary<string, object> { ["taskId"] = task.Id });
+        }
+
+        if (IsMine(task.Workplace))
+        {
+            var mouth = Mouth(wilds, task.Workplace);
+            if (picked is { } spot && spot.DistanceTo(mouth) > SpotReach)
             {
                 throw new GameRuleException("spot.notForTask", $"\"{task.Name}\" is done at its own place.",
                     new Dictionary<string, object> { ["taskId"] = task.Id });
             }
 
-            if (!village.IsExplored(new TileArea(wilds.CaveX, wilds.CaveY, 1, 1)))
+            var tile = mouth.ToTile();
+            if (!village.IsExplored(tile))
             {
-                throw new GameRuleException("wilds.caveUnknown", "Nobody has found the cave yet. Explore the mountains first.");
+                throw new GameRuleException(UnknownMine(task.Workplace), "Nobody has found this mine yet.");
             }
 
-            return wilds.CaveMouth;
+            return mouth;
         }
 
         var kind = ObstacleOf(task) ?? throw new ArgumentException("Not a wild task.", nameof(task));
-        var standing = wilds.Obstacles.Where(o => o.Kind == kind && Stands(o)).ToList();
         if (picked is { } chosen)
         {
-            var near = standing.Where(o => o.Center.DistanceTo(chosen) <= SpotReach).MinBy(o => o.Center.DistanceTo(chosen));
+            Materialize(wilds, kind, chosen, Seed(village.Id.ToString()), SpotReach);
+            var near = wilds.Obstacles.Where(o => o.Kind == kind && Stands(o) && o.Center.DistanceTo(chosen) <= SpotReach)
+                .MinBy(o => o.Center.DistanceTo(chosen));
             return near?.Center ?? throw new GameRuleException("spot.nothingToClear", "Nothing is left to clear here.");
         }
+
+        var standing = wilds.Obstacles.Where(o => o.Kind == kind && Stands(o)).ToList();
 
         var camp = WorldMap.Places[WorldMap.Camp];
         var nearest = standing.Where(o => village.IsExplored(o.Tile)).MinBy(o => o.Center.DistanceTo(camp));
@@ -165,6 +263,11 @@ public static class Wilderness
     /// <summary>Works away obstacle tiles around the spot, nearest first, up to <paramref name="work"/>. Returns the work done.</summary>
     public static int Clear(Village village, ObstacleKind kind, int work, TilePoint spot, DateTimeOffset now)
     {
+        if (village.Wilds is { } wilds)
+        {
+            Materialize(wilds, kind, spot, Seed(village.Id.ToString()), PatchReach);
+        }
+
         var done = 0;
         var near = (village.Wilds?.Obstacles ?? [])
             .Where(o => o.Kind == kind && Stands(o) && o.Center.DistanceTo(spot) <= PatchReach)
@@ -191,6 +294,31 @@ public static class Wilderness
     }
 
     /// <summary>
+    /// Records far thicket and rockfall tiles around a spot the first time someone works them.
+    /// The camp picture is already stored. A tile that was cleared stays cleared.
+    /// </summary>
+    private static void Materialize(Wilds wilds, ObstacleKind kind, TilePoint spot, uint seed, double reach)
+    {
+        var known = wilds.Obstacles.Select(o => (o.X, o.Y)).ToHashSet();
+        var wanted = kind == ObstacleKind.Thicket ? FarWilds.Kind.Thicket : FarWilds.Kind.Rockfall;
+        var x0 = (int)Math.Floor(spot.X - reach);
+        var x1 = (int)Math.Floor(spot.X + reach);
+        var y0 = (int)Math.Floor(spot.Y - reach);
+        var y1 = (int)Math.Floor(spot.Y + reach);
+        for (var y = y0; y <= y1; y++)
+        {
+            for (var x = x0; x <= x1; x++)
+            {
+                if (known.Contains((x, y))) continue;
+                if (new TilePoint(x + 0.5, y + 0.5).DistanceTo(spot) > reach) continue;
+                if (FarWilds.At(x, y, seed) != wanted) continue;
+                wilds.Obstacles.Add(new Obstacle { Kind = kind, X = x, Y = y });
+                known.Add((x, y));
+            }
+        }
+    }
+
+    /// <summary>
     /// A rope bridge crosses the ravine when the ravine runs through every column of its footprint, between the top row
     /// (the north rim) and the bottom row (the south rim, its yard).
     /// </summary>
@@ -213,7 +341,7 @@ public static class Wilderness
         return true;
     }
 
-    /// <summary>The ravine, the passes, the cave, the lookout and the thickets of a new village's wild land.</summary>
+    /// <summary>The ravine, the cave and the lookout of a new village. Hills and thickets are not planted around the camp.</summary>
     public static Wilds Generate(Guid villageId)
     {
         var seed = Seed(villageId.ToString());
@@ -272,57 +400,38 @@ public static class Wilderness
         }
 
         // Mountain features keep away from each other, so each gets a ridge of its own.
-        var cave = Pick(10, 8, 6, 14, 0) ?? new TilePoint(-30, 20);
-        mountains.Add(cave);
-        wilds.CaveX = (int)cave.X;
-        wilds.CaveY = (int)cave.Y;
+        // This draw used to be the cave. It stays in the sequence so the lookout, the passes and the thickets
+        // keep their places. The mouth itself stands outside the vale, at the seed's place.
+        mountains.Add(Pick(10, 8, 6, 14, 0) ?? new TilePoint(-30, 20));
+        var mouth = CaveSite.At(seed);
+        wilds.CaveX = mouth.X;
+        wilds.CaveY = mouth.Y;
+        PlaceMines(wilds, seed);
+        wilds.Gold = GoldVein.Place(seed);
 
         var lookout = Pick(10, 8, 6, 14, 0) ?? new TilePoint(-30, 40);
         mountains.Add(lookout);
         wilds.LookoutX = (int)lookout.X;
         wilds.LookoutY = (int)lookout.Y;
 
-        for (var pass = 0; pass < PassCount; pass++)
-        {
-            if (Pick(10, 8, 6, 14, 0) is not { } point)
-            {
-                continue;
-            }
-
-            mountains.Add(point);
-            var x = (int)point.X;
-            var y = (int)point.Y;
-            wilds.Passes.Add(new MountainPass { X = x, Y = y, Horizontal = random.Next(2) == 0 });
-            foreach (var (dx, dy) in new[] { (0, 0), (1, 0), (0, 1), (1, 1) })
-            {
-                wilds.Obstacles.Add(new Obstacle { Kind = ObstacleKind.Rockfall, X = x + dx, Y = y + dy });
-            }
-        }
-
-        // Thickets grow in patches out in the open land, clear of the mountains.
-        for (var patch = 0; patch < ThicketCount; patch++)
-        {
-            if (Pick(3, 5, 4, 10, 9) is not { } center)
-            {
-                continue;
-            }
-
-            thickets.Add(center);
-            var radius = 1.6 + random.NextDouble() * 1.2;
-            for (var y = (int)Math.Floor(center.Y - radius); y <= center.Y + radius; y++)
-            {
-                for (var x = (int)Math.Floor(center.X - radius); x <= center.X + radius; x++)
-                {
-                    var reach = radius * (0.75 + 0.5 * random.NextDouble());
-                    if (new TilePoint(x, y).DistanceTo(center) <= reach && Fits(x, y, 2, 3, 3))
-                    {
-                        wilds.Obstacles.Add(new Obstacle { Kind = ObstacleKind.Thicket, X = x, Y = y });
-                    }
-                }
-            }
-        }
-
         return wilds;
+    }
+
+    /// <summary>
+    /// Takes the thickets, rockfalls and passes off the camp picture. Returns true when something was removed.
+    /// </summary>
+    public static bool ClearAroundVillage(Village village)
+    {
+        if (village.Wilds is not { } wilds)
+        {
+            return false;
+        }
+
+        var removed = wilds.Obstacles.RemoveAll(obstacle =>
+            obstacle.Kind is ObstacleKind.Thicket or ObstacleKind.Rockfall);
+        var passes = wilds.Passes.Count;
+        wilds.Passes.Clear();
+        return removed > 0 || passes > 0;
     }
 
     /// <summary>Centre column of the river in a row: straight through the camp area, meandering beyond it. Mirrors the web client.</summary>

@@ -80,6 +80,12 @@ public static class CycleEngine
             WorkSpots.Check(village, task, picked, now);
         }
 
+        if (spot is null && WildGoods.IsPlace(task.Workplace))
+        {
+            throw new GameRuleException("spot.notForTask", "This is gathered where it grows.",
+                new Dictionary<string, object> { ["taskId"] = task.Id });
+        }
+
         if (task.Effect == TaskEffect.NotAvailableYet)
         {
             throw new GameRuleException("task.notAvailable", $"\"{task.Name}\" is not available yet.", new Dictionary<string, object> { ["taskId"] = task.Id });
@@ -149,7 +155,7 @@ public static class CycleEngine
         var repairAt = task.Effect == TaskEffect.Repair
             ? workplacePlotId ?? CombatRules.MostDamaged(village, citizen.AccountId) ?? throw new GameRuleException("repair.nothing", "No building needs repair.")
             : null;
-        if (GoldVein.IsDug(task) && GoldVein.IsEmpty(village))
+        if (GoldVein.IsDug(task) && (spot is { } chosen && GoldVein.Find(village, chosen) is { Remaining: 0 } || spot is null && GoldVein.IsEmpty(village)))
         {
             throw new GameRuleException("task.veinEmpty", "The gold vein is empty.", new Dictionary<string, object> { ["taskId"] = task.Id });
         }
@@ -518,7 +524,7 @@ public static class CycleEngine
                 if (GoldVein.IsDug(task))
                 {
                     var perShare = task.Outputs.Sum(o => o.Amount);
-                    var dug = GoldVein.Take(village, YieldMath.Whole(perShare * share));
+                    var dug = GoldVein.Take(village, YieldMath.Whole(perShare * share), citizen.Spot ?? WorldMap.Places[WorldMap.Camp]);
                     share = (double)dug / perShare;
                     overflowed = dug == 0;
                 }
@@ -530,12 +536,6 @@ public static class CycleEngine
                         citizen.Spot ?? WorldMap.Places[WorldMap.Camp], now);
                     share = (double)cleared / perCycle;
                     overflowed = cleared == 0;
-                }
-
-                if (task.Workplace == Wilderness.Cave && context.Random.NextDouble() < Wilderness.CaveFindChance * share)
-                {
-                    var find = Loot.Roll(Wilderness.CaveFinds, context.Random);
-                    Produce(find.Resource, find.Amount);
                 }
 
                 var wood = 0;

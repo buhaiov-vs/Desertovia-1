@@ -64,8 +64,8 @@ public static class WorldMap
     /// <summary>The camp land west of the river, short of the reeds on its bank. A whole plot must fit inside.</summary>
     public static TileArea BuildArea { get; } = new(0, 0, 28, 26);
 
-    /// <summary>One edge of the land, in tiles. A healthy walker takes two real hours from the camp to an edge.</summary>
-    public const int Side = 24_000;
+    /// <summary>One edge of the land, in tiles. A healthy walker takes one real hour from the camp to an edge.</summary>
+    public const int Side = 12_000;
 
     /// <summary>The authored camp picture. Its collision and the old fog bitmap stay this size.</summary>
     public static TileArea Vale { get; } = new(-44, -32, 120, 90);

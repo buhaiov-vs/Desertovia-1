@@ -207,9 +207,8 @@ public sealed class Village
             added = true;
         }
 
-        if (Trees.Count == 0)
+        if (Forest.MatchTheWild(this))
         {
-            Trees.AddRange(Forest.Plant(new Random(Id.GetHashCode())));
             added = true;
         }
 
@@ -217,6 +216,39 @@ public sealed class Village
         {
             Wilds = Wilderness.Generate(Id);
             added = true;
+        }
+
+        if (Wilds is { } wilds)
+        {
+            var seed = Wilderness.Seed(Id.ToString());
+            var mouth = CaveSite.At(seed);
+            if (wilds.CaveX != mouth.X || wilds.CaveY != mouth.Y)
+            {
+                wilds.CaveX = mouth.X;
+                wilds.CaveY = mouth.Y;
+                added = true;
+            }
+
+            var coal = CaveSite.At(seed, Wilderness.CoalSalt, [mouth]);
+            var iron = CaveSite.At(seed, Wilderness.IronSalt, [mouth, coal]);
+            var moon = CaveSite.At(seed, Wilderness.MoonstoneSalt, [mouth, coal, iron]);
+            if (wilds.CoalX != coal.X || wilds.CoalY != coal.Y
+                || wilds.IronX != iron.X || wilds.IronY != iron.Y
+                || wilds.MoonX != moon.X || wilds.MoonY != moon.Y)
+            {
+                Wilderness.PlaceMines(wilds, seed);
+                added = true;
+            }
+
+            if (GoldVein.Sync(wilds, seed, GoldVeinMined))
+            {
+                added = true;
+            }
+
+            if (Wilderness.ClearAroundVillage(this))
+            {
+                added = true;
+            }
         }
 
         if (!Exploration.IsChunkFormat(Explored))
@@ -265,6 +297,11 @@ public sealed class Village
             ? TsarTrip.PositionAt(now)
             : TsarSpot ?? WorldMap.Places[WorldMap.Camp];
         var way = OverlandPath.Find(this, from, spot);
+        if (way is null)
+        {
+            throw new GameRuleException("spot.blocked", "Mountains, thickets or water block the way.");
+        }
+
         var departure = Exploration.SetOut(Explored, TsarTrip, TsarSpot ?? WorldMap.Places[WorldMap.Camp], spot, now, Wilds?.Lookout, way);
         Explored = departure.Explored;
         TsarTrip = departure.Trip;

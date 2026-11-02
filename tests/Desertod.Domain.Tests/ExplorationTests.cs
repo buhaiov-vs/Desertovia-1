@@ -159,6 +159,44 @@ public class ExplorationTests
     }
 
     [Fact]
+    public void AWalkPastTheVale_DoesNotCrossWaterOrThickets()
+    {
+        var terrain = new byte[AuthoredTerrain.Width * AuthoredTerrain.Height];
+        for (var y = AuthoredTerrain.Top; y < AuthoredTerrain.Bottom; y++)
+        {
+            terrain[AuthoredTerrain.Index(40, y)] = y is 12 or 13 ? AuthoredTerrain.Thicket : AuthoredTerrain.Water;
+            if (y != 20) terrain[AuthoredTerrain.Index(50, y)] = AuthoredTerrain.Thicket;
+        }
+
+        var from = new TilePoint(10.5, 13.5);
+        var to = new TilePoint(90.5, 20.5);
+        var way = OverlandPath.Find(terrain, from, to, bridge: false, crossings: [], seed: 1);
+        Assert.NotNull(way);
+
+        var cursor = from;
+        foreach (var point in way)
+        {
+            Assert.False(SegmentCrosses(terrain, cursor, point, AuthoredTerrain.Water));
+            Assert.False(SegmentCrosses(terrain, cursor, point, AuthoredTerrain.Thicket));
+            cursor = point;
+        }
+    }
+
+    private static bool SegmentCrosses(byte[] terrain, TilePoint a, TilePoint b, byte kind)
+    {
+        var steps = Math.Max(1, (int)Math.Ceiling(a.DistanceTo(b)));
+        for (var step = 1; step < steps; step++)
+        {
+            var x = (int)Math.Floor(a.X + (b.X - a.X) * step / steps);
+            var y = (int)Math.Floor(a.Y + (b.Y - a.Y) * step / steps);
+            if (!AuthoredTerrain.Inside(x, y)) continue;
+            if (terrain[AuthoredTerrain.Index(x, y)] == kind) return true;
+        }
+
+        return false;
+    }
+
+    [Fact]
     public void TsarWalk_StoresTheFootPathOnTheTrip()
     {
         var village = NewVillage();

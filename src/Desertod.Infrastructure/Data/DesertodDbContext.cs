@@ -248,6 +248,11 @@ public sealed class DesertodDbContext(DbContextOptions<DesertodDbContext> option
                     obstacle.Ignore(o => o.Tile);
                     obstacle.Ignore(o => o.Center);
                 });
+                wilds.OwnsMany(w => w.Gold, gold =>
+                {
+                    gold.Ignore(g => g.Center);
+                    gold.Ignore(g => g.Remaining);
+                });
             });
             village.HasIndex(v => v.NextRaidAt);
             village.Property(v => v.ChosenTechnology).HasMaxLength(32);

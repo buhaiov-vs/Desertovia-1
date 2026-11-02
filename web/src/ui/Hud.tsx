@@ -42,10 +42,15 @@ export function TopBar({
   const fighter=village.battles?.filter(b=>!b.finishedAt&&b.phase!=='Warning').flatMap(b=>b.fighters).find(f=>f.isTsar?f.accountId===accountId:f.citizenId===citizen?.id)
   const denHero=village.dens?.map(d=>d.hero).find(h=>h&&h.citizenId===citizen?.id)??null
   const minutes=catalog.rules.combatHealthFullRegenerationMinutes??30
-  const regenerating=citizen&&citizen.maximumHealth!=null&&citizen.health!=null
-    ?{health:currentCombatHealth(citizen as Citizen&{health:number;maximumHealth:number},now,minutes),maximumHealth:citizen.maximumHealth}
-    :null
-  const vitals=fighter??denHero??(regenerating&&regenerating.maximumHealth>0?regenerating:null)
+  const regenerating =
+    citizen && citizen.maximumHealth != null && citizen.health != null
+      ? {
+          health: currentCombatHealth(citizen, now, minutes),
+          maximumHealth: citizen.maximumHealth,
+        }
+      : null
+  const vitals =
+    fighter ?? denHero ?? (regenerating && regenerating.maximumHealth > 0 ? regenerating : null)
   const ru=i18n.language==='ru'
   return (
     <div className="hud-top">
